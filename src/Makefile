@@ -62,5 +62,7 @@ all: $(EXE)
 $(EXE): $(OBJS)
 	$(CXX) -o $@ $^ $(CXXFLAGS) $(LIBS)
 
+run: $(EXE)
+	./Zathura
 clean:
 	rm -f $(EXE) $(OBJS)
