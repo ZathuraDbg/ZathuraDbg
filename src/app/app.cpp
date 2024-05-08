@@ -155,6 +155,7 @@ ImGuiIO& setupIO(){
     io.ConfigViewportsNoTaskBarIcon = true;
     io.Fonts->AddFontFromFileTTF("../assets/Satoshi-Variable.ttf", 16.0f);
     io.Fonts->AddFontFromFileTTF("../assets/JetBrainsMono.ttf", 20.0f);
+    io.Fonts->AddFontFromFileTTF("../assets/Satoshi-Variable.ttf", 18.0f);
     io.Fonts->AddFontDefault();
     return io;
 }
@@ -167,37 +168,52 @@ void setupViewPort() {
     ImGui::SetNextWindowViewport(viewport->ID);
 }
 
-//std::<std::string, std::string> registerValueMap = {{"RAX", "0x00"}, {"RBX", "0x00"}, {"RCX", "0x00"}, {"RDX", "0x00"}, {"RBP", "0x00"}, {"RSP", "0x00"}, {"RDI", "0x00"}, {"RSI", "0x00"}, {"R8", "0x00"}, {"R9", "0x00"}, {"R10", "0x00"}, {"R11", "0x00"}, {"R12", "0x00"}, {"R13", "0x00"}, {"R14", "0x00"}, {"R15", "0x00"}};
-std::map<std::string, std::string> registerValueMap = {{"RAX", "0x00"}, {"RBX", "0x00"}, {"RCX", "0x00"}, {"RDX", "0x00"}, {"RSP", "0x00"}};
+std::map<std::string, std::string> registerValueMap = {{"RAX", "0x7fffe29fc6c0"}, {"RBX", "0x00"}, {"RCX", "0x00"}, {"RDX", "0x00"}, {"RSP", "0x00"}};
+
 void EditableTable()
 {
+    auto io = ImGui::GetIO();
+    ImGui::PushFont(io.Fonts->Fonts[2]);
     if (ImGui::BeginTable("Table", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_Resizable, ImVec2(0, ImGui::GetTextLineHeightWithSpacing()), 500.0f)) {
-        ImGui::TableSetupColumn("Register", ImGuiTableColumnFlags_NoSort | ImGuiTableColumnFlags_WidthStretch, 3.0f);
-        ImGui::TableSetupColumn("Values", ImGuiTableColumnFlags_WidthStretch, 5.0f);
+        ImGui::TableSetupColumn("Register", ImGuiTableColumnFlags_NoSort | ImGuiTableColumnFlags_WidthStretch, 8.0f);
+        ImGui::TableSetupColumn("Values", ImGuiTableColumnFlags_WidthStretch, ImGui::GetTextLineHeight());
         ImGui::TableHeadersRow();
-        int i = 0;
+        ImGui::PopFont();
+        int index = 0;
         for (auto& reg : registerValueMap) {
+            ImGui::SetNextItemWidth(-1);
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
             ImGui::PushID(reg.first.c_str());
             ImGui::Text("%s", reg.first.c_str());
             ImGui::PopID();
 
+            ImGui::SetNextItemWidth(-1);
             ImGui::TableNextColumn();
-            ImGui::PushID(reg.first.c_str() + reg.first.length() + reg.second.size());
-            char value[64];
-            strncpy(value, reg.second.c_str(), reg.second.length());
-            if (ImGui::InputText("##value", value, ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CharsUppercase)) {
-                // Input value has been modified
-                std::cout << value << std::endl;
+
+            ImGui::PushID(index);
+            char value[64] = {};
+            strncpy(value, reg.second.c_str(), sizeof(value) - 1);
+            value[sizeof(value) - 1] = '\0';
+            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+            if (ImGui::InputText(("##value" + std::to_string(index)).c_str(), value, IM_ARRAYSIZE(value), ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CharsUppercase | ImGuiInputTextFlags_CharsNoBlank)) {
+                if (strncmp(value, "0x", 2) != 0){
+                    registerValueMap[reg.first] = "0x";
+                    registerValueMap[reg.first].append(value);
+                }
+                else{
+                    registerValueMap[reg.first] = value;
+                }
             }
+            ImGui::PopStyleVar();
             ImGui::PopID();
-            i++;
+            index++;
         }
 
         ImGui::EndTable();
     }
 }
+
 void mainWindow(){
     bool k = true;
     SetupImGuiStyle();
@@ -216,7 +232,7 @@ void mainWindow(){
     // set the poisiton of the editable table next to the table window in the center
     ImGui::SetNextWindowPos(ImVec2(ImGui::GetWindowPos().x + ImGui::GetWindowWidth(), ImGui::GetWindowPos().y));
     ImGui::SetNextWindowSize(ImVec2(250, ImGui::GetWindowHeight()));
-    ImGui::Begin("Editable Table", &k, ImGuiWindowFlags_NoCollapse);
+    ImGui::Begin("Register Values", &k, ImGuiWindowFlags_NoCollapse);
     EditableTable();
     ImGui::End();
 
