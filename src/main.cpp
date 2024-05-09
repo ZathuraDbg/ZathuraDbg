@@ -79,7 +79,6 @@ int main(int, char**)
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glsl_version);
 
-
     ImVec4 clear_color = hexToImVec4("101010");
 
 //    ImGui::SetNextWindowBgAlpha(0.0f);
@@ -89,6 +88,8 @@ int main(int, char**)
     while (!glfwWindowShouldClose(window))
     {
         glfwPollEvents();
+        glfwSetWindowSizeLimits(window, 200, 200, GLFW_DONT_CARE, GLFW_DONT_CARE);
+//        ImGui::SetNextWindowSizeConstraints(ImVec2(200, 200), ImVec2(1080, 729), 10000);
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
