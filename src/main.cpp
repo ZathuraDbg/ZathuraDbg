@@ -1,8 +1,8 @@
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include "imgui_internal.h"
 #include "../imgui/imgui.h"
-#include "imgui_impl_glfw.h"
-#include "imgui_impl_opengl3.h"
+#include "../imgui/backends/imgui_impl_glfw.h"
+#include "../imgui/backends/imgui_impl_opengl3.h"
 #include <cstdio>
 #include "../ImGuiColorTextEdit/TextEditor.h"
 #include "app/app.hpp"
