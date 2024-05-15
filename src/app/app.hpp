@@ -10,14 +10,23 @@
 #include "../../hex/hex.h"
 #include "../../imgui/imgui.h"
 #include "../../ImGuiColorTextEdit/TextEditor.h"
+#include "../utils/fonts.hpp"
+#include "../utils/layoutmanager.h"
 #include <cstdio>
+#include "../utils/style.h"
+#define CONFIG_NAME "config"
+
 extern void setupViewPort();
 
-extern ImVec4 hexToImVec4(const char* hex);
+enum fonts{
+    Default,
+    SatoshiSmall,
+    SatoshiBig,
+    JetBrainsMono
+};
+extern void LoadIniFile();
 extern void mainWindow();
 extern TextEditor* editor;
 extern void setupEditor();
-extern ImGuiIO& setupIO();
 extern void appMenuBar();
-extern void SetupImGuiStyle();
 #endif //ZATHURA_UI_APP_HPP

@@ -3,10 +3,14 @@ IMGUI_DIR = ../imgui
 SOURCES = main.cpp
 EXTRA = ../ImGuiColorTextEdit
 APP = ./app
+UTILS = ./utils
 SOURCES += $(IMGUI_DIR)/imgui.cpp $(IMGUI_DIR)/imgui_draw.cpp $(IMGUI_DIR)/imgui_tables.cpp $(IMGUI_DIR)/imgui_widgets.cpp
 SOURCES += $(IMGUI_DIR)/backends/imgui_impl_glfw.cpp $(IMGUI_DIR)/backends/imgui_impl_opengl3.cpp
 SOURCES += $(EXTRA)/TextEditor.cpp
 SOURCES += $(APP)/app.hpp
+SOURCES += $(UTILS)/fonts.hpp
+SOURCES += $(UTILS)/layoutmanager.h
+
 OBJS = $(addsuffix .o, $(basename $(notdir $(SOURCES))))
 UNAME_S := $(shell uname -s)
 LINUX_GL_LIBS = -lGL
@@ -61,6 +65,9 @@ endif
 %.o:$(APP)/%.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
+%.o:$(UTILS)/%.cpp
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
+
 all: $(EXE)
 	@echo Build complete for $(ECHO_MESSAGE)
 
@@ -71,5 +78,7 @@ run: $(EXE)
 	./Zathura
 
 clean:
-	rm -f Zathura app.o main.o imgui.ini
-#	rm -f $(EXE) $(OBJS) imgui.ini
+	rm -f Zathura app.o main.o
+
+c:
+	rm -rf Zathura app.o main.o
