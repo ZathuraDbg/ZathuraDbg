@@ -65,9 +65,11 @@ int main(int, char**)
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
-
-    ImGuiIO& io = setupIO();
-
+    ImGuiIO& io = ImGui::GetIO();
+    io.IniFilename = "/home/rc/Zathura-UI/src/imgui.ini";
+	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+    LoadIniFile();
+    io = setupIO();
     // When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
     ImGuiStyle& style = ImGui::GetStyle();
     if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
@@ -81,14 +83,12 @@ int main(int, char**)
 
     ImVec4 clear_color = hexToImVec4("101010");
 
-//    ImGui::SetNextWindowBgAlpha(0.0f);
-//    SetupImGuiStyle();
     setupEditor();
 
     while (!glfwWindowShouldClose(window))
     {
         glfwPollEvents();
-        glfwSetWindowSizeLimits(window, 200, 200, GLFW_DONT_CARE, GLFW_DONT_CARE);
+        glfwSetWindowSizeLimits(window, 400, 400, GLFW_DONT_CARE, GLFW_DONT_CARE);
 //        ImGui::SetNextWindowSizeConstraints(ImVec2(200, 200), ImVec2(1080, 729), 10000);
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
