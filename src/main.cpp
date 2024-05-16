@@ -57,6 +57,8 @@ int main(int, char**)
 #endif
 
     window = glfwCreateWindow(1280, 720, "Zathura!", nullptr, nullptr);
+    glfwSetWindowSizeLimits(window, 980, 435, GLFW_DONT_CARE, GLFW_DONT_CARE);
+
     if (window == nullptr)
         return 1;
 
@@ -83,12 +85,12 @@ int main(int, char**)
 
     ImVec4 clear_color = hexToImVec4("101010");
 
+    SetupImGuiStyle();
     setupEditor();
 
     while (!glfwWindowShouldClose(window))
     {
         glfwPollEvents();
-        glfwSetWindowSizeLimits(window, 400, 400, GLFW_DONT_CARE, GLFW_DONT_CARE);
 //        ImGui::SetNextWindowSizeConstraints(ImVec2(200, 200), ImVec2(1080, 729), 10000);
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
