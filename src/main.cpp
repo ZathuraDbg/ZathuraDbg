@@ -91,7 +91,6 @@ int main(int, char**)
     while (!glfwWindowShouldClose(window))
     {
         glfwPollEvents();
-//        ImGui::SetNextWindowSizeConstraints(ImVec2(200, 200), ImVec2(1080, 729), 10000);
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();

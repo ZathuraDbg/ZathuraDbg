@@ -16,6 +16,14 @@ ImGuiIO& setupIO(){
     io.Fonts->AddFontFromFileTTF("../assets/Rubik-Regular.ttf", 20.0f);
     io.Fonts->AddFontFromFileTTF("../assets/Satoshi-Bold.ttf", 18.0f);
     io.Fonts->AddFontFromFileTTF("../assets/Satoshi-Medium.ttf", 18.0f);
+
+//    ImVector<ImWchar> ranges;
+//    ImFontGlyphRangesBuilder builder;
+//    builder.AddRanges();// Add one of the default ranges
+//    builder.BuildRanges(&ranges);
+
+    io.Fonts->AddFontFromFileTTF("../assets/codicon.ttf", 18.0f);
+    io.Fonts->Build();
     return io;
 }
 
