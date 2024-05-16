@@ -1,6 +1,6 @@
 [Window][DockSpaceViewport_11111111]
 Pos=0,19
-Size=1920,1024
+Size=1280,700
 Collapsed=0
 
 [Window][Debug##Default]
@@ -10,30 +10,30 @@ Collapsed=0
 
 [Window][Code]
 Pos=0,19
-Size=672,1024
+Size=672,700
 Collapsed=0
 DockId=0x00000001,0
 
 [Window][Register Values]
-Pos=1535,19
-Size=385,584
+Pos=895,19
+Size=385,260
 Collapsed=0
 DockId=0x00000002,0
 
 [Window][Console]
 Pos=674,19
-Size=859,584
+Size=219,260
 Collapsed=0
 DockId=0x00000006,0
 
 [Window][Memory Editor]
-Pos=674,605
-Size=1246,438
+Pos=674,281
+Size=606,438
 Collapsed=0
 DockId=0x00000004,0
 
 [Docking][Data]
-DockSpace       ID=0x8B93E3BD Window=0xA787BDB4 Pos=0,19 Size=1920,1024 Split=X
+DockSpace       ID=0x8B93E3BD Window=0xA787BDB4 Pos=0,19 Size=1280,700 Split=X
   DockNode      ID=0x00000001 Parent=0x8B93E3BD SizeRef=672,1024 Selected=0xD5FB4B5E
   DockNode      ID=0x00000005 Parent=0x8B93E3BD SizeRef=1246,1024 Split=Y Selected=0x49278EEE
     DockNode    ID=0x00000003 Parent=0x00000005 SizeRef=1246,584 Split=X Selected=0x49278EEE

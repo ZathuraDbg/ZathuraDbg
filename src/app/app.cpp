@@ -29,7 +29,7 @@ void appMenuBar()
 
 void setupEditor(){
     editor = new TextEditor();
-    editor->SetLanguageDefinition(TextEditor::LanguageDefinition::C());
+    editor->SetLanguageDefinition(TextEditor::LanguageDefinition::ASMx86_64());
     editor->SetPalette(TextEditor::GetDarkPalette());
     editor->SetReadOnly(false);
     editor->SetShowWhitespaces(true);
