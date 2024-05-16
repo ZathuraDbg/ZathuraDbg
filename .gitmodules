@@ -1,7 +1,4 @@
 [submodule "zep"]
 	path = zep
 	url = https://github.com/Rezonality/zep
-[submodule "ImGuiColorTextEdit"]
-	path = ImGuiColorTextEdit
-	url = https://github.com/BalazsJako/ImGuiColorTextEdit
 
