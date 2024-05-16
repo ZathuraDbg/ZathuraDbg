@@ -4,6 +4,4 @@
 [submodule "ImGuiColorTextEdit"]
 	path = ImGuiColorTextEdit
 	url = https://github.com/BalazsJako/ImGuiColorTextEdit
-[submodule "imgui"]
-	path = imgui
-	url = https://github.com/ocornut/imgui
+
