@@ -4,9 +4,15 @@ SOURCES = main.cpp
 EXTRA = ../ImGuiColorTextEdit
 APP = ./app
 UTILS = ./utils
+REGEX = ../ImGuiColorTextEdit/vendor/regex/include
+MAP = ../ordered-map/include
 SOURCES += $(IMGUI_DIR)/imgui.cpp $(IMGUI_DIR)/imgui_draw.cpp $(IMGUI_DIR)/imgui_tables.cpp $(IMGUI_DIR)/imgui_widgets.cpp
 SOURCES += $(IMGUI_DIR)/backends/imgui_impl_glfw.cpp $(IMGUI_DIR)/backends/imgui_impl_opengl3.cpp
+SOURCES += $(EXTRA)/TextEditor.h
 SOURCES += $(EXTRA)/TextEditor.cpp
+SOURCES += $(EXTRA)/LanguageDefinitions.cpp
+# SOURCES += $(EXTRA)/ImGuiDebugPanel.cpp
+# SOURCES += $(EXTRA)/UnitTests.cpp
 SOURCES += $(APP)/app.hpp
 SOURCES += $(UTILS)/fonts.hpp
 SOURCES += $(UTILS)/layoutmanager.h
@@ -15,8 +21,8 @@ OBJS = $(addsuffix .o, $(basename $(notdir $(SOURCES))))
 UNAME_S := $(shell uname -s)
 LINUX_GL_LIBS = -lGL
 
-CXXFLAGS = -std=c++17 -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends
-CXXFLAGS += -g -Wall -Wformat
+CXXFLAGS = -std=c++17 -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends -I$(REGEX) -I$(MAP)
+CXXFLAGS += -g  -Wformat
 LIBS =
 
 ifeq ($(UNAME_S), Linux) #LINUX
@@ -38,6 +44,7 @@ ifeq ($(UNAME_S), Darwin) #APPLE
 	CFLAGS = $(CXXFLAGS)
 endif
 
+
 ifeq ($(OS), Windows_NT)
 	ECHO_MESSAGE = "MinGW"
 	LIBS += -lglfw3 -lgdi32 -lopengl32 -limm32
@@ -45,7 +52,6 @@ ifeq ($(OS), Windows_NT)
 	CXXFLAGS += `pkg-config --cflags glfw3`
 	CFLAGS = $(CXXFLAGS)
 endif
-
 ##---------------------------------------------------------------------
 ## BUILD RULES
 ##---------------------------------------------------------------------

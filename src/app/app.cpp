@@ -1,6 +1,7 @@
 #include "app.hpp"
 #include <string>
 #include <filesystem>
+#include <tsl/ordered_map.h>
 
 TextEditor *editor = nullptr;
 
@@ -29,10 +30,9 @@ void appMenuBar()
 
 void setupEditor(){
     editor = new TextEditor();
-    editor->SetLanguageDefinition(TextEditor::LanguageDefinition::ASMx86_64());
-    editor->SetPalette(TextEditor::GetDarkPalette());
-    editor->SetReadOnly(false);
-    editor->SetShowWhitespaces(true);
+    editor->SetLanguageDefinition(TextEditor::LanguageDefinitionId::Asmx86_64);
+    editor->SetPalette(TextEditor::PaletteId::Dark);
+    editor->SetReadOnlyEnabled(false);
     editor->SetTabSize(4);
     {
         std::ifstream t("test.asm");
@@ -52,7 +52,9 @@ void setupViewPort() {
     ImGui::SetNextWindowViewport(viewport->ID);
 }
 
-std::map<std::string, std::string> registerValueMap = {{"RAX", "0x7fffe29fc6c0"}, {"RBX", "0x00"}, {"RCX", "0x00"}, {"RDX", "0x00"}, {"RSP", "0x00"}};
+tsl::ordered_map<std::string, std::string> registerValueMap = {{"RIP", "0x00"}, {"RSP", "0x00"}, {"RBP", "0x00"},{"RAX", "0x00"}, {"RBX", "0x00"}, {"RCX", "0x00"}, {"RDX", "0x00"},
+                                                        {"RSI", "0x00"}, {"RDI", "0x00"}, {"R8", "0x00"}, {"R9", "0x00"}, {"R10", "0x00"}, {"R11", "0x00"}, {"R12", "0x00"},
+                                                        {"R13", "0x00"}, {"R14", "0x00"}, {"R15", "0x00"}, {"CS", "0x00"}, {"DS", "0x00"}, {"ES", "0x00"}, {"FS", "0x00"}, {"GS", "0x00"}, {"SS", "0x00"}};
 
 void EditableTable()
 {
