@@ -7,24 +7,47 @@ TextEditor *editor = nullptr;
 
 void appMenuBar()
 {
+    ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[4]);
     if (ImGui::BeginMainMenuBar())
     {
         if (ImGui::BeginMenu("File"))
         {
+            if (ImGui::MenuItem("Open", "Ctrl+O")) {
+//               std::ifstream t(dir.string());
+//                if (t.good())
+//                {
+//                    std::string str((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());
+//                    editor->SetText(str);
+//                }
+            }
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu("Edit"))
         {
-            if (ImGui::MenuItem("Undo", "CTRL+Z")) {}
-            if (ImGui::MenuItem("Redo", "CTRL+Y", false, false)) {}  // Disabled item
+            if (ImGui::MenuItem("Undo", "CTRL+Z")) {
+                if (editor->CanUndo())
+                    editor->Undo();
+            }
+            if (ImGui::MenuItem("Redo", "CTRL+Y", false)) {
+                if (editor->CanRedo())
+                    editor->Redo();
+            }
             ImGui::Separator();
-            if (ImGui::MenuItem("Cut", "CTRL+X")) {}
-            if (ImGui::MenuItem("Copy", "CTRL+C")) {}
-            if (ImGui::MenuItem("Paste", "CTRL+V")) {}
+            if (ImGui::MenuItem("Cut", "CTRL+X")) {
+                editor->Cut();
+            }
+            if (ImGui::MenuItem("Copy", "CTRL+C")) {
+                editor->Copy();
+            }
+            if (ImGui::MenuItem("Paste", "CTRL+V")) {
+                editor->Paste();
+            }
+            ImGui::Separator();
             ImGui::EndMenu();
         }
         ImGui::EndMainMenuBar();
     }
+    ImGui::PopFont();
 }
 
 
@@ -174,11 +197,27 @@ void mainWindow(){
 
     setupViewPort();
     ImGui::Begin("Code", &k, ImGuiWindowFlags_NoCollapse);
-    ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
+    ImGui::PushFont(io.Fonts->Fonts[6]);
+    ImGui::Separator();
+    ImGui::Button(ICON_CI_FOLDER_OPENED, ImVec2(20, 20));
     ImGui::SameLine();
-    ImGui::PushFont(io.Fonts->Fonts[7]);
-    ImGui::Text("debug-restart");
-    ImGui::PopStyleVar();
+    ImGui::Separator();
+    ImGui::SameLine();
+    ImGui::Button(ICON_CI_DEBUG_RESTART, ImVec2(20, 20));
+    ImGui::SameLine();
+    ImGui::Separator();
+    ImGui::SameLine();
+    ImGui::Button(ICON_CI_DEBUG_START, ImVec2(20, 20));
+    ImGui::SameLine();
+    ImGui::Separator();
+    ImGui::SameLine();
+    ImGui::Button(ICON_CI_DEBUG_CONTINUE, ImVec2(20, 20));
+    ImGui::SameLine();
+    ImGui::Separator();
+    ImGui::SameLine();
+    ImGui::Button(ICON_CI_DEBUG_PAUSE, ImVec2(20, 20));
+    ImGui::PopFont();
+//    ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
     ImGui::PushFont(io.Fonts->Fonts[3]);
     editor->Render("Editor");
     ImGui::PopFont();
