@@ -1,4 +1,7 @@
 [submodule "zep"]
 	path = zep
 	url = https://github.com/Rezonality/zep
+[submodule "imgui"]
+	path = imgui
+	url = https://github.com/ocornut/imgui
 
