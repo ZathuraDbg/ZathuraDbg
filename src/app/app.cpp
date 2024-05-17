@@ -2,46 +2,8 @@
 #include <string>
 #include <filesystem>
 #include <tsl/ordered_map.h>
-#include "../utils/filedialog.h"
 
 TextEditor *editor = nullptr;
-std::string selectedFile;
-
-std::string openFileDialog(){
-    if (!pfd::settings::available())
-    {
-        pfd::message("Unsupported platform!",
-                     "Sorry, file Dialogs are not available on this platform.\nPlease just copy paste the content of the file in the editor",
-                     pfd::choice::ok,
-                     pfd::icon::error);
-    }
-
-    pfd::settings::verbose(false);
-
-    auto f = pfd::open_file("Choose files to read", pfd::path::home(),
-                            { "Text Files (.asm .s)", "*.asm *.s",
-                              "All Files", "*" },
-                            pfd::opt::none);
-    if (!f.result().empty()){
-        selectedFile = f.result()[0];
-        return selectedFile;
-    }
-
-    return "";
-}
-
-std::string saveAsFileDialog(){
-    auto f = pfd::save_file("Choose file to save",
-                            pfd::path::home() + pfd::path::separator() + "readme.txt",
-                            { "Text Files (.asm .s)", "*.asm *.s" },
-                            pfd::opt::force_overwrite);
-    std::cout << "Selected file: " << f.result() << "\n";
-
-    if (!f.result().empty()){
-        return f.result();
-    }
-    return "";
-}
 
 bool writeEditorToFile(const std::string& filePath) {
     std::ofstream out(filePath, std::ios::out | std::ios::trunc);
@@ -144,13 +106,11 @@ void appMenuBar()
         }
     }
     if (fileSaveAs){
-        auto f = openFileDialog();
-        std::cout << "Selected files:";
-        if (!f.empty()){
-            std::cout << " " + f << "\n";
-            if (!readFileIntoEditor(f)){
-                pfd::message("File read error!",
-                             "Sorry, the file you selected couldn't be opened or read.\nPlease make sure "
+        auto fileName = saveAsFileDialog();
+        if (!fileName.empty()){
+            if (!writeEditorToFile(fileName)){
+                pfd::message("File write error!",
+                             "Sorry, the file you selected couldn't be opened or written to.\nPlease make sure "
                              "no other program is using this file and you have the correct permissions to access the file and try again!",
                              pfd::choice::ok,
                              pfd::icon::error);

@@ -14,6 +14,7 @@
 #include "../utils/layoutmanager.h"
 #include <cstdio>
 #include "../utils/style.h"
+#include "dialogs/dialogHeader.hpp"
 #define CONFIG_NAME "config"
 
 extern void setupViewPort();
