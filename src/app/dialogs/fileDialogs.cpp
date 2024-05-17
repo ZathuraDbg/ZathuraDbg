@@ -1,6 +1,6 @@
 #include "dialogHeader.hpp"
 
-std::string selectedFile;
+std::string selectedFile = "/home/rc/Zathura-UI/src/test.asm";
 
 std::string openFileDialog(){
     if (!pfd::settings::available())

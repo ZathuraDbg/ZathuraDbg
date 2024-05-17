@@ -9,7 +9,8 @@ bool writeEditorToFile(const std::string& filePath) {
     std::ofstream out(filePath, std::ios::out | std::ios::trunc);
 
     if (out.good()){
-        out << editor->GetText();
+        std::cout << editor->GetText() << std::endl;
+        out << editor->GetText() << "\n";
         out.close();
         return true;
     }
@@ -105,16 +106,26 @@ void appMenuBar()
             }
         }
     }
-    if (fileSaveAs){
+    if (fileSaveAs) {
         auto fileName = saveAsFileDialog();
-        if (!fileName.empty()){
-            if (!writeEditorToFile(fileName)){
+        if (!fileName.empty()) {
+            if (!writeEditorToFile(fileName)) {
                 pfd::message("File write error!",
                              "Sorry, the file you selected couldn't be opened or written to.\nPlease make sure "
                              "no other program is using this file and you have the correct permissions to access the file and try again!",
                              pfd::choice::ok,
                              pfd::icon::error);
             }
+        }
+    }
+    if (fileSave){
+        std::cout << "writing to " << selectedFile << std::endl;
+        if (!writeEditorToFile(selectedFile)) {
+            pfd::message("File write error!",
+                         "Sorry, the file you selected couldn't be opened or written to.\nPlease make sure "
+                         "no other program is using this file and you have the correct permissions to access the file and try again!",
+                         pfd::choice::ok,
+                         pfd::icon::error);
         }
     }
 
@@ -256,28 +267,41 @@ void LoadIniFile()
 	ImGui::LoadIniSettingsFromDisk(dir.string().c_str());
 }
 
-void setupButtons(){
+void setupButtons() {
     ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[6]);
     ImGui::Separator();
 
-    if (ImGui::Button(ICON_CI_FOLDER_OPENED, ImVec2(20, 20))){
-
+    if (ImGui::Button(ICON_CI_FOLDER_OPENED, ImVec2(20, 20))) {
+        auto f = openFileDialog();
+        std::cout << "Selected files:";
+        if (!f.empty()) {
+            std::cout << " " + f << "\n";
+            if (!readFileIntoEditor(f)) {
+                pfd::message("File read error!",
+                             "Sorry, the file you selected couldn't be opened or read.\nPlease make sure "
+                             "no other program is using this file and you have the correct permissions to access the file and try again!",
+                             pfd::choice::ok,
+                             pfd::icon::error);
+            }
+        }
     }
-
     ImGui::SameLine();
     ImGui::Separator();
     ImGui::SameLine();
 
-    if (ImGui::Button(ICON_CI_SAVE, ImVec2(20, 20))){
-        auto fileName = saveAsFileDialog();
-        if (!fileName.empty()){
-            if (!writeEditorToFile(fileName)){
+    if (ImGui::Button(ICON_CI_SAVE, ImVec2(20, 20))) {
+        if (!selectedFile.empty()) {
+            std::cout << "writing to " << selectedFile << std::endl;
+            if (!writeEditorToFile(selectedFile)) {
                 pfd::message("File write error!",
                              "Sorry, the file you selected couldn't be opened or written to.\nPlease make sure "
                              "no other program is using this file and you have the correct permissions to access the file and try again!",
                              pfd::choice::ok,
                              pfd::icon::error);
             }
+        }
+        else{
+            std::cout << "Selected file ew" << std::endl;
         }
     }
 
@@ -300,38 +324,38 @@ void setupButtons(){
     ImGui::PopFont();
 }
 
-void mainWindow(){
-    static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_PassthruCentralNode;
-    ImGuiIO& io = ImGui::GetIO();
+    void mainWindow() {
+        static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_PassthruCentralNode;
+        ImGuiIO &io = ImGui::GetIO();
 
-    bool k = true;
-    SetupImGuiStyle();
-    ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
+        bool k = true;
+        SetupImGuiStyle();
+        ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
 
-    appMenuBar();
-    setupViewPort();
+        appMenuBar();
+        setupViewPort();
 
-    ImGui::Begin("Code", &k, ImGuiWindowFlags_NoCollapse);
-    setupButtons();
+        ImGui::Begin("Code", &k, ImGuiWindowFlags_NoCollapse);
+        setupButtons();
 
 //    ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
-    ImGui::PushFont(io.Fonts->Fonts[3]);
-    editor->Render("Editor");
-    ImGui::PopFont();
-    ImGui::End();
+        ImGui::PushFont(io.Fonts->Fonts[3]);
+        editor->Render("Editor");
+        ImGui::PopFont();
+        ImGui::End();
 
-    ImGui::Begin("Register Values", &k, ImGuiWindowFlags_NoCollapse);
-    EditableTable();
+        ImGui::Begin("Register Values", &k, ImGuiWindowFlags_NoCollapse);
+        EditableTable();
 
-    ImGui::Begin("Console", &k, ImGuiWindowFlags_NoCollapse);
-    consoleWindow();
+        ImGui::Begin("Console", &k, ImGuiWindowFlags_NoCollapse);
+        consoleWindow();
 
-    ImGui::End();
-    hexEditorWindow();
+        ImGui::End();
+        hexEditorWindow();
 
-    ImGui::Begin("Stack", &k, ImGuiWindowFlags_NoCollapse);
-    stackEditorWindow();
-    ImGui::End();
+        ImGui::Begin("Stack", &k, ImGuiWindowFlags_NoCollapse);
+        stackEditorWindow();
+        ImGui::End();
 //    Utils::LayoutManager::save(CONFIG_NAME);
-    ImGui::Render();
+        ImGui::Render();
 }
