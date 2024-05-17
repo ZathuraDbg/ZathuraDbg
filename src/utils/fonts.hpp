@@ -9,7 +9,7 @@
 #include <fstream>
 #include "../../hex/hex.h"
 #include "../../imgui/imgui.h"
-#include "../../font.h"
+#include "iconfont.h"
 #include "../../ImGuiColorTextEdit/TextEditor.h"
 #include <cstdio>
 

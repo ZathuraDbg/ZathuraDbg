@@ -38,6 +38,26 @@ Size=219,443
 Collapsed=0
 DockId=0x00000007,0
 
+[Window][dummy window]
+Pos=60,60
+Size=118,44
+Collapsed=0
+
+[Window][FilterApplier]
+Pos=0,19
+Size=500,600
+Collapsed=0
+
+[Window][Open ...##filebrowser_140724091175888]
+Pos=290,135
+Size=700,450
+Collapsed=0
+
+[Window][Open ...##filebrowser_140721185104288]
+Pos=290,135
+Size=700,450
+Collapsed=0
+
 [Table][0xB4C7751B,2]
 Column 0  Weight=3.4118
 Column 1  Weight=20.5882

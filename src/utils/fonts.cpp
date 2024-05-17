@@ -28,9 +28,6 @@ ImGuiIO& setupIO(){
     io.Fonts->AddFontFromFileTTF( FONT_ICON_FILE_NAME_CI, iconFontSize, &icons_config, icons_ranges );
 
     io.Fonts->AddFontFromFileTTF("../assets/Satoshi-Regular.ttf", 16.0f);
-    // use FONT_ICON_FILE_NAME_FAR if you want regular instead of solid
-//    io.Fonts->AddFontFromFileTTF("../assets/codicon.ttf", 18.0f);
-//    io.Fonts->Build();
     return io;
 }
 

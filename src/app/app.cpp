@@ -2,24 +2,41 @@
 #include <string>
 #include <filesystem>
 #include <tsl/ordered_map.h>
+#include "../utils/filedialog.h"
 
 TextEditor *editor = nullptr;
 
+std::string openFileDialog(){
+    if (!pfd::settings::available())
+    {
+        std::cout << "Sorry, file Dialogs are not available on this platform.\nPlease just copy paste the content of the"
+                     "file in the editor\n";
+    }
+
+    pfd::settings::verbose(false);
+
+    auto f = pfd::open_file("Choose files to read", pfd::path::home(),
+                            { "Text Files (.asm .s)", "*.asm *.s",
+                              "All Files", "*" },
+                            pfd::opt::none);
+    if (!f.result().empty()){
+        return f.result()[0];
+    }
+
+    return "";
+}
+
 void appMenuBar()
 {
+    bool fileOpen = false;
+
     ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[4]);
     if (ImGui::BeginMainMenuBar())
     {
         if (ImGui::BeginMenu("File"))
         {
-            if (ImGui::MenuItem("Open", "Ctrl+O")) {
-//               std::ifstream t(dir.string());
-//                if (t.good())
-//                {
-//                    std::string str((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());
-//                    editor->SetText(str);
-//                }
-            }
+            ImGui::Separator();
+            ImGui::MenuItem("Open", "Ctrl+O", &fileOpen);
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu("Edit"))
@@ -45,8 +62,18 @@ void appMenuBar()
             ImGui::Separator();
             ImGui::EndMenu();
         }
-        ImGui::EndMainMenuBar();
+       ImGui::EndMainMenuBar();
     }
+
+    if (fileOpen)
+    {
+        auto f = openFileDialog();
+        std::cout << "Selected files:";
+        if (!f.empty()){
+            std::cout << " " + f << "\n";
+        }
+    }
+
     ImGui::PopFont();
 }
 
@@ -195,7 +222,16 @@ void mainWindow(){
 
     appMenuBar();
 
+//    ImGuiFileBrowserFlags openFileDialogFlags = 0;
+//    openFileDialogFlags |= ImGuiFileBrowserFlags_SelectDirectory;
+//    openFileDialogFlags |= ImGuiFileBrowserFlags_CloseOnEsc;
+//    openFileDialogFlags |= ImGuiFileBrowserFlags_EnterNewFilename;
+//    openFileDialogFlags |= ImGuiFileBrowserFlags_CreateNewDir;
+//
+//    ImGui::FileBrowser openFileDialog(openFileDialogFlags);
+
     setupViewPort();
+
     ImGui::Begin("Code", &k, ImGuiWindowFlags_NoCollapse);
     ImGui::PushFont(io.Fonts->Fonts[6]);
     ImGui::Separator();
