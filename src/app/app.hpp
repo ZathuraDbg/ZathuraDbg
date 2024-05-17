@@ -14,6 +14,7 @@
 #include "../utils/layoutmanager.h"
 #include <cstdio>
 #include "../utils/style.h"
+#include "../../vendor/imgui-filebrowser/imfilebrowser.h"
 #define CONFIG_NAME "config"
 
 extern void setupViewPort();
