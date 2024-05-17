@@ -6,13 +6,14 @@ APP = ./app
 UTILS = ./utils
 REGEX = ../ImGuiColorTextEdit/vendor/regex/include
 MAP = ../ordered-map/include
-FILE = ../vendor/imgui-filebrowser
+DIALOGS = ./app/dialogs
 SOURCES += $(IMGUI_DIR)/imgui.cpp $(IMGUI_DIR)/imgui_draw.cpp $(IMGUI_DIR)/imgui_tables.cpp $(IMGUI_DIR)/imgui_widgets.cpp
 SOURCES += $(IMGUI_DIR)/backends/imgui_impl_glfw.cpp $(IMGUI_DIR)/backends/imgui_impl_opengl3.cpp
 SOURCES += $(EXTRA)/TextEditor.h
 SOURCES += $(EXTRA)/TextEditor.cpp
 SOURCES += $(EXTRA)/LanguageDefinitions.cpp
-# SOURCES += $(FILE)/imfilebrowser.h 
+#SOURCES += $(DIALOGS)/dialogHeader.hpp
+SOURCES += $(DIALOGS)/fileDialogs.cpp 
 # SOURCES += $(EXTRA)/ImGuiDebugPanel.cpp
 # SOURCES += $(EXTRA)/UnitTests.cpp
 SOURCES += $(APP)/app.hpp
@@ -24,7 +25,7 @@ OBJS = $(addsuffix .o, $(basename $(notdir $(SOURCES))))
 UNAME_S := $(shell uname -s)
 LINUX_GL_LIBS = -lGL
 
-CXXFLAGS = -std=c++17 -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends -I$(REGEX) -I$(MAP) -I$(FILE)
+CXXFLAGS = -std=c++17 -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends -I$(REGEX) -I$(MAP) -I$(DIALOGS)
 CXXFLAGS += -g  -Wformat
 LIBS =
 
@@ -75,6 +76,9 @@ endif
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 %.o:$(UTILS)/%.cpp
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
+
+%.o:$(DIALOGS)/%.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 all: $(EXE)
