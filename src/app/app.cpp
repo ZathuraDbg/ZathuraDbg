@@ -5,12 +5,15 @@
 #include "../utils/filedialog.h"
 
 TextEditor *editor = nullptr;
+std::string selectedFile;
 
 std::string openFileDialog(){
     if (!pfd::settings::available())
     {
-        std::cout << "Sorry, file Dialogs are not available on this platform.\nPlease just copy paste the content of the"
-                     "file in the editor\n";
+        pfd::message("Unsupported platform!",
+                     "Sorry, file Dialogs are not available on this platform.\nPlease just copy paste the content of the file in the editor",
+                     pfd::choice::ok,
+                     pfd::icon::error);
     }
 
     pfd::settings::verbose(false);
@@ -20,15 +23,62 @@ std::string openFileDialog(){
                               "All Files", "*" },
                             pfd::opt::none);
     if (!f.result().empty()){
-        return f.result()[0];
+        selectedFile = f.result()[0];
+        return selectedFile;
     }
 
     return "";
 }
 
+std::string saveAsFileDialog(){
+    auto f = pfd::save_file("Choose file to save",
+                            pfd::path::home() + pfd::path::separator() + "readme.txt",
+                            { "Text Files (.asm .s)", "*.asm *.s" },
+                            pfd::opt::force_overwrite);
+    std::cout << "Selected file: " << f.result() << "\n";
+
+    if (!f.result().empty()){
+        return f.result();
+    }
+    return "";
+}
+
+bool writeEditorToFile(const std::string& filePath) {
+    std::ofstream out(filePath, std::ios::out | std::ios::trunc);
+
+    if (out.good()){
+        out << editor->GetText();
+        out.close();
+        return true;
+    }
+    return false;
+}
+
+bool readFileIntoEditor(const std::string& filePath){
+    std::ifstream t(filePath);
+
+    if (t.good())
+    {
+        std::string str((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());
+        editor->SetText(str);
+        t.close();
+        return true;
+    }
+
+    return false;
+}
+
 void appMenuBar()
 {
     bool fileOpen = false;
+    bool fileSave = false;
+    bool fileSaveAs = false;
+    bool quit = false;  // not using exit because it's a function from std to avoid confusion
+
+    bool debugRestart = false;
+    bool debugStep = false;
+    bool debugRun = false;
+    bool debugPause = false;
 
     ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[4]);
     if (ImGui::BeginMainMenuBar())
@@ -37,6 +87,11 @@ void appMenuBar()
         {
             ImGui::Separator();
             ImGui::MenuItem("Open", "Ctrl+O", &fileOpen);
+            ImGui::MenuItem("Save", "Ctrl+S", &fileSave);
+            ImGui::MenuItem("Save As", "Ctrl+Shift+S", &fileSaveAs);
+            ImGui::Separator();
+            ImGui::MenuItem("Exit", "Alt+F4", &quit);
+            ImGui::Separator();
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu("Edit"))
@@ -62,7 +117,15 @@ void appMenuBar()
             ImGui::Separator();
             ImGui::EndMenu();
         }
-       ImGui::EndMainMenuBar();
+        if (ImGui::BeginMenu("Debug")){
+            ImGui::Separator();
+            ImGui::MenuItem("Restart", "CTRL+R", &debugRestart);
+            ImGui::MenuItem("Step", "CTRL+J", &debugStep);
+            ImGui::MenuItem("Pause", "CTRL+P", &debugPause);
+            ImGui::Separator();
+            ImGui::EndMenu();
+        }
+        ImGui::EndMainMenuBar();
     }
 
     if (fileOpen)
@@ -71,12 +134,32 @@ void appMenuBar()
         std::cout << "Selected files:";
         if (!f.empty()){
             std::cout << " " + f << "\n";
+            if (!readFileIntoEditor(f)){
+                pfd::message("File read error!",
+                             "Sorry, the file you selected couldn't be opened or read.\nPlease make sure "
+                             "no other program is using this file and you have the correct permissions to access the file and try again!",
+                             pfd::choice::ok,
+                             pfd::icon::error);
+            }
+        }
+    }
+    if (fileSaveAs){
+        auto f = openFileDialog();
+        std::cout << "Selected files:";
+        if (!f.empty()){
+            std::cout << " " + f << "\n";
+            if (!readFileIntoEditor(f)){
+                pfd::message("File read error!",
+                             "Sorry, the file you selected couldn't be opened or read.\nPlease make sure "
+                             "no other program is using this file and you have the correct permissions to access the file and try again!",
+                             pfd::choice::ok,
+                             pfd::icon::error);
+            }
         }
     }
 
     ImGui::PopFont();
 }
-
 
 void setupEditor(){
     editor = new TextEditor();
@@ -116,6 +199,7 @@ void EditableTable()
         ImGui::TableHeadersRow();
         ImGui::PopFont();
         ImGui::PushFont(io.Fonts->Fonts[5]);
+
         int index = 0;
         for (auto& reg : registerValueMap) {
             ImGui::SetNextItemWidth(-1);
@@ -212,30 +296,31 @@ void LoadIniFile()
 	ImGui::LoadIniSettingsFromDisk(dir.string().c_str());
 }
 
-void mainWindow(){
-    static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_PassthruCentralNode;
-    ImGuiIO& io = ImGui::GetIO();
-
-    bool k = true;
-    SetupImGuiStyle();
-    ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
-
-    appMenuBar();
-
-//    ImGuiFileBrowserFlags openFileDialogFlags = 0;
-//    openFileDialogFlags |= ImGuiFileBrowserFlags_SelectDirectory;
-//    openFileDialogFlags |= ImGuiFileBrowserFlags_CloseOnEsc;
-//    openFileDialogFlags |= ImGuiFileBrowserFlags_EnterNewFilename;
-//    openFileDialogFlags |= ImGuiFileBrowserFlags_CreateNewDir;
-//
-//    ImGui::FileBrowser openFileDialog(openFileDialogFlags);
-
-    setupViewPort();
-
-    ImGui::Begin("Code", &k, ImGuiWindowFlags_NoCollapse);
-    ImGui::PushFont(io.Fonts->Fonts[6]);
+void setupButtons(){
+    ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[6]);
     ImGui::Separator();
-    ImGui::Button(ICON_CI_FOLDER_OPENED, ImVec2(20, 20));
+
+    if (ImGui::Button(ICON_CI_FOLDER_OPENED, ImVec2(20, 20))){
+
+    }
+
+    ImGui::SameLine();
+    ImGui::Separator();
+    ImGui::SameLine();
+
+    if (ImGui::Button(ICON_CI_SAVE, ImVec2(20, 20))){
+        auto fileName = saveAsFileDialog();
+        if (!fileName.empty()){
+            if (!writeEditorToFile(fileName)){
+                pfd::message("File write error!",
+                             "Sorry, the file you selected couldn't be opened or written to.\nPlease make sure "
+                             "no other program is using this file and you have the correct permissions to access the file and try again!",
+                             pfd::choice::ok,
+                             pfd::icon::error);
+            }
+        }
+    }
+
     ImGui::SameLine();
     ImGui::Separator();
     ImGui::SameLine();
@@ -253,6 +338,22 @@ void mainWindow(){
     ImGui::SameLine();
     ImGui::Button(ICON_CI_DEBUG_PAUSE, ImVec2(20, 20));
     ImGui::PopFont();
+}
+
+void mainWindow(){
+    static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_PassthruCentralNode;
+    ImGuiIO& io = ImGui::GetIO();
+
+    bool k = true;
+    SetupImGuiStyle();
+    ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
+
+    appMenuBar();
+    setupViewPort();
+
+    ImGui::Begin("Code", &k, ImGuiWindowFlags_NoCollapse);
+    setupButtons();
+
 //    ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
     ImGui::PushFont(io.Fonts->Fonts[3]);
     editor->Render("Editor");
@@ -271,6 +372,6 @@ void mainWindow(){
     ImGui::Begin("Stack", &k, ImGuiWindowFlags_NoCollapse);
     stackEditorWindow();
     ImGui::End();
-    Utils::LayoutManager::save(CONFIG_NAME);
+//    Utils::LayoutManager::save(CONFIG_NAME);
     ImGui::Render();
 }

@@ -25,7 +25,7 @@ ImGuiIO& setupIO(){
     icons_config.MergeMode = true;
     icons_config.PixelSnapH = true;
     icons_config.GlyphMinAdvanceX = iconFontSize;
-    io.Fonts->AddFontFromFileTTF( FONT_ICON_FILE_NAME_CI, iconFontSize, &icons_config, icons_ranges );
+    io.Fonts->AddFontFromFileTTF( "../assets/codicon.ttf", iconFontSize, &icons_config, icons_ranges );
 
     io.Fonts->AddFontFromFileTTF("../assets/Satoshi-Regular.ttf", 16.0f);
     return io;
