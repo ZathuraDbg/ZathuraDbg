@@ -161,106 +161,230 @@ tsl::ordered_map<std::string, std::string> registerValueMap = {{"RIP", "0x00"}, 
                                                         {"R13", "0x00"}, {"R14", "0x00"}, {"R15", "0x00"}, {"CS", "0x00"}, {"DS", "0x00"}, {"ES", "0x00"}, {"FS", "0x00"}, {"GS", "0x00"}, {"SS", "0x00"}};
 
 void testWindow(){
-    ImGui::BeginChild("Register Value child", ImVec2(0, 300), true, ImGuiWindowFlags_HorizontalScrollbar);
-    ImGui::Columns(4);
+    using namespace ImGui;
+    PushFont(GetIO().Fonts->Fonts[5]);
+    ImGui::Begin("Window");
 
-    ImGui::SetColumnWidth(0, 100); // Register Name
-    ImGui::SetColumnWidth(1, 150); // Value
-    ImGui::SetColumnWidth(2, 100); // Register Name 2
-    ImGui::SetColumnWidth(2, 150); // Value
+    float textHeight = ImGui::GetTextLineHeight();
+    float inputHeight = ImGui::GetFrameHeight();
+    float offset = (inputHeight - textHeight) / 2.0f;
 
-    int index = 0;
-    auto it = registerValueMap.begin();
-    while (it != registerValueMap.end()) {
-        const auto& [regName, regValue] = *it;
+    ImGui::Text("Label:");
+    ImGui::SameLine();
+    ImGui::SetCursorPosY(ImGui::GetCursorPosY() + offset); // Adjust vertical alignment
+    static char inputText[128] = "";
+    ImGui::InputText("##input", inputText, IM_ARRAYSIZE(inputText));
 
-        ImGui::Text("%s", regName.c_str()); // Register Name
-        ImGui::NextColumn();
-
-        char buffer[64];
-        strncpy(buffer, regValue.c_str(), sizeof(buffer) - 1);
-        buffer[sizeof(buffer) - 1] = '\0';
-
-        if (ImGui::InputText(("##value" + std::to_string(index)).c_str(), buffer, sizeof(buffer), ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CharsUppercase)) {
-            registerValueMap[regName] = buffer;
-        }
-
-        ImGui::NextColumn();
-
-        ++it;
-        ++index;
-
-        if (it!=registerValueMap.end()){
-            auto [regName1, regValue1] = *it;
-
-            ImGui::Text("%s", regName1.c_str()); // Description (optional)
-            ImGui::NextColumn();
-
-            if (ImGui::InputText(("##value" + std::to_string(index)).c_str(), buffer, sizeof(buffer), ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CharsUppercase)) {
-                registerValueMap[regName] = buffer;
-            }
-            ImGui::NextColumn();
-            ++it;
-        }
-        ++index;
-    }
-
-    ImGui::EndChild();
+    ImGui::End();
+    PopFont();
 }
+//void testWindow(){
+//    using namespace ImGui;
+//    PushFont(GetIO().Fonts->Fonts[5]);
+//    PushStyleColor(ImGuiCol_ChildBg, (ImVec4)ImColor(40,44,52,255));
+//    PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(15, 10));
+//    PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 5));
+//    PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(10, 10));
+//    ImGui::BeginChild("Register Value child", ImVec2(0, 600), true, ImGuiWindowFlags_HorizontalScrollbar);
+//
+//    PushStyleColor(ImGuiCol_FrameBg, (ImVec4)ImColor(24,25,38,255));
+//    ImGuiStyle& style = ImGui::GetStyle();
+//    ImGui::Columns(4);
+////
+////    ImGui::SetColumnWidth(0, 100); // Register Name
+////    ImGui::SetColumnWidth(1, 200); // Value
+////    ImGui::SetColumnWidth(2, 70); // Register Name 2
+////    ImGui::SetColumnWidth(3, 150); // Value
+//
+//    int index = 0;
+//    auto it = registerValueMap.begin();
+//    while (it != registerValueMap.end()) {
+//        const auto& [regName, regValue] = *it;
+//
+//        ImGui::PushID(regName.c_str());
+//        ImGui::Text("%s", regName.c_str());
+//        ImGui::PopID();
+//        ImGui::NextColumn();
+//
+//        char buffer[64];
+//        strncpy(buffer, regValue.c_str(), sizeof(buffer) - 1);
+//        buffer[sizeof(buffer) - 1] = '\0';
+//
+//        ImGui::PushID(regName.c_str());
+//
+//        if (ImGui::InputText(("##value" + std::to_string(index)).c_str(), buffer, sizeof(buffer), ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CharsUppercase)) {
+//            registerValueMap[regName] = buffer;
+//        }
+//
+//        ImGui::PopID();
+//        ImGui::NextColumn();
+//
+//        ++it;
+//        ++index;
+//
+//        if (it!=registerValueMap.end()){
+//            auto [regName1, regValue1] = *it;
+//
+//            ImGui::PushID(std::to_string(index).c_str());
+//            ImGui::Text("     %s", regName1.c_str());
+//            ImGui::PopID();
+//
+//            ImGui::NextColumn();
+//
+//            ImGui::PushID(regName1.c_str());
+//            if (ImGui::InputText(("##value1" + std::to_string(index)).c_str(), buffer, sizeof(buffer), ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CharsUppercase)) {
+//                registerValueMap[regName1] = buffer;
+//            }
+//            ImGui::PopID();
+//            ImGui::NextColumn();
+//            ++it;
+//        }
+//        ++index;
+//        ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal | ImGuiSeparatorFlags_SpanAllColumns, 4.0f);
+//    }
+//    PopStyleColor();
+//    PopStyleColor();
+//    PopStyleVar();
+//    PopStyleVar();
+//    PopStyleVar();
+//    ImGui::PopFont();
+//    ImGui::EndChild();
+//}
+//
+//void registerWindow()
+//{
+//    auto io = ImGui::GetIO();
+//    ImGui::PushFont(io.Fonts->Fonts[SatoshiSmall]);
+//    if (ImGui::BeginTable("Table", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_Resizable, ImVec2(0, ImGui::GetTextLineHeightWithSpacing()), 500.0f)) {
+//        ImGui::TableSetupColumn("Register", ImGuiTableColumnFlags_NoSort | ImGuiTableColumnFlags_WidthStretch, 8.0f);
+//        ImGui::TableSetupColumn("Values", ImGuiTableColumnFlags_WidthStretch, ImGui::GetTextLineHeight());
+//        ImGui::TableHeadersRow();
+//        ImGui::PopFont();
+//        ImGui::PushFont(io.Fonts->Fonts[5]);
+//
+//        int index = 0;
+//        for (auto& reg : registerValueMap) {
+//            ImGui::SetNextItemWidth(50);
+//            ImGui::TableNextColumn();
+//            ImGui::PushID(reg.first.c_str());
+//            ImGui::Text("%s", reg.first.c_str());
+//            ImGui::PopID();
+//
+//            ImGui::SetNextItemWidth(50);
+//            ImGui::TableNextColumn();
+//
+//            ImGui::PushID(index);
+//            char value[64] = {};
+//            strncpy(value, reg.second.c_str(), sizeof(value) - 1);
+//            value[sizeof(value) - 1] = '\0';
+//            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+//            if (ImGui::InputText(("##value" + std::to_string(index)).c_str(), value, IM_ARRAYSIZE(value), ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CharsUppercase | ImGuiInputTextFlags_CharsNoBlank)) {
+//                if (strncmp(value, "0x", 2) != 0){
+//                    registerValueMap[reg.first] = "0x";
+//                    registerValueMap[reg.first].append(value);
+//                }
+//                else{
+//                    registerValueMap[reg.first] = value;
+//                }
+//            }
+////            ImGui::SameLine();
+////            ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical | ImGuiSeparatorFlags_SpanAllColumns, 20.0f);
+////            ImGui::SameLine();
+////            ImGui::Text("abc");
+////            ImGui::SameLine();
+////            ImGui::Text(reg.second.c_str());
+//            ImGui::PopStyleVar();
+//            ImGui::PopID();
+//            index++;
+//        }
+//        ImGui::EndTable();
+//        ImGui::PopFont();
+//    }
+//    else{
+//        ImGui::PopFont();
+//    }
+//}
 
-void registerWindow()
-{
+void registerWindow() {
     auto io = ImGui::GetIO();
     ImGui::PushFont(io.Fonts->Fonts[SatoshiSmall]);
-    if (ImGui::BeginTable("Table", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_Resizable, ImVec2(0, ImGui::GetTextLineHeightWithSpacing()), 500.0f)) {
-        ImGui::TableSetupColumn("Register", ImGuiTableColumnFlags_NoSort | ImGuiTableColumnFlags_WidthStretch, 8.0f);
-        ImGui::TableSetupColumn("Values", ImGuiTableColumnFlags_WidthStretch, ImGui::GetTextLineHeight());
+
+    if (ImGui::BeginTable("RegistersTable", 4, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_Resizable)) {
+        // Setup columns headers
+        ImGui::TableSetupColumn("Register", ImGuiTableColumnFlags_WidthStretch);
+        ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch);
+        ImGui::TableSetupColumn("Register", ImGuiTableColumnFlags_WidthStretch);
+        ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch);
         ImGui::TableHeadersRow();
-        ImGui::PopFont();
-        ImGui::PushFont(io.Fonts->Fonts[5]);
 
         int index = 0;
-        for (auto& reg : registerValueMap) {
-            ImGui::SetNextItemWidth(50);
-            ImGui::TableNextColumn();
-            ImGui::PushID(reg.first.c_str());
-            ImGui::Text("%s", reg.first.c_str());
-            ImGui::PopID();
+        for (auto it = registerValueMap.begin(); it != registerValueMap.end(); ++index) {
+            ImGui::TableNextRow();
 
-            ImGui::SetNextItemWidth(50);
-            ImGui::TableNextColumn();
+            // First Register Name
+            ImGui::TableSetColumnIndex(0);
+            // Align text vertically centered with the input box
+            float textHeight = ImGui::GetTextLineHeight();
+            float frameHeight = ImGui::GetFrameHeight();
+            float spacing = (frameHeight - textHeight) / 2.0f;
+            ImGui::SetCursorPosY(ImGui::GetCursorPosY() + spacing);
+            ImGui::Text("%s", it->first.c_str());
 
-            ImGui::PushID(index);
-            char value[64] = {};
-            strncpy(value, reg.second.c_str(), sizeof(value) - 1);
-            value[sizeof(value) - 1] = '\0';
-            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
-            if (ImGui::InputText(("##value" + std::to_string(index)).c_str(), value, IM_ARRAYSIZE(value), ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CharsUppercase | ImGuiInputTextFlags_CharsNoBlank)) {
-                if (strncmp(value, "0x", 2) != 0){
-                    registerValueMap[reg.first] = "0x";
-                    registerValueMap[reg.first].append(value);
-                }
-                else{
-                    registerValueMap[reg.first] = value;
+            // First Register Value
+            ImGui::TableSetColumnIndex(1);
+            static char value1[64] = {};
+            strncpy(value1, it->second.c_str(), sizeof(value1) - 1);
+            value1[sizeof(value1) - 1] = '\0';
+
+            ImGui::PushID(index * 2);
+            ImGui::SetNextItemWidth(-FLT_MIN); // Use the remaining space in the column
+            if (ImGui::InputText(("##value1" + std::to_string(index)).c_str(), value1, IM_ARRAYSIZE(value1), ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CharsUppercase | ImGuiInputTextFlags_CharsNoBlank)) {
+                if (strncmp(value1, "0x", 2) != 0) {
+                    registerValueMap[it->first] = "0x";
+                    registerValueMap[it->first].append(value1);
+                } else {
+                    registerValueMap[it->first] = value1;
                 }
             }
-//            ImGui::SameLine();
-//            ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical | ImGuiSeparatorFlags_SpanAllColumns, 20.0f);
-//            ImGui::SameLine();
-//            ImGui::Text("abc");
-//            ImGui::SameLine();
-//            ImGui::Text(reg.second.c_str());
-            ImGui::PopStyleVar();
             ImGui::PopID();
-            index++;
+
+            // Move to next element in map for the second register and its value
+            ++it;
+            if (it == registerValueMap.end()) break;
+
+            // Second Register Name
+            ImGui::TableSetColumnIndex(2);
+            ImGui::Text("%s", it->first.c_str());
+
+            // Second Register Value
+            ImGui::TableSetColumnIndex(3);
+            static char value2[64] = {};
+            strncpy(value2, it->second.c_str(), sizeof(value2) - 1);
+            value2[sizeof(value2) - 1] = '\0';
+
+            ImGui::PushID(index * 2 + 1);
+            ImGui::SetNextItemWidth(-FLT_MIN); // Use the remaining space in the column
+            if (ImGui::InputText(("##value2" + std::to_string(index)).c_str(), value2, IM_ARRAYSIZE(value2), ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CharsUppercase | ImGuiInputTextFlags_CharsNoBlank)) {
+                if (strncmp(value2, "0x", 2) != 0) {
+                    registerValueMap[it->first] = "0x";
+                    registerValueMap[it->first].append(value2);
+                } else {
+                    registerValueMap[it->first] = value2;
+                }
+            }
+            ImGui::PopID();
+            ++it;
+            if (it == registerValueMap.end()) break;
         }
+
         ImGui::EndTable();
-        ImGui::PopFont();
     }
-    else{
-        ImGui::PopFont();
-    }
+
+    ImGui::PopFont();
 }
+
+
+
 
 void consoleWindow()
 {
@@ -395,7 +519,8 @@ void mainWindow() {
     ImGui::End();
 
     ImGui::Begin("Register Values", &k, ImGuiWindowFlags_NoCollapse);
-    testWindow();
+    registerWindow();
+
     ImGui::Begin("Console", &k, ImGuiWindowFlags_NoCollapse);
     consoleWindow();
 
