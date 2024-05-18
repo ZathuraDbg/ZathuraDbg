@@ -12,7 +12,7 @@ static ImVec4 hexToImVec4(const char* hex)
     float b = static_cast<float>((value & 0x0000FF00) >> 8) / 255.0f;
     float a = static_cast<float>(value & 0x000000FF) / 255.0f;
 
-    return {r, g, b, a};
+    return {r, g, b, 1};
 }
 
 static void SetupImGuiStyle()
@@ -21,7 +21,7 @@ static void SetupImGuiStyle()
     ImGuiStyle& style = ImGui::GetStyle();
     style.Alpha = 1.0f;
     style.DisabledAlpha = 1.0f;
-    style.WindowPadding = ImVec2(6.0f, 0.0f);
+//    style.WindowPadding = ImVec2(6.0f, 0.0f);
     style.WindowRounding = 0.5f;
     style.WindowBorderSize = 0.0f;
     style.WindowMinSize = ImVec2(20.0f, 20.0f);
@@ -31,14 +31,14 @@ static void SetupImGuiStyle()
     style.ChildBorderSize = 1.0f;
     style.PopupRounding = 0.0f;
     style.PopupBorderSize = 1.0f;
-    style.FramePadding = ImVec2(5.0f, 3.400000095367432f);
-    style.FrameRounding = 8.0f;
+//    style.FramePadding = ImVec2(5.0f, 3.400000095367432f);
+//    style.FrameRounding = 8.0f;
     style.FrameBorderSize = 0.0f;
-    style.ItemSpacing = ImVec2(4.300000190734863f, 5.5f);
-    style.ItemInnerSpacing = ImVec2(7.099999904632568f, 1.799999952316284f);
-    style.CellPadding = ImVec2(4, 6);
-    style.IndentSpacing = 0.0f;
-    style.ColumnsMinSpacing = 4.900000095367432f;
+//    style.ItemSpacing = ImVec2(4.300000190734863f, 5.5f);
+//    style.ItemInnerSpacing = ImVec2(7.099999904632568f, 1.799999952316284f);
+//    style.CellPadding = ImVec2(4, 6);
+//    style.IndentSpacing = 0.0f;
+//    style.ColumnsMinSpacing = 4.900000095367432f;
     style.ScrollbarSize = 11.60000038146973f;
     style.ScrollbarRounding = 15.89999961853027f;
     style.GrabMinSize = 3.700000047683716f;
