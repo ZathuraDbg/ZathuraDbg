@@ -68,9 +68,9 @@ int main(int, char**)
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
-    io.IniFilename = "/home/rc/Zathura-UI/src/imgui.ini";
-	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-    LoadIniFile();
+//    io.IniFilename = "/home/rc/Zathura-UI/src/config.ini";
+//	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+//    LoadIniFile();
     io = setupIO();
     // When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
     ImGuiStyle& style = ImGui::GetStyle();
