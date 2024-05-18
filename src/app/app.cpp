@@ -160,7 +160,55 @@ tsl::ordered_map<std::string, std::string> registerValueMap = {{"RIP", "0x00"}, 
                                                         {"RSI", "0x00"}, {"RDI", "0x00"}, {"R8", "0x00"}, {"R9", "0x00"}, {"R10", "0x00"}, {"R11", "0x00"}, {"R12", "0x00"},
                                                         {"R13", "0x00"}, {"R14", "0x00"}, {"R15", "0x00"}, {"CS", "0x00"}, {"DS", "0x00"}, {"ES", "0x00"}, {"FS", "0x00"}, {"GS", "0x00"}, {"SS", "0x00"}};
 
-void EditableTable()
+void testWindow(){
+    ImGui::BeginChild("Register Value child", ImVec2(0, 300), true, ImGuiWindowFlags_HorizontalScrollbar);
+    ImGui::Columns(4);
+
+    ImGui::SetColumnWidth(0, 100); // Register Name
+    ImGui::SetColumnWidth(1, 150); // Value
+    ImGui::SetColumnWidth(2, 100); // Register Name 2
+    ImGui::SetColumnWidth(2, 150); // Value
+
+    int index = 0;
+    auto it = registerValueMap.begin();
+    while (it != registerValueMap.end()) {
+        const auto& [regName, regValue] = *it;
+
+        ImGui::Text("%s", regName.c_str()); // Register Name
+        ImGui::NextColumn();
+
+        char buffer[64];
+        strncpy(buffer, regValue.c_str(), sizeof(buffer) - 1);
+        buffer[sizeof(buffer) - 1] = '\0';
+
+        if (ImGui::InputText(("##value" + std::to_string(index)).c_str(), buffer, sizeof(buffer), ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CharsUppercase)) {
+            registerValueMap[regName] = buffer;
+        }
+
+        ImGui::NextColumn();
+
+        ++it;
+        ++index;
+
+        if (it!=registerValueMap.end()){
+            auto [regName1, regValue1] = *it;
+
+            ImGui::Text("%s", regName1.c_str()); // Description (optional)
+            ImGui::NextColumn();
+
+            if (ImGui::InputText(("##value" + std::to_string(index)).c_str(), buffer, sizeof(buffer), ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CharsUppercase)) {
+                registerValueMap[regName] = buffer;
+            }
+            ImGui::NextColumn();
+            ++it;
+        }
+        ++index;
+    }
+
+    ImGui::EndChild();
+}
+
+void registerWindow()
 {
     auto io = ImGui::GetIO();
     ImGui::PushFont(io.Fonts->Fonts[SatoshiSmall]);
@@ -173,14 +221,13 @@ void EditableTable()
 
         int index = 0;
         for (auto& reg : registerValueMap) {
-            ImGui::SetNextItemWidth(-1);
-            ImGui::TableNextRow();
+            ImGui::SetNextItemWidth(50);
             ImGui::TableNextColumn();
             ImGui::PushID(reg.first.c_str());
             ImGui::Text("%s", reg.first.c_str());
             ImGui::PopID();
 
-            ImGui::SetNextItemWidth(-1);
+            ImGui::SetNextItemWidth(50);
             ImGui::TableNextColumn();
 
             ImGui::PushID(index);
@@ -197,6 +244,12 @@ void EditableTable()
                     registerValueMap[reg.first] = value;
                 }
             }
+//            ImGui::SameLine();
+//            ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical | ImGuiSeparatorFlags_SpanAllColumns, 20.0f);
+//            ImGui::SameLine();
+//            ImGui::Text("abc");
+//            ImGui::SameLine();
+//            ImGui::Text(reg.second.c_str());
             ImGui::PopStyleVar();
             ImGui::PopID();
             index++;
@@ -207,7 +260,6 @@ void EditableTable()
     else{
         ImGui::PopFont();
     }
-
 }
 
 void consoleWindow()
@@ -285,6 +337,7 @@ void setupButtons() {
             }
         }
     }
+
     ImGui::SameLine();
     ImGui::Separator();
     ImGui::SameLine();
@@ -299,9 +352,6 @@ void setupButtons() {
                              pfd::choice::ok,
                              pfd::icon::error);
             }
-        }
-        else{
-            std::cout << "Selected file ew" << std::endl;
         }
     }
 
@@ -324,38 +374,37 @@ void setupButtons() {
     ImGui::PopFont();
 }
 
-    void mainWindow() {
-        static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_PassthruCentralNode;
-        ImGuiIO &io = ImGui::GetIO();
+void mainWindow() {
+    static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_PassthruCentralNode;
+    ImGuiIO &io = ImGui::GetIO();
 
-        bool k = true;
-        SetupImGuiStyle();
-        ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
+    bool k = true;
+    SetupImGuiStyle();
+    ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
 
-        appMenuBar();
-        setupViewPort();
+    appMenuBar();
+    setupViewPort();
 
-        ImGui::Begin("Code", &k, ImGuiWindowFlags_NoCollapse);
-        setupButtons();
+    ImGui::Begin("Code", &k, ImGuiWindowFlags_NoCollapse);
+    setupButtons();
 
 //    ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
-        ImGui::PushFont(io.Fonts->Fonts[3]);
-        editor->Render("Editor");
-        ImGui::PopFont();
-        ImGui::End();
+    ImGui::PushFont(io.Fonts->Fonts[3]);
+    editor->Render("Editor");
+    ImGui::PopFont();
+    ImGui::End();
 
-        ImGui::Begin("Register Values", &k, ImGuiWindowFlags_NoCollapse);
-        EditableTable();
+    ImGui::Begin("Register Values", &k, ImGuiWindowFlags_NoCollapse);
+    testWindow();
+    ImGui::Begin("Console", &k, ImGuiWindowFlags_NoCollapse);
+    consoleWindow();
 
-        ImGui::Begin("Console", &k, ImGuiWindowFlags_NoCollapse);
-        consoleWindow();
+    ImGui::End();
+    hexEditorWindow();
 
-        ImGui::End();
-        hexEditorWindow();
-
-        ImGui::Begin("Stack", &k, ImGuiWindowFlags_NoCollapse);
-        stackEditorWindow();
-        ImGui::End();
+    ImGui::Begin("Stack", &k, ImGuiWindowFlags_NoCollapse);
+    stackEditorWindow();
+    ImGui::End();
 //    Utils::LayoutManager::save(CONFIG_NAME);
-        ImGui::Render();
+    ImGui::Render();
 }
