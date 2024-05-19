@@ -1,7 +1,7 @@
 #ifndef ZATHURA_UI_EDITORTASKS_HPP
 #define ZATHURA_UI_EDITORTASKS_HPP
 #include "../dialogs/dialogHeader.hpp"
-#include "../../../ImGuiColorTextEdit/TextEditor.h"
+#include "../../../vendor/ImGuiColorTextEdit/TextEditor.h"
 
 extern TextEditor* editor;
 extern bool writeEditorToFile(const std::string& filePath);
