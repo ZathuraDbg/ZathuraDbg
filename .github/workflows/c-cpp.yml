@@ -16,7 +16,11 @@ jobs:
     - name: Install
       run: |
         sudo apt install libglfw3 libglfw3-dev
+    - name: Submodule Update
+      run: |
+        git submodule init vendor/imgui
+        git submodule update vendor/imgui
     - name: make
       run: cd src; make
     - name: check
-      run: ls ./Zathura
+      run: ls src/Zathura
