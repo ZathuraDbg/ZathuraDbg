@@ -1,7 +1,7 @@
 name: C/C++ CI
 
 on:
-  push:
+  issues:
     branches: [ "master" ]
   pull_request:
     branches: [ "master" ]
