@@ -11,3 +11,6 @@
 [submodule "vendor/ImGuiColorTextEdit"]
 	path = vendor/ImGuiColorTextEdit
 	url = https://github.com/HACKE-RC/ImGuiColorTextEdit
+[submodule "vendor/ordered-map"]
+	path = vendor/ordered-map
+	url = https://github.com/Tessil/ordered-map
