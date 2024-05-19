@@ -1,10 +1,10 @@
 #define IMGUI_DEFINE_MATH_OPERATORS
-#include "../imgui/imgui_internal.h"
-#include "../imgui/imgui.h"
-#include "../imgui/backends/imgui_impl_glfw.h"
-#include "../imgui/backends/imgui_impl_opengl3.h"
+#include "../vendor/imgui/imgui_internal.h"
+#include "../vendor/imgui/imgui.h"
+#include "../vendor/imgui/backends/imgui_impl_glfw.h"
+#include "../vendor/imgui/backends/imgui_impl_opengl3.h"
 #include <cstdio>
-#include "../ImGuiColorTextEdit/TextEditor.h"
+#include "../vendor/ImGuiColorTextEdit/TextEditor.h"
 #include "app/app.hpp"
 #define GL_SILENCE_DEPRECATION
 #if defined(IMGUI_IMPL_OPENGL_ES2)

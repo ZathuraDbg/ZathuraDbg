@@ -1,13 +1,13 @@
 EXE = Zathura 
-IMGUI_DIR = ../imgui
+IMGUI_DIR = ../vendor/imgui
 SOURCES = main.cpp
-EXTRA = ../ImGuiColorTextEdit
+EXTRA = ../vendor/ImGuiColorTextEdit
 APP = ./app
 UTILS = ./utils
 TASKS = ./app/tasks
 WINDOWS = ./app/windows
-REGEX = ../ImGuiColorTextEdit/vendor/regex/include
-MAP = ../ordered-map/include
+REGEX = ../vendor/ImGuiColorTextEdit/vendor/regex/include
+MAP = ../vendor/ordered-map/include
 DIALOGS = ./app/dialogs
 
 SOURCES += $(IMGUI_DIR)/imgui.cpp $(IMGUI_DIR)/imgui_draw.cpp $(IMGUI_DIR)/imgui_tables.cpp $(IMGUI_DIR)/imgui_widgets.cpp
