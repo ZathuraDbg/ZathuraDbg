@@ -17,6 +17,6 @@ jobs:
       run: |
         sudo apt install libglfw3 libglfw3-dev
     - name: make
-      run: cd Zathura-UI; make
+      run: cd src; make
     - name: check
       run: ls ./Zathura
