@@ -23,4 +23,4 @@ jobs:
     - name: make
       run: cd src; make
     - name: check
-      run: ls ./Zathura
+      run: ls src/Zathura
