@@ -18,8 +18,7 @@ jobs:
         sudo apt install libglfw3 libglfw3-dev
     - name: Submodule Update
       run: |
-        git submodule init vendor/ImGuiColorTextEdit/
-        git submodule update vendor/ImGuiColorTextEdit/
+        cd vendor/ImGuiColorTextEdit; git submodule update --init
         git submodule init vendor/imgui
         git submodule update vendor/imgui
     - name: make
