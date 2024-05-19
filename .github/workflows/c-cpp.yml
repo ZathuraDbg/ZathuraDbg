@@ -19,8 +19,7 @@ jobs:
     - name: Submodule Update
       run: |
         cd vendor/ImGuiColorTextEdit; git submodule update --init
-        git submodule init vendor/imgui
-        git submodule update vendor/imgui
+        cd ../imgui; git submodule update --init
     - name: make
       run: cd src; make
     - name: check
