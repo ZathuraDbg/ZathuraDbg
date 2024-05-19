@@ -4,9 +4,12 @@ SOURCES = main.cpp
 EXTRA = ../ImGuiColorTextEdit
 APP = ./app
 UTILS = ./utils
+TASKS = ./app/tasks
+WINDOWS = ./app/windows
 REGEX = ../ImGuiColorTextEdit/vendor/regex/include
 MAP = ../ordered-map/include
 DIALOGS = ./app/dialogs
+
 SOURCES += $(IMGUI_DIR)/imgui.cpp $(IMGUI_DIR)/imgui_draw.cpp $(IMGUI_DIR)/imgui_tables.cpp $(IMGUI_DIR)/imgui_widgets.cpp
 SOURCES += $(IMGUI_DIR)/backends/imgui_impl_glfw.cpp $(IMGUI_DIR)/backends/imgui_impl_opengl3.cpp
 SOURCES += $(EXTRA)/TextEditor.h
@@ -19,13 +22,21 @@ SOURCES += $(DIALOGS)/fileDialogs.cpp
 SOURCES += $(APP)/app.hpp
 SOURCES += $(UTILS)/fonts.hpp
 SOURCES += $(UTILS)/layoutmanager.h
-# SOURCES += $(UTILS)/filedialog.h
+SOURCES += $(TASKS)/fileTasks.hpp
+SOURCES += $(TASKS)/editorTasks.hpp
+SOURCES += $(WINDOWS)/registerWindow.cpp
+SOURCES += $(WINDOWS)/consoleWindow.cpp
+SOURCES += $(WINDOWS)/hexEditorWindow.cpp
+SOURCES += $(WINDOWS)/stackWindow.cpp
+SOURCES += $(APP)/buttons.cpp
+SOURCES += $(WINDOWS)/menuBar.cpp
+#SOURCES += $(APP)/stackEditorWindow.cpp
 
 OBJS = $(addsuffix .o, $(basename $(notdir $(SOURCES))))
 UNAME_S := $(shell uname -s)
 LINUX_GL_LIBS = -lGL
 
-CXXFLAGS = -std=c++17 -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends -I$(REGEX) -I$(MAP) -I$(DIALOGS)
+CXXFLAGS = -std=c++17 -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends -I$(REGEX) -I$(MAP) -I$(DIALOGS) -I$(TASKS) -I$(WINDOWS)
 CXXFLAGS += -g  -Wformat
 LIBS =
 
@@ -80,6 +91,13 @@ endif
 
 %.o:$(DIALOGS)/%.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
+
+%.o:$(TASKS)/%.cpp
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
+
+%.o:$(WINDOWS)/%.cpp
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
+
 
 all: $(EXE)
 	@echo Build complete for $(ECHO_MESSAGE)
