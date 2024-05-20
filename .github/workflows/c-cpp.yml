@@ -13,6 +13,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+      with:
+        submodules: true  # Recursively clones submodules
+        fetch-depth: 0    # Ensures the full history is cloned
+
     - name: Install
       run: |
         sudo apt install libglfw3 libglfw3-dev
