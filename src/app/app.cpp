@@ -4,8 +4,10 @@ void setupEditor(){
     editor = new TextEditor();
     editor->SetLanguageDefinition(TextEditor::LanguageDefinitionId::Asmx86_64);
     editor->SetPalette(TextEditor::PaletteId::Dark);
+    editor->SetShowWhitespacesEnabled(false);
     editor->SetReadOnlyEnabled(false);
     editor->SetTabSize(4);
+
     {
         std::ifstream t("test.asm");
         if (t.good())
@@ -29,8 +31,8 @@ void LoadIniFile()
 {
     std::string filename = "/home/rc/Zathura-UI/src/config.zlyt";
 	std::filesystem::path dir(filename);
-	std::cout << "Ini File Directory: " << dir.string() << "\n";
 	ImGui::LoadIniSettingsFromDisk(dir.string().c_str());
+    LOG_DEBUG("Loaded config file from " << dir.string());
 }
 
 void mainWindow() {

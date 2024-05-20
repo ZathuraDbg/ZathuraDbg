@@ -1,13 +1,15 @@
 #ifndef ZATHURA_UI_DIALOGHEADER_HPP
 #define ZATHURA_UI_DIALOGHEADER_HPP
+#define LOG_MODULE_NAME "Zathura"
 
+#include <iostream>
+#include <fstream>
 #include "../../utils/filedialog.h"
 #include "../../../vendor/ImGuiColorTextEdit/TextEditor.h"
 #include "../../utils/fonts.hpp"
 #include "../../../vendor/imgui/imgui.h"
 #include "../../../vendor/imgui/imgui_internal.h"
-#include <iostream>
-#include <fstream>
+#include "../../../vendor/log/clue.hpp"
 
 extern std::string selectedFile;
 extern std::string openFileDialog();

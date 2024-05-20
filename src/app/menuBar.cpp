@@ -12,7 +12,7 @@ void appMenuBar()
     bool debugRun = false;
     bool debugPause = false;
 
-    ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[4]);
+    ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[RubikRegular16]);
     if (ImGui::BeginMainMenuBar())
     {
         if (ImGui::BeginMenu("File"))
@@ -28,22 +28,36 @@ void appMenuBar()
         if (ImGui::BeginMenu("Edit"))
         {
             if (ImGui::MenuItem("Undo", "CTRL+Z")) {
-                if (editor->CanUndo())
+                if (editor->CanUndo()){
                     editor->Undo();
+                    LOG_INFO("Editor serviced undo");
+                }
+                else{
+                    LOG_ERROR("Undo requested but couldn't be fulfilled by editor");
+                }
             }
             if (ImGui::MenuItem("Redo", "CTRL+Y", false)) {
-                if (editor->CanRedo())
+                if (editor->CanRedo()){
                     editor->Redo();
+                    LOG_INFO("Editor serviced redo");
+                }
+                else{
+                    LOG_ERROR("Redo requested but couldn't be fulfilled by editor");
+                }
+
             }
             ImGui::Separator();
             if (ImGui::MenuItem("Cut", "CTRL+X")) {
                 editor->Cut();
+                LOG_INFO("Editor cut to clipboard");
             }
             if (ImGui::MenuItem("Copy", "CTRL+C")) {
                 editor->Copy();
+                LOG_INFO("Editor copied to clipboard");
             }
             if (ImGui::MenuItem("Paste", "CTRL+V")) {
                 editor->Paste();
+                LOG_INFO("Editor pasted from clipboard");
             }
             ImGui::Separator();
             ImGui::EndMenu();
@@ -60,12 +74,15 @@ void appMenuBar()
 
     if (fileOpen)
     {
+        LOG_INFO("File open dialog requested!");
         fileOpenTask(openFileDialog());
     }
     if (fileSaveAs) {
+        LOG_INFO("File save as dialog requested!");
         fileSaveAsTask( saveAsFileDialog());
     }
     if (fileSave){
+        LOG_INFO("File save dialog requested!");
         fileSaveTask(selectedFile);
     }
 

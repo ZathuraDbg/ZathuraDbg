@@ -35,4 +35,3 @@ void setupButtons() {
     ImGui::Button(ICON_CI_DEBUG_PAUSE, ImVec2(20, 20));
     ImGui::PopFont();
 }
-

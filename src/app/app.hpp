@@ -1,12 +1,14 @@
 #ifndef ZATHURA_UI_APP_HPP
 #define ZATHURA_UI_APP_HPP
 #define IMGUI_DEFINE_MATH_OPERATORS
+#define LOG_MODULE_NAME "Zathura"
 
 #include <cstdio>
 #include <string>
 #include <fstream>
 #include <iostream>
 #include <filesystem>
+#include "../../vendor/log/clue.hpp"
 #include <tsl/ordered_map.h>
 #include "../utils/style.h"
 #include "../utils/fonts.hpp"
@@ -31,12 +33,16 @@ void appMenuBar();
 
 enum fonts{
     Default,
-    SatoshiSmall,
-    SatoshiBig,
-    JetBrainsMono
+    Satoshi16,
+    Satoshi18,
+    JetBrainsMono,
+    RubikRegular16,
+    SatoshiBold18,
+    SatoshiMedium18,
+    SatoshiRegular16
 };
-extern void LoadIniFile();
 
+extern void LoadIniFile();
 extern void appMenuBar();
 extern void setupButtons();
 extern void mainWindow();

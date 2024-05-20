@@ -9,6 +9,7 @@ WINDOWS = ./app/windows
 REGEX = ../vendor/ImGuiColorTextEdit/vendor/regex/include
 MAP = ../vendor/ordered-map/include
 DIALOGS = ./app/dialogs
+LOGGING = ../vendor/log
 
 SOURCES += $(IMGUI_DIR)/imgui.cpp $(IMGUI_DIR)/imgui_draw.cpp $(IMGUI_DIR)/imgui_tables.cpp $(IMGUI_DIR)/imgui_widgets.cpp
 SOURCES += $(IMGUI_DIR)/backends/imgui_impl_glfw.cpp $(IMGUI_DIR)/backends/imgui_impl_opengl3.cpp
@@ -30,6 +31,7 @@ SOURCES += $(WINDOWS)/hexEditorWindow.cpp
 SOURCES += $(WINDOWS)/stackWindow.cpp
 SOURCES += $(APP)/buttons.cpp
 SOURCES += $(WINDOWS)/menuBar.cpp
+#SOURCES += $(LOGGING)/clue.hpp
 #SOURCES += $(APP)/stackEditorWindow.cpp
 
 OBJS = $(addsuffix .o, $(basename $(notdir $(SOURCES))))
@@ -38,6 +40,8 @@ LINUX_GL_LIBS = -lGL
 
 CXXFLAGS = -std=c++17 -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends -I$(REGEX) -I$(MAP) -I$(DIALOGS) -I$(TASKS) -I$(WINDOWS)
 CXXFLAGS += -g  -Wformat
+CXXFLAGS += -DLOG_TO_FILE=\".Zathura.zlog\"
+# CXXFLAGS += -DLOG_TO_STRING
 LIBS =
 
 ifeq ($(UNAME_S), Linux) #LINUX
