@@ -1,8 +1,9 @@
 #include "app.hpp"
 
 void setupButtons() {
+    using namespace ImGui;
+
     ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[6]);
-    ImGui::Separator();
 
     if (ImGui::Button(ICON_CI_FOLDER_OPENED, ImVec2(20, 20))) {
         fileOpenTask(openFileDialog());

@@ -17,7 +17,6 @@ void appMenuBar()
     {
         if (ImGui::BeginMenu("File"))
         {
-            ImGui::Separator();
             ImGui::MenuItem("Open", "Ctrl+O", &fileOpen);
             ImGui::MenuItem("Save", "Ctrl+S", &fileSave);
             ImGui::MenuItem("Save As", "Ctrl+Shift+S", &fileSaveAs);
@@ -50,7 +49,6 @@ void appMenuBar()
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu("Debug")){
-            ImGui::Separator();
             ImGui::MenuItem("Restart", "CTRL+R", &debugRestart);
             ImGui::MenuItem("Step", "CTRL+J", &debugStep);
             ImGui::MenuItem("Pause", "CTRL+P", &debugPause);
@@ -73,4 +71,3 @@ void appMenuBar()
 
     ImGui::PopFont();
 }
-
