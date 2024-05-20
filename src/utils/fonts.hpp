@@ -13,6 +13,16 @@
 #include "../../ImGuiColorTextEdit/TextEditor.h"
 #include <cstdio>
 
+enum fonts{
+    Default,
+    Satoshi16,
+    Satoshi18,
+    JetBrainsMono20,
+    RubikRegular16,
+    SatoshiBold18,
+    SatoshiMedium18,
+    SatoshiRegular16
+};
 extern ImGuiIO& setupIO();
 
 #endif
