@@ -31,17 +31,6 @@ extern void setupViewPort();
 void setupButtons();
 void appMenuBar();
 
-enum fonts{
-    Default,
-    Satoshi16,
-    Satoshi18,
-    JetBrainsMono,
-    RubikRegular16,
-    SatoshiBold18,
-    SatoshiMedium18,
-    SatoshiRegular16
-};
-
 extern void LoadIniFile();
 extern void appMenuBar();
 extern void setupButtons();

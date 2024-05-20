@@ -48,8 +48,7 @@ void mainWindow() {
     ImGui::Begin("Code", &k, ImGuiWindowFlags_NoCollapse);
     setupButtons();
 
-//    ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
-    ImGui::PushFont(io.Fonts->Fonts[3]);
+    ImGui::PushFont(io.Fonts->Fonts[JetBrainsMono20]);
     editor->Render("Editor");
     ImGui::PopFont();
     ImGui::End();

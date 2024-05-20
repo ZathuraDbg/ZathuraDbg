@@ -82,7 +82,7 @@ void appMenuBar()
         fileSaveAsTask( saveAsFileDialog());
     }
     if (fileSave){
-        LOG_INFO("File save dialog requested!");
+        LOG_INFO("File save requested for the file: " << selectedFile);
         fileSaveTask(selectedFile);
     }
 

@@ -6,7 +6,7 @@ tsl::ordered_map<std::string, std::string> registerValueMap = {{"RIP", "0x00"}, 
 
 void registerWindow() {
     auto io = ImGui::GetIO();
-    ImGui::PushFont(io.Fonts->Fonts[3]);
+    ImGui::PushFont(io.Fonts->Fonts[JetBrainsMono20]);
 
     if (ImGui::BeginTable("RegistersTable", 4, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_Resizable)) {
         ImGui::TableSetupColumn("Register", ImGuiTableColumnFlags_WidthStretch);
