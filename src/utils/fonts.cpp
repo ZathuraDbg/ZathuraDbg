@@ -1,4 +1,5 @@
 #include "fonts.hpp"
+#include "../../vendor/imgui/imgui.h"
 
 ImGuiIO& setupIO(){
     ImGuiIO& io = ImGui::GetIO();
