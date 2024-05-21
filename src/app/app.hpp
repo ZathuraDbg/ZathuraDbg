@@ -10,6 +10,7 @@
 #include <filesystem>
 #include "../../vendor/log/clue.hpp"
 #include <tsl/ordered_map.h>
+#include <unicorn/unicorn.h>
 #include "../utils/style.h"
 #include "../utils/fonts.hpp"
 #include "../../vendor/imgui/imgui.h"
@@ -22,8 +23,8 @@
 #include "../../vendor/imgui/backends/imgui_impl_opengl3.h"
 #include "../../vendor/imgui/misc/single_file/imgui_single_file.h"
 #include "../../vendor/hex/hex.h"
+#include "integration/interpreter/interpreter.hpp"
 #include "windows/windows.hpp"
-//#include "../../ImGuiColorTextEdit/TextEditor.h"
 
 #define CONFIG_NAME "config"
 
