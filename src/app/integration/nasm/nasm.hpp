@@ -2,7 +2,7 @@
 #define ZATHURA_NASM_HPP
 
 #include <stdlib.h>
-#include "../hex/hex.hpp"
+#include "../utils/hex/hex.hpp"
 #include <iostream>
 #include <fstream>
 #include <algorithm>

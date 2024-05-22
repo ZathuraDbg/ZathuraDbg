@@ -10,7 +10,7 @@ REGEX = ../vendor/ImGuiColorTextEdit/vendor/regex/include
 MAP = ../vendor/ordered-map/include
 DIALOGS = ./app/dialogs
 LOGGING = ../vendor/log
-
+INTEGRATION = ./app/integration
 SOURCES += $(IMGUI_DIR)/imgui.cpp $(IMGUI_DIR)/imgui_draw.cpp $(IMGUI_DIR)/imgui_tables.cpp $(IMGUI_DIR)/imgui_widgets.cpp
 SOURCES += $(IMGUI_DIR)/backends/imgui_impl_glfw.cpp $(IMGUI_DIR)/backends/imgui_impl_opengl3.cpp
 SOURCES += $(EXTRA)/TextEditor.h
@@ -33,6 +33,9 @@ SOURCES += $(APP)/buttons.cpp
 SOURCES += $(WINDOWS)/menuBar.cpp
 #SOURCES += $(LOGGING)/clue.hpp
 #SOURCES += $(APP)/stackEditorWindow.cpp
+SOURCES += $(INTEGRATION)/interpreter/interpreter.hpp
+#SOURCES += $(INTEGRATION)/utils/hex/hex.hpp
+SOURCES += $(INTEGRATION)/nasm/nasm.hpp
 
 OBJS = $(addsuffix .o, $(basename $(notdir $(SOURCES))))
 UNAME_S := $(shell uname -s)
@@ -40,7 +43,7 @@ LINUX_GL_LIBS = -lGL
 
 CXXFLAGS = -std=c++17 -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends -I$(REGEX) -I$(MAP) -I$(DIALOGS) -I$(TASKS) -I$(WINDOWS)
 CXXFLAGS += -g  -Wformat
-CXXFLAGS += -L../vendor/unicorn/include
+CXXFLAGS += -L../vendor/unicorn/include -lunicorn
 CXXFLAGS += -DLOG_TO_FILE=\".Zathura.zlog\"
 # CXXFLAGS += -DLOG_TO_STRING
 LIBS =
@@ -103,6 +106,16 @@ endif
 %.o:$(WINDOWS)/%.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
+
+%.o:$(INTEGRATION)/interpreter/%.cpp
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
+
+%.o:$(INTEGRATION)/nasm/%.cpp
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
+
+
+#%.o:$(INTEGRATION)/utils/hex/%.cpp
+#	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 all: $(EXE)
 	@echo Build complete for $(ECHO_MESSAGE)

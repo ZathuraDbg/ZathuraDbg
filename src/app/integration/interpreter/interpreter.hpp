@@ -8,7 +8,8 @@
 #include <unordered_map>
 #include <iomanip>
 #include "../nasm/nasm.hpp"
-
+extern bool createStack();
+extern bool ucInit();
 extern uc_engine *uc;
 extern int regNameToConstant(std::string name);
 extern int runCode(const std::string& code_in, int instructionCount);
