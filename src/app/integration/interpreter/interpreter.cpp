@@ -226,30 +226,37 @@ uint64_t getRegister(std::string name){
     return value;
 }
 
+bool ucInit(){
+    auto err = uc_open(UC_ARCH_X86, UC_MODE_64, &uc);
+    if (err) {
+        return false;
+    }
+    return true;
+}
+
+bool createStack(){
+    uint8_t zeroBuf[STACK_SIZE];
+
+    memset(zeroBuf, 0, STACK_SIZE);
+    uc_mem_map(uc, STACK_ADDRESS, STACK_SIZE, UC_PROT_READ | UC_PROT_WRITE);
+    if (uc_mem_write(uc, STACK_ADDRESS, zeroBuf, STACK_SIZE)) {
+        return false;
+    }
+
+    return true;
+}
+
 int runCode(const std::string& code_in, int instructionCount)
 {
     uc_err err;
     uint8_t codeBuf[CODE_BUF_SIZE];
-    uint8_t zeroBuf[STACK_SIZE];
-
     uint8_t* code;
     code = (uint8_t*)(code_in.c_str());
 
     memcpy(codeBuf, code, code_in.length());
     printf("Emulate i386 code\n");
 
-    err = uc_open(UC_ARCH_X86, UC_MODE_64, &uc);
-    if (err) {
-        printf("Failed on uc_open() with error returned: %u\n", err);
-        return -1;
-    }
 
-    memset(zeroBuf, 0, STACK_SIZE);
-    uc_mem_map(uc, STACK_ADDRESS, STACK_SIZE, UC_PROT_READ | UC_PROT_WRITE);
-    if (uc_mem_write(uc, STACK_ADDRESS, zeroBuf, STACK_SIZE)) {
-        printf("Failed to write stack to memory, quit!\n");
-        return -1;
-    }
 
     uc_mem_map(uc, ENTRY_POINT_ADDRESS, MEMORY_ALLOCATION_SIZE, UC_PROT_READ | UC_PROT_WRITE | UC_PROT_EXEC);
     if (uc_mem_write(uc, ENTRY_POINT_ADDRESS, codeBuf, sizeof(codeBuf) - 1)) {
