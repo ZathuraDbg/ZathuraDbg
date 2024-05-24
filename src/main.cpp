@@ -89,11 +89,11 @@ int main(int, char**)
     setupEditor();
 
     if (!ucInit()){
-            LOG_ERROR("Failed to initialize unicorn engine");
+        LOG_ERROR("Failed to initialize unicorn engine");
     }
 
     if (!createStack()){
-            LOG_ERROR("Failed to create stack");
+        LOG_ERROR("Failed to create stack");
     }
 
     runCode(getBytes("test.asm"), 0);
@@ -127,6 +127,7 @@ int main(int, char**)
 
        glfwSwapBuffers(window);
     }
+    uc_close(uc);
 
     destroyWindow();
     return 0;
