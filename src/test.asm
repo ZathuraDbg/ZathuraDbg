@@ -1,3 +1,6 @@
-mov rax, rbx
-lea rcx, [rax + 20 * 1]
-ret
+[bits 64]
+mov rax, 0x100
+push rax
+pop rbx
+hlt
+

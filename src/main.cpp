@@ -88,6 +88,16 @@ int main(int, char**)
     SetupImGuiStyle();
     setupEditor();
 
+    if (!ucInit()){
+            LOG_ERROR("Failed to initialize unicorn engine");
+    }
+
+    if (!createStack()){
+            LOG_ERROR("Failed to create stack");
+    }
+
+    runCode(getBytes("test.asm"), 0);
+
     while (!glfwWindowShouldClose(window))
     {
         glfwPollEvents();
