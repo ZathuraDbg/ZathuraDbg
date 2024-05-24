@@ -2,7 +2,7 @@
 
 // TODO: Add support to read memory
 
-uintptr_t ENTRY_POINT_ADDRESS = 0x100000;
+uintptr_t ENTRY_POINT_ADDRESS = 0x1000;
 uintptr_t MEMORY_ALLOCATION_SIZE = 2 * 1024 * 1024;
 uintptr_t STACK_ADDRESS = 0x300000;
 uint64_t CODE_BUF_SIZE = 0x3000;
@@ -158,6 +158,7 @@ int regNameToConstant(std::string name){
 }
 
 void showRegs(){
+    LOG_DEBUG("Showing registers");
     int rax, rbx, rcx, rdx, rsi, rdi, rbp, rsp, r8, r9, r10, r11, r12, r13, r14, r15, rip,
         ah, al, ax, bh, bl, bx, ch, cl, cx, dh, dl, dx, si, di, bp, sp, r8d, r9d, r10d, r11d, r12d,
         r13d, r14d, r15d, r8w, r9w, r10w, r11w, r12w, r13w, r14w, r15w, r8b, r9b, r10b, r11b, r12b, r13b, r14b,
@@ -227,6 +228,7 @@ uint64_t getRegister(std::string name){
 }
 
 bool ucInit(){
+    LOG_DEBUG("Initializing unicorn engine");
     auto err = uc_open(UC_ARCH_X86, UC_MODE_64, &uc);
     if (err) {
         return false;
@@ -235,6 +237,7 @@ bool ucInit(){
 }
 
 bool createStack(){
+    LOG_DEBUG("Creating stack");
     uint8_t zeroBuf[STACK_SIZE];
 
     memset(zeroBuf, 0, STACK_SIZE);
@@ -259,6 +262,7 @@ bool createStack(){
 
 int runCode(const std::string& code_in, int instructionCount)
 {
+    LOG_DEBUG("running code");
     uc_err err;
     uint8_t codeBuf[CODE_BUF_SIZE];
     uint8_t* code;
@@ -268,14 +272,16 @@ int runCode(const std::string& code_in, int instructionCount)
     printf("Emulate i386 code\n");
 
 
-
     uc_mem_map(uc, ENTRY_POINT_ADDRESS, MEMORY_ALLOCATION_SIZE, UC_PROT_READ | UC_PROT_WRITE | UC_PROT_EXEC);
     if (uc_mem_write(uc, ENTRY_POINT_ADDRESS, codeBuf, sizeof(codeBuf) - 1)) {
         printf("Failed to write emulation code to memory, quit!\n");
         return -1;
     }
-
-
+//    char buf[25] = "bro this is our test fr";
+//    if (uc_mem_write(uc, ENTRY_POINT_ADDRESS + sizeof(codeBuf) + 1, buf, sizeof(buf) - 1)) {
+//        printf("Failed to write emulation code to memory, quit!\n");
+//        return -1;
+//    }
     err = uc_emu_start(uc, ENTRY_POINT_ADDRESS, ENTRY_POINT_ADDRESS + sizeof(codeBuf), 0, instructionCount);
     if (err) {
         printf("Failed on uc_emu_start() with error returned %u: %s\n",
@@ -283,6 +289,5 @@ int runCode(const std::string& code_in, int instructionCount)
     }
 
     showRegs();
-    uc_close(uc);
     return 0;
 }

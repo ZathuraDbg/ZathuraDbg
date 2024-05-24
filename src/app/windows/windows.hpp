@@ -2,6 +2,7 @@
 #define windows_hpp
 #include "../tasks/editorTasks.hpp"
 #include "../../../vendor/ordered-map/include/tsl/ordered_map.h"
+#include "../../../vendor/log/clue.hpp"
 #include "../integration/interpreter/interpreter.hpp"
 
 extern void registerWindow();

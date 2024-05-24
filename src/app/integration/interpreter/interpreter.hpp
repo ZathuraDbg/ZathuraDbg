@@ -8,6 +8,7 @@
 #include <unordered_map>
 #include <iomanip>
 #include "../nasm/nasm.hpp"
+#include "../../../vendor/log/clue.hpp"
 extern bool createStack();
 extern bool ucInit();
 extern uc_engine *uc;
