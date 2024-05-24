@@ -1,8 +1,8 @@
 [bits 64]
-mov rax, 0x100
-push rax
-mov rbx, 223
-push rbx
+push 0x123456
+pop rbx
+push 1
+pop rcx
+push 2
+pop rdx
 hlt
-
-

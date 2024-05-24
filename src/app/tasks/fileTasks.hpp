@@ -3,6 +3,7 @@
 
 #include "../dialogs/dialogHeader.hpp" // that already includes everything we need
 #include "editorTasks.hpp"
+#include "../integration/interpreter/interpreter.hpp"
 
 void fileOpenTask(const std::string& fileName);
 void fileSaveAsTask(const std::string &fileName);

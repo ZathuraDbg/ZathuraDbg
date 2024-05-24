@@ -277,11 +277,7 @@ int runCode(const std::string& code_in, int instructionCount)
         printf("Failed to write emulation code to memory, quit!\n");
         return -1;
     }
-//    char buf[25] = "bro this is our test fr";
-//    if (uc_mem_write(uc, ENTRY_POINT_ADDRESS + sizeof(codeBuf) + 1, buf, sizeof(buf) - 1)) {
-//        printf("Failed to write emulation code to memory, quit!\n");
-//        return -1;
-//    }
+
     err = uc_emu_start(uc, ENTRY_POINT_ADDRESS, ENTRY_POINT_ADDRESS + sizeof(codeBuf), 0, instructionCount);
     if (err) {
         printf("Failed on uc_emu_start() with error returned %u: %s\n",
