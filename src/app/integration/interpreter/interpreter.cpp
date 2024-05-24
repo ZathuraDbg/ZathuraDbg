@@ -243,6 +243,17 @@ bool createStack(){
         return false;
     }
 
+    uint64_t stackBase = STACK_ADDRESS + STACK_SIZE;
+    if (uc_reg_write(uc, UC_X86_REG_RSP, &stackBase)){
+        printf("Failed to write stack pointer to memory, quit!\n");
+        return false;
+    }
+
+    if (uc_reg_write(uc, UC_X86_REG_RBP, &stackBase)){
+        printf("Failed to write base pointer to memory, quit!\n");
+        return false;
+    }
+
     return true;
 }
 
@@ -263,11 +274,7 @@ int runCode(const std::string& code_in, int instructionCount)
         printf("Failed to write emulation code to memory, quit!\n");
         return -1;
     }
-    uint64_t stackBase = STACK_ADDRESS + STACK_SIZE;
-    if (uc_reg_write(uc, UC_X86_REG_RSP, &stackBase)){
-        printf("Failed to write stack pointer to memory, quit!\n");
-        return -1;
-    }
+
 
     err = uc_emu_start(uc, ENTRY_POINT_ADDRESS, ENTRY_POINT_ADDRESS + sizeof(codeBuf), 0, instructionCount);
     if (err) {

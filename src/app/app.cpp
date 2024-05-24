@@ -38,16 +38,6 @@ void LoadIniFile()
 void mainWindow() {
     ImGuiIO &io = ImGui::GetIO();
 
-    if (!ucInit()){
-        LOG_ERROR("Failed to initialize unicorn engine");
-        return;
-    }
-
-    if (!createStack()){
-        LOG_ERROR("Failed to create stack");
-        return;
-    }
-
     bool k = true;
     SetupImGuiStyle();
     ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
@@ -74,6 +64,7 @@ void mainWindow() {
 
     ImGui::Begin("Stack", &k, ImGuiWindowFlags_NoCollapse);
     stackEditorWindow();
+
     ImGui::End();
 //    Utils::LayoutManager::save(CONFIG_NAME);
     ImGui::Render();
