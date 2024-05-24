@@ -13,9 +13,11 @@ void consoleWindow()
     ImGui::EndChild();
     char input[500]{};
     ImGui::PushID(&input);
+
     if (ImGui::InputText("Command", input, ImGuiInputTextFlags_AllowTabInput)){
         test.emplace_back(input);
     }
+
     ImGui::PopID();
     ImGui::End();
 }
