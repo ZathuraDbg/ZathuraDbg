@@ -25,6 +25,7 @@ void fileSaveAsTask(const std::string &fileName){
                          pfd::choice::ok,
                          pfd::icon::error);
         }
+
     }
 }
 
@@ -38,6 +39,13 @@ void fileSaveTask(const std::string &fileName){
                          "no other program is using this file and you have the correct permissions to access the file and try again!",
                          pfd::choice::ok,
                          pfd::icon::error);
+        }
+        else{
+            LOG_DEBUG("Running code from: " << selectedFile);
+            uc_close(uc);
+            ucInit();
+            createStack();
+            runCode(getBytes(selectedFile), 0);
         }
     }
 }

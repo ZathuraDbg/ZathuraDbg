@@ -29,7 +29,6 @@
 #define CONFIG_NAME "config"
 
 extern void setupViewPort();
-void setupButtons();
 void appMenuBar();
 
 extern void LoadIniFile();
