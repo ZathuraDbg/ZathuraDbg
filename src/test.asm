@@ -6,5 +6,5 @@ pop rcx
 push 2
 pop rdx
 push 0x1000
-pop r14
+pop r13
 hlt
