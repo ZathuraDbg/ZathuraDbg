@@ -5,6 +5,8 @@
 #include "../../../vendor/log/clue.hpp"
 #include "../integration/interpreter/interpreter.hpp"
 
+extern tsl::ordered_map<std::string, std::string> registerValueMap;
+
 extern void registerWindow();
 extern void consoleWindow();
 extern void hexEditorWindow();

@@ -10,6 +10,7 @@
 #include "../nasm/nasm.hpp"
 #include "../../../vendor/log/clue.hpp"
 extern bool createStack();
+uint64_t getRegister(std::string name);
 extern bool ucInit();
 extern uc_engine *uc;
 extern int regNameToConstant(std::string name);

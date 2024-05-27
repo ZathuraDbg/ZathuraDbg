@@ -7,10 +7,11 @@ bool writeEditorToFile(const std::string& filePath) {
 
     if (out.good()){
         std::cout << editor->GetText() << std::endl;
-        out << editor->GetText() << "\n";
+        out << editor->GetText();
         out.close();
         return true;
     }
+
     return false;
 }
 

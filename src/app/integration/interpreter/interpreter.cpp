@@ -1,7 +1,5 @@
 #include "interpreter.hpp"
 
-// TODO: Add support to read memory
-
 uintptr_t ENTRY_POINT_ADDRESS = 0x1000;
 uintptr_t MEMORY_ALLOCATION_SIZE = 2 * 1024 * 1024;
 uintptr_t STACK_ADDRESS = 0x300000;
@@ -29,6 +27,12 @@ int regNameToConstant(std::string name){
         {"r14", UC_X86_REG_R14},
         {"r15", UC_X86_REG_R15},
         {"rip", UC_X86_REG_RIP},
+        {"cs", UC_X86_REG_CS},
+        {"ds", UC_X86_REG_DS},
+        {"es", UC_X86_REG_ES},
+        {"fs", UC_X86_REG_FS},
+        {"gs", UC_X86_REG_GS},
+        {"ss", UC_X86_REG_SS},
         {"ah", UC_X86_REG_AH},
         {"al", UC_X86_REG_AL},
         {"ax", UC_X86_REG_AX},
@@ -69,11 +73,6 @@ int regNameToConstant(std::string name){
         {"r13b", UC_X86_REG_R13B},
         {"r14b", UC_X86_REG_R14B},
         {"r15b", UC_X86_REG_R15B},
-        {"ds", UC_X86_REG_DS},
-        {"es", UC_X86_REG_ES},
-        {"fs", UC_X86_REG_FS},
-        {"gs", UC_X86_REG_GS},
-        {"ss", UC_X86_REG_SS},
         {"eflags", UC_X86_REG_EFLAGS},
         {"fs_base", UC_X86_REG_FS_BASE},
         {"gs_base", UC_X86_REG_GS_BASE},
@@ -186,10 +185,11 @@ void showRegs(){
     uc_reg_read(uc, UC_X86_REG_RIP, &rip);
     uc_reg_read(uc, UC_X86_REG_EFLAGS, &eflags);
     uc_reg_read(uc, UC_X86_REG_CS, &cs);
+    uc_reg_read(uc, UC_X86_REG_DS, &ds);
     uc_reg_read(uc, UC_X86_REG_SS, &ss);
-    uc_reg_read(uc, UC_X86_REG_ES, &fs);
-    uc_reg_read(uc, UC_X86_REG_FS, &ds);
-    uc_reg_read(uc, UC_X86_REG_GS, &ds);
+    uc_reg_read(uc, UC_X86_REG_ES, &es);
+    uc_reg_read(uc, UC_X86_REG_FS, &fs);
+    uc_reg_read(uc, UC_X86_REG_GS, &gs);
     uc_reg_read(uc, UC_X86_REG_FS_BASE, &fs_base);
     uc_reg_read(uc, UC_X86_REG_GS_BASE, &gs_base);
 

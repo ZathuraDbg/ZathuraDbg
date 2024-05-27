@@ -8,9 +8,8 @@ void stackEditorWindow(){
 
     ImGui::PushFont(io.Fonts->Fonts[3]);
     static char data[5 * 1024 * 1024];
-    size_t data_size = 0x10000;
-    LOG_DEBUG("Quering stack memory");
-//  pop does not remove the popped element from the stack, it only copies it
+
+    //  pop does not remove the popped element from the stack, it only copies it
     uc_mem_read(uc, STACK_ADDRESS, data, STACK_SIZE);
     mem_edit_2.DrawWindow("Stack", (void*)data, STACK_SIZE);
     ImGui::PopFont();
