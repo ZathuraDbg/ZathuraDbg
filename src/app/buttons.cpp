@@ -24,7 +24,11 @@ void setupButtons() {
     ImGui::SameLine();
     ImGui::Separator();
     ImGui::SameLine();
-    ImGui::Button(ICON_CI_DEBUG_START, ImVec2(20, 20));
+
+    if (ImGui::Button(ICON_CI_DEBUG_START, ImVec2(20, 20))){
+        fileRunTask();
+    }
+
     ImGui::SameLine();
     ImGui::Separator();
     ImGui::SameLine();

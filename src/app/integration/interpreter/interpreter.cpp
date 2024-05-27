@@ -221,9 +221,11 @@ void showRegs(){
 }
 
 uint64_t getRegister(std::string name){
+    LOG_DEBUG("Retrieving the value for the register: " << name);
     int reg = regNameToConstant(name);
     uint64_t value;
     uc_reg_read(uc, reg, &value);
+    LOG_DEBUG(name << ": " << value);
     return value;
 }
 
@@ -231,6 +233,7 @@ bool ucInit(){
     LOG_DEBUG("Initializing unicorn engine");
     auto err = uc_open(UC_ARCH_X86, UC_MODE_64, &uc);
     if (err) {
+        LOG_ERROR("Failed to initialise Unicorn Engine!");
         return false;
     }
     return true;
@@ -269,7 +272,6 @@ int runCode(const std::string& code_in, int instructionCount)
     code = (uint8_t*)(code_in.c_str());
 
     memcpy(codeBuf, code, code_in.length());
-    printf("Emulate i386 code\n");
 
 
     uc_mem_map(uc, ENTRY_POINT_ADDRESS, MEMORY_ALLOCATION_SIZE, UC_PROT_READ | UC_PROT_WRITE | UC_PROT_EXEC);
@@ -284,6 +286,5 @@ int runCode(const std::string& code_in, int instructionCount)
                err, uc_strerror(err));
     }
 
-    showRegs();
     return 0;
 }

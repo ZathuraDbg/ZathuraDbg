@@ -96,7 +96,6 @@ int main(int, char**)
         LOG_ERROR("Failed to create stack");
     }
 
-    runCode(getBytes("test.asm"), 0);
 
     while (!glfwWindowShouldClose(window))
     {

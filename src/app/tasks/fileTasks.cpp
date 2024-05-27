@@ -40,12 +40,22 @@ void fileSaveTask(const std::string &fileName){
                          pfd::choice::ok,
                          pfd::icon::error);
         }
-        else{
-            LOG_DEBUG("Running code from: " << selectedFile);
-            uc_close(uc);
-            ucInit();
-            createStack();
-            runCode(getBytes(selectedFile), 0);
-        }
+    }
+}
+
+void fileRunTask(){
+    if (!selectedFile.empty()){
+        LOG_DEBUG("Running code from: " << selectedFile);
+        uc_close(uc);
+        ucInit();
+        createStack();
+        runCode(getBytes(selectedFile), 0);
+    }
+    else{
+        LOG_ERROR("No file selected to run!");
+        pfd::message("No file selected!",
+                     "Please open a file to run the code!",
+                     pfd::choice::ok,
+                     pfd::icon::info);
     }
 }
