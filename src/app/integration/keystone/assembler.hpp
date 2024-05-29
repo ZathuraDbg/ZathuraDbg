@@ -9,6 +9,7 @@
 #include <vector>
 #include "../../../vendor/keystone/include/keystone/keystone.h"
 #include "../../../vendor/keystone/include/keystone/x86.h"
+#include "../../../vendor/log/clue.hpp"
 #include "../utils/hex/hex.hpp"
 
 // #define ASM_FILE_NAME "tmpasm.asm"
