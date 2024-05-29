@@ -1,5 +1,4 @@
 #include "fileTasks.hpp"
-
 void fileOpenTask(const std::string& fileName){
     if (!fileName.empty()){
         LOG_DEBUG("Opening the file " << fileName);

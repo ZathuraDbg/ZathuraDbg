@@ -1,7 +1,7 @@
 #ifndef fileTasks
 #define fileTasks
 
-#include "../dialogs/dialogHeader.hpp" // that already includes everything we need
+#include "../dialogs/dialogHeader.hpp"
 #include "editorTasks.hpp"
 #include "../integration/interpreter/interpreter.hpp"
 
