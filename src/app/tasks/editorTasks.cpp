@@ -7,17 +7,17 @@ bool writeEditorToFile(const std::string& filePath) {
     std::ofstream out(filePath, std::ios::out | std::ios::trunc);
 
     if (out.good()){
-//      std::cout << editor->GetText() << std::endl;
         out << editor->GetText();
         out.close();
         LOG_DEBUG("Done!");
-        return true;
     }
 
+    LOG_ERROR("Failed to write to file.");
     return false;
 }
 
 bool readFileIntoEditor(const std::string& filePath){
+    LOG_DEBUG("Read into editor");
     std::ifstream t(filePath);
 
     if (t.good())

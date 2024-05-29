@@ -46,7 +46,7 @@ void fileRunTask(){
     if (!selectedFile.empty()){
         LOG_DEBUG("Running code from: " << selectedFile);
         uc_close(uc);
-        ucInit();
+        uc = nullptr;
         createStack();
         runCode(getBytes(selectedFile), 0);
     }

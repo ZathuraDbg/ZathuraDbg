@@ -221,31 +221,41 @@ void showRegs(){
 }
 
 uint64_t getRegister(std::string name){
-    LOG_DEBUG("Retrieving the value for the register: " << name);
     int reg = regNameToConstant(name);
     uint64_t value;
     uc_reg_read(uc, reg, &value);
-    LOG_DEBUG(name << ": " << value);
     return value;
 }
 
 bool ucInit(){
     LOG_DEBUG("Initializing unicorn engine");
     auto err = uc_open(UC_ARCH_X86, UC_MODE_64, &uc);
+
     if (err) {
         LOG_ERROR("Failed to initialise Unicorn Engine!");
         return false;
     }
+
+    LOG_DEBUG("Unicorn engine successfully initialised");
     return true;
 }
 
 bool createStack(){
     LOG_DEBUG("Creating stack");
+
+    if (!ucInit()){
+                LOG_ERROR("Failed to initialize unicorn engine");
+    }
     uint8_t zeroBuf[STACK_SIZE];
 
     memset(zeroBuf, 0, STACK_SIZE);
-    uc_mem_map(uc, STACK_ADDRESS, STACK_SIZE, UC_PROT_READ | UC_PROT_WRITE);
+    if (uc_mem_map(uc, STACK_ADDRESS, STACK_SIZE, UC_PROT_READ | UC_PROT_WRITE)){
+        LOG_ERROR("Failed to map the stack!!");
+        return false;
+    }
+
     if (uc_mem_write(uc, STACK_ADDRESS, zeroBuf, STACK_SIZE)) {
+        LOG_ERROR("Failed to write to stack address");
         return false;
     }
 
@@ -255,6 +265,7 @@ bool createStack(){
         return false;
     }
 
+    LOG_DEBUG("wrote to rsp ");
     if (uc_reg_write(uc, UC_X86_REG_RBP, &stackBase)){
         printf("Failed to write base pointer to memory, quit!\n");
         return false;
