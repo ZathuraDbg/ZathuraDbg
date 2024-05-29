@@ -7,7 +7,7 @@
 #include <unicorn/unicorn.h>
 #include <unordered_map>
 #include <iomanip>
-#include "../nasm/nasm.hpp"
+#include "../keystone/assembler.hpp"
 #include "../../../vendor/log/clue.hpp"
 extern bool createStack();
 uint64_t getRegister(std::string name);

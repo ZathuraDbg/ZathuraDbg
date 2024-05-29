@@ -11,6 +11,7 @@ MAP = ../vendor/ordered-map/include
 DIALOGS = ./app/dialogs
 LOGGING = ../vendor/log
 INTEGRATION = ./app/integration
+KEYSTONE = ../vendor/keystone
 SOURCES += $(IMGUI_DIR)/imgui.cpp $(IMGUI_DIR)/imgui_draw.cpp $(IMGUI_DIR)/imgui_tables.cpp $(IMGUI_DIR)/imgui_widgets.cpp
 SOURCES += $(IMGUI_DIR)/backends/imgui_impl_glfw.cpp $(IMGUI_DIR)/backends/imgui_impl_opengl3.cpp
 SOURCES += $(EXTRA)/TextEditor.h
@@ -35,7 +36,8 @@ SOURCES += $(WINDOWS)/menuBar.cpp
 #SOURCES += $(APP)/stackEditorWindow.cpp
 SOURCES += $(INTEGRATION)/interpreter/interpreter.hpp
 #SOURCES += $(INTEGRATION)/utils/hex/hex.hpp
-SOURCES += $(INTEGRATION)/nasm/nasm.hpp
+SOURCES += $(INTEGRATION)/keystone/assembler.hpp
+SOURCES += $(INTEGRATION)/keystone/assembler.cpp
 
 OBJS = $(addsuffix .o, $(basename $(notdir $(SOURCES))))
 UNAME_S := $(shell uname -s)
@@ -44,6 +46,7 @@ LINUX_GL_LIBS = -lGL
 CXXFLAGS = -std=c++17 -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends -I$(REGEX) -I$(MAP) -I$(DIALOGS) -I$(TASKS) -I$(WINDOWS) 
 CXXFLAGS += -g  -Wformat
 CXXFLAGS += -L../vendor/unicorn/include -lunicorn
+CXXFLAGS += -L../vendor/keystone -l:libkeystone.a -L../vendor/keystone/include 
 CXXFLAGS += -DLOG_TO_FILE=\".Zathura.zlog\"
 # CXXFLAGS += -DLOG_TO_STRING
 LIBS =
@@ -110,7 +113,7 @@ endif
 %.o:$(INTEGRATION)/interpreter/%.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
-%.o:$(INTEGRATION)/nasm/%.cpp
+%.o:$(INTEGRATION)/keystone/%.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 
