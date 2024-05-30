@@ -10,3 +10,6 @@
 [submodule "vendor/unicorn"]
 	path = vendor/unicorn
 	url = https://github.com/unicorn-engine/unicorn
+[submodule "vendor/code"]
+	path = vendor/code
+	url = http://git.code.sf.net/p/tinyfiledialogs/code

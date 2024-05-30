@@ -7,6 +7,7 @@
 #include <fstream>
 #include <algorithm>
 #include <vector>
+#include "../../dialogs/dialogHeader.hpp"
 #include "../../../vendor/keystone/include/keystone/keystone.h"
 #include "../../../vendor/keystone/include/keystone/x86.h"
 #include "../../../vendor/log/clue.hpp"

@@ -1,4 +1,5 @@
 #include "app.hpp"
+bool isRunning = true;
 
 void setupEditor(){
     editor = new TextEditor();

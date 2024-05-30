@@ -85,6 +85,9 @@ void appMenuBar()
         LOG_INFO("File save requested for the file: " << selectedFile);
         fileSaveTask(selectedFile);
     }
+    if (quit){
+        isRunning = false;
+    }
 
     ImGui::PopFont();
 }

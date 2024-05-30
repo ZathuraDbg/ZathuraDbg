@@ -1,7 +1,7 @@
 //
 //  Portable File Dialogs
 //
-//  Copyright © 2018–2022 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2018—2020 Sam Hocevar <sam@hocevar.net>
 //
 //  This library is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -23,7 +23,6 @@
 #include <shellapi.h>
 #include <strsafe.h>
 #include <future>     // std::async
-#include <userenv.h>  // GetUserProfileDirectory()
 
 #elif __EMSCRIPTEN__
 #include <emscripten.h>
@@ -40,11 +39,9 @@
 #include <cstdio>     // popen()
 #include <cstdlib>    // std::getenv()
 #include <fcntl.h>    // fcntl()
-#include <unistd.h>   // read(), pipe(), dup2(), getuid()
+#include <unistd.h>   // read(), pipe(), dup2()
 #include <csignal>    // ::kill, std::signal
-#include <sys/stat.h> // stat()
 #include <sys/wait.h> // waitpid()
-#include <pwd.h>      // getpwnam()
 #endif
 
 #include <string>   // std::string
@@ -70,148 +67,148 @@
 namespace pfd
 {
 
-enum class button
-{
-    cancel = -1,
-    ok,
-    yes,
-    no,
-    abort,
-    retry,
-    ignore,
-};
+    enum class button
+    {
+        cancel = -1,
+        ok,
+        yes,
+        no,
+        abort,
+        retry,
+        ignore,
+    };
 
-enum class choice
-{
-    ok = 0,
-    ok_cancel,
-    yes_no,
-    yes_no_cancel,
-    retry_cancel,
-    abort_retry_ignore,
-};
+    enum class choice
+    {
+        ok = 0,
+        ok_cancel,
+        yes_no,
+        yes_no_cancel,
+        retry_cancel,
+        abort_retry_ignore,
+    };
 
-enum class icon
-{
-    info = 0,
-    warning,
-    error,
-    question,
-};
+    enum class icon
+    {
+        info = 0,
+        warning,
+        error,
+        question,
+    };
 
 // Additional option flags for various dialog constructors
-enum class opt : uint8_t
-{
-    none = 0,
-    // For file open, allow multiselect.
-    multiselect     = 0x1,
-    // For file save, force overwrite and disable the confirmation dialog.
-    force_overwrite = 0x2,
-    // For folder select, force path to be the provided argument instead
-    // of the last opened directory, which is the Microsoft-recommended,
-    // user-friendly behaviour.
-    force_path      = 0x4,
-};
+    enum class opt : uint8_t
+    {
+        none = 0,
+        // For file open, allow multiselect.
+        multiselect     = 0x1,
+        // For file save, force overwrite and disable the confirmation dialog.
+        force_overwrite = 0x2,
+        // For folder select, force path to be the provided argument instead
+        // of the last opened directory, which is the Microsoft-recommended,
+        // user-friendly behaviour.
+        force_path      = 0x4,
+    };
 
-inline opt operator |(opt a, opt b) { return opt(uint8_t(a) | uint8_t(b)); }
-inline bool operator &(opt a, opt b) { return bool(uint8_t(a) & uint8_t(b)); }
+    inline opt operator |(opt a, opt b) { return opt(uint8_t(a) | uint8_t(b)); }
+    inline bool operator &(opt a, opt b) { return bool(uint8_t(a) & uint8_t(b)); }
 
 // The settings class, only exposing to the user a way to set verbose mode
 // and to force a rescan of installed desktop helpers (zenity, kdialog…).
-class settings
-{
-public:
-    static bool available();
-
-    static void verbose(bool value);
-    static void rescan();
-
-protected:
-    explicit settings(bool resync = false);
-
-    bool check_program(std::string const &program);
-
-    inline bool is_osascript() const;
-    inline bool is_zenity() const;
-    inline bool is_kdialog() const;
-
-    enum class flag
+    class settings
     {
-        is_scanned = 0,
-        is_verbose,
+    public:
+        static bool available();
 
-        has_zenity,
-        has_matedialog,
-        has_qarma,
-        has_kdialog,
-        is_vista,
+        static void verbose(bool value);
+        static void rescan();
 
-        max_flag,
+    protected:
+        explicit settings(bool resync = false);
+
+        bool check_program(std::string const &program);
+
+        inline bool is_osascript() const;
+        inline bool is_zenity() const;
+        inline bool is_kdialog() const;
+
+        enum class flag
+        {
+            is_scanned = 0,
+            is_verbose,
+
+            has_zenity,
+            has_matedialog,
+            has_qarma,
+            has_kdialog,
+            is_vista,
+
+            max_flag,
+        };
+
+        // Static array of flags for internal state
+        bool const &flags(flag in_flag) const;
+
+        // Non-const getter for the static array of flags
+        bool &flags(flag in_flag);
     };
 
-    // Static array of flags for internal state
-    bool const &flags(flag in_flag) const;
-
-    // Non-const getter for the static array of flags
-    bool &flags(flag in_flag);
-};
-
 // Internal classes, not to be used by client applications
-namespace internal
-{
+    namespace internal
+    {
 
 // Process wait timeout, in milliseconds
-static int const default_wait_timeout = 20;
+        static int const default_wait_timeout = 20;
 
-class executor
-{
-    friend class dialog;
+        class executor
+        {
+            friend class dialog;
 
-public:
-    // High level function to get the result of a command
-    std::string result(int *exit_code = nullptr);
+        public:
+            // High level function to get the result of a command
+            std::string result(int *exit_code = nullptr);
 
-    // High level function to abort
-    bool kill();
+            // High level function to abort
+            bool kill();
 
 #if _WIN32
-    void start_func(std::function<std::string(int *)> const &fun);
+            void start_func(std::function<std::string(int *)> const &fun);
     static BOOL CALLBACK enum_windows_callback(HWND hwnd, LPARAM lParam);
 #elif __EMSCRIPTEN__
-    void start(int exit_code);
+            void start(int exit_code);
 #else
-    void start_process(std::vector<std::string> const &command);
+            void start_process(std::vector<std::string> const &command);
 #endif
 
-    ~executor();
+            ~executor();
 
-protected:
-    bool ready(int timeout = default_wait_timeout);
-    void stop();
+        protected:
+            bool ready(int timeout = default_wait_timeout);
+            void stop();
 
-private:
-    bool m_running = false;
-    std::string m_stdout;
-    int m_exit_code = -1;
+        private:
+            bool m_running = false;
+            std::string m_stdout;
+            int m_exit_code = -1;
 #if _WIN32
-    std::future<std::string> m_future;
+            std::future<std::string> m_future;
     std::set<HWND> m_windows;
     std::condition_variable m_cond;
     std::mutex m_mutex;
     DWORD m_tid;
 #elif __EMSCRIPTEN__ || __NX__
-    // FIXME: do something
+            // FIXME: do something
 #else
-    pid_t m_pid = 0;
-    int m_fd = -1;
+            pid_t m_pid = 0;
+            int m_fd = -1;
 #endif
-};
+        };
 
-class platform
-{
-protected:
+        class platform
+        {
+        protected:
 #if _WIN32
-    // Helper class around LoadLibraryA() and GetProcAddress() with some safety
+            // Helper class around LoadLibraryA() and GetProcAddress() with some safety
     class dll
     {
     public:
@@ -222,7 +219,7 @@ protected:
         {
         public:
             proc(dll const &lib, std::string const &sym)
-              : m_proc(reinterpret_cast<T *>((void *)::GetProcAddress(lib.handle, sym.c_str())))
+              : m_proc(reinterpret_cast<T *>(::GetProcAddress(lib.handle, sym.c_str())))
             {}
 
             operator bool() const { return m_proc != nullptr; }
@@ -260,51 +257,51 @@ protected:
         ULONG_PTR m_cookie = 0;
     };
 #endif
-};
+        };
 
-class dialog : protected settings, protected platform
-{
-public:
-    bool ready(int timeout = default_wait_timeout) const;
-    bool kill() const;
+        class dialog : protected settings, protected platform
+        {
+        public:
+            bool ready(int timeout = default_wait_timeout) const;
+            bool kill() const;
 
-protected:
-    explicit dialog();
+        protected:
+            explicit dialog();
 
-    std::vector<std::string> desktop_helper() const;
-    static std::string buttons_to_name(choice _choice);
-    static std::string get_icon_name(icon _icon);
+            std::vector<std::string> desktop_helper() const;
+            static std::string buttons_to_name(choice _choice);
+            static std::string get_icon_name(icon _icon);
 
-    std::string powershell_quote(std::string const &str) const;
-    std::string osascript_quote(std::string const &str) const;
-    std::string shell_quote(std::string const &str) const;
+            std::string powershell_quote(std::string const &str) const;
+            std::string osascript_quote(std::string const &str) const;
+            std::string shell_quote(std::string const &str) const;
 
-    // Keep handle to executing command
-    std::shared_ptr<executor> m_async;
-};
+            // Keep handle to executing command
+            std::shared_ptr<executor> m_async;
+        };
 
-class file_dialog : public dialog
-{
-protected:
-    enum type
-    {
-        open,
-        save,
-        folder,
-    };
+        class file_dialog : public dialog
+        {
+        protected:
+            enum type
+            {
+                open,
+                save,
+                folder,
+            };
 
-    file_dialog(type in_type,
-                std::string const &title,
-                std::string const &default_path = "",
-                std::vector<std::string> const &filters = {},
-                opt options = opt::none);
+            file_dialog(type in_type,
+                        std::string const &title,
+                        std::string const &default_path = "",
+                        std::vector<std::string> const &filters = {},
+                        opt options = opt::none);
 
-protected:
-    std::string string_result();
-    std::vector<std::string> vector_result();
+        protected:
+            std::string string_result();
+            std::vector<std::string> vector_result();
 
 #if _WIN32
-    static int CALLBACK bffcallback(HWND hwnd, UINT uMsg, LPARAM, LPARAM pData);
+            static int CALLBACK bffcallback(HWND hwnd, UINT uMsg, LPARAM, LPARAM pData);
 #if PFD_HAS_IFILEDIALOG
     std::string select_folder_vista(IFileDialog *ifd, bool force_path);
 #endif
@@ -314,109 +311,98 @@ protected:
 
     std::vector<std::string> m_vector_result;
 #endif
-};
+        };
 
-} // namespace internal
-
-//
-// The path class provides some platform-specific path constants
-//
-
-class path : protected internal::platform
-{
-public:
-    static std::string home();
-    static std::string separator();
-};
+    } // namespace internal
 
 //
 // The notify widget
 //
 
-class notify : public internal::dialog
-{
-public:
-    notify(std::string const &title,
-           std::string const &message,
-           icon _icon = icon::info);
-};
+    class notify : public internal::dialog
+    {
+    public:
+        notify(std::string const &title,
+               std::string const &message,
+               icon _icon = icon::info);
+    };
 
 //
 // The message widget
 //
 
-class message : public internal::dialog
-{
-public:
-    message(std::string const &title,
-            std::string const &text,
-            choice _choice = choice::ok_cancel,
-            icon _icon = icon::info);
+    class message : public internal::dialog
+    {
+    public:
+        message(std::string const &title,
+                std::string const &text,
+                choice _choice = choice::ok_cancel,
+                icon _icon = icon::info);
 
-    button result();
+        button result();
 
-private:
-    // Some extra logic to map the exit code to button number
-    std::map<int, button> m_mappings;
-};
+    private:
+        // Some extra logic to map the exit code to button number
+        std::map<int, button> m_mappings;
+    };
 
 //
 // The open_file, save_file, and open_folder widgets
 //
 
-class open_file : public internal::file_dialog
-{
-public:
-    open_file(std::string const &title,
-              std::string const &default_path = "",
-              std::vector<std::string> const &filters = { "All Files", "*" },
-              opt options = opt::none);
+    class open_file : public internal::file_dialog
+    {
+    public:
+        open_file(std::string const &title,
+                  std::string const &default_path = "",
+                  std::vector<std::string> const &filters = { "All Files", "*" },
+                  opt options = opt::none);
 
 #if defined(__has_cpp_attribute)
-#if __has_cpp_attribute(deprecated)
+        #if __has_cpp_attribute(deprecated)
     // Backwards compatibility
     [[deprecated("Use pfd::opt::multiselect instead of allow_multiselect")]]
 #endif
 #endif
-    open_file(std::string const &title,
-              std::string const &default_path,
-              std::vector<std::string> const &filters,
-              bool allow_multiselect);
+        open_file(std::string const &title,
+                  std::string const &default_path,
+                  std::vector<std::string> const &filters,
+                  bool allow_multiselect);
 
-    std::vector<std::string> result();
-};
+        std::vector<std::string> result();
+    };
 
-class save_file : public internal::file_dialog
-{
-public:
-    save_file(std::string const &title,
-              std::string const &default_path = "",
-              std::vector<std::string> const &filters = { "All Files", "*" },
-              opt options = opt::none);
+    class save_file : public internal::file_dialog
+    {
+    public:
+        save_file(std::string const &title,
+                  std::string const &default_path = "",
+                  std::vector<std::string> const &filters = { "All Files", "*" },
+                  opt options = opt::none);
 
 #if defined(__has_cpp_attribute)
-#if __has_cpp_attribute(deprecated)
+        #if __has_cpp_attribute(deprecated)
     // Backwards compatibility
     [[deprecated("Use pfd::opt::force_overwrite instead of confirm_overwrite")]]
 #endif
 #endif
-    save_file(std::string const &title,
-              std::string const &default_path,
-              std::vector<std::string> const &filters,
-              bool confirm_overwrite);
+        save_file(std::string const &title,
+                  std::string const &default_path,
+                  std::vector<std::string> const &filters,
+                  bool confirm_overwrite);
 
-    std::string result();
-};
+        std::string result();
+    };
 
-class select_folder : public internal::file_dialog
-{
-public:
-    select_folder(std::string const &title,
-                  std::string const &default_path = "",
-                  opt options = opt::none);
+    class select_folder : public internal::file_dialog
+    {
+    public:
+        select_folder(std::string const &title,
+                      std::string const &default_path = "",
+                      opt options = opt::none);
 
-    std::string result();
-};
+        std::string result();
+    };
 
 //
 // Below this are all the method implementations. You may choose to define the
@@ -428,11 +414,11 @@ public:
 
 // internal free functions implementations
 
-namespace internal
-{
+    namespace internal
+    {
 
 #if _WIN32
-static inline std::wstring str2wstr(std::string const &str)
+        static inline std::wstring str2wstr(std::string const &str)
 {
     int len = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), (int)str.size(), nullptr, 0);
     std::wstring ret(len, '\0');
@@ -469,260 +455,163 @@ static inline bool is_vista()
 
 // This is necessary until C++20 which will have std::string::ends_with() etc.
 
-static inline bool ends_with(std::string const &str, std::string const &suffix)
-{
-    return suffix.size() <= str.size() &&
-        str.compare(str.size() - suffix.size(), suffix.size(), suffix) == 0;
-}
+        static inline bool ends_with(std::string const &str, std::string const &suffix)
+        {
+            return suffix.size() <= str.size() &&
+                   str.compare(str.size() - suffix.size(), suffix.size(), suffix) == 0;
+        }
 
-static inline bool starts_with(std::string const &str, std::string const &prefix)
-{
-    return prefix.size() <= str.size() &&
-        str.compare(0, prefix.size(), prefix) == 0;
-}
+        static inline bool starts_with(std::string const &str, std::string const &prefix)
+        {
+            return prefix.size() <= str.size() &&
+                   str.compare(0, prefix.size(), prefix) == 0;
+        }
 
-// This is necessary until C++17 which will have std::filesystem::is_directory
-
-static inline bool is_directory(std::string const &path)
-{
-#if _WIN32
-    auto attr = GetFileAttributesA(path.c_str());
-    return attr != INVALID_FILE_ATTRIBUTES && (attr & FILE_ATTRIBUTE_DIRECTORY);
-#elif __EMSCRIPTEN__
-    // TODO
-    return false;
-#else
-    struct stat s;
-    return stat(path.c_str(), &s) == 0 && S_ISDIR(s.st_mode);
-#endif
-}
-
-// This is necessary because getenv is not thread-safe
-
-static inline std::string getenv(std::string const &str)
-{
-#if _MSC_VER
-    char *buf = nullptr;
-    size_t size = 0;
-    if (_dupenv_s(&buf, &size, str.c_str()) == 0 && buf)
-    {
-        std::string ret(buf);
-        free(buf);
-        return ret;
-    }
-    return "";
-#else
-    auto buf = std::getenv(str.c_str());
-    return buf ? buf : "";
-#endif
-}
-
-} // namespace internal
+    } // namespace internal
 
 // settings implementation
 
-inline settings::settings(bool resync)
-{
-    flags(flag::is_scanned) &= !resync;
+    inline settings::settings(bool resync)
+    {
+        flags(flag::is_scanned) &= !resync;
 
-    if (flags(flag::is_scanned))
-        return;
-
-    auto pfd_verbose = internal::getenv("PFD_VERBOSE");
-    auto match_no = std::regex("(|0|no|false)", std::regex_constants::icase);
-    if (!std::regex_match(pfd_verbose, match_no))
-        flags(flag::is_verbose) = true;
+        if (flags(flag::is_scanned))
+            return;
 
 #if _WIN32
-    flags(flag::is_vista) = internal::is_vista();
+        flags(flag::is_vista) = internal::is_vista();
 #elif !__APPLE__
-    flags(flag::has_zenity) = check_program("zenity");
-    flags(flag::has_matedialog) = check_program("matedialog");
-    flags(flag::has_qarma) = check_program("qarma");
-    flags(flag::has_kdialog) = check_program("kdialog");
+        flags(flag::has_zenity) = check_program("zenity");
+        flags(flag::has_matedialog) = check_program("matedialog");
+        flags(flag::has_qarma) = check_program("qarma");
+        flags(flag::has_kdialog) = check_program("kdialog");
 
-    // If multiple helpers are available, try to default to the best one
-    if (flags(flag::has_zenity) && flags(flag::has_kdialog))
-    {
-        auto desktop_name = internal::getenv("XDG_SESSION_DESKTOP");
-        if (desktop_name == std::string("gnome"))
-            flags(flag::has_kdialog) = false;
-        else if (desktop_name == std::string("KDE"))
-            flags(flag::has_zenity) = false;
-    }
+        // If multiple helpers are available, try to default to the best one
+        if (flags(flag::has_zenity) && flags(flag::has_kdialog))
+        {
+            auto desktop_name = std::getenv("XDG_SESSION_DESKTOP");
+            if (desktop_name && desktop_name == std::string("gnome"))
+                flags(flag::has_kdialog) = false;
+            else if (desktop_name && desktop_name == std::string("KDE"))
+                flags(flag::has_zenity) = false;
+        }
 #endif
 
-    flags(flag::is_scanned) = true;
-}
+        flags(flag::is_scanned) = true;
+    }
 
-inline bool settings::available()
-{
+    inline bool settings::available()
+    {
 #if _WIN32
-    return true;
+        return true;
 #elif __APPLE__
-    return true;
+        return true;
 #elif __EMSCRIPTEN__
-    // FIXME: Return true after implementation is complete.
+        // FIXME: Return true after implementation is complete.
     return false;
 #else
-    settings tmp;
-    return tmp.flags(flag::has_zenity) ||
-           tmp.flags(flag::has_matedialog) ||
-           tmp.flags(flag::has_qarma) ||
-           tmp.flags(flag::has_kdialog);
+        settings tmp;
+        return tmp.flags(flag::has_zenity) ||
+               tmp.flags(flag::has_matedialog) ||
+               tmp.flags(flag::has_qarma) ||
+               tmp.flags(flag::has_kdialog);
 #endif
-}
+    }
 
-inline void settings::verbose(bool value)
-{
-    settings().flags(flag::is_verbose) = value;
-}
+    inline void settings::verbose(bool value)
+    {
+        settings().flags(flag::is_verbose) = value;
+    }
 
-inline void settings::rescan()
-{
-    settings(/* resync = */ true);
-}
+    inline void settings::rescan()
+    {
+        settings(/* resync = */ true);
+    }
 
 // Check whether a program is present using “which”.
-inline bool settings::check_program(std::string const &program)
-{
-#if _WIN32
-    (void)program;
-    return false;
-#elif __EMSCRIPTEN__
-    (void)program;
-    return false;
-#else
-    int exit_code = -1;
-    internal::executor async;
-    async.start_process({"/bin/sh", "-c", "which " + program});
-    async.result(&exit_code);
-    return exit_code == 0;
-#endif
-}
-
-inline bool settings::is_osascript() const
-{
-#if __APPLE__
-    return true;
-#else
-    return false;
-#endif
-}
-
-inline bool settings::is_zenity() const
-{
-    return flags(flag::has_zenity) ||
-           flags(flag::has_matedialog) ||
-           flags(flag::has_qarma);
-}
-
-inline bool settings::is_kdialog() const
-{
-    return flags(flag::has_kdialog);
-}
-
-inline bool const &settings::flags(flag in_flag) const
-{
-    static bool flags[size_t(flag::max_flag)];
-    return flags[size_t(in_flag)];
-}
-
-inline bool &settings::flags(flag in_flag)
-{
-    return const_cast<bool &>(static_cast<settings const *>(this)->flags(in_flag));
-}
-
-// path implementation
-inline std::string path::home()
-{
-#if _WIN32
-    // First try the USERPROFILE environment variable
-    auto user_profile = internal::getenv("USERPROFILE");
-    if (user_profile.size() > 0)
-        return user_profile;
-    // Otherwise, try GetUserProfileDirectory()
-    HANDLE token = nullptr;
-    DWORD len = MAX_PATH;
-    char buf[MAX_PATH] = { '\0' };
-    if (OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token))
+    inline bool settings::check_program(std::string const &program)
     {
-        dll userenv("userenv.dll");
-        dll::proc<BOOL WINAPI (HANDLE, LPSTR, LPDWORD)> get_user_profile_directory(userenv, "GetUserProfileDirectoryA");
-        get_user_profile_directory(token, buf, &len);
-        CloseHandle(token);
-        if (*buf)
-            return buf;
-    }
-#elif __EMSCRIPTEN__
-    return "/";
-#else
-    // First try the HOME environment variable
-    auto home = internal::getenv("HOME");
-    if (home.size() > 0)
-        return home;
-    // Otherwise, try getpwuid_r()
-    size_t len = 4096;
-#if defined(_SC_GETPW_R_SIZE_MAX)
-    auto size_max = sysconf(_SC_GETPW_R_SIZE_MAX);
-    if (size_max != -1)
-        len = size_t(size_max);
-#endif
-    std::vector<char> buf(len);
-    struct passwd pwd, *result;
-    if (getpwuid_r(getuid(), &pwd, buf.data(), buf.size(), &result) == 0)
-        return result->pw_dir;
-#endif
-    return "/";
-}
-
-inline std::string path::separator()
-{
 #if _WIN32
-    return "\\";
+        (void)program;
+    return false;
+#elif __EMSCRIPTEN__
+        (void)program;
+    return false;
 #else
-    return "/";
+        int exit_code = -1;
+        internal::executor async;
+        async.start_process({"/bin/sh", "-c", "which " + program});
+        async.result(&exit_code);
+        return exit_code == 0;
 #endif
-}
+    }
+
+    inline bool settings::is_osascript() const
+    {
+#if __APPLE__
+        return true;
+#else
+        return false;
+#endif
+    }
+
+    inline bool settings::is_zenity() const
+    {
+        return flags(flag::has_zenity) ||
+               flags(flag::has_matedialog) ||
+               flags(flag::has_qarma);
+    }
+
+    inline bool settings::is_kdialog() const
+    {
+        return flags(flag::has_kdialog);
+    }
+
+    inline bool const &settings::flags(flag in_flag) const
+    {
+        static bool flags[size_t(flag::max_flag)];
+        return flags[size_t(in_flag)];
+    }
+
+    inline bool &settings::flags(flag in_flag)
+    {
+        return const_cast<bool &>(static_cast<settings const *>(this)->flags(in_flag));
+    }
 
 // executor implementation
 
-inline std::string internal::executor::result(int *exit_code /* = nullptr */)
-{
-    stop();
-    if (exit_code)
-        *exit_code = m_exit_code;
-    return m_stdout;
-}
+    inline std::string internal::executor::result(int *exit_code /* = nullptr */)
+    {
+        stop();
+        if (exit_code)
+            *exit_code = m_exit_code;
+        return m_stdout;
+    }
 
-inline bool internal::executor::kill()
-{
+    inline bool internal::executor::kill()
+    {
 #if _WIN32
-    if (m_future.valid())
+        if (m_future.valid())
     {
         // Close all windows that weren’t open when we started the future
         auto previous_windows = m_windows;
         EnumWindows(&enum_windows_callback, (LPARAM)this);
         for (auto hwnd : m_windows)
             if (previous_windows.find(hwnd) == previous_windows.end())
-            {
                 SendMessage(hwnd, WM_CLOSE, 0, 0);
-                // Also send IDNO in case of a Yes/No or Abort/Retry/Ignore messagebox
-                SendMessage(hwnd, WM_COMMAND, IDNO, 0);
-            }
     }
 #elif __EMSCRIPTEN__ || __NX__
-    // FIXME: do something
+        // FIXME: do something
     return false; // cannot kill
 #else
-    ::kill(m_pid, SIGKILL);
+        ::kill(m_pid, SIGKILL);
 #endif
-    stop();
-    return true;
-}
+        stop();
+        return true;
+    }
 
 #if _WIN32
-inline BOOL CALLBACK internal::executor::enum_windows_callback(HWND hwnd, LPARAM lParam)
+    inline BOOL CALLBACK internal::executor::enum_windows_callback(HWND hwnd, LPARAM lParam)
 {
     auto that = (executor *)lParam;
 
@@ -735,7 +624,7 @@ inline BOOL CALLBACK internal::executor::enum_windows_callback(HWND hwnd, LPARAM
 #endif
 
 #if _WIN32
-inline void internal::executor::start_func(std::function<std::string(int *)> const &fun)
+    inline void internal::executor::start_func(std::function<std::string(int *)> const &fun)
 {
     stop();
 
@@ -755,69 +644,69 @@ inline void internal::executor::start_func(std::function<std::string(int *)> con
 }
 
 #elif __EMSCRIPTEN__
-inline void internal::executor::start(int exit_code)
+    inline void internal::executor::start(int exit_code)
 {
     m_exit_code = exit_code;
 }
 
 #else
-inline void internal::executor::start_process(std::vector<std::string> const &command)
-{
-    stop();
-    m_stdout.clear();
-    m_exit_code = -1;
-
-    int in[2], out[2];
-    if (pipe(in) != 0 || pipe(out) != 0)
-        return;
-
-    m_pid = fork();
-    if (m_pid < 0)
-        return;
-
-    close(in[m_pid ? 0 : 1]);
-    close(out[m_pid ? 1 : 0]);
-
-    if (m_pid == 0)
+    inline void internal::executor::start_process(std::vector<std::string> const &command)
     {
-        dup2(in[0], STDIN_FILENO);
-        dup2(out[1], STDOUT_FILENO);
+        stop();
+        m_stdout.clear();
+        m_exit_code = -1;
 
-        // Ignore stderr so that it doesn’t pollute the console (e.g. GTK+ errors from zenity)
-        int fd = open("/dev/null", O_WRONLY);
-        dup2(fd, STDERR_FILENO);
-        close(fd);
+        int in[2], out[2];
+        if (pipe(in) != 0 || pipe(out) != 0)
+            return;
 
-        std::vector<char *> args;
-        std::transform(command.cbegin(), command.cend(), std::back_inserter(args),
-                       [](std::string const &s) { return const_cast<char *>(s.c_str()); });
-        args.push_back(nullptr); // null-terminate argv[]
+        m_pid = fork();
+        if (m_pid < 0)
+            return;
 
-        execvp(args[0], args.data());
-        exit(1);
+        close(in[m_pid ? 0 : 1]);
+        close(out[m_pid ? 1 : 0]);
+
+        if (m_pid == 0)
+        {
+            dup2(in[0], STDIN_FILENO);
+            dup2(out[1], STDOUT_FILENO);
+
+            // Ignore stderr so that it doesn’t pollute the console (e.g. GTK+ errors from zenity)
+            int fd = open("/dev/null", O_WRONLY);
+            dup2(fd, STDERR_FILENO);
+            close(fd);
+
+            std::vector<char *> args;
+            std::transform(command.cbegin(), command.cend(), std::back_inserter(args),
+                           [](std::string const &s) { return const_cast<char *>(s.c_str()); });
+            args.push_back(nullptr); // null-terminate argv[]
+
+            execvp(args[0], args.data());
+            exit(1);
+        }
+
+        close(in[1]);
+        m_fd = out[0];
+        auto flags = fcntl(m_fd, F_GETFL);
+        fcntl(m_fd, F_SETFL, flags | O_NONBLOCK);
+
+        m_running = true;
     }
-
-    close(in[1]);
-    m_fd = out[0];
-    auto flags = fcntl(m_fd, F_GETFL);
-    fcntl(m_fd, F_SETFL, flags | O_NONBLOCK);
-
-    m_running = true;
-}
 #endif
 
-inline internal::executor::~executor()
-{
-    stop();
-}
+    inline internal::executor::~executor()
+    {
+        stop();
+    }
 
-inline bool internal::executor::ready(int timeout /* = default_wait_timeout */)
-{
-    if (!m_running)
-        return true;
+    inline bool internal::executor::ready(int timeout /* = default_wait_timeout */)
+    {
+        if (!m_running)
+            return true;
 
 #if _WIN32
-    if (m_future.valid())
+        if (m_future.valid())
     {
         auto status = m_future.wait_for(std::chrono::milliseconds(timeout));
         if (status != std::future_status::ready)
@@ -837,49 +726,49 @@ inline bool internal::executor::ready(int timeout /* = default_wait_timeout */)
         m_stdout = m_future.get();
     }
 #elif __EMSCRIPTEN__ || __NX__
-    // FIXME: do something
+        // FIXME: do something
     (void)timeout;
 #else
-    char buf[BUFSIZ];
-    ssize_t received = read(m_fd, buf, BUFSIZ); // Flawfinder: ignore
-    if (received > 0)
-    {
-        m_stdout += std::string(buf, received);
-        return false;
-    }
+        char buf[BUFSIZ];
+        ssize_t received = read(m_fd, buf, BUFSIZ); // Flawfinder: ignore
+        if (received > 0)
+        {
+            m_stdout += std::string(buf, received);
+            return false;
+        }
 
-    // Reap child process if it is dead. It is possible that the system has already reaped it
-    // (this happens when the calling application handles or ignores SIG_CHLD) and results in
-    // waitpid() failing with ECHILD. Otherwise we assume the child is running and we sleep for
-    // a little while.
-    int status;
-    pid_t child = waitpid(m_pid, &status, WNOHANG);
-    if (child != m_pid && (child >= 0 || errno != ECHILD))
-    {
-        // FIXME: this happens almost always at first iteration
-        std::this_thread::sleep_for(std::chrono::milliseconds(timeout));
-        return false;
-    }
+        // Reap child process if it is dead. It is possible that the system has already reaped it
+        // (this happens when the calling application handles or ignores SIG_CHLD) and results in
+        // waitpid() failing with ECHILD. Otherwise we assume the child is running and we sleep for
+        // a little while.
+        int status;
+        pid_t child = waitpid(m_pid, &status, WNOHANG);
+        if (child != m_pid && (child >= 0 || errno != ECHILD))
+        {
+            // FIXME: this happens almost always at first iteration
+            std::this_thread::sleep_for(std::chrono::milliseconds(timeout));
+            return false;
+        }
 
-    close(m_fd);
-    m_exit_code = WEXITSTATUS(status);
+        close(m_fd);
+        m_exit_code = WEXITSTATUS(status);
 #endif
 
-    m_running = false;
-    return true;
-}
+        m_running = false;
+        return true;
+    }
 
-inline void internal::executor::stop()
-{
-    // Loop until the user closes the dialog
-    while (!ready())
-        ;
-}
+    inline void internal::executor::stop()
+    {
+        // Loop until the user closes the dialog
+        while (!ready())
+            ;
+    }
 
 // dll implementation
 
 #if _WIN32
-inline internal::platform::dll::dll(std::string const &name)
+    inline internal::platform::dll::dll(std::string const &name)
   : handle(::LoadLibraryA(name.c_str()))
 {}
 
@@ -893,7 +782,7 @@ inline internal::platform::dll::~dll()
 // ole32_dll implementation
 
 #if _WIN32
-inline internal::platform::ole32_dll::ole32_dll()
+    inline internal::platform::ole32_dll::ole32_dll()
     : dll("ole32.dll")
 {
     // Use COINIT_MULTITHREADED because COINIT_APARTMENTTHREADED causes crashes.
@@ -917,7 +806,7 @@ inline bool internal::platform::ole32_dll::is_initialized()
 // new_style_context implementation
 
 #if _WIN32
-inline internal::platform::new_style_context::new_style_context()
+    inline internal::platform::new_style_context::new_style_context()
 {
     // Only create one activation context for the whole app lifetime.
     static HANDLE hctx = create();
@@ -953,7 +842,7 @@ inline HANDLE internal::platform::new_style_context::create()
         // crash with error “default context is already set”.
         sizeof(act_ctx),
         ACTCTX_FLAG_RESOURCE_NAME_VALID | ACTCTX_FLAG_ASSEMBLY_DIRECTORY_VALID,
-        "shell32.dll", 0, 0, sys_dir.c_str(), (LPCSTR)124, nullptr, 0,
+        "shell32.dll", 0, 0, sys_dir.c_str(), (LPCSTR)124,
     };
 
     return ::CreateActCtxA(&act_ctx);
@@ -962,107 +851,107 @@ inline HANDLE internal::platform::new_style_context::create()
 
 // dialog implementation
 
-inline bool internal::dialog::ready(int timeout /* = default_wait_timeout */) const
-{
-    return m_async->ready(timeout);
-}
+    inline bool internal::dialog::ready(int timeout /* = default_wait_timeout */) const
+    {
+        return m_async->ready(timeout);
+    }
 
-inline bool internal::dialog::kill() const
-{
-    return m_async->kill();
-}
+    inline bool internal::dialog::kill() const
+    {
+        return m_async->kill();
+    }
 
-inline internal::dialog::dialog()
-  : m_async(std::make_shared<executor>())
-{
-}
+    inline internal::dialog::dialog()
+            : m_async(std::make_shared<executor>())
+    {
+    }
 
-inline std::vector<std::string> internal::dialog::desktop_helper() const
-{
+    inline std::vector<std::string> internal::dialog::desktop_helper() const
+    {
 #if __APPLE__
-    return { "osascript" };
+        return { "osascript" };
 #else
-    return { flags(flag::has_zenity) ? "zenity"
-           : flags(flag::has_matedialog) ? "matedialog"
-           : flags(flag::has_qarma) ? "qarma"
-           : flags(flag::has_kdialog) ? "kdialog"
-           : "echo" };
+        return { flags(flag::has_zenity) ? "zenity"
+                                         : flags(flag::has_matedialog) ? "matedialog"
+                                                                       : flags(flag::has_qarma) ? "qarma"
+                                                                                                : flags(flag::has_kdialog) ? "kdialog"
+                                                                                                                           : "echo" };
 #endif
-}
-
-inline std::string internal::dialog::buttons_to_name(choice _choice)
-{
-    switch (_choice)
-    {
-        case choice::ok_cancel: return "okcancel";
-        case choice::yes_no: return "yesno";
-        case choice::yes_no_cancel: return "yesnocancel";
-        case choice::retry_cancel: return "retrycancel";
-        case choice::abort_retry_ignore: return "abortretryignore";
-        /* case choice::ok: */ default: return "ok";
     }
-}
 
-inline std::string internal::dialog::get_icon_name(icon _icon)
-{
-    switch (_icon)
+    inline std::string internal::dialog::buttons_to_name(choice _choice)
     {
-        case icon::warning: return "warning";
-        case icon::error: return "error";
-        case icon::question: return "question";
-        // Zenity wants "information" but WinForms wants "info"
-        /* case icon::info: */ default:
+        switch (_choice)
+        {
+            case choice::ok_cancel: return "okcancel";
+            case choice::yes_no: return "yesno";
+            case choice::yes_no_cancel: return "yesnocancel";
+            case choice::retry_cancel: return "retrycancel";
+            case choice::abort_retry_ignore: return "abortretryignore";
+                /* case choice::ok: */ default: return "ok";
+        }
+    }
+
+    inline std::string internal::dialog::get_icon_name(icon _icon)
+    {
+        switch (_icon)
+        {
+            case icon::warning: return "warning";
+            case icon::error: return "error";
+            case icon::question: return "question";
+                // Zenity wants "information" but WinForms wants "info"
+                /* case icon::info: */ default:
 #if _WIN32
-            return "info";
+                return "info";
 #else
-            return "information";
+                return "information";
 #endif
+        }
     }
-}
 
-// This is only used for debugging purposes
-inline std::ostream& operator <<(std::ostream &s, std::vector<std::string> const &v)
-{
-    int not_first = 0;
-    for (auto &e : v)
-        s << (not_first++ ? " " : "") << e;
-    return s;
-}
+// THis is only used for debugging purposes
+    inline std::ostream& operator <<(std::ostream &s, std::vector<std::string> const &v)
+    {
+        int not_first = 0;
+        for (auto &e : v)
+            s << (not_first++ ? " " : "") << e;
+        return s;
+    }
 
 // Properly quote a string for Powershell: replace ' or " with '' or ""
 // FIXME: we should probably get rid of newlines!
 // FIXME: the \" sequence seems unsafe, too!
 // XXX: this is no longer used but I would like to keep it around just in case
-inline std::string internal::dialog::powershell_quote(std::string const &str) const
-{
-    return "'" + std::regex_replace(str, std::regex("['\"]"), "$&$&") + "'";
-}
+    inline std::string internal::dialog::powershell_quote(std::string const &str) const
+    {
+        return "'" + std::regex_replace(str, std::regex("['\"]"), "$&$&") + "'";
+    }
 
 // Properly quote a string for osascript: replace \ or " with \\ or \"
 // XXX: this also used to replace ' with \' when popen was used, but it would be
 // smarter to do shell_quote(osascript_quote(...)) if this is needed again.
-inline std::string internal::dialog::osascript_quote(std::string const &str) const
-{
-    return "\"" + std::regex_replace(str, std::regex("[\\\\\"]"), "\\$&") + "\"";
-}
+    inline std::string internal::dialog::osascript_quote(std::string const &str) const
+    {
+        return "\"" + std::regex_replace(str, std::regex("[\\\\\"]"), "\\$&") + "\"";
+    }
 
 // Properly quote a string for the shell: just replace ' with '\''
 // XXX: this is no longer used but I would like to keep it around just in case
-inline std::string internal::dialog::shell_quote(std::string const &str) const
-{
-    return "'" + std::regex_replace(str, std::regex("'"), "'\\''") + "'";
-}
+    inline std::string internal::dialog::shell_quote(std::string const &str) const
+    {
+        return "'" + std::regex_replace(str, std::regex("'"), "'\\''") + "'";
+    }
 
 // file_dialog implementation
 
-inline internal::file_dialog::file_dialog(type in_type,
-            std::string const &title,
-            std::string const &default_path /* = "" */,
-            std::vector<std::string> const &filters /* = {} */,
-            opt options /* = opt::none */)
-{
+    inline internal::file_dialog::file_dialog(type in_type,
+                                              std::string const &title,
+                                              std::string const &default_path /* = "" */,
+                                              std::vector<std::string> const &filters /* = {} */,
+                                              opt options /* = opt::none */)
+    {
 #if _WIN32
-    std::string filter_list;
+        std::string filter_list;
     std::regex whitespace("  *");
     for (size_t i = 0; i + 1 < filters.size(); i += 2)
     {
@@ -1205,194 +1094,173 @@ inline internal::file_dialog::file_dialog(type in_type,
         return "";
     });
 #elif __EMSCRIPTEN__
-    // FIXME: do something
+        // FIXME: do something
     (void)in_type;
     (void)title;
     (void)default_path;
     (void)filters;
     (void)options;
 #else
-    auto command = desktop_helper();
+        auto command = desktop_helper();
 
-    if (is_osascript())
-    {
-        std::string script = "set ret to choose";
-        switch (in_type)
+        if (is_osascript())
         {
-            case type::save:
-                script += " file name";
-                break;
-            case type::open: default:
-                script += " file";
-                if (options & opt::multiselect)
-                    script += " with multiple selections allowed";
-                break;
-            case type::folder:
-                script += " folder";
-                break;
-        }
+            std::string script = "set ret to choose";
+            switch (in_type)
+            {
+                case type::save:
+                    script += " file name";
+                    break;
+                case type::open: default:
+                    script += " file";
+                    if (options & opt::multiselect)
+                        script += " with multiple selections allowed";
+                    break;
+                case type::folder:
+                    script += " folder";
+                    break;
+            }
 
-        if (default_path.size())
-        {
-            if (in_type == type::folder || is_directory(default_path))
-                script += " default location ";
+            if (default_path.size())
+                script += " default location " + osascript_quote(default_path);
+            script += " with prompt " + osascript_quote(title);
+
+            if (in_type == type::open)
+            {
+                // Concatenate all user-provided filter patterns
+                std::string patterns;
+                for (size_t i = 0; i < filters.size() / 2; ++i)
+                    patterns += " " + filters[2 * i + 1];
+
+                // Split the pattern list to check whether "*" is in there; if it
+                // is, we have to disable filters because there is no mechanism in
+                // OS X for the user to override the filter.
+                std::regex sep("\\s+");
+                std::string filter_list;
+                bool has_filter = true;
+                std::sregex_token_iterator iter(patterns.begin(), patterns.end(), sep, -1);
+                std::sregex_token_iterator end;
+                for ( ; iter != end; ++iter)
+                {
+                    auto pat = iter->str();
+                    if (pat == "*" || pat == "*.*")
+                        has_filter = false;
+                    else if (internal::starts_with(pat, "*."))
+                        filter_list += (filter_list.size() == 0 ? "" : ",") +
+                                       osascript_quote(pat.substr(2, pat.size() - 2));
+                }
+                if (has_filter && filter_list.size() > 0)
+                    script += " of type {" + filter_list + "}";
+            }
+
+            if (in_type == type::open && (options & opt::multiselect))
+            {
+                script += "\nset s to \"\"";
+                script += "\nrepeat with i in ret";
+                script += "\n  set s to s & (POSIX path of i) & \"\\n\"";
+                script += "\nend repeat";
+                script += "\ncopy s to stdout";
+            }
             else
-                script += " default name ";
-            script += osascript_quote(default_path);
+            {
+                script += "\nPOSIX path of ret";
+            }
+
+            command.push_back("-e");
+            command.push_back(script);
         }
-
-        script += " with prompt " + osascript_quote(title);
-
-        if (in_type == type::open)
+        else if (is_zenity())
         {
-            // Concatenate all user-provided filter patterns
-            std::string patterns;
+            command.push_back("--file-selection");
+            command.push_back("--filename=" + default_path);
+            command.push_back("--title");
+            command.push_back(title);
+            command.push_back("--separator=\n");
+
             for (size_t i = 0; i < filters.size() / 2; ++i)
-                patterns += " " + filters[2 * i + 1];
-
-            // Split the pattern list to check whether "*" is in there; if it
-            // is, we have to disable filters because there is no mechanism in
-            // OS X for the user to override the filter.
-            std::regex sep("\\s+");
-            std::string filter_list;
-            bool has_filter = true;
-            std::sregex_token_iterator iter(patterns.begin(), patterns.end(), sep, -1);
-            std::sregex_token_iterator end;
-            for ( ; iter != end; ++iter)
             {
-                auto pat = iter->str();
-                if (pat == "*" || pat == "*.*")
-                    has_filter = false;
-                else if (internal::starts_with(pat, "*."))
-                    filter_list += "," + osascript_quote(pat.substr(2, pat.size() - 2));
+                command.push_back("--file-filter");
+                command.push_back(filters[2 * i] + "|" + filters[2 * i + 1]);
             }
 
-            if (has_filter && filter_list.size() > 0)
+            if (in_type == type::save)
+                command.push_back("--save");
+            if (in_type == type::folder)
+                command.push_back("--directory");
+            if (!(options & opt::force_overwrite))
+                command.push_back("--confirm-overwrite");
+            if (options & opt::multiselect)
+                command.push_back("--multiple");
+        }
+        else if (is_kdialog())
+        {
+            switch (in_type)
             {
-                // There is a weird AppleScript bug where file extensions of length != 3 are
-                // ignored, e.g. type{"txt"} works, but type{"json"} does not. Fortunately if
-                // the whole list starts with a 3-character extension, everything works again.
-                // We use "///" for such an extension because we are sure it cannot appear in
-                // an actual filename.
-                script += " of type {\"///\"" + filter_list + "}";
+                case type::save: command.push_back("--getsavefilename"); break;
+                case type::open: command.push_back("--getopenfilename"); break;
+                case type::folder: command.push_back("--getexistingdirectory"); break;
             }
+            if (options & opt::multiselect)
+            {
+                command.push_back("--multiple");
+                command.push_back("--separate-output");
+            }
+
+            command.push_back(default_path);
+
+            std::string filter;
+            for (size_t i = 0; i < filters.size() / 2; ++i)
+                filter += (i == 0 ? "" : " | ") + filters[2 * i] + "(" + filters[2 * i + 1] + ")";
+            command.push_back(filter);
+
+            command.push_back("--title");
+            command.push_back(title);
         }
 
-        if (in_type == type::open && (options & opt::multiselect))
-        {
-            script += "\nset s to \"\"";
-            script += "\nrepeat with i in ret";
-            script += "\n  set s to s & (POSIX path of i) & \"\\n\"";
-            script += "\nend repeat";
-            script += "\ncopy s to stdout";
-        }
-        else
-        {
-            script += "\nPOSIX path of ret";
-        }
+        if (flags(flag::is_verbose))
+            std::cerr << "pfd: " << command << std::endl;
 
-        command.push_back("-e");
-        command.push_back(script);
-    }
-    else if (is_zenity())
-    {
-        command.push_back("--file-selection");
-
-        // If the default path is a directory, make sure it ends with "/" otherwise zenity will
-        // open the file dialog in the parent directory.
-        auto filename_arg = "--filename=" + default_path;
-        if (in_type != type::folder && !ends_with(default_path, "/") && internal::is_directory(default_path))
-            filename_arg += "/";
-        command.push_back(filename_arg);
-
-        command.push_back("--title");
-        command.push_back(title);
-        command.push_back("--separator=\n");
-
-        for (size_t i = 0; i < filters.size() / 2; ++i)
-        {
-            command.push_back("--file-filter");
-            command.push_back(filters[2 * i] + "|" + filters[2 * i + 1]);
-        }
-
-        if (in_type == type::save)
-            command.push_back("--save");
-        if (in_type == type::folder)
-            command.push_back("--directory");
-        if (!(options & opt::force_overwrite))
-            command.push_back("--confirm-overwrite");
-        if (options & opt::multiselect)
-            command.push_back("--multiple");
-    }
-    else if (is_kdialog())
-    {
-        switch (in_type)
-        {
-            case type::save: command.push_back("--getsavefilename"); break;
-            case type::open: command.push_back("--getopenfilename"); break;
-            case type::folder: command.push_back("--getexistingdirectory"); break;
-        }
-        if (options & opt::multiselect)
-        {
-            command.push_back("--multiple");
-            command.push_back("--separate-output");
-        }
-
-        command.push_back(default_path);
-
-        std::string filter;
-        for (size_t i = 0; i < filters.size() / 2; ++i)
-            filter += (i == 0 ? "" : " | ") + filters[2 * i] + "(" + filters[2 * i + 1] + ")";
-        command.push_back(filter);
-
-        command.push_back("--title");
-        command.push_back(title);
-    }
-
-    if (flags(flag::is_verbose))
-        std::cerr << "pfd: " << command << std::endl;
-
-    m_async->start_process(command);
+        m_async->start_process(command);
 #endif
-}
+    }
 
-inline std::string internal::file_dialog::string_result()
-{
+    inline std::string internal::file_dialog::string_result()
+    {
 #if _WIN32
-    return m_async->result();
+        return m_async->result();
 #else
-    auto ret = m_async->result();
-    // Strip potential trailing newline (zenity). Also strip trailing slash
-    // added by osascript for consistency with other backends.
-    while (!ret.empty() && (ret.back() == '\n' || ret.back() == '/'))
-        ret.pop_back();
-    return ret;
+        auto ret = m_async->result();
+        // Strip potential trailing newline (zenity). Also strip trailing slash
+        // added by osascript for consistency with other backends.
+        while (!ret.empty() && (ret.back() == '\n' || ret.back() == '/'))
+            ret.pop_back();
+        return ret;
 #endif
-}
+    }
 
-inline std::vector<std::string> internal::file_dialog::vector_result()
-{
+    inline std::vector<std::string> internal::file_dialog::vector_result()
+    {
 #if _WIN32
-    m_async->result();
+        m_async->result();
     return m_vector_result;
 #else
-    std::vector<std::string> ret;
-    auto result = m_async->result();
-    for (;;)
-    {
-        // Split result along newline characters
-        auto i = result.find('\n');
-        if (i == 0 || i == std::string::npos)
-            break;
-        ret.push_back(result.substr(0, i));
-        result = result.substr(i + 1, result.size());
-    }
-    return ret;
+        std::vector<std::string> ret;
+        auto result = m_async->result();
+        for (;;)
+        {
+            // Split result along newline characters
+            auto i = result.find('\n');
+            if (i == 0 || i == std::string::npos)
+                break;
+            ret.push_back(result.substr(0, i));
+            result = result.substr(i + 1, result.size());
+        }
+        return ret;
 #endif
-}
+    }
 
 #if _WIN32
-// Use a static function to pass as BFFCALLBACK for legacy folder select
+    // Use a static function to pass as BFFCALLBACK for legacy folder select
 inline int CALLBACK internal::file_dialog::bffcallback(HWND hwnd, UINT uMsg,
                                                        LPARAM, LPARAM pData)
 {
@@ -1441,7 +1309,7 @@ inline std::string internal::file_dialog::select_folder_vista(IFileDialog *ifd, 
     }
 
     // Set the dialog title and option to select folders
-    ifd->SetOptions(FOS_PICKFOLDERS | FOS_FORCEFILESYSTEM);
+    ifd->SetOptions(FOS_PICKFOLDERS);
     ifd->SetTitle(m_wtitle.c_str());
 
     hr = ifd->Show(GetActiveWindow());
@@ -1451,27 +1319,15 @@ inline std::string internal::file_dialog::select_folder_vista(IFileDialog *ifd, 
         hr = ifd->GetResult(&item);
         if (SUCCEEDED(hr))
         {
-            wchar_t* wname = nullptr;
-            // This is unlikely to fail because we use FOS_FORCEFILESYSTEM, but try
-            // to output a debug message just in case.
-            if (SUCCEEDED(item->GetDisplayName(SIGDN_FILESYSPATH, &wname)))
-            {
-                result = internal::wstr2str(std::wstring(wname));
-                dll::proc<void WINAPI (LPVOID)>(ole32_dll(), "CoTaskMemFree")(wname);
-            }
-            else
-            {
-                if (SUCCEEDED(item->GetDisplayName(SIGDN_NORMALDISPLAY, &wname)))
-                {
-                    auto name = internal::wstr2str(std::wstring(wname));
-                    dll::proc<void WINAPI (LPVOID)>(ole32_dll(), "CoTaskMemFree")(wname);
-                    std::cerr << "pfd: failed to get path for " << name << std::endl;
-                }
-                else
-                    std::cerr << "pfd: item of unknown type selected" << std::endl;
-            }
-
+            wchar_t* wselected = nullptr;
+            item->GetDisplayName(SIGDN_FILESYSPATH, &wselected);
             item->Release();
+
+            if (wselected)
+            {
+                result = internal::wstr2str(std::wstring(wselected));
+                dll::proc<void WINAPI (LPVOID)>(ole32_dll(), "CoTaskMemFree")(wselected);
+            }
         }
     }
 
@@ -1484,15 +1340,15 @@ inline std::string internal::file_dialog::select_folder_vista(IFileDialog *ifd, 
 
 // notify implementation
 
-inline notify::notify(std::string const &title,
-                      std::string const &message,
-                      icon _icon /* = icon::info */)
-{
-    if (_icon == icon::question) // Not supported by notifications
-        _icon = icon::info;
+    inline notify::notify(std::string const &title,
+                          std::string const &message,
+                          icon _icon /* = icon::info */)
+    {
+        if (_icon == icon::question) // Not supported by notifications
+            _icon = icon::info;
 
 #if _WIN32
-    // Use a static shared pointer for notify_icon so that we can delete
+        // Use a static shared pointer for notify_icon so that we can delete
     // it whenever we need to display a new one, and we can also wait
     // until the program has finished running.
     struct notify_icon_data : public NOTIFYICONDATAW
@@ -1553,53 +1409,53 @@ inline notify::notify(std::string const &title,
     // Display the new icon
     Shell_NotifyIconW(NIM_ADD, nid.get());
 #elif __EMSCRIPTEN__
-    // FIXME: do something
+        // FIXME: do something
     (void)title;
     (void)message;
 #else
-    auto command = desktop_helper();
+        auto command = desktop_helper();
 
-    if (is_osascript())
-    {
-        command.push_back("-e");
-        command.push_back("display notification " + osascript_quote(message) +
-                          " with title " + osascript_quote(title));
-    }
-    else if (is_zenity())
-    {
-        command.push_back("--notification");
-        command.push_back("--window-icon");
-        command.push_back(get_icon_name(_icon));
-        command.push_back("--text");
-        command.push_back(title + "\n" + message);
-    }
-    else if (is_kdialog())
-    {
-        command.push_back("--icon");
-        command.push_back(get_icon_name(_icon));
-        command.push_back("--title");
-        command.push_back(title);
-        command.push_back("--passivepopup");
-        command.push_back(message);
-        command.push_back("5");
-    }
+        if (is_osascript())
+        {
+            command.push_back("-e");
+            command.push_back("display notification " + osascript_quote(message) +
+                              " with title " + osascript_quote(title));
+        }
+        else if (is_zenity())
+        {
+            command.push_back("--notification");
+            command.push_back("--window-icon");
+            command.push_back(get_icon_name(_icon));
+            command.push_back("--text");
+            command.push_back(title + "\n" + message);
+        }
+        else if (is_kdialog())
+        {
+            command.push_back("--icon");
+            command.push_back(get_icon_name(_icon));
+            command.push_back("--title");
+            command.push_back(title);
+            command.push_back("--passivepopup");
+            command.push_back(message);
+            command.push_back("5");
+        }
 
-    if (flags(flag::is_verbose))
-        std::cerr << "pfd: " << command << std::endl;
+        if (flags(flag::is_verbose))
+            std::cerr << "pfd: " << command << std::endl;
 
-    m_async->start_process(command);
+        m_async->start_process(command);
 #endif
-}
+    }
 
 // message implementation
 
-inline message::message(std::string const &title,
-                        std::string const &text,
-                        choice _choice /* = choice::ok_cancel */,
-                        icon _icon /* = icon::info */)
-{
+    inline message::message(std::string const &title,
+                            std::string const &text,
+                            choice _choice /* = choice::ok_cancel */,
+                            icon _icon /* = icon::info */)
+    {
 #if _WIN32
-    // Use MB_SYSTEMMODAL rather than MB_TOPMOST to ensure the message window is brought
+        // Use MB_SYSTEMMODAL rather than MB_TOPMOST to ensure the message window is brought
     // to front. See https://github.com/samhocevar/portable-file-dialogs/issues/52
     UINT style = MB_SYSTEMMODAL;
     switch (_icon)
@@ -1639,7 +1495,7 @@ inline message::message(std::string const &title,
     });
 
 #elif __EMSCRIPTEN__
-    std::string full_message;
+        std::string full_message;
     switch (_icon)
     {
         case icon::warning: full_message = "⚠️"; break;
@@ -1660,227 +1516,227 @@ inline message::message(std::string const &title,
         return 0;
     }, full_message.c_str(), _choice == choice::ok_cancel));
 #else
-    auto command = desktop_helper();
+        auto command = desktop_helper();
 
-    if (is_osascript())
-    {
-        std::string script = "display dialog " + osascript_quote(text) +
-                             " with title " + osascript_quote(title);
-        auto if_cancel = button::cancel;
-        switch (_choice)
+        if (is_osascript())
         {
-            case choice::ok_cancel:
-                script += "buttons {\"OK\", \"Cancel\"}"
-                          " default button \"OK\""
-                          " cancel button \"Cancel\"";
-                break;
-            case choice::yes_no:
-                script += "buttons {\"Yes\", \"No\"}"
-                          " default button \"Yes\""
-                          " cancel button \"No\"";
-                if_cancel = button::no;
-                break;
-            case choice::yes_no_cancel:
-                script += "buttons {\"Yes\", \"No\", \"Cancel\"}"
-                          " default button \"Yes\""
-                          " cancel button \"Cancel\"";
-                break;
-            case choice::retry_cancel:
-                script += "buttons {\"Retry\", \"Cancel\"}"
-                          " default button \"Retry\""
-                          " cancel button \"Cancel\"";
-                break;
-            case choice::abort_retry_ignore:
-                script += "buttons {\"Abort\", \"Retry\", \"Ignore\"}"
-                          " default button \"Abort\""
-                          " cancel button \"Retry\"";
-                if_cancel = button::retry;
-                break;
-            case choice::ok: default:
-                script += "buttons {\"OK\"}"
-                          " default button \"OK\""
-                          " cancel button \"OK\"";
-                if_cancel = button::ok;
-                break;
-        }
-        m_mappings[1] = if_cancel;
-        m_mappings[256] = if_cancel; // XXX: I think this was never correct
-        script += " with icon ";
-        switch (_icon)
-        {
-            #define PFD_OSX_ICON(n) "alias ((path to library folder from system domain) as text " \
+            std::string script = "display dialog " + osascript_quote(text) +
+                                 " with title " + osascript_quote(title);
+            switch (_choice)
+            {
+                case choice::ok_cancel:
+                    script += "buttons {\"OK\", \"Cancel\"}"
+                              " default button \"OK\""
+                              " cancel button \"Cancel\"";
+                    m_mappings[256] = button::cancel;
+                    break;
+                case choice::yes_no:
+                    script += "buttons {\"Yes\", \"No\"}"
+                              " default button \"Yes\""
+                              " cancel button \"No\"";
+                    m_mappings[256] = button::no;
+                    break;
+                case choice::yes_no_cancel:
+                    script += "buttons {\"Yes\", \"No\", \"Cancel\"}"
+                              " default button \"Yes\""
+                              " cancel button \"Cancel\"";
+                    m_mappings[256] = button::cancel;
+                    break;
+                case choice::retry_cancel:
+                    script += "buttons {\"Retry\", \"Cancel\"}"
+                              " default button \"Retry\""
+                              " cancel button \"Cancel\"";
+                    m_mappings[256] = button::cancel;
+                    break;
+                case choice::abort_retry_ignore:
+                    script += "buttons {\"Abort\", \"Retry\", \"Ignore\"}"
+                              " default button \"Retry\""
+                              " cancel button \"Retry\"";
+                    m_mappings[256] = button::cancel;
+                    break;
+                case choice::ok: default:
+                    script += "buttons {\"OK\"}"
+                              " default button \"OK\""
+                              " cancel button \"OK\"";
+                    m_mappings[256] = button::ok;
+                    break;
+            }
+            script += " with icon ";
+            switch (_icon)
+            {
+#define PFD_OSX_ICON(n) "alias ((path to library folder from system domain) as text " \
                 "& \"CoreServices:CoreTypes.bundle:Contents:Resources:" n ".icns\")"
-            case icon::info: default: script += PFD_OSX_ICON("ToolBarInfo"); break;
-            case icon::warning: script += "caution"; break;
-            case icon::error: script += "stop"; break;
-            case icon::question: script += PFD_OSX_ICON("GenericQuestionMarkIcon"); break;
-            #undef PFD_OSX_ICON
-        }
+                case icon::info: default: script += PFD_OSX_ICON("ToolBarInfo"); break;
+                case icon::warning: script += "caution"; break;
+                case icon::error: script += "stop"; break;
+                case icon::question: script += PFD_OSX_ICON("GenericQuestionMarkIcon"); break;
+#undef PFD_OSX_ICON
+            }
 
-        command.push_back("-e");
-        command.push_back(script);
-    }
-    else if (is_zenity())
-    {
-        switch (_choice)
+            command.push_back("-e");
+            command.push_back(script);
+        }
+        else if (is_zenity())
         {
-            case choice::ok_cancel:
-                command.insert(command.end(), { "--question", "--cancel-label=Cancel", "--ok-label=OK" }); break;
-            case choice::yes_no:
-                // Do not use standard --question because it causes “No” to return -1,
-                // which is inconsistent with the “Yes/No/Cancel” mode below.
-                command.insert(command.end(), { "--question", "--switch", "--extra-button=No", "--extra-button=Yes" }); break;
-            case choice::yes_no_cancel:
-                command.insert(command.end(), { "--question", "--switch", "--extra-button=Cancel", "--extra-button=No", "--extra-button=Yes" }); break;
-            case choice::retry_cancel:
-                command.insert(command.end(), { "--question", "--switch", "--extra-button=Cancel", "--extra-button=Retry" }); break;
-            case choice::abort_retry_ignore:
-                command.insert(command.end(), { "--question", "--switch", "--extra-button=Ignore", "--extra-button=Abort", "--extra-button=Retry" }); break;
-            case choice::ok:
-            default:
+            switch (_choice)
+            {
+                case choice::ok_cancel:
+                    command.insert(command.end(), { "--question", "--cancel-label=Cancel", "--ok-label=OK" }); break;
+                case choice::yes_no:
+                    // Do not use standard --question because it causes “No” to return -1,
+                    // which is inconsistent with the “Yes/No/Cancel” mode below.
+                    command.insert(command.end(), { "--question", "--switch", "--extra-button=No", "--extra-button=Yes" }); break;
+                case choice::yes_no_cancel:
+                    command.insert(command.end(), { "--question", "--switch", "--extra-button=Cancel", "--extra-button=No", "--extra-button=Yes" }); break;
+                case choice::retry_cancel:
+                    command.insert(command.end(), { "--question", "--switch", "--extra-button=Cancel", "--extra-button=Retry" }); break;
+                case choice::abort_retry_ignore:
+                    command.insert(command.end(), { "--question", "--switch", "--extra-button=Ignore", "--extra-button=Abort", "--extra-button=Retry" }); break;
+                case choice::ok:
+                default:
+                    switch (_icon)
+                    {
+                        case icon::error: command.push_back("--error"); break;
+                        case icon::warning: command.push_back("--warning"); break;
+                        default: command.push_back("--info"); break;
+                    }
+            }
+
+            command.insert(command.end(), { "--title", title,
+                                            "--width=300", "--height=0", // sensible defaults
+                                            "--text", text,
+                                            "--icon-name=dialog-" + get_icon_name(_icon) });
+        }
+        else if (is_kdialog())
+        {
+            if (_choice == choice::ok)
+            {
                 switch (_icon)
                 {
                     case icon::error: command.push_back("--error"); break;
-                    case icon::warning: command.push_back("--warning"); break;
-                    default: command.push_back("--info"); break;
+                    case icon::warning: command.push_back("--sorry"); break;
+                    default: command.push_back("--msgbox"); break;
                 }
-        }
-
-        command.insert(command.end(), { "--title", title,
-                                        "--width=300", "--height=0", // sensible defaults
-                                        "--no-markup", // do not interpret text as Pango markup
-                                        "--text", text,
-                                        "--icon-name=dialog-" + get_icon_name(_icon) });
-    }
-    else if (is_kdialog())
-    {
-        if (_choice == choice::ok)
-        {
-            switch (_icon)
-            {
-                case icon::error: command.push_back("--error"); break;
-                case icon::warning: command.push_back("--sorry"); break;
-                default: command.push_back("--msgbox"); break;
             }
-        }
-        else
-        {
-            std::string flag = "--";
-            if (_icon == icon::warning || _icon == icon::error)
-                flag += "warning";
-            flag += "yesno";
-            if (_choice == choice::yes_no_cancel)
-                flag += "cancel";
-            command.push_back(flag);
-            if (_choice == choice::yes_no || _choice == choice::yes_no_cancel)
+            else
             {
-                m_mappings[0] = button::yes;
-                m_mappings[256] = button::no;
+                std::string flag = "--";
+                if (_icon == icon::warning || _icon == icon::error)
+                    flag += "warning";
+                flag += "yesno";
+                if (_choice == choice::yes_no_cancel)
+                    flag += "cancel";
+                command.push_back(flag);
+                if (_choice == choice::yes_no || _choice == choice::yes_no_cancel)
+                {
+                    m_mappings[0] = button::yes;
+                    m_mappings[256] = button::no;
+                }
             }
+
+            command.push_back(text);
+            command.push_back("--title");
+            command.push_back(title);
+
+            // Must be after the above part
+            if (_choice == choice::ok_cancel)
+                command.insert(command.end(), { "--yes-label", "OK", "--no-label", "Cancel" });
         }
 
-        command.push_back(text);
-        command.push_back("--title");
-        command.push_back(title);
+        if (flags(flag::is_verbose))
+            std::cerr << "pfd: " << command << std::endl;
 
-        // Must be after the above part
-        if (_choice == choice::ok_cancel)
-            command.insert(command.end(), { "--yes-label", "OK", "--no-label", "Cancel" });
-    }
-
-    if (flags(flag::is_verbose))
-        std::cerr << "pfd: " << command << std::endl;
-
-    m_async->start_process(command);
+        m_async->start_process(command);
 #endif
-}
+    }
 
-inline button message::result()
-{
-    int exit_code;
-    auto ret = m_async->result(&exit_code);
-    // osascript will say "button returned:Cancel\n"
-    // and others will just say "Cancel\n"
-    if (internal::ends_with(ret, "Cancel\n"))
-        return button::cancel;
-    if (internal::ends_with(ret, "OK\n"))
-        return button::ok;
-    if (internal::ends_with(ret, "Yes\n"))
-        return button::yes;
-    if (internal::ends_with(ret, "No\n"))
-        return button::no;
-    if (internal::ends_with(ret, "Abort\n"))
-        return button::abort;
-    if (internal::ends_with(ret, "Retry\n"))
-        return button::retry;
-    if (internal::ends_with(ret, "Ignore\n"))
-        return button::ignore;
-    if (m_mappings.count(exit_code) != 0)
-        return m_mappings[exit_code];
-    return exit_code == 0 ? button::ok : button::cancel;
-}
+    inline button message::result()
+    {
+        int exit_code;
+        auto ret = m_async->result(&exit_code);
+        // osascript will say "button returned:Cancel\n"
+        // and others will just say "Cancel\n"
+        if (exit_code < 0 || // this means cancel
+            internal::ends_with(ret, "Cancel\n"))
+            return button::cancel;
+        if (internal::ends_with(ret, "OK\n"))
+            return button::ok;
+        if (internal::ends_with(ret, "Yes\n"))
+            return button::yes;
+        if (internal::ends_with(ret, "No\n"))
+            return button::no;
+        if (internal::ends_with(ret, "Abort\n"))
+            return button::abort;
+        if (internal::ends_with(ret, "Retry\n"))
+            return button::retry;
+        if (internal::ends_with(ret, "Ignore\n"))
+            return button::ignore;
+        if (m_mappings.count(exit_code) != 0)
+            return m_mappings[exit_code];
+        return exit_code == 0 ? button::ok : button::cancel;
+    }
 
 // open_file implementation
 
-inline open_file::open_file(std::string const &title,
-                            std::string const &default_path /* = "" */,
-                            std::vector<std::string> const &filters /* = { "All Files", "*" } */,
-                            opt options /* = opt::none */)
-  : file_dialog(type::open, title, default_path, filters, options)
-{
-}
+    inline open_file::open_file(std::string const &title,
+                                std::string const &default_path /* = "" */,
+                                std::vector<std::string> const &filters /* = { "All Files", "*" } */,
+                                opt options /* = opt::none */)
+            : file_dialog(type::open, title, default_path, filters, options)
+    {
+    }
 
-inline open_file::open_file(std::string const &title,
-                            std::string const &default_path,
-                            std::vector<std::string> const &filters,
-                            bool allow_multiselect)
-  : open_file(title, default_path, filters,
-              (allow_multiselect ? opt::multiselect : opt::none))
-{
-}
+    inline open_file::open_file(std::string const &title,
+                                std::string const &default_path,
+                                std::vector<std::string> const &filters,
+                                bool allow_multiselect)
+            : open_file(title, default_path, filters,
+                        (allow_multiselect ? opt::multiselect : opt::none))
+    {
+    }
 
-inline std::vector<std::string> open_file::result()
-{
-    return vector_result();
-}
+    inline std::vector<std::string> open_file::result()
+    {
+        return vector_result();
+    }
 
 // save_file implementation
 
-inline save_file::save_file(std::string const &title,
-                            std::string const &default_path /* = "" */,
-                            std::vector<std::string> const &filters /* = { "All Files", "*" } */,
-                            opt options /* = opt::none */)
-  : file_dialog(type::save, title, default_path, filters, options)
-{
-}
+    inline save_file::save_file(std::string const &title,
+                                std::string const &default_path /* = "" */,
+                                std::vector<std::string> const &filters /* = { "All Files", "*" } */,
+                                opt options /* = opt::none */)
+            : file_dialog(type::save, title, default_path, filters, options)
+    {
+    }
 
-inline save_file::save_file(std::string const &title,
-                            std::string const &default_path,
-                            std::vector<std::string> const &filters,
-                            bool confirm_overwrite)
-  : save_file(title, default_path, filters,
-              (confirm_overwrite ? opt::none : opt::force_overwrite))
-{
-}
+    inline save_file::save_file(std::string const &title,
+                                std::string const &default_path,
+                                std::vector<std::string> const &filters,
+                                bool confirm_overwrite)
+            : save_file(title, default_path, filters,
+                        (confirm_overwrite ? opt::none : opt::force_overwrite))
+    {
+    }
 
-inline std::string save_file::result()
-{
-    return string_result();
-}
+    inline std::string save_file::result()
+    {
+        return string_result();
+    }
 
 // select_folder implementation
 
-inline select_folder::select_folder(std::string const &title,
-                                    std::string const &default_path /* = "" */,
-                                    opt options /* = opt::none */)
-  : file_dialog(type::folder, title, default_path, {}, options)
-{
-}
+    inline select_folder::select_folder(std::string const &title,
+                                        std::string const &default_path /* = "" */,
+                                        opt options /* = opt::none */)
+            : file_dialog(type::folder, title, default_path, {}, options)
+    {
+    }
 
-inline std::string select_folder::result()
-{
-    return string_result();
-}
+    inline std::string select_folder::result()
+    {
+        return string_result();
+    }
 
 #endif // PFD_SKIP_IMPLEMENTATION
 
