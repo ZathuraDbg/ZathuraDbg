@@ -4,7 +4,8 @@
 
 #include <iostream>
 #include <fstream>
-#include "../../utils/filedialog.h"
+#include "../../../vendor/code/tinyfiledialogs.h"
+#include "../../../vendor/ImGuiColorTextEdit/TextEditor.h"
 #include "../../../vendor/ImGuiColorTextEdit/TextEditor.h"
 #include "../../utils/fonts.hpp"
 #include "../../../vendor/imgui/imgui.h"

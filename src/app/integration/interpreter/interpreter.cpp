@@ -233,6 +233,7 @@ bool ucInit(){
 
     if (err) {
         LOG_ERROR("Failed to initialise Unicorn Engine!");
+        tinyfd_messageBox("ERROR!", "Could not initialize Unicorn Engine. Please check if the environment is correctly setup.", "ok", "error", 0);
         return false;
     }
 
@@ -244,7 +245,8 @@ bool createStack(){
     LOG_DEBUG("Creating stack");
 
     if (!ucInit()){
-                LOG_ERROR("Failed to initialize unicorn engine");
+        return false;
+//                LOG_ERROR("Failed to initialize unicorn engine");
     }
     uint8_t zeroBuf[STACK_SIZE];
 
@@ -255,35 +257,39 @@ bool createStack(){
     }
 
     if (uc_mem_write(uc, STACK_ADDRESS, zeroBuf, STACK_SIZE)) {
-        LOG_ERROR("Failed to write to stack address");
+        LOG_ERROR("Failed to write to stack address!!");
         return false;
     }
 
     uint64_t stackBase = STACK_ADDRESS + STACK_SIZE;
     if (uc_reg_write(uc, UC_X86_REG_RSP, &stackBase)){
-        printf("Failed to write stack pointer to memory, quit!\n");
+        printf("Failed to write stack pointer to memory, quitting!!\n");
         return false;
     }
 
     LOG_DEBUG("wrote to rsp ");
     if (uc_reg_write(uc, UC_X86_REG_RBP, &stackBase)){
-        printf("Failed to write base pointer to memory, quit!\n");
+        printf("Failed to write base pointer to memory, quitting!\n");
         return false;
     }
 
     return true;
 }
 
-int runCode(const std::string& code_in, int instructionCount)
+bool runCode(const std::string& code_in, int instructionCount)
 {
     LOG_DEBUG("running code");
+    if (code_in.empty()){
+        LOG_ERROR("Last function possibly failed. Could not run code. : runCode(<empty>, " << instructionCount << ")");
+        return false;
+    }
+
     uc_err err;
     uint8_t codeBuf[CODE_BUF_SIZE];
     uint8_t* code;
     code = (uint8_t*)(code_in.c_str());
 
     memcpy(codeBuf, code, code_in.length());
-
 
     uc_mem_map(uc, ENTRY_POINT_ADDRESS, MEMORY_ALLOCATION_SIZE, UC_PROT_READ | UC_PROT_WRITE | UC_PROT_EXEC);
     if (uc_mem_write(uc, ENTRY_POINT_ADDRESS, codeBuf, sizeof(codeBuf) - 1)) {

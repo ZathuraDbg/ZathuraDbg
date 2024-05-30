@@ -14,7 +14,7 @@ uint64_t getRegister(std::string name);
 extern bool ucInit();
 extern uc_engine *uc;
 extern int regNameToConstant(std::string name);
-extern int runCode(const std::string& code_in, int instructionCount);
+extern bool runCode(const std::string& code_in, int instructionCount);
 extern void showRegs();
 extern uintptr_t ENTRY_POINT_ADDRESS;
 extern uintptr_t MEMORY_ALLOCATION_SIZE;

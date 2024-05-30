@@ -1,6 +1,6 @@
 #include "app.hpp"
 
-void setupButtons() {
+bool setupButtons() {
     using namespace ImGui;
 
     ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[6]);
@@ -38,4 +38,5 @@ void setupButtons() {
     ImGui::SameLine();
     ImGui::Button(ICON_CI_DEBUG_PAUSE, ImVec2(20, 20));
     ImGui::PopFont();
+    return true;
 }

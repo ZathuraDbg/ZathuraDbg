@@ -3,11 +3,13 @@
 #define IMGUI_DEFINE_MATH_OPERATORS
 #define LOG_MODULE_NAME "Zathura"
 
+extern bool isRunning;
 #include <cstdio>
 #include <string>
 #include <fstream>
 #include <iostream>
 #include <filesystem>
+#include "../../vendor/code/tinyfiledialogs.h"
 #include "../../vendor/log/clue.hpp"
 #include <tsl/ordered_map.h>
 #include <unicorn/unicorn.h>
@@ -33,7 +35,7 @@ void appMenuBar();
 
 extern void LoadIniFile();
 extern void appMenuBar();
-extern void setupButtons();
+extern bool setupButtons();
 extern void mainWindow();
 extern void setupEditor();
 #endif //ZATHURA_UI_APP_HPP

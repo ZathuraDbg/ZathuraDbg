@@ -15,6 +15,7 @@ std::pair<std::string, std::size_t> assemble(const std::string& assembly, const 
 
         if (err != KS_ERR_OK) {
             std::cerr << "ERROR: Failed to initialize Keystone engine: " << ks_strerror(err) << std::endl;
+            tinyfd_messageBox("ERROR!","Failed to initialize Keystone engine!", "ok", "error", 0);
             return {"", 0};
         }
 
@@ -29,8 +30,17 @@ std::pair<std::string, std::size_t> assemble(const std::string& assembly, const 
     }
 
     if (ks_asm(ks, assembly.data(), 0, &encode, &size, &count)) {
-        std::cerr << "ERROR: " << ks_strerror(ks_errno(ks)) << std::endl;
+        ks_err err = ks_errno(ks);
+        std::string error(ks_strerror(err));
+
+        if (err >= KS_ERR_ASM){
+            LOG_ERROR("Assembly syntax error: " << error);
+            tinyfd_messageBox("Assembly syntax error!", error.c_str(), "ok", "error", 0);
+        }
+
+        LOG_ERROR(error);
         ks_close(ks);
+        ks = nullptr;
         return {"", 0};
     }
 
@@ -46,11 +56,12 @@ std::pair<std::string, std::size_t> assemble(const std::string& assembly, const 
 
 std::string getBytes(std::string fileName){
     LOG_DEBUG("Getting bytes from the file: " << fileName);
-    std::stringstream assembly;
     std::ifstream asmFile(fileName);
+    std::stringstream assembly;
 
     if (!asmFile.is_open()){
-        LOG_ERROR("Asm file can not be read");
+        LOG_ERROR("Asm file can not be read: getBytes(" << fileName << ")");
+        tinyfd_messageBox("File read error!", "Asm file can't be read!", "ok", "error", 0);
         return "";
     }
 

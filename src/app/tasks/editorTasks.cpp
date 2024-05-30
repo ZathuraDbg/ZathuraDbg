@@ -10,9 +10,11 @@ bool writeEditorToFile(const std::string& filePath) {
         out << editor->GetText();
         out.close();
         LOG_DEBUG("Done!");
+        return true;
     }
 
-    LOG_ERROR("Failed to write to file.");
+    tinyfd_messageBox("File write error!", ("Unable to write to the file " + filePath + "!\nPlease check if the "
+                                                                                        "file is not open in another program and/or you have the permissions to read it.").c_str(), "ok", "error", 0);
     return false;
 }
 
@@ -27,6 +29,8 @@ bool readFileIntoEditor(const std::string& filePath){
         t.close();
         return true;
     }
+    tinyfd_messageBox("File read error!", ("Unable to read from the file " + filePath + "!\nPlease check if the "
+                            "file is not open in another program and/or you have the permissions to read it.").c_str(), "ok", "error", 0);
 
     return false;
 }

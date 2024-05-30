@@ -91,7 +91,9 @@ int main(int, char**)
 
 
     if (!createStack()){
-        LOG_ERROR("Failed to create stack");
+        tinyfd_messageBox("Keystone Engine error!", "Unable to initialize the stack. If the issue persists please create a GitHub issue and report your logs.", "ok", "error", 0);
+        LOG_ERROR("Failed to create stack!");
+        exit(-1);
     }
 
 
@@ -104,8 +106,13 @@ int main(int, char**)
 
         io.ConfigDockingWithShift = true;
         io.ConfigDockingAlwaysTabBar = true;
+        isRunning = true;
 
         mainWindow();
+
+        if (!isRunning){
+            glfwSetWindowShouldClose(window, 1);
+        }
 
         int display_w, display_h;
         glfwGetFramebufferSize(window, &display_w, &display_h);
