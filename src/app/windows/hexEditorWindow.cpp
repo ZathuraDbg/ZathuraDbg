@@ -5,6 +5,7 @@ void hexEditorWindow(){
     static MemoryEditor mem_edit_2;
     ImGui::PushFont(io.Fonts->Fonts[3]);
     static char data[0x3000];
+    memset(data, 0, 0x3000);
 
     uc_mem_read(uc, ENTRY_POINT_ADDRESS, data, 0x3000);
     mem_edit_2.DrawWindow("Memory Editor", (void*)data, 0x3000);
