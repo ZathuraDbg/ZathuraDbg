@@ -36,7 +36,18 @@ void fileRunTask(){
         }
 
         if (createStack()){
-            runCode(getBytes(selectedFile), 0);
+            std::string bytes = getBytes(selectedFile);
+            if (!bytes.empty()){
+                if (!runCode(bytes, 0)){
+                    tinyfd_messageBox("Unicorn engine error!", "Unable to run the code, please try again or report the"
+                                                               "issue on GitHub with your logs!", "ok", "error", 0);
+                    LOG_ERROR("Unable to run code!");
+                    return;
+                }
+            }
+            else{
+                return;
+            }
         }
         else{
             LOG_ERROR("Unable to create stack!, quitting!");

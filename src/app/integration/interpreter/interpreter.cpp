@@ -246,24 +246,24 @@ bool createStack(){
 
     if (!ucInit()){
         return false;
-//                LOG_ERROR("Failed to initialize unicorn engine");
     }
+
     uint8_t zeroBuf[STACK_SIZE];
 
     memset(zeroBuf, 0, STACK_SIZE);
     if (uc_mem_map(uc, STACK_ADDRESS, STACK_SIZE, UC_PROT_READ | UC_PROT_WRITE)){
-        LOG_ERROR("Failed to map the stack!!");
+        LOG_ERROR("Failed to memory map the stack!!");
         return false;
     }
 
     if (uc_mem_write(uc, STACK_ADDRESS, zeroBuf, STACK_SIZE)) {
-        LOG_ERROR("Failed to write to stack address!!");
+        LOG_ERROR("Failed to write to the stack!!");
         return false;
     }
 
     uint64_t stackBase = STACK_ADDRESS + STACK_SIZE;
     if (uc_reg_write(uc, UC_X86_REG_RSP, &stackBase)){
-        printf("Failed to write stack pointer to memory, quitting!!\n");
+        LOG_ERROR("Failed to write the stack pointer to base pointer, quitting!!");
         return false;
     }
 
@@ -278,11 +278,7 @@ bool createStack(){
 
 bool runCode(const std::string& code_in, int instructionCount)
 {
-    LOG_DEBUG("running code");
-    if (code_in.empty()){
-        LOG_ERROR("Last function possibly failed. Could not run code. : runCode(<empty>, " << instructionCount << ")");
-        return false;
-    }
+    LOG_DEBUG("Running code...");
 
     uc_err err;
     uint8_t codeBuf[CODE_BUF_SIZE];
@@ -293,15 +289,17 @@ bool runCode(const std::string& code_in, int instructionCount)
 
     uc_mem_map(uc, ENTRY_POINT_ADDRESS, MEMORY_ALLOCATION_SIZE, UC_PROT_READ | UC_PROT_WRITE | UC_PROT_EXEC);
     if (uc_mem_write(uc, ENTRY_POINT_ADDRESS, codeBuf, sizeof(codeBuf) - 1)) {
-        printf("Failed to write emulation code to memory, quit!\n");
-        return -1;
+        LOG_ERROR("Failed to write emulation code to memory, quit!\n");
+        return false;
     }
 
+    LOG_DEBUG("Running code with uc_emu_start(uc, " << ENTRY_POINT_ADDRESS << ", " << ENTRY_POINT_ADDRESS + sizeof(codeBuf) << ", 0, " << instructionCount);
     err = uc_emu_start(uc, ENTRY_POINT_ADDRESS, ENTRY_POINT_ADDRESS + sizeof(codeBuf), 0, instructionCount);
     if (err) {
-        printf("Failed on uc_emu_start() with error returned %u: %s\n",
-               err, uc_strerror(err));
+        LOG_ERROR("Failed on uc_emu_start() with error returned " <<  err << ": " << uc_strerror(err));
+        return false;
     }
 
-    return 0;
+    LOG_DEBUG("Ran code successfully!");
+    return true;
 }
