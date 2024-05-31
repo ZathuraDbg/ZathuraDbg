@@ -5,16 +5,16 @@ main:
 	pop r11
 	mov rax, 0x12345678
 	push rax
-	mov rdi, 0x11
-; 	call sq
-	push rdi
+	mov rdi, 0x12
+	call square
+	push rax
 	hlt
-; 
-; sq:
-; 	 push    rbp
-;      mov     rbp, rsp
-;      mov     [rbp-4], edi
-;      mov     eax, [rbp-4]
-;      imul    eax, eax
-;      pop     rbp
-;      ret
+
+square:
+	 push    rbp
+     mov     rbp, rsp
+     mov     [rbp-4], edi
+     mov     eax, [rbp-4]
+     imul    eax, eax
+     pop     rbp
+     ret
