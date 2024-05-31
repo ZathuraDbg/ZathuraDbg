@@ -4,11 +4,11 @@
 #include <cstring>
 #include <cstdlib>
 #include <iostream>
+#include "../../../vendor/log/clue.hpp"
 #include <unicorn/unicorn.h>
 #include <unordered_map>
 #include <iomanip>
 #include "../keystone/assembler.hpp"
-#include "../../../vendor/log/clue.hpp"
 extern bool createStack();
 uint64_t getRegister(std::string name);
 extern bool ucInit();
