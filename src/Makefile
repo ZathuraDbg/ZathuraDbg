@@ -118,6 +118,10 @@ endif
 %.o:$(INTEGRATION)/keystone/%.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
+%.o:$(TINYFD_DIR)/%.c
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
+
+
 
 #%.o:$(INTEGRATION)/utils/hex/%.cpp
 #	$(CXX) $(CXXFLAGS) -c -o $@ $<
@@ -136,3 +140,4 @@ clean:
 
 c:
 	rm -rf Zathura app.o main.o
+
