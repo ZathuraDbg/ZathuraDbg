@@ -5,6 +5,8 @@ uintptr_t MEMORY_ALLOCATION_SIZE = 2 * 1024 * 1024;
 uintptr_t STACK_ADDRESS = 0x300000;
 uint64_t CODE_BUF_SIZE = 0x3000;
 uintptr_t STACK_SIZE = 5 * 1024 * 1024;
+uint8_t* codeBuf = nullptr;
+uc_context* context = nullptr;
 
 uc_engine *uc = nullptr;
 
@@ -354,29 +356,80 @@ void handleUCErrors(uc_err err){
     }
 }
 
+bool resetState(){
+    if (uc != nullptr){
+        uc_close(uc);
+        uc = nullptr;
+    }
+
+    for (auto& reg: registerValueMap){
+        registerValueMap[reg.first] = "0";
+    }
+
+    auto err = createStack();
+    if (err){
+        LOG_DEBUG("Unable to create stack!");
+        return false;
+    }
+
+    return true;
+}
+
+bool stepCode(){
+    uc_context_restore(uc, context);
+    uc_err err;
+    uint64_t rip;
+
+    uc_reg_read(uc, UC_X86_REG_RIP, &rip);
+    err = uc_emu_start(uc, rip, ENTRY_POINT_ADDRESS + CODE_BUF_SIZE, 0, 1);
+    if (err) {
+        printf("Failed on uc_emu_start() with error returned %u: %s\n",
+               err, uc_strerror(err));
+    }
+
+    uc_context_save(uc, context);
+    return true;
+}
+
 bool runCode(const std::string& code_in, int instructionCount)
 {
     LOG_DEBUG("Running code...");
 
     uc_err err;
-    uint8_t codeBuf[CODE_BUF_SIZE];
     uint8_t* code;
+
+    if (codeBuf == nullptr){
+        codeBuf = (uint8_t*)malloc(CODE_BUF_SIZE);
+        memset(codeBuf, 0, CODE_BUF_SIZE);
+    }
+
     code = (uint8_t*)(code_in.c_str());
 
     memcpy(codeBuf, code, code_in.length());
 
     uc_mem_map(uc, ENTRY_POINT_ADDRESS, MEMORY_ALLOCATION_SIZE, UC_PROT_READ | UC_PROT_WRITE | UC_PROT_EXEC);
-    if (uc_mem_write(uc, ENTRY_POINT_ADDRESS, codeBuf, sizeof(codeBuf) - 1)) {
+    if (uc_mem_write(uc, ENTRY_POINT_ADDRESS, codeBuf, CODE_BUF_SIZE - 1)) {
         LOG_ERROR("Failed to write emulation code to memory, quit!\n");
         return false;
     }
 
-    LOG_DEBUG("Running code with uc_emu_start(uc, " << ENTRY_POINT_ADDRESS << ", " << ENTRY_POINT_ADDRESS + sizeof(codeBuf) << ", 0, " << instructionCount << ")");
-    err = uc_emu_start(uc, ENTRY_POINT_ADDRESS, ENTRY_POINT_ADDRESS + sizeof(codeBuf), 0, instructionCount);
+    LOG_DEBUG("Running code with uc_emu_start(uc, " << ENTRY_POINT_ADDRESS << ", " << ENTRY_POINT_ADDRESS + CODE_BUF_SIZE << ", 0, " << instructionCount << ")");
+    err = uc_emu_start(uc, ENTRY_POINT_ADDRESS, ENTRY_POINT_ADDRESS + CODE_BUF_SIZE, 0, instructionCount);
 
     if (err) {
         handleUCErrors(err);
         return false;
+    }
+
+    if (instructionCount == 0){
+        free(codeBuf);
+        codeBuf = nullptr;
+    }
+    else{
+        if (context == nullptr){
+            uc_context_alloc(uc, &context);
+        }
+        uc_context_save(uc, context);
     }
 
     LOG_DEBUG("Ran code successfully!");

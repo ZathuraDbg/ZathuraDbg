@@ -26,7 +26,7 @@ void fileSaveTask(const std::string &fileName){
     }
 }
 
-void fileRunTask(){
+void fileRunTask(uint64_t instructionCount){
     if (!selectedFile.empty()){
         LOG_DEBUG("Running code from: " << selectedFile);
 
@@ -38,8 +38,8 @@ void fileRunTask(){
         if (createStack()){
             std::string bytes = getBytes(selectedFile);
             if (!bytes.empty()){
-                if (!runCode(bytes, 0)){
-                    tinyfd_messageBox("Unicorn engine error!", "Unable to run the code, please try again or report the"
+                if (!runCode(bytes, instructionCount)){
+                    tinyfd_messageBox("Unicorn engine error!", "Unable to run the code, please try again or report the "
                                                                "issue on GitHub with your logs!", "ok", "error", 0);
                     LOG_ERROR("Unable to run code!");
                     return;

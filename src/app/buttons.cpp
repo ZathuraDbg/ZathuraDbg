@@ -20,19 +20,32 @@ bool setupButtons() {
     ImGui::SameLine();
     ImGui::Separator();
     ImGui::SameLine();
-    ImGui::Button(ICON_CI_DEBUG_RESTART, ImVec2(20, 20));
-    ImGui::SameLine();
-    ImGui::Separator();
-    ImGui::SameLine();
 
-    if (ImGui::Button(ICON_CI_DEBUG_START, ImVec2(20, 20))){
-        fileRunTask();
+    if (ImGui::Button(ICON_CI_DEBUG_RESTART, ImVec2(20, 20))){
+        resetState();
     }
 
     ImGui::SameLine();
     ImGui::Separator();
     ImGui::SameLine();
-    ImGui::Button(ICON_CI_DEBUG_CONTINUE, ImVec2(20, 20));
+
+    if (ImGui::Button(ICON_CI_DEBUG_START, ImVec2(20, 20))){
+        fileRunTask(0);
+    }
+
+    ImGui::SameLine();
+    ImGui::Separator();
+    ImGui::SameLine();
+
+    if (ImGui::Button(ICON_CI_DEBUG_CONTINUE, ImVec2(20, 20))){
+        if (context == nullptr){
+            fileRunTask(1);
+        }
+        else{
+            stepCode();
+        }
+    }
+
     ImGui::SameLine();
     ImGui::Separator();
     ImGui::SameLine();
