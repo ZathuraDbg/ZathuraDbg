@@ -11,6 +11,14 @@ std::string toLowerCase(const std::string& input) {
     return result;
 }
 
+std::string toUpperCase(const std::string& input) {
+    std::string result = input; // Create a copy of the input string
+    std::transform(result.begin(), result.end(), result.begin(), [](unsigned char c) {
+        return std::toupper(c);
+    });
+    return result;
+}
+
 void updateRegs(){
     std::stringstream hex;
     for (auto &reg: registerValueMap) {
@@ -106,6 +114,7 @@ void registerWindow() {
     if (!commands.empty()){
         for (auto& command: commands){
             if (getRegister(command) != UC_X86_REG_INVALID){
+                command = toUpperCase(command);
                 registerValueMap[command] = "";
             }
         }
