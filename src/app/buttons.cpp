@@ -48,8 +48,6 @@ bool setupButtons() {
 
     ImGui::SameLine();
     ImGui::Separator();
-    ImGui::SameLine();
-    ImGui::Button(ICON_CI_DEBUG_PAUSE, ImVec2(20, 20));
     ImGui::PopFont();
     return true;
 }
