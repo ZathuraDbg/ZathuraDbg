@@ -90,5 +90,28 @@ void registerWindow() {
 
         ImGui::EndTable();
     }
+    std::vector<std::string> test = {};
+    const float footer_height_to_reserve = ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
+    ImGui::BeginChild("ScrollingRegion", ImVec2(0, -footer_height_to_reserve), ImGuiChildFlags_None, ImGuiWindowFlags_HorizontalScrollbar);
+    ImGui::EndChild();
+
+    std::list<std::string> commands;
+    char input[500]{};
+    ImGui::PushID(&input);
+
+    if (ImGui::InputText("Command", input, IM_ARRAYSIZE(input), ImGuiInputTextFlags_EnterReturnsTrue)){
+        commands.emplace_back(input);
+    }
+
+    if (!commands.empty()){
+        for (auto& command: commands){
+            if (getRegister(command) != UC_X86_REG_INVALID){
+                registerValueMap[command] = "";
+            }
+        }
+    }
+
+
+    ImGui::PopID();
     ImGui::PopFont();
 }

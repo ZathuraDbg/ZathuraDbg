@@ -155,6 +155,11 @@ int regNameToConstant(std::string name){
         {"eflags", UC_X86_REG_EFLAGS},
         {"flags", UC_X86_REG_FLAGS},
     };
+
+    if (regMap.find(name) == regMap.end()){
+        return UC_X86_REG_INVALID;
+    }
+
     return regMap[name];
 }
 
@@ -224,7 +229,12 @@ void showRegs(){
 
 uint64_t getRegister(std::string name){
     int reg = regNameToConstant(name);
+    if (reg == UC_X86_REG_INVALID){
+        return reg;
+    }
+
     uint64_t value;
+
     uc_reg_read(uc, reg, &value);
     return value;
 }
