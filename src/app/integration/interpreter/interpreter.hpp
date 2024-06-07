@@ -9,6 +9,8 @@
 #include <unordered_map>
 #include <iomanip>
 #include "../keystone/assembler.hpp"
+#include "../../windows/windows.hpp"
+
 extern bool createStack();
 uint64_t getRegister(std::string name);
 extern bool ucInit();
@@ -21,4 +23,7 @@ extern uintptr_t MEMORY_ALLOCATION_SIZE;
 extern uintptr_t STACK_ADDRESS;
 extern uintptr_t STACK_SIZE;
 extern uint64_t CODE_BUF_SIZE;
+extern uc_context* context;
+extern bool stepCode();
+extern bool resetState();
 #endif
