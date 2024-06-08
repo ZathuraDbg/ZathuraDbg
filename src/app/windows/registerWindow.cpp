@@ -3,27 +3,20 @@
 tsl::ordered_map<std::string, std::string> registerValueMap = {{"RIP", "0x00"}, {"RSP", "0x00"}, {"RBP", "0x00"},{"RAX", "0x00"}, {"RBX", "0x00"}, {"RCX", "0x00"}, {"RDX", "0x00"},
                                                                {"RSI", "0x00"}, {"RDI", "0x00"}, {"R8", "0x00"}, {"R9", "0x00"}, {"R10", "0x00"}, {"R11", "0x00"}, {"R12", "0x00"},
                                                                {"R13", "0x00"}, {"R14", "0x00"}, {"R15", "0x00"}, {"CS", "0x00"}, {"DS", "0x00"}, {"ES", "0x00"}, {"FS", "0x00"}, {"GS", "0x00"}, {"SS", "0x00"}};
-std::string toLowerCase(const std::string& input) {
-    std::string result = input; // Create a copy of the input string
-    std::transform(result.begin(), result.end(), result.begin(), [](unsigned char c) {
-        return std::tolower(c);
-    });
-    return result;
-}
-
-std::string toUpperCase(const std::string& input) {
-    std::string result = input; // Create a copy of the input string
-    std::transform(result.begin(), result.end(), result.begin(), [](unsigned char c) {
-        return std::toupper(c);
-    });
-    return result;
-}
-
 void updateRegs(){
     std::stringstream hex;
+    std::pair<bool, uint64_t> val;
     for (auto &reg: registerValueMap) {
+        val = getRegister(toLowerCase(reg.first));
+
         hex << "0x";
-        hex << std::hex << getRegister(toLowerCase(reg.first));
+        if (val.first){
+            hex << std::hex << val.second;
+        }
+        else {
+            hex << "00";
+        }
+
         registerValueMap[reg.first] = hex.str();
         hex.str("");
         hex.clear();
@@ -98,28 +91,32 @@ void registerWindow() {
 
         ImGui::EndTable();
     }
-    std::vector<std::string> test = {};
+
     const float footer_height_to_reserve = ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
     ImGui::BeginChild("ScrollingRegion", ImVec2(0, -footer_height_to_reserve), ImGuiChildFlags_None, ImGuiWindowFlags_HorizontalScrollbar);
     ImGui::EndChild();
 
-    std::list<std::string> commands;
+    std::list<std::string> regs;
     char input[500]{};
     ImGui::PushID(&input);
 
     if (ImGui::InputText("Command", input, IM_ARRAYSIZE(input), ImGuiInputTextFlags_EnterReturnsTrue)){
-        commands.emplace_back(input);
+        regs.emplace_back(toLowerCase(input));
+        LOG_DEBUG("Request to add the register: " << input);
     }
 
-    if (!commands.empty()){
-        for (auto& command: commands){
-            if (getRegister(command) != UC_X86_REG_INVALID){
-                command = toUpperCase(command);
-                registerValueMap[command] = "";
+    if (!regs.empty()){
+        for (auto& reg: regs){
+            if (getRegister(reg).first){
+                LOG_DEBUG("Adding the register " << reg);
+                reg = toUpperCase(reg);
+                registerValueMap[reg] = "0x00";
+            }
+            else{
+                LOG_ERROR("Unable to get the register: " << reg);
             }
         }
     }
-
 
     ImGui::PopID();
     ImGui::PopFont();

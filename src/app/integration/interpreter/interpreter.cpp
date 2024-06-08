@@ -10,6 +10,22 @@ uc_context* context = nullptr;
 
 uc_engine *uc = nullptr;
 
+std::string toLowerCase(const std::string& input) {
+    std::string result = input; // Create a copy of the input string
+    std::transform(result.begin(), result.end(), result.begin(), [](unsigned char c) {
+        return std::tolower(c);
+    });
+    return result;
+}
+
+std::string toUpperCase(const std::string& input) {
+    std::string result = input; // Create a copy of the input string
+    std::transform(result.begin(), result.end(), result.begin(), [](unsigned char c) {
+        return std::toupper(c);
+    });
+    return result;
+}
+
 int regNameToConstant(std::string name){
     std::unordered_map<std::string, int> regMap = {
         {"rax", UC_X86_REG_RAX},
@@ -157,6 +173,7 @@ int regNameToConstant(std::string name){
     };
 
     if (regMap.find(name) == regMap.end()){
+        std::cout << "Not found 1: "  << name << std::endl;
         return UC_X86_REG_INVALID;
     }
 
@@ -227,16 +244,18 @@ void showRegs(){
     printf("GS_BASE = 0x%x\n", gs_base);
 }
 
-uint64_t getRegister(std::string name){
-    int reg = regNameToConstant(name);
+std::pair<bool, uint64_t> getRegister(std::string name){
+    std::pair<bool, uint64_t> res = {false, 0};
+    int reg = regNameToConstant(toLowerCase(name));
     if (reg == UC_X86_REG_INVALID){
-        return reg;
+        LOG_ERROR("Invalid register requested: " << name);
+        return res;
     }
 
     uint64_t value;
-
     uc_reg_read(uc, reg, &value);
-    return value;
+    res = {true, value};
+    return res;
 }
 
 bool ucInit(){

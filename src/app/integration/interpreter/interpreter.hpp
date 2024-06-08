@@ -12,7 +12,7 @@
 #include "../../windows/windows.hpp"
 
 extern bool createStack();
-uint64_t getRegister(std::string name);
+std::pair<bool, uint64_t> getRegister(std::string name);
 extern bool ucInit();
 extern uc_engine *uc;
 extern int regNameToConstant(std::string name);
@@ -26,4 +26,6 @@ extern uint64_t CODE_BUF_SIZE;
 extern uc_context* context;
 extern bool stepCode();
 extern bool resetState();
+extern std::string toLowerCase(const std::string& input);
+extern std::string toUpperCase(const std::string& input);
 #endif
