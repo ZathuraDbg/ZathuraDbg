@@ -74,3 +74,11 @@ std::string getBytes(std::string fileName){
     LOG_DEBUG("Got bytes,  now hexlifying.");
     return hexlify({bytes.first.data(), bytes.second});
 }
+
+std::string getBytes(std::stringstream &assembly){
+    keystoneSettings ksSettings = {.arch = KS_ARCH_X86, .mode = KS_MODE_64, .optionType=KS_OPT_SYNTAX, .optionValue=KS_OPT_SYNTAX_NASM};
+    auto bytes = assemble(assembly.str(), ksSettings);
+
+    LOG_DEBUG("Got bytes,  now hexlifying.");
+    return hexlify({bytes.first.data(), bytes.second});
+}

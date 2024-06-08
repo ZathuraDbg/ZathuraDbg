@@ -15,6 +15,7 @@ KEYSTONE = ../vendor/keystone
 TINYFD_DIR = ../vendor/code
 SOURCES += $(IMGUI_DIR)/imgui.cpp $(IMGUI_DIR)/imgui_draw.cpp $(IMGUI_DIR)/imgui_tables.cpp $(IMGUI_DIR)/imgui_widgets.cpp
 SOURCES += $(IMGUI_DIR)/backends/imgui_impl_glfw.cpp $(IMGUI_DIR)/backends/imgui_impl_opengl3.cpp
+SOURCES += $(IMGUI_DIR)/misc/cpp/imgui_stdlib.cpp
 SOURCES += $(EXTRA)/TextEditor.h
 SOURCES += $(EXTRA)/TextEditor.cpp
 SOURCES += $(EXTRA)/LanguageDefinitions.cpp
@@ -36,6 +37,7 @@ SOURCES += $(WINDOWS)/menuBar.cpp
 #SOURCES += $(LOGGING)/clue.hpp
 #SOURCES += $(APP)/stackEditorWindow.cpp
 SOURCES += $(INTEGRATION)/interpreter/interpreter.hpp
+SOURCES += $(INTEGRATION)/interpreter/interpreter.cpp
 #SOURCES += $(INTEGRATION)/utils/hex/hex.hpp
 SOURCES += $(INTEGRATION)/keystone/assembler.hpp
 SOURCES += $(INTEGRATION)/keystone/assembler.cpp
@@ -119,6 +121,9 @@ endif
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 %.o:$(TINYFD_DIR)/%.c
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
+
+%.o:$(IMGUI_DIR)/misc/cpp/%.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 

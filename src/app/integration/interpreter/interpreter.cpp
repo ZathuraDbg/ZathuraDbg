@@ -243,9 +243,18 @@ void showRegs(){
     printf("FS_BASE = 0x%x\n", fs_base);
     printf("GS_BASE = 0x%x\n", gs_base);
 }
+uint64_t ptr = 0;
 
 std::pair<bool, uint64_t> getRegister(std::string name){
     std::pair<bool, uint64_t> res = {false, 0};
+
+//  uc engine has a bug - you can't get the value of some registers without
+// executing an instruction
+    std::stringstream asmbly;
+    asmbly << "nop" << "\n";
+    runCode(getBytes(asmbly), 1);
+    ptr = 123;
+
     int reg = regNameToConstant(toLowerCase(name));
     if (reg == UC_X86_REG_INVALID){
         LOG_ERROR("Invalid register requested: " << name);
@@ -268,7 +277,7 @@ bool ucInit(){
         return false;
     }
 
-    LOG_DEBUG("Unicorn engine successfully initialised");
+
     return true;
 }
 
@@ -303,7 +312,6 @@ bool createStack(){
         printf("Failed to write base pointer to memory, quitting!\n");
         return false;
     }
-
     return true;
 }
 
