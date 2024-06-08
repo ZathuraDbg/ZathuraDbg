@@ -8,7 +8,7 @@
 #include <list>
 
 extern tsl::ordered_map<std::string, std::string> registerValueMap;
-
+extern bool codeHasRun;
 extern void registerWindow();
 extern void consoleWindow();
 extern void hexEditorWindow();
