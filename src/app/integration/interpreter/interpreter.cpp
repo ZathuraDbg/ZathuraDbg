@@ -243,17 +243,13 @@ void showRegs(){
     printf("FS_BASE = 0x%x\n", fs_base);
     printf("GS_BASE = 0x%x\n", gs_base);
 }
-uint64_t ptr = 0;
 
 std::pair<bool, uint64_t> getRegister(std::string name){
     std::pair<bool, uint64_t> res = {false, 0};
 
-//  uc engine has a bug - you can't get the value of some registers without
-// executing an instruction
-    std::stringstream asmbly;
-    asmbly << "nop" << "\n";
-    runCode(getBytes(asmbly), 1);
-    ptr = 123;
+    if (!codeHasRun){
+        return {true, 0x00};
+    }
 
     int reg = regNameToConstant(toLowerCase(name));
     if (reg == UC_X86_REG_INVALID){
@@ -394,13 +390,14 @@ void handleUCErrors(uc_err err){
 }
 
 bool resetState(){
+    codeHasRun = false;
     if (uc != nullptr){
         uc_close(uc);
         uc = nullptr;
     }
 
     for (auto& reg: registerValueMap){
-        registerValueMap[reg.first] = "0";
+        registerValueMap[reg.first] = "00";
     }
 
     auto err = createStack();
@@ -425,6 +422,7 @@ bool stepCode(){
     }
 
     uc_context_save(uc, context);
+    codeHasRun = true;
     return true;
 }
 
@@ -470,5 +468,6 @@ bool runCode(const std::string& code_in, int instructionCount)
     }
 
     LOG_DEBUG("Ran code successfully!");
+    codeHasRun = true;
     return true;
 }

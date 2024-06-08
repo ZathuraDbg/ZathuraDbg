@@ -1,8 +1,9 @@
 #include "windows.hpp"
-
+bool codeHasRun = false;
 tsl::ordered_map<std::string, std::string> registerValueMap = {{"RIP", "0x00"}, {"RSP", "0x00"}, {"RBP", "0x00"},{"RAX", "0x00"}, {"RBX", "0x00"}, {"RCX", "0x00"}, {"RDX", "0x00"},
                                                                {"RSI", "0x00"}, {"RDI", "0x00"}, {"R8", "0x00"}, {"R9", "0x00"}, {"R10", "0x00"}, {"R11", "0x00"}, {"R12", "0x00"},
-                                                               {"R13", "0x00"}, {"R14", "0x00"}, {"R15", "0x00"}};
+                                                               {"R13", "0x00"}, {"R14", "0x00"}, {"R15", "0x00"}, {"CS", "0x00"}, {"DS", "0x00"}, {"ES", "0x00"}, {"FS", "0x00"}, {"GS", "0x00"}, {"SS", "0x00"}};
+
 void updateRegs(){
     std::stringstream hex;
     std::pair<bool, uint64_t> val;
@@ -78,9 +79,6 @@ void registerWindow() {
             ImGui::TableSetColumnIndex(3);
 
             std::string value2 = it->second;
-            if (it->first == "CS"){
-                std::cout << "val 2: " << value2 << std::endl;
-            }
 
             ImGui::PushID(index * 2 + 1);
             ImGui::SetNextItemWidth(-FLT_MIN); // Use the remaining space in the column
@@ -105,15 +103,10 @@ void registerWindow() {
 
     const float footer_height_to_reserve = ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
 
-    // BeginChild with appropriate size
-    // Omitting horizontal scrollbar flag and allowing ImGui to manage scrolling
     ImGui::BeginChild("ScrollingRegion", ImVec2(0, -footer_height_to_reserve), false, ImGuiWindowFlags_None);
-
-    // You can add content here that requires scrolling
 
     ImGui::EndChild();
 
-    // Command input handling
     std::list<std::string> regs;
     char input[500] = {}; // Local buffer for input command
     ImGui::PushID(&input);
