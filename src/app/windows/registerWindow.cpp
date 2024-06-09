@@ -12,7 +12,12 @@ void updateRegs(){
 
         hex << "0x";
         if (val.first){
-            hex << std::hex << val.second;
+            if (val.second == 0){
+                hex << std::hex << "00";
+            }
+            else{
+                hex << std::hex << val.second;
+            }
         }
         else {
             hex << "00";
@@ -42,7 +47,6 @@ void registerWindow() {
         for (auto it = registerValueMap.begin(); it != registerValueMap.end(); ++index) {
             ImGui::TableNextRow();
 
-            // Column 0: Register Name
             ImGui::TableSetColumnIndex(0);
             float textHeight = ImGui::GetTextLineHeight();
             float frameHeight = ImGui::GetFrameHeight();
@@ -50,16 +54,15 @@ void registerWindow() {
             ImGui::SetCursorPosY(ImGui::GetCursorPosY() + spacing);
             ImGui::Text("%s", it->first.c_str());
 
-            // Column 1: Register Value (Editable)
             ImGui::TableSetColumnIndex(1);
-            std::string value1 = it->second;
+            static char value1[64] = {};
+            strncpy(value1, it->second.c_str(), sizeof(value1) - 1);
+            value1[sizeof(value1) - 1] = '\0';
 
             ImGui::PushID(index * 2);
             ImGui::SetNextItemWidth(-FLT_MIN); // Use the remaining space in the column
-
-            if (ImGui::InputText(("##value1" + std::to_string(index)).c_str(), (char*)value1.c_str(), value1.length(), (ImGuiInputTextFlags)(ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CharsUppercase | ImGuiInputTextFlags_CharsNoBlank),
-                                 nullptr, nullptr)) {
-                if (strncmp(value1.c_str(), "0x", 2) != 0) {
+            if (ImGui::InputText(("##value1" + std::to_string(index)).c_str(), value1, IM_ARRAYSIZE(value1), ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CharsUppercase | ImGuiInputTextFlags_CharsNoBlank)) {
+                if (strncmp(value1, "0x", 2) != 0) {
                     registerValueMap[it->first] = "0x";
                     registerValueMap[it->first].append(value1);
                 } else {
@@ -71,21 +74,18 @@ void registerWindow() {
             ++it;
             if (it == registerValueMap.end()) break;
 
-            // Column 2: Next Register Name
             ImGui::TableSetColumnIndex(2);
             ImGui::Text("%s", it->first.c_str());
 
-            // Column 3: Next Register Value (Editable)
             ImGui::TableSetColumnIndex(3);
-
-            std::string value2 = it->second;
+            static char value2[64] = {};
+            strncpy(value2, it->second.c_str(), sizeof(value2) - 1);
+            value2[sizeof(value2) - 1] = '\0';
 
             ImGui::PushID(index * 2 + 1);
             ImGui::SetNextItemWidth(-FLT_MIN); // Use the remaining space in the column
-
-            if (ImGui::InputText(("##value2" + std::to_string(index)).c_str(), (char*)value2.c_str(), value2.length(), (ImGuiInputTextFlags)(ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CharsUppercase | ImGuiInputTextFlags_CharsNoBlank),
-            nullptr, nullptr)) {
-                if (strncmp(value2.c_str(), "0x", 2) != 0) {
+            if (ImGui::InputText(("##value2" + std::to_string(index)).c_str(), value2, IM_ARRAYSIZE(value2), ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CharsUppercase | ImGuiInputTextFlags_CharsNoBlank)) {
+                if (strncmp(value2, "0x", 2) != 0) {
                     registerValueMap[it->first] = "0x";
                     registerValueMap[it->first].append(value2);
                 } else {
@@ -93,7 +93,6 @@ void registerWindow() {
                 }
             }
             ImGui::PopID();
-
             ++it;
             if (it == registerValueMap.end()) break;
         }

@@ -305,9 +305,11 @@ bool createStack(){
 
     LOG_DEBUG("wrote to rsp ");
     if (uc_reg_write(uc, UC_X86_REG_RBP, &stackBase)){
-        printf("Failed to write base pointer to memory, quitting!\n");
+        LOG_ERROR("Failed to write base pointer to memory, quitting!\n");
         return false;
     }
+
+    LOG_DEBUG("Stack created successfully!");
     return true;
 }
 
@@ -400,9 +402,9 @@ bool resetState(){
         registerValueMap[reg.first] = "00";
     }
 
-    auto err = createStack();
-    if (err){
-        LOG_DEBUG("Unable to create stack!");
+    auto created = createStack();
+    if (!created){
+        LOG_ERROR("Unable to create stack!");
         return false;
     }
 
