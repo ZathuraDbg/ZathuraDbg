@@ -2,11 +2,11 @@
 
 void consoleWindow()
 {
-    std::vector<std::string> test = {};
+    std::vector<std::string> commands = {};
     const float footer_height_to_reserve = ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
     ImGui::BeginChild("ScrollingRegion", ImVec2(0, -footer_height_to_reserve), ImGuiChildFlags_None, ImGuiWindowFlags_HorizontalScrollbar);
 
-    for (auto &t: test){
+    for (auto &t: commands){
         ImGui::Text("%s", t.c_str());
     }
 
@@ -15,7 +15,7 @@ void consoleWindow()
     ImGui::PushID(&input);
 
     if (ImGui::InputText("Command", input, ImGuiInputTextFlags_AllowTabInput)){
-        test.emplace_back(input);
+        commands.emplace_back(input);
     }
 
     ImGui::PopID();

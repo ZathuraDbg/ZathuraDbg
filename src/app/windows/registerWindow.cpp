@@ -29,6 +29,24 @@ void updateRegs(){
     }
 }
 
+std::vector<std::string> parseRegisters(std::string registerString){
+    std::vector<std::string> registers = {};
+    uint16_t index = 0;
+
+    size_t registerCount = std::count(registerString.begin(), registerString.end(), ',') + 1;
+    registers.resize(registerCount);
+
+    for (auto c: registerString){
+        if (c != ',' && c != ' '){
+            registers[index] += c;
+        }
+
+        if (c == ','){
+            index++;
+        }
+    }
+    return registers;
+}
 
 void registerWindow() {
     updateRegs();  // Update register values
