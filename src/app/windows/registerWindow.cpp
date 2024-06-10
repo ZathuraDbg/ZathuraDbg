@@ -34,6 +34,12 @@ std::vector<std::string> parseRegisters(std::string registerString){
     uint16_t index = 0;
 
     size_t registerCount = std::count(registerString.begin(), registerString.end(), ',') + 1;
+    // the string only contains one register
+    if (registerCount == 0){
+        registers.emplace_back(registerString);
+        return registers;
+    }
+
     registers.resize(registerCount);
 
     for (auto c: registerString){
@@ -121,23 +127,27 @@ void registerWindow() {
     const float footer_height_to_reserve = ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
 
     ImGui::BeginChild("ScrollingRegion", ImVec2(0, -footer_height_to_reserve), false, ImGuiWindowFlags_None);
-
     ImGui::EndChild();
 
-    std::list<std::string> regs;
+    std::string registerString;
     char input[500] = {}; // Local buffer for input command
+
     ImGui::PushID(&input);
     ImGui::Text("Add registers: ");
     ImGui::SameLine();
+
     if (ImGui::InputText("##registerInput", input, IM_ARRAYSIZE(input), ImGuiInputTextFlags_EnterReturnsTrue)) {
-        regs.emplace_back(toLowerCase(input));
-        std::cout << "Request to add the register: " << input << std::endl;
+        registerString += toLowerCase(input);
+        LOG_DEBUG("Request to add the register: " << input);
     }
 
-    if (!regs.empty()) {
+    std::vector<std::string> regsVec = {};
+    if (!registerString.empty()) {
+        auto regs = parseRegisters(registerString);
         for (auto& reg : regs) {
             auto regInfo = getRegister(reg);
             if (regInfo.first) {
+                regsVec = parseRegisters(reg);
                 LOG_DEBUG("Adding the register " << reg);
                 reg = toUpperCase(reg);
                 registerValueMap[reg] = regInfo.second;
