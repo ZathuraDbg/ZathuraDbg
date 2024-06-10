@@ -104,8 +104,6 @@ uint64_t getRegisterValue(const std::string& regName){
     auto entry = x86RegInfoMap[toUpperCase(regName)];
     auto size = entry.first;
     uint64_t value;
-    LOG_DEBUG("Register requested: " << regName);
-    LOG_DEBUG("Size: " << size);
 
     if (size == 8) {
         uint8_t valTemp8;
@@ -128,7 +126,6 @@ uint64_t getRegisterValue(const std::string& regName){
         value = valTemp64; // force zero extension
     }
 
-    LOG_DEBUG("Value: " << value);
     // 80, 128 and 512 bit unimplemented
     return value;
 }
