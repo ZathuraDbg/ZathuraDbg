@@ -42,6 +42,8 @@ SOURCES += $(INTEGRATION)/interpreter/interpreter.cpp
 SOURCES += $(INTEGRATION)/keystone/assembler.hpp
 SOURCES += $(INTEGRATION)/keystone/assembler.cpp
 SOURCES += $(TINYFD_DIR)/tinyfiledialogs.h
+SOURCES += $(APP)/arch/x86.hpp
+SOURCES += $(APP)/arch/x86.cpp
 
 OBJS = $(addsuffix .o, $(basename $(notdir $(SOURCES))))
 UNAME_S := $(shell uname -s)
@@ -126,7 +128,8 @@ endif
 %.o:$(IMGUI_DIR)/misc/cpp/%.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
-
+%.o:$(APP)/arch/%.cpp
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 #%.o:$(INTEGRATION)/utils/hex/%.cpp
 #	$(CXX) $(CXXFLAGS) -c -o $@ $<
