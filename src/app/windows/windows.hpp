@@ -13,4 +13,5 @@ extern void registerWindow();
 extern void consoleWindow();
 extern void hexEditorWindow();
 extern void stackEditorWindow();
+extern std::vector<std::string> parseRegisters(std::string registerString);
 #endif
