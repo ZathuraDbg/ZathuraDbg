@@ -10,6 +10,7 @@
 #include <iomanip>
 #include "../keystone/assembler.hpp"
 #include "../../windows/windows.hpp"
+#include "../../arch/x86.hpp"
 
 extern bool createStack();
 std::pair<bool, uint64_t> getRegister(std::string name);

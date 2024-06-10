@@ -109,8 +109,9 @@ void registerWindow() {
     std::list<std::string> regs;
     char input[500] = {}; // Local buffer for input command
     ImGui::PushID(&input);
-
-    if (ImGui::InputText("Command", input, IM_ARRAYSIZE(input), ImGuiInputTextFlags_EnterReturnsTrue)) {
+    ImGui::Text("Add registers: ");
+    ImGui::SameLine();
+    if (ImGui::InputText("##registerInput", input, IM_ARRAYSIZE(input), ImGuiInputTextFlags_EnterReturnsTrue)) {
         regs.emplace_back(toLowerCase(input));
         std::cout << "Request to add the register: " << input << std::endl;
     }
@@ -119,11 +120,11 @@ void registerWindow() {
         for (auto& reg : regs) {
             auto regInfo = getRegister(reg);
             if (regInfo.first) {
-                std::cout << "Adding the register " << reg << std::endl;
+                LOG_DEBUG("Adding the register " << reg);
                 reg = toUpperCase(reg);
                 registerValueMap[reg] = regInfo.second;
             } else {
-                std::cerr << "Unable to get the register: " << reg << std::endl;
+                LOG_ERROR("Unable to get the register: " << reg);
             }
         }
     }

@@ -7,7 +7,6 @@ uint64_t CODE_BUF_SIZE = 0x3000;
 uintptr_t STACK_SIZE = 5 * 1024 * 1024;
 uint8_t* codeBuf = nullptr;
 uc_context* context = nullptr;
-
 uc_engine *uc = nullptr;
 
 std::string toLowerCase(const std::string& input) {
@@ -27,157 +26,12 @@ std::string toUpperCase(const std::string& input) {
 }
 
 int regNameToConstant(std::string name){
-    std::unordered_map<std::string, int> regMap = {
-        {"rax", UC_X86_REG_RAX},
-        {"rbx", UC_X86_REG_RBX},
-        {"rcx", UC_X86_REG_RCX},
-        {"rdx", UC_X86_REG_RDX},
-        {"rsi", UC_X86_REG_RSI},
-        {"rdi", UC_X86_REG_RDI},
-        {"rbp", UC_X86_REG_RBP},
-        {"rsp", UC_X86_REG_RSP},
-        {"r8", UC_X86_REG_R8},
-        {"r9", UC_X86_REG_R9},
-        {"r10", UC_X86_REG_R10},
-        {"r11", UC_X86_REG_R11},
-        {"r12", UC_X86_REG_R12},
-        {"r13", UC_X86_REG_R13},
-        {"r14", UC_X86_REG_R14},
-        {"r15", UC_X86_REG_R15},
-        {"rip", UC_X86_REG_RIP},
-        {"cs", UC_X86_REG_CS},
-        {"ds", UC_X86_REG_DS},
-        {"es", UC_X86_REG_ES},
-        {"fs", UC_X86_REG_FS},
-        {"gs", UC_X86_REG_GS},
-        {"ss", UC_X86_REG_SS},
-        {"ah", UC_X86_REG_AH},
-        {"al", UC_X86_REG_AL},
-        {"ax", UC_X86_REG_AX},
-        {"bh", UC_X86_REG_BH},
-        {"bl", UC_X86_REG_BL},
-        {"bx", UC_X86_REG_BX},
-        {"ch", UC_X86_REG_CH},
-        {"cl", UC_X86_REG_CL},
-        {"cx", UC_X86_REG_CX},
-        {"dh", UC_X86_REG_DH},
-        {"dl", UC_X86_REG_DL},
-        {"dx", UC_X86_REG_DX},
-        {"si", UC_X86_REG_SI},
-        {"di", UC_X86_REG_DI},
-        {"bp", UC_X86_REG_BP},
-        {"sp", UC_X86_REG_SP},
-        {"r8d", UC_X86_REG_R8D},
-        {"r9d", UC_X86_REG_R9D},
-        {"r10d", UC_X86_REG_R10D},
-        {"r11d", UC_X86_REG_R11D},
-        {"r12d", UC_X86_REG_R12D},
-        {"r13d", UC_X86_REG_R13D},
-        {"r14d", UC_X86_REG_R14D},
-        {"r15d", UC_X86_REG_R15D},
-        {"r8w", UC_X86_REG_R8W},
-        {"r9w", UC_X86_REG_R9W},
-        {"r10w", UC_X86_REG_R10W},
-        {"r11w", UC_X86_REG_R11W},
-        {"r12w", UC_X86_REG_R12W},
-        {"r13w", UC_X86_REG_R13W},
-        {"r14w", UC_X86_REG_R14W},
-        {"r15w", UC_X86_REG_R15W},
-        {"r8b", UC_X86_REG_R8B},
-        {"r9b", UC_X86_REG_R9B},
-        {"r10b", UC_X86_REG_R10B},
-        {"r11b", UC_X86_REG_R11B},
-        {"r12b", UC_X86_REG_R12B},
-        {"r13b", UC_X86_REG_R13B},
-        {"r14b", UC_X86_REG_R14B},
-        {"r15b", UC_X86_REG_R15B},
-        {"eflags", UC_X86_REG_EFLAGS},
-        {"fs_base", UC_X86_REG_FS_BASE},
-        {"gs_base", UC_X86_REG_GS_BASE},
-        {"flags", UC_X86_REG_FLAGS},
-        {"idtr", UC_X86_REG_IDTR},
-        {"ldtr", UC_X86_REG_LDTR},
-        {"tr", UC_X86_REG_TR},
-        {"mm0", UC_X86_REG_MM0},
-        {"mm1", UC_X86_REG_MM1},
-        {"mm2", UC_X86_REG_MM2},
-        {"mm3", UC_X86_REG_MM3},
-        {"mm4", UC_X86_REG_MM4},
-        {"mm5", UC_X86_REG_MM5},
-        {"mm6", UC_X86_REG_MM6},
-        {"mm7", UC_X86_REG_MM7},
-        {"xmm0", UC_X86_REG_XMM0},
-        {"xmm1", UC_X86_REG_XMM1},
-        {"xmm2", UC_X86_REG_XMM2},
-        {"xmm3", UC_X86_REG_XMM3},
-        {"xmm4", UC_X86_REG_XMM4},
-        {"xmm5", UC_X86_REG_XMM5},
-        {"xmm6", UC_X86_REG_XMM6},
-        {"xmm7", UC_X86_REG_XMM7},
-        {"ymm0", UC_X86_REG_YMM0},
-        {"ymm1", UC_X86_REG_YMM1},
-        {"ymm2", UC_X86_REG_YMM2},
-        {"ymm3", UC_X86_REG_YMM3},
-        {"ymm4", UC_X86_REG_YMM4},
-        {"ymm5", UC_X86_REG_YMM5},
-        {"ymm6", UC_X86_REG_YMM6},
-        {"ymm7", UC_X86_REG_YMM7},
-        {"zmm0", UC_X86_REG_ZMM0},
-        {"zmm1", UC_X86_REG_ZMM1},
-        {"zmm2", UC_X86_REG_ZMM2},
-        {"zmm3", UC_X86_REG_ZMM3},
-        {"zmm4", UC_X86_REG_ZMM4},
-        {"zmm5", UC_X86_REG_ZMM5},
-        {"zmm6", UC_X86_REG_ZMM6},
-        {"zmm7", UC_X86_REG_ZMM7},
-        {"cr0", UC_X86_REG_CR0},
-        {"cr1", UC_X86_REG_CR1},
-        {"cr2", UC_X86_REG_CR2},
-        {"cr3", UC_X86_REG_CR3},
-        {"cr4", UC_X86_REG_CR4},
-        {"cr8", UC_X86_REG_CR8},
-        {"dr0", UC_X86_REG_DR0},
-        {"dr1", UC_X86_REG_DR1},
-        {"dr2", UC_X86_REG_DR2},
-        {"dr3", UC_X86_REG_DR3},
-        {"dr4", UC_X86_REG_DR4},
-        {"dr5", UC_X86_REG_DR5},
-        {"dr6", UC_X86_REG_DR6},
-        {"dr7", UC_X86_REG_DR7},
-        {"dil", UC_X86_REG_DIL},
-        {"edi", UC_X86_REG_EDI},
-        {"sil", UC_X86_REG_SIL},
-        {"esi", UC_X86_REG_ESI},
-        {"bpl", UC_X86_REG_BPL},
-        {"ebp", UC_X86_REG_EBP},
-        {"spl", UC_X86_REG_SPL},
-        {"esp", UC_X86_REG_ESP},
-        {"r8d", UC_X86_REG_R8D},
-        {"r8", UC_X86_REG_R8},
-        {"r9d", UC_X86_REG_R9D},
-        {"r9", UC_X86_REG_R9},
-        {"r10d", UC_X86_REG_R10D},
-        {"r10", UC_X86_REG_R10},
-        {"r11d", UC_X86_REG_R11D},
-        {"r11", UC_X86_REG_R11},
-        {"r12d", UC_X86_REG_R12D},
-        {"r12", UC_X86_REG_R12},
-        {"r13d", UC_X86_REG_R13D},
-        {"r13", UC_X86_REG_R13},
-        {"r14d", UC_X86_REG_R14D},
-        {"r14", UC_X86_REG_R14},
-        {"r15d", UC_X86_REG_R15D},
-        {"r15", UC_X86_REG_R15},
-        {"eflags", UC_X86_REG_EFLAGS},
-        {"flags", UC_X86_REG_FLAGS},
-    };
-
-    if (regMap.find(name) == regMap.end()){
-        std::cout << "Not found 1: "  << name << std::endl;
+    if (x86RegInfoMap.find(name) == x86RegInfoMap.end()){
+        LOG_ALERT("Requested register not found: " << name);
         return UC_X86_REG_INVALID;
     }
 
-    return regMap[name];
+    return x86RegInfoMap[name].second;
 }
 
 void showRegs(){
@@ -243,22 +97,51 @@ void showRegs(){
     printf("FS_BASE = 0x%x\n", fs_base);
     printf("GS_BASE = 0x%x\n", gs_base);
 }
+// TODO: Add a check while adding a new register so we don't have to add a check in the below
+// two functions
+
+uint64_t getRegisterValue(const std::string& regName){
+    auto entry = x86RegInfoMap[toUpperCase(regName)];
+    auto size = entry.first;
+    uint64_t value;
+    LOG_DEBUG("Register requested: " << regName);
+    LOG_DEBUG("Size: " << size);
+
+    if (size == 8) {
+        uint8_t valTemp8;
+        uc_reg_read(uc, entry.second, &valTemp8);
+        value = valTemp8; // force zero extension
+    }
+    else if (size == 16) {
+        uint16_t valTemp16;
+        uc_reg_read(uc, entry.second, &valTemp16);
+        value = valTemp16; // force zero extension
+    }
+    else if (size == 32) {
+        uint32_t valTemp32;
+        uc_reg_read(uc, entry.second, &valTemp32);
+        value = valTemp32; // force zero extension
+    }
+    else if (size == 64) {
+        uint64_t valTemp64;
+        uc_reg_read(uc, entry.second, &valTemp64);
+        value = valTemp64; // force zero extension
+    }
+
+    LOG_DEBUG("Value: " << value);
+    // 80, 128 and 512 bit unimplemented
+    return value;
+}
 
 std::pair<bool, uint64_t> getRegister(std::string name){
     std::pair<bool, uint64_t> res = {false, 0};
+
 
     if (!codeHasRun){
         return {true, 0x00};
     }
 
-    int reg = regNameToConstant(toLowerCase(name));
-    if (reg == UC_X86_REG_INVALID){
-        LOG_ERROR("Invalid register requested: " << name);
-        return res;
-    }
-
-    uint64_t value;
-    uc_reg_read(uc, reg, &value);
+    auto value = getRegisterValue(name);
     res = {true, value};
     return res;
 }
@@ -305,11 +188,9 @@ bool createStack(){
 
     LOG_DEBUG("wrote to rsp ");
     if (uc_reg_write(uc, UC_X86_REG_RBP, &stackBase)){
-        LOG_ERROR("Failed to write base pointer to memory, quitting!\n");
+        printf("Failed to write base pointer to memory, quitting!\n");
         return false;
     }
-
-    LOG_DEBUG("Stack created successfully!");
     return true;
 }
 
@@ -402,9 +283,9 @@ bool resetState(){
         registerValueMap[reg.first] = "00";
     }
 
-    auto created = createStack();
-    if (!created){
-        LOG_ERROR("Unable to create stack!");
+    auto err = createStack();
+    if (err){
+        LOG_DEBUG("Unable to create stack!");
         return false;
     }
 
@@ -448,6 +329,12 @@ bool runCode(const std::string& code_in, int instructionCount)
     if (uc_mem_write(uc, ENTRY_POINT_ADDRESS, codeBuf, CODE_BUF_SIZE - 1)) {
         LOG_ERROR("Failed to write emulation code to memory, quit!\n");
         return false;
+    }
+
+    err = uc_emu_start(uc, ENTRY_POINT_ADDRESS, ENTRY_POINT_ADDRESS + CODE_BUF_SIZE, 0, instructionCount);
+    if (err) {
+        printf("Failed on uc_emu_start() with error returned %u: %s\n",
+               err, uc_strerror(err));
     }
 
     LOG_DEBUG("Running code with uc_emu_start(uc, " << ENTRY_POINT_ADDRESS << ", " << ENTRY_POINT_ADDRESS + CODE_BUF_SIZE << ", 0, " << instructionCount << ")");
