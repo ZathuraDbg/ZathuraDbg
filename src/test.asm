@@ -7,7 +7,6 @@ main:
 	push rax
 	mov rdi, 0x12
 	call square
-	push rax
 	hlt
 
 square:

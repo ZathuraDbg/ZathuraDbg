@@ -39,9 +39,11 @@ bool setupButtons() {
 
     if (ImGui::Button(ICON_CI_DEBUG_CONTINUE, ImVec2(20, 20))){
         if (context == nullptr){
+            LOG_DEBUG("Context is empty!");
             fileRunTask(1);
         }
         else{
+            LOG_DEBUG("Context is not empty!");
             stepCode();
         }
     }
