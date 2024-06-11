@@ -291,11 +291,13 @@ bool resetState(){
 }
 
 bool stepCode(){
+    LOG_DEBUG("Stepping into code!");
     uc_context_restore(uc, context);
     uc_err err;
     uint64_t rip;
 
     uc_reg_read(uc, UC_X86_REG_RIP, &rip);
+
     err = uc_emu_start(uc, rip, ENTRY_POINT_ADDRESS + CODE_BUF_SIZE, 0, 1);
     if (err) {
         printf("Failed on uc_emu_start() with error returned %u: %s\n",
@@ -305,6 +307,8 @@ bool stepCode(){
     uc_context_save(uc, context);
     codeHasRun = true;
     return true;
+
+    LOG_DEBUG("Code ran once!");
 }
 
 bool runCode(const std::string& code_in, int instructionCount)
@@ -317,10 +321,10 @@ bool runCode(const std::string& code_in, int instructionCount)
     if (codeBuf == nullptr){
         codeBuf = (uint8_t*)malloc(CODE_BUF_SIZE);
         memset(codeBuf, 0, CODE_BUF_SIZE);
+        LOG_DEBUG("Code buffer allocated!");
     }
 
     code = (uint8_t*)(code_in.c_str());
-
     memcpy(codeBuf, code, code_in.length());
 
     uc_mem_map(uc, ENTRY_POINT_ADDRESS, MEMORY_ALLOCATION_SIZE, UC_PROT_READ | UC_PROT_WRITE | UC_PROT_EXEC);
@@ -334,9 +338,6 @@ bool runCode(const std::string& code_in, int instructionCount)
         printf("Failed on uc_emu_start() with error returned %u: %s\n",
                err, uc_strerror(err));
     }
-
-    LOG_DEBUG("Running code with uc_emu_start(uc, " << ENTRY_POINT_ADDRESS << ", " << ENTRY_POINT_ADDRESS + CODE_BUF_SIZE << ", 0, " << instructionCount << ")");
-    err = uc_emu_start(uc, ENTRY_POINT_ADDRESS, ENTRY_POINT_ADDRESS + CODE_BUF_SIZE, 0, instructionCount);
 
     if (err) {
         handleUCErrors(err);
