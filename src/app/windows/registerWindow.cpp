@@ -55,7 +55,7 @@ std::vector<std::string> parseRegisters(std::string registerString){
 }
 
 void registerWindow() {
-    updateRegs();  // Update register values
+    updateRegs();
     auto io = ImGui::GetIO();
     ImGui::PushFont(io.Fonts->Fonts[3]);  // Use the appropriate font index
 

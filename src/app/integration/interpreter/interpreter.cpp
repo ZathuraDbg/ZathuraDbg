@@ -193,7 +193,7 @@ bool createStack(){
 
 void handleUCErrors(uc_err err){
     if (err == UC_ERR_INSN_INVALID){
-                LOG_ERROR("Failed on uc_emu_start(): Invalid Instruction provided.");
+        LOG_ERROR("Failed on uc_emu_start(): Invalid Instruction provided.");
         tinyfd_messageBox("ERROR!", "Invalid instruction found in the provided code!!", "ok", "error", 0);
     }
     else if (err < UC_ERR_VERSION){
@@ -276,6 +276,7 @@ bool resetState(){
         uc = nullptr;
     }
 
+    context = nullptr;
     for (auto& reg: registerValueMap){
         registerValueMap[reg.first] = "00";
     }

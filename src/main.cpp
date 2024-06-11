@@ -88,7 +88,10 @@ int main(int, char**)
     SetupImGuiStyle();
     setupEditor();
 
-
+    memoryEditorWindow.WriteFn = &hexWriteFunc;
+    stackEditor.OptShowAscii = false;
+    stackEditor.Cols = 8;
+    stackEditor.WriteFn = &stackWriteFunc;
 
     if (!createStack()){
         tinyfd_messageBox("Keystone Engine error!", "Unable to initialize the stack. If the issue persists please create a GitHub issue and report your logs.", "ok", "error", 0);

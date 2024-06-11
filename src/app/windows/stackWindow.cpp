@@ -1,4 +1,5 @@
 #include "windows.hpp"
+MemoryEditor stackEditor;
 
 static void* copyBigEndian(void* _dst, void* _src, size_t s)
 {
@@ -9,12 +10,24 @@ static void* copyBigEndian(void* _dst, void* _src, size_t s)
     return _dst;
 }
 
+
+void stackWriteFunc(ImU8* data, size_t off, ImU8 d){
+    LOG_DEBUG("Stack Edit request!");
+    auto err = uc_mem_write(uc, STACK_ADDRESS + STACK_SIZE - off - 1, &d, 1);
+
+    if (err){
+        LOG_ERROR("Failed to write to memory. Address: " << std::hex << STACK_ADDRESS + off);
+        tinyfd_messageBox("ERROR!", "Failed to write to the memory address!!", "ok", "error", 0);
+    }
+
+    char* hex = (char*)malloc(24);
+    sprintf((char*)hex, "Data change: %x", d);
+    LOG_DEBUG(hex);
+}
+
+
 void stackEditorWindow() {
     auto io = ImGui::GetIO();
-    static MemoryEditor stackEditor;
-    stackEditor.OptShowAscii = false;
-    stackEditor.Cols = 8;
-
     ImGui::PushFont(io.Fonts->Fonts[3]);
 
     static char data[5 * 1024 * 1024];
