@@ -1,6 +1,8 @@
 #include "assembler.hpp"
 
 ks_engine *ks = nullptr;
+uint64_t codeFinalLen = 0;
+
 std::pair<std::string, std::size_t> assemble(const std::string& assembly, const keystoneSettings& ksSettings) {
     LOG_DEBUG("Assembling:\n" << assembly);
     ks_err err;
@@ -49,6 +51,7 @@ std::pair<std::string, std::size_t> assemble(const std::string& assembly, const 
     ks_close(ks);
     ks = nullptr;
 
+    codeFinalLen = size;
     LOG_DEBUG("Assembled: " << size << " bytes");
     return assembled;
 }

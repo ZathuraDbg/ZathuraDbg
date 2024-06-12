@@ -33,4 +33,5 @@ typedef struct{
 extern std::pair<std::string, std::size_t> assemble(const std::string& assembly, const keystoneSettings& ksSettings);
 extern std::string getBytes(std::string fileName);
 extern std::string getBytes(std::stringstream& assembly);
+extern uint64_t codeFinalLen;
 #endif //ZATHURA_UI_ASSEMBLER_HPP

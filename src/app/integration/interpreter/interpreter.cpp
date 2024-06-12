@@ -8,6 +8,7 @@ uintptr_t STACK_SIZE = 5 * 1024 * 1024;
 uint8_t* codeBuf = nullptr;
 uc_context* context = nullptr;
 uc_engine *uc = nullptr;
+uint64_t codeCurrentLen = 0;
 
 std::string toLowerCase(const std::string& input) {
     std::string result = input; // Create a copy of the input string
@@ -153,7 +154,6 @@ bool ucInit(){
         return false;
     }
 
-
     return true;
 }
 
@@ -188,6 +188,7 @@ bool createStack(){
         printf("Failed to write base pointer to memory, quitting!\n");
         return false;
     }
+
     return true;
 }
 
@@ -287,11 +288,18 @@ bool resetState(){
         return false;
     }
 
+    codeCurrentLen = 0;
+    codeFinalLen = 0;
     return true;
 }
 
 bool stepCode(){
     LOG_DEBUG("Stepping into code!");
+
+    if (codeCurrentLen == codeFinalLen){
+        return true;
+    }
+
     uc_context_restore(uc, context);
     uc_err err;
     uint64_t rip;
@@ -309,6 +317,10 @@ bool stepCode(){
     return true;
 
     LOG_DEBUG("Code ran once!");
+}
+
+void hook(uc_engine *uc, uint64_t address, uint32_t size, void *user_data){
+   codeCurrentLen += size;
 }
 
 bool runCode(const std::string& code_in, int instructionCount)
@@ -333,6 +345,8 @@ bool runCode(const std::string& code_in, int instructionCount)
         return false;
     }
 
+    uc_hook trace;
+    uc_hook_add(uc, &trace, UC_HOOK_CODE, (void*)hook, NULL, 1, 0);
     err = uc_emu_start(uc, ENTRY_POINT_ADDRESS, ENTRY_POINT_ADDRESS + CODE_BUF_SIZE, 0, instructionCount);
     if (err) {
         printf("Failed on uc_emu_start() with error returned %u: %s\n",
