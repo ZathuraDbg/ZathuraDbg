@@ -89,9 +89,17 @@ void registerWindow() {
                 if (strncmp(value1, "0x", 2) != 0) {
                     registerValueMap[it->first] = "0x";
                     registerValueMap[it->first].append(value1);
+                    int val1 = std::stoi(value1, nullptr, 16);
+                    LOG_DEBUG("Register: " << it->first << "; Value: " << value1 << "; after stoi" << val1);
+                    uc_reg_write(uc, regNameToConstant(it->first), &val1);
                 } else {
+                    int val1 = std::stoi(value1, nullptr, 16);
+                    LOG_DEBUG("Register else: " << it->first << "; Value: " << value1 << "; after stoi" << val1);
+                    uc_reg_write(uc, regNameToConstant(it->first), &val1);
                     registerValueMap[it->first] = value1;
                 }
+
+                uc_context_save(uc, context);
             }
             ImGui::PopID();
 
@@ -112,9 +120,17 @@ void registerWindow() {
                 if (strncmp(value2, "0x", 2) != 0) {
                     registerValueMap[it->first] = "0x";
                     registerValueMap[it->first].append(value2);
+                    int val1 = std::stoi(value2, nullptr, 16);
+                    LOG_DEBUG("Register: " << it->first << "; Value: " << value2<< "; after stoi" << val1);
+                    uc_reg_write(uc, regNameToConstant(it->first), &val1);
                 } else {
                     registerValueMap[it->first] = value2;
+                    int val1 = std::stoi(value2, nullptr, 16);
+                    LOG_DEBUG("Register: " << it->first << "; Value: " << value2 << "; after stoi" << val1);
+                    uc_reg_write(uc, regNameToConstant(it->first), &val1);
                 }
+
+                uc_context_save(uc, context);
             }
             ImGui::PopID();
             ++it;
