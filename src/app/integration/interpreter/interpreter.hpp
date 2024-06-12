@@ -29,4 +29,6 @@ extern bool stepCode();
 extern bool resetState();
 extern std::string toLowerCase(const std::string& input);
 extern std::string toUpperCase(const std::string& input);
+extern uint64_t codeCurrentLen;
+
 #endif
