@@ -1,0 +1,5 @@
+/tmp/Z/src/build/CMakeFiles/Zathura.dir
+/tmp/Z/src/build/CMakeFiles/run.dir
+/tmp/Z/src/build/CMakeFiles/clean-all.dir
+/tmp/Z/src/build/CMakeFiles/edit_cache.dir
+/tmp/Z/src/build/CMakeFiles/rebuild_cache.dir
