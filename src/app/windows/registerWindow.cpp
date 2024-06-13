@@ -1,4 +1,5 @@
 #include "windows.hpp"
+#include <cstring>
 bool codeHasRun = false;
 tsl::ordered_map<std::string, std::string> registerValueMap = {{"RIP", "0x00"}, {"RSP", "0x00"}, {"RBP", "0x00"},{"RAX", "0x00"}, {"RBX", "0x00"}, {"RCX", "0x00"}, {"RDX", "0x00"},
                                                                {"RSI", "0x00"}, {"RDI", "0x00"}, {"R8", "0x00"}, {"R9", "0x00"}, {"R10", "0x00"}, {"R11", "0x00"}, {"R12", "0x00"},
@@ -54,6 +55,30 @@ std::vector<std::string> parseRegisters(std::string registerString){
     return registers;
 }
 
+static int TextInputCallback(ImGuiInputTextCallbackData* data) {
+    std::string input(data->Buf, data->BufTextLen);
+    std::string filteredString;
+
+    if (input.starts_with("0x")){
+        filteredString += "0x";
+    }
+
+//    if (!input.starts_with("0x")){
+//        input = "";
+//        data->UserData = reinterpret_cast<void*>(input.size());
+//    }
+
+    for (int i = 2; i < input.length(); i++){
+        if ((input[i] >= '0' && input[i] <= '9') || (input[i] >= 'A' && input[i] <= 'F') || (input[i] >= 'a' && input[i] <= 'f')) {
+            filteredString += input[i];
+        }
+    }
+
+    strncpy(data->Buf, filteredString.c_str(), filteredString.length());
+    return 0;
+}
+
+
 void registerWindow() {
     updateRegs();
     auto io = ImGui::GetIO();
@@ -85,22 +110,28 @@ void registerWindow() {
 
             ImGui::PushID(index * 2);
             ImGui::SetNextItemWidth(-FLT_MIN); // Use the remaining space in the column
-            if (ImGui::InputText(("##value1" + std::to_string(index)).c_str(), value1, IM_ARRAYSIZE(value1), ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CharsUppercase | ImGuiInputTextFlags_CharsNoBlank)) {
-                if (strncmp(value1, "0x", 2) != 0) {
-                    registerValueMap[it->first] = "0x";
-                    registerValueMap[it->first].append(value1);
-                    int val1 = std::stoi(value1, nullptr, 16);
-                    LOG_DEBUG("Register: " << it->first << "; Value: " << value1 << "; after stoi" << val1);
-                    uc_reg_write(uc, regNameToConstant(it->first), &val1);
-                } else {
-                    int val1 = std::stoi(value1, nullptr, 16);
-                    LOG_DEBUG("Register else: " << it->first << "; Value: " << value1 << "; after stoi" << val1);
-                    uc_reg_write(uc, regNameToConstant(it->first), &val1);
-                    registerValueMap[it->first] = value1;
-                }
+            if (ImGui::InputText(("##value1" + std::to_string(index)).c_str(), value1, IM_ARRAYSIZE(value1), ImGuiInputTextFlags_CharsNoBlank, TextInputCallback)) {
+                if (codeHasRun) {
+                    if (strlen(value1) == 0){
+                        // do nothing
+                    }
+                    else if (strncmp(value1, "0x", 2) != 0) {
+                        registerValueMap[it->first] = "0x";
+                        registerValueMap[it->first].append(value1);
+                        int val1 = std::stoi(value1, nullptr, 16);
+                        LOG_DEBUG("Register: " << it->first << "; Value: " << value1 << "; after stoi" << val1);
+                        uc_reg_write(uc, regNameToConstant(it->first), &val1);
+                    } else {
+                        int val1 = std::stoi(value1, nullptr, 16);
+                                LOG_DEBUG("Register else: " << it->first << "; Value: " << value1 << "; after stoi" << val1);
+                        uc_reg_write(uc, regNameToConstant(it->first), &val1);
+                        registerValueMap[it->first] = value1;
+                    }
 
-                uc_context_save(uc, context);
-            }
+                    uc_context_save(uc, context);
+                    // do nothing
+                }
+                           }
             ImGui::PopID();
 
             ++it;
