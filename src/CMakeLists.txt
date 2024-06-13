@@ -3,7 +3,6 @@ project(Zathura)
 
 set(CMAKE_CXX_STANDARD 23)
 
-# Source files
 set(SOURCES
         ${CMAKE_SOURCE_DIR}/main.cpp
         ${CMAKE_SOURCE_DIR}/../vendor/imgui/imgui.cpp
