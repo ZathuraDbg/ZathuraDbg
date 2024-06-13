@@ -1,0 +1,5 @@
+/home/rc/Zathura-UI/src/cmake-build-debug/CMakeFiles/Zathura.dir
+/home/rc/Zathura-UI/src/cmake-build-debug/CMakeFiles/run.dir
+/home/rc/Zathura-UI/src/cmake-build-debug/CMakeFiles/clean-all.dir
+/home/rc/Zathura-UI/src/cmake-build-debug/CMakeFiles/edit_cache.dir
+/home/rc/Zathura-UI/src/cmake-build-debug/CMakeFiles/rebuild_cache.dir
