@@ -34,7 +34,6 @@ extern void setupViewPort();
 void appMenuBar();
 
 extern void LoadIniFile();
-extern void appMenuBar();
 extern bool setupButtons();
 extern void mainWindow();
 extern void setupEditor();

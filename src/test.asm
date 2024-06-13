@@ -5,7 +5,7 @@ main:
 	pop r11
 	mov rax, 0x12345678
 	push rax
-	mov rdi, 0x12
+	mov rdi, 0x13
 	call square
 	hlt
 
