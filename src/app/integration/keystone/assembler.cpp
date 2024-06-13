@@ -31,7 +31,7 @@ std::pair<std::string, std::size_t> assemble(const std::string& assembly, const 
     }
 
     if (ks_asm(ks, assembly.data(), 0, &encode, &size, &count)) {
-        ks_err err = ks_errno(ks);
+        err = ks_errno(ks);
         std::string error(ks_strerror(err));
 
         if (err >= KS_ERR_ASM){
@@ -71,15 +71,16 @@ std::string getBytes(std::string fileName){
     asmFile.close();
 
     keystoneSettings ksSettings = {.arch = KS_ARCH_X86, .mode = KS_MODE_64, .optionType=KS_OPT_SYNTAX, .optionValue=KS_OPT_SYNTAX_NASM};
-    auto bytes = assemble(assembly.str(), ksSettings);
+    auto [bytes, size] = assemble(assembly.str(), ksSettings);
 
     LOG_DEBUG("Got bytes, now hexlifying.");
-    return hexlify({bytes.first.data(), bytes.second});
+    return hexlify({bytes.data(), size});
 }
 
 std::string getBytes(std::stringstream &assembly){
     keystoneSettings ksSettings = {.arch = KS_ARCH_X86, .mode = KS_MODE_64, .optionType=KS_OPT_SYNTAX, .optionValue=KS_OPT_SYNTAX_NASM};
-    auto bytes = assemble(assembly.str(), ksSettings);
+    auto [bytes, size] = assemble(assembly.str(), ksSettings);
+
     LOG_DEBUG("Got bytes, now hexlifying.");
-    return hexlify({bytes.first.data(), bytes.second});
+    return hexlify({bytes.data(), size});
 }

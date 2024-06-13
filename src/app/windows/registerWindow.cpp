@@ -8,23 +8,25 @@ tsl::ordered_map<std::string, std::string> registerValueMap = {{"RIP", "0x00"}, 
 void updateRegs(){
     std::stringstream hex;
     std::pair<bool, uint64_t> val;
-    for (auto &reg: registerValueMap) {
-        val = getRegister(toLowerCase(reg.first));
+
+    for (const auto& [name, value]: registerValueMap) {
+        val = getRegister(toLowerCase(name));
+        auto const [isRegisterValid, registerValue] = val;
 
         hex << "0x";
-        if (val.first){
-            if (val.second == 0){
+        if (isRegisterValid){
+            if (registerValue == 0){
                 hex << std::hex << "00";
             }
             else{
-                hex << std::hex << val.second;
+                hex << std::hex << registerValue;
             }
         }
         else {
             hex << "00";
         }
 
-        registerValueMap[reg.first] = hex.str();
+        registerValueMap[name] = hex.str();
         hex.str("");
         hex.clear();
     }
