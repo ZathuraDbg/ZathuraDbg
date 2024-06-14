@@ -323,7 +323,7 @@ void hook(uc_engine *uc, uint64_t address, uint32_t size, void *user_data){
    codeCurrentLen += size;
 }
 
-bool runCode(const std::string& code_in, int instructionCount)
+bool runCode(const std::string& code_in, uint64_t instructionCount)
 {
     LOG_DEBUG("Running code...");
 
@@ -346,7 +346,7 @@ bool runCode(const std::string& code_in, int instructionCount)
     }
 
     uc_hook trace;
-    uc_hook_add(uc, &trace, UC_HOOK_CODE, (void*)hook, NULL, 1, 0);
+    uc_hook_add(uc, &trace, UC_HOOK_CODE, (void*)hook, nullptr, 1, 0);
     err = uc_emu_start(uc, ENTRY_POINT_ADDRESS, ENTRY_POINT_ADDRESS + CODE_BUF_SIZE, 0, instructionCount);
     if (err) {
         printf("Failed on uc_emu_start() with error returned %u: %s\n",
