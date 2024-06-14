@@ -7,10 +7,9 @@ void appMenuBar()
     bool fileSaveAs = false;
     bool quit = false;  // not using exit because it's a function from std to avoid confusion
 
-    bool debugRestart = false;
+    bool debugReset = false;
     bool debugStep = false;
     bool debugRun = false;
-    bool debugPause = false;
 
     ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[RubikRegular16]);
     if (ImGui::BeginMainMenuBar())
@@ -63,9 +62,9 @@ void appMenuBar()
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu("Debug")){
-            ImGui::MenuItem("Restart", "CTRL+R", &debugRestart);
+            ImGui::MenuItem("Reset", "CTRL+Shift+R", &debugReset);
+            ImGui::MenuItem("Run", "CTRL+R", &debugRun);
             ImGui::MenuItem("Step", "CTRL+J", &debugStep);
-            ImGui::MenuItem("Pause", "CTRL+P", &debugPause);
             ImGui::Separator();
             ImGui::EndMenu();
         }
@@ -87,6 +86,22 @@ void appMenuBar()
     }
     if (quit){
         isRunning = false;
+    }
+    if (debugRun){
+        fileRunTask();
+    }
+    if (debugStep){
+        if (context == nullptr){
+            LOG_DEBUG("Context is empty!");
+            fileRunTask(1);
+        }
+        else{
+            LOG_DEBUG("Context is not empty!");
+            stepCode();
+        }
+    }
+    if (debugReset){
+        resetState();
     }
 
     ImGui::PopFont();
