@@ -56,8 +56,9 @@ std::pair<std::string, std::size_t> assemble(const std::string& assembly, const 
     return assembled;
 }
 
-std::string getBytes(std::string fileName){
+std::string getBytes(const std::string& fileName){
     LOG_DEBUG("Getting bytes from the file: " << fileName);
+
     std::ifstream asmFile(fileName);
     std::stringstream assembly;
 

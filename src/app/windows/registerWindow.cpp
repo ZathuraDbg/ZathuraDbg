@@ -9,7 +9,7 @@ void updateRegs(){
     std::stringstream hex;
     std::pair<bool, uint64_t> val;
 
-    for (const auto& [name, value]: registerValueMap) {
+    for (const auto& [name, registerValue]: registerValueMap) {
         val = getRegister(toLowerCase(name));
         auto const [isRegisterValid, registerValue] = val;
 
@@ -65,11 +65,6 @@ static int TextInputCallback(ImGuiInputTextCallbackData* data) {
         filteredString += "0x";
     }
 
-//    if (!input.starts_with("0x")){
-//        input = "";
-//        data->UserData = reinterpret_cast<void*>(input.size());
-//    }
-
     for (int i = 2; i < input.length(); i++){
         if ((input[i] >= '0' && input[i] <= '9') || (input[i] >= 'A' && input[i] <= 'F') || (input[i] >= 'a' && input[i] <= 'f')) {
             filteredString += input[i];
@@ -98,78 +93,71 @@ void registerWindow() {
         for (auto it = registerValueMap.begin(); it != registerValueMap.end(); ++index) {
             ImGui::TableNextRow();
 
+            auto const &[registerName, registerValue] = *it;
+
             ImGui::TableSetColumnIndex(0);
             float textHeight = ImGui::GetTextLineHeight();
             float frameHeight = ImGui::GetFrameHeight();
             float spacing = (frameHeight - textHeight) / 2.0f;
+
             ImGui::SetCursorPosY(ImGui::GetCursorPosY() + spacing);
-            ImGui::Text("%s", it->first.c_str());
+            ImGui::Text("%s", registerName.c_str());
 
             ImGui::TableSetColumnIndex(1);
             static char value1[64] = {};
-            strncpy(value1, it->second.c_str(), sizeof(value1) - 1);
+            strncpy(value1, registerValue.c_str(), sizeof(value1) - 1);
             value1[sizeof(value1) - 1] = '\0';
 
             ImGui::PushID(index * 2);
             ImGui::SetNextItemWidth(-FLT_MIN); // Use the remaining space in the column
             if (ImGui::InputText(("##value1" + std::to_string(index)).c_str(), value1, IM_ARRAYSIZE(value1), ImGuiInputTextFlags_CharsNoBlank, TextInputCallback)) {
-                if (codeHasRun) {
-                    if (strlen(value1) == 0){
-                        // do nothing
-                    }
-                    else if (strncmp(value1, "0x", 2) != 0) {
-                        registerValueMap[it->first] = "0x";
-                        registerValueMap[it->first].append(value1);
-                        int val1 = std::stoi(value1, nullptr, 16);
-                        LOG_DEBUG("Register: " << it->first << "; Value: " << value1 << "; after stoi" << val1);
-                        uc_reg_write(uc, regNameToConstant(it->first), &val1);
+                if (codeHasRun && (strlen(value1) > 0)) {
+
+                    if (strncmp(value1, "0x", 2) != 0) {
+                        registerValueMap[registerName] = "0x";
+                        registerValueMap[registerName].append(value1);
                     } else {
-                        int val1 = std::stoi(value1, nullptr, 16);
-                                LOG_DEBUG("Register else: " << it->first << "; Value: " << value1 << "; after stoi" << val1);
-                        uc_reg_write(uc, regNameToConstant(it->first), &val1);
-                        registerValueMap[it->first] = value1;
+                        registerValueMap[registerName] = value1;
                     }
 
+                    int val1 = std::stoi(value1, nullptr, 16);
+                    LOG_DEBUG("Register: " << registerName << "; Value: " << value1 << "; after stoi" << val1);
+                    uc_reg_write(uc, regNameToConstant(registerName), &val1);
                     uc_context_save(uc, context);
                     // do nothing
                 }
-                           }
+           }
             ImGui::PopID();
 
             ++it;
             if (it == registerValueMap.end()) break;
 
             ImGui::TableSetColumnIndex(2);
-            ImGui::Text("%s", it->first.c_str());
+            ImGui::Text("%s", registerName.c_str());
 
             ImGui::TableSetColumnIndex(3);
             static char value2[64] = {};
-            strncpy(value2, it->second.c_str(), sizeof(value2) - 1);
+            strncpy(value2, registerValue.c_str(), sizeof(value2) - 1);
             value2[sizeof(value2) - 1] = '\0';
 
             ImGui::PushID(index * 2 + 1);
             ImGui::SetNextItemWidth(-FLT_MIN); // Use the remaining space in the column
             if (ImGui::InputText(("##value2" + std::to_string(index)).c_str(), value2, IM_ARRAYSIZE(value2), ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CharsUppercase | ImGuiInputTextFlags_CharsNoBlank)) {
-                if (strncmp(value2, "0x", 2) != 0) {
-                    registerValueMap[it->first] = "0x";
-                    registerValueMap[it->first].append(value2);
+                if (codeHasRun && (strlen(value2) > 0)) {
+
+                    if (strncmp(value2, "0x", 2) != 0) {
+                        registerValueMap[registerName] = "0x";
+                        registerValueMap[registerName].append(value2);
+                    } else {
+                        registerValueMap[registerName] = value1;
+                    }
+
                     int val1 = std::stoi(value2, nullptr, 16);
-                    LOG_DEBUG("Register: " << it->first << "; Value: " << value2<< "; after stoi" << val1);
-                    uc_reg_write(uc, regNameToConstant(it->first), &val1);
-                } else {
-                    registerValueMap[it->first] = value2;
-                    int val1 = std::stoi(value2, nullptr, 16);
-                    LOG_DEBUG("Register: " << it->first << "; Value: " << value2 << "; after stoi" << val1);
-                    uc_reg_write(uc, regNameToConstant(it->first), &val1);
+                    LOG_DEBUG("Register: " << registerName << "; Value: " << value2 << "; after stoi" << val1);
+                    uc_reg_write(uc, regNameToConstant(registerName), &val1);
+                    uc_context_save(uc, context);
                 }
-
-                uc_context_save(uc, context);
             }
-            ImGui::PopID();
-            ++it;
-            if (it == registerValueMap.end()) break;
-        }
-
         ImGui::EndTable();
     }
 
