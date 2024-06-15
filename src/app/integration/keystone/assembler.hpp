@@ -30,7 +30,8 @@ typedef struct{
     ks_opt_value optionValue;
 } keystoneSettings;
 
-
+//extern std::map<std::string, uint64_t> lineNoInstructionSizeMap;
+extern std::map<std::string, std::string> addressLineNoMap;
 extern std::stringstream assembly;
 extern std::pair<std::string, std::size_t> assemble(const std::string& assemblyString, const keystoneSettings& ksSettings);
 extern std::string getBytes(const std::string& fileName);
