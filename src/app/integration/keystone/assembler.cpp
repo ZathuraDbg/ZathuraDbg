@@ -2,9 +2,10 @@
 
 ks_engine *ks = nullptr;
 uint64_t codeFinalLen = 0;
+std::stringstream assembly;
 
-std::pair<std::string, std::size_t> assemble(const std::string& assembly, const keystoneSettings& ksSettings) {
-    LOG_DEBUG("Assembling:\n" << assembly);
+std::pair<std::string, std::size_t> assemble(const std::string& assemblyString, const keystoneSettings& ksSettings) {
+    LOG_DEBUG("Assembling:\n" << assemblyString);
     ks_err err;
     size_t size;
     size_t count;
@@ -30,7 +31,7 @@ std::pair<std::string, std::size_t> assemble(const std::string& assembly, const 
         LOG_DEBUG("Keystone object already exists. Using that instead.");
     }
 
-    if (ks_asm(ks, assembly.data(), 0, &encode, &size, &count)) {
+    if (ks_asm(ks, assemblyString.data(), 0, &encode, &size, &count)) {
         err = ks_errno(ks);
         std::string error(ks_strerror(err));
 
@@ -60,7 +61,6 @@ std::string getBytes(const std::string& fileName){
     LOG_DEBUG("Getting bytes from the file: " << fileName);
 
     std::ifstream asmFile(fileName);
-    std::stringstream assembly;
 
     if (!asmFile.is_open()){
         LOG_ERROR("Asm file can not be read: getBytes(" << fileName << ")");
@@ -78,9 +78,9 @@ std::string getBytes(const std::string& fileName){
     return hexlify({bytes.data(), size});
 }
 
-std::string getBytes(std::stringstream &assembly){
+std::string getBytes(std::stringstream &assemblyStream){
     keystoneSettings ksSettings = {.arch = KS_ARCH_X86, .mode = KS_MODE_64, .optionType=KS_OPT_SYNTAX, .optionValue=KS_OPT_SYNTAX_NASM};
-    auto [bytes, size] = assemble(assembly.str(), ksSettings);
+    auto [bytes, size] = assemble(assemblyStream.str(), ksSettings);
 
     LOG_DEBUG("Got bytes, now hexlifying.");
     return hexlify({bytes.data(), size});

@@ -5,10 +5,16 @@ uintptr_t MEMORY_ALLOCATION_SIZE = 2 * 1024 * 1024;
 uintptr_t STACK_ADDRESS = 0x300000;
 uint64_t CODE_BUF_SIZE = 0x3000;
 uintptr_t STACK_SIZE = 5 * 1024 * 1024;
+
 uint8_t* codeBuf = nullptr;
 uc_context* context = nullptr;
 uc_engine *uc = nullptr;
+
 uint64_t codeCurrentLen = 0;
+uint64_t expectedRIP = 0;
+uint64_t lineNo = 1;
+
+std::unordered_map <std::string, uint64_t> labelLineNoMap = {};
 
 std::string toLowerCase(const std::string& input) {
     std::string result = input; // Create a copy of the input string
@@ -293,18 +299,62 @@ bool resetState(){
     return true;
 }
 
+void getLabelLineNo(){
+    std::vector<std::string> result;
+    std::string item;
+
+    uint64_t labelLineNumber = 1;
+    while (std::getline(assembly, item, '\n')) {
+        if (item.starts_with('\t')){
+            item = item.substr(item.find_first_not_of('\t'));
+        }
+
+        if ((item.starts_with(' '))){
+            item = item.substr(item.find_first_not_of(' '));
+        }
+
+        if (item.contains(":")){
+            labelLineNoMap.insert({item, labelLineNumber});
+        }
+
+        labelLineNumber++;
+    }
+    result;
+}
+
 bool stepCode(){
     LOG_DEBUG("Stepping into code!");
-
+    ++lineNo;
     if (codeCurrentLen == codeFinalLen){
         return true;
     }
+
 
     uc_context_restore(uc, context);
     uc_err err;
     uint64_t rip;
 
     uc_reg_read(uc, UC_X86_REG_RIP, &rip);
+
+
+    std::cout << std::hex << "RIP: " << rip << std::hex << "\n";
+    if (expectedRIP == rip){
+        std::cout << "Jump not detected" << std::endl;
+    }
+    else{
+        std::cout << "Jump detected!" << std::endl;
+        std::cout << "Current Line No. " << lineNo << std::endl;
+        editor->SetCursorPosition(0, 0);
+        editor->SelectNextOccurrenceOf("testlabel:", 10, true);
+        int line;
+        int column;
+        editor->GetCursorPosition(line, column);
+        std::cout << std::hex << std::endl;
+        line = line + 1;
+        std::cout << "Current Line after jump: " << line << std::endl;
+        editor->SelectLine(line + 1);
+    }
+
 
     err = uc_emu_start(uc, rip, ENTRY_POINT_ADDRESS + CODE_BUF_SIZE, 0, 1);
     if (err) {
@@ -321,6 +371,10 @@ bool stepCode(){
 
 void hook(uc_engine *uc, uint64_t address, uint32_t size, void *user_data){
    codeCurrentLen += size;
+   uint64_t rip;
+
+    expectedRIP = (uint64_t)(address + size);
+    std::cout << "Expected RIP: " << std::hex <<  expectedRIP << "\n";
 }
 
 bool runCode(const std::string& code_in, uint64_t instructionCount)
@@ -367,6 +421,7 @@ bool runCode(const std::string& code_in, uint64_t instructionCount)
             uc_context_alloc(uc, &context);
         }
         uc_context_save(uc, context);
+        getLabelLineNo();
     }
 
     LOG_DEBUG("Ran code successfully!");
