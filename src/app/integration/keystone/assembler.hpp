@@ -30,7 +30,9 @@ typedef struct{
     ks_opt_value optionValue;
 } keystoneSettings;
 
-extern std::pair<std::string, std::size_t> assemble(const std::string& assembly, const keystoneSettings& ksSettings);
+
+extern std::stringstream assembly;
+extern std::pair<std::string, std::size_t> assemble(const std::string& assemblyString, const keystoneSettings& ksSettings);
 extern std::string getBytes(const std::string& fileName);
 extern std::string getBytes(std::stringstream& assembly);
 extern uint64_t codeFinalLen;
