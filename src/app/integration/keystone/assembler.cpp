@@ -1,9 +1,13 @@
 #include "assembler.hpp"
+#include "../interpreter/interpreter.hpp"
+#include <capstone/capstone.h>
 
 ks_engine *ks = nullptr;
 uint64_t codeFinalLen = 0;
 std::stringstream assembly;
 
+std::map<std::string, std::string> addressLineNoMap{};
+std::vector<uint16_t> instructionSizes{};
 std::pair<std::string, std::size_t> assemble(const std::string& assemblyString, const keystoneSettings& ksSettings) {
     LOG_DEBUG("Assembling:\n" << assemblyString);
     ks_err err;
@@ -57,6 +61,64 @@ std::pair<std::string, std::size_t> assemble(const std::string& assemblyString, 
     return assembled;
 }
 
+
+void initInsSizeInfoMap(){
+    std::string instructionStr;
+
+    uint64_t lineNo = 0;
+    uint16_t index = 0;
+    uint64_t currentAddr = ENTRY_POINT_ADDRESS;
+
+    while (std::getline(assembly, instructionStr, '\n')) {
+        if (instructionStr.contains(":") || (instructionStr.empty())){
+            lineNo++;
+            continue;
+        }
+
+        if (instructionStr.starts_with("\t")){
+            instructionStr = instructionStr.substr(instructionStr.find_first_not_of('\t'));
+        }
+        if (instructionStr.starts_with(" ")){
+            instructionStr = instructionStr.substr(instructionStr.find_first_not_of(' '));
+        }
+
+        instructionStr = instructionStr.substr(0, instructionStr.find_first_of(' '));
+        instructionStr = toUpperCase(instructionStr);
+
+        if (std::find(x86Instructions.begin(), x86Instructions.end(), instructionStr) != x86Instructions.end()){
+            addressLineNoMap.insert({std::to_string(currentAddr), std::to_string(lineNo)});
+            currentAddr += instructionSizes[index];
+            index++;
+        }
+
+        lineNo++;
+    }
+}
+
+void disassemble(const std::string& compiledAsm){
+    csh handle;
+    cs_insn *insn;
+    size_t count;
+
+    if (cs_open(CS_ARCH_X86, CS_MODE_64, &handle) != CS_ERR_OK)
+        return;
+
+    count = cs_disasm(handle, reinterpret_cast<const uint8_t *>(compiledAsm.c_str()), compiledAsm.length() - 1, ENTRY_POINT_ADDRESS, 0, &insn);
+    if (count > 0) {
+        size_t j;
+        size_t line = 1;
+        for (j = 0; j < count; j++) {
+            instructionSizes.push_back(insn[j].size);
+            std::cout << "Line: " << line++ << " has the size: " << insn[j].size << '\n';
+        }
+
+        cs_free(insn, count);
+    } else
+        printf("ERROR: Failed to disassemble given code!\n");
+
+    cs_close(&handle);
+}
+
 std::string getBytes(const std::string& fileName){
     LOG_DEBUG("Getting bytes from the file: " << fileName);
 
@@ -74,6 +136,8 @@ std::string getBytes(const std::string& fileName){
     keystoneSettings ksSettings = {.arch = KS_ARCH_X86, .mode = KS_MODE_64, .optionType=KS_OPT_SYNTAX, .optionValue=KS_OPT_SYNTAX_NASM};
     auto [bytes, size] = assemble(assembly.str(), ksSettings);
 
+    disassemble(bytes);
+    initInsSizeInfoMap();
     LOG_DEBUG("Got bytes, now hexlifying.");
     return hexlify({bytes.data(), size});
 }

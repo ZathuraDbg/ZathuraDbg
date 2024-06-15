@@ -42,6 +42,7 @@ include_directories(
         ${CMAKE_SOURCE_DIR}/app/windows
         ${CMAKE_SOURCE_DIR}/../vendor/unicorn/include
         ${CMAKE_SOURCE_DIR}/../vendor/keystone/include
+        ${CMAKE_SOURCE_DIR}/../vendor/capstone/include
 )
 
 # Compiler options
@@ -56,7 +57,7 @@ if (UNIX AND NOT APPLE)
     pkg_check_modules(GLFW REQUIRED glfw3)
     link_libraries(${GLFW_LIBRARIES})
     add_compile_options(${GLFW_CFLAGS})
-    set(LIBS ${GLFW_LDFLAGS} -lGL -lunicorn -l:libkeystone.a)
+    set(LIBS ${GLFW_LDFLAGS} -lGL -lunicorn -l:libkeystone.a -l:libcapstone.a)
 elseif (APPLE)
     message("Mac OS X")
     find_library(GLFW_LIB glfw3)

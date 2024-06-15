@@ -299,61 +299,68 @@ bool resetState(){
     return true;
 }
 
-void getLabelLineNo(){
-    std::vector<std::string> result;
-    std::string item;
-
-    uint64_t labelLineNumber = 1;
-    while (std::getline(assembly, item, '\n')) {
-        if (item.starts_with('\t')){
-            item = item.substr(item.find_first_not_of('\t'));
-        }
-
-        if ((item.starts_with(' '))){
-            item = item.substr(item.find_first_not_of(' '));
-        }
-
-        if (item.contains(":")){
-            labelLineNoMap.insert({item, labelLineNumber});
-        }
-
-        labelLineNumber++;
-    }
-    result;
-}
-
+//void getLabelLineNo(){
+//    std::vector<std::string> result;
+//    std::string item;
+//
+//    uint64_t labelLineNumber = 1;
+//    while (std::getline(assembly, item, '\n')) {
+//        if (item.starts_with('\t')){
+//            item = item.substr(item.find_first_not_of('\t'));
+//        }
+//
+//        if ((item.starts_with(' '))){
+//            item = item.substr(item.find_first_not_of(' '));
+//        }
+//
+//        if (item.contains(":")){
+//            labelLineNoMap.insert({item, labelLineNumber});
+//        }
+//
+//        labelLineNumber++;
+//    }
+//    result;
+//}
 bool stepCode(){
     LOG_DEBUG("Stepping into code!");
     ++lineNo;
+
     if (codeCurrentLen == codeFinalLen){
         return true;
     }
-
 
     uc_context_restore(uc, context);
     uc_err err;
     uint64_t rip;
 
     uc_reg_read(uc, UC_X86_REG_RIP, &rip);
+    char* ptr;
+    unsigned long long ret;
+    ret = strtoul(addressLineNoMap[std::to_string(rip)].c_str(), &ptr, 10);
 
-
-    std::cout << std::hex << "RIP: " << rip << std::hex << "\n";
-    if (expectedRIP == rip){
-        std::cout << "Jump not detected" << std::endl;
+    if (expectedRIP != rip){
+        std::cout << "Jump detected" << std::endl;
+        editor->SelectLine(ret + 1);
+        std::cout << "Current Line: " << ret + 1 << std::endl;
     }
     else{
-        std::cout << "Jump detected!" << std::endl;
-        std::cout << "Current Line No. " << lineNo << std::endl;
-        editor->SetCursorPosition(0, 0);
-        editor->SelectNextOccurrenceOf("testlabel:", 10, true);
-        int line;
-        int column;
-        editor->GetCursorPosition(line, column);
-        std::cout << std::hex << std::endl;
-        line = line + 1;
-        std::cout << "Current Line after jump: " << line << std::endl;
-        editor->SelectLine(line + 1);
+//        std::cout << "Current Line: " << addressLineNoMap[std::to_string(rip)] << std::endl;
+        editor->SelectLine(ret + 1);
     }
+//    else{
+//        std::cout << "Jump detected!" << std::endl;
+//        std::cout << "Current Line No. " << lineNo << std::endl;
+//        editor->SetCursorPosition(0, 0);
+//        editor->SelectNextOccurrenceOf("testlabel:", 10, true);
+//        int line;
+//        int column;
+//        editor->GetCursorPosition(line, column);
+//        std::cout << std::hex << std::endl;
+//        line = line + 1;
+//        std::cout << "Current Line after jump: " << line << std::endl;
+//        editor->SelectLine(line + 1);
+//    }
+
 
 
     err = uc_emu_start(uc, rip, ENTRY_POINT_ADDRESS + CODE_BUF_SIZE, 0, 1);
@@ -421,7 +428,7 @@ bool runCode(const std::string& code_in, uint64_t instructionCount)
             uc_context_alloc(uc, &context);
         }
         uc_context_save(uc, context);
-        getLabelLineNo();
+//        getLabelLineNo();
     }
 
     LOG_DEBUG("Ran code successfully!");
