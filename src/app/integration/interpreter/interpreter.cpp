@@ -278,6 +278,11 @@ void handleUCErrors(uc_err err){
 
 bool resetState(){
     codeHasRun = false;
+
+    codeCurrentLen = 0;
+    codeFinalLen = 0;
+    lineNo = 0;
+
     if (uc != nullptr){
         uc_close(uc);
         uc = nullptr;
@@ -294,43 +299,24 @@ bool resetState(){
         return false;
     }
 
-    codeCurrentLen = 0;
-    codeFinalLen = 0;
     return true;
 }
 
-//void getLabelLineNo(){
-//    std::vector<std::string> result;
-//    std::string item;
-//
-//    uint64_t labelLineNumber = 1;
-//    while (std::getline(assembly, item, '\n')) {
-//        if (item.starts_with('\t')){
-//            item = item.substr(item.find_first_not_of('\t'));
-//        }
-//
-//        if ((item.starts_with(' '))){
-//            item = item.substr(item.find_first_not_of(' '));
-//        }
-//
-//        if (item.contains(":")){
-//            labelLineNoMap.insert({item, labelLineNumber});
-//        }
-//
-//        labelLineNumber++;
-//    }
-//    result;
-//}
+
 bool stepCode(){
     LOG_DEBUG("Stepping into code!");
     ++lineNo;
 
-    if (codeCurrentLen == codeFinalLen){
+    if (codeCurrentLen >= codeFinalLen){
+        std::cout << "Current Len > Final Len" << std::endl;
         return true;
     }
 
-    uc_context_restore(uc, context);
-    uc_err err;
+    auto err = uc_context_restore(uc, context);
+    if (err != UC_ERR_OK){
+        std::cout << "ERROR: " << uc_strerror(err) << std::endl;
+    }
+
     uint64_t rip;
 
     uc_reg_read(uc, UC_X86_REG_RIP, &rip);
@@ -348,9 +334,9 @@ bool stepCode(){
 
     uc_context_save(uc, context);
     codeHasRun = true;
-    return true;
 
     LOG_DEBUG("Code ran once!");
+    return true;
 }
 
 void hook(uc_engine *uc, uint64_t address, uint32_t size, void *user_data){
