@@ -333,10 +333,9 @@ bool stepCode(){
     {
         char *ptr;
         int ret;
-//        if (std::find(breakpointLines.begin(), breakpointLines.end(), lineNo) != breakpointLines.end()){
-//            std::cout << "Breakpoint reached" << std::endl;
-//            std::cout << "Line: " << lineNo << std::endl;
-//        }
+//        lineNo = stoi(addressLineNoMap[std::to_string(rip)]);
+
+//        std::cout << "Line: " << lineNo << std::endl;
 
         if (codeCurrentLen >= codeFinalLen){
             LOG_DEBUG("Code execution is complete!");
@@ -346,6 +345,12 @@ bool stepCode(){
         ret = std::stoi(addressLineNoMap[std::to_string(rip)], reinterpret_cast<size_t *>(&ptr), 10);
         editor->SetHighlightedLine(ret - 1);
         lineNo = ret;
+
+        if (std::find(breakpointLines.begin(), breakpointLines.end(), lineNo) != breakpointLines.end()){
+            std::cout << "Breakpoint reached" << std::endl;
+            std::cout << "Line: " << lineNo << std::endl;
+        }
+
     }
 
     uc_context_save(uc, context);
