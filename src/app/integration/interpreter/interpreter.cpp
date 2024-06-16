@@ -282,6 +282,10 @@ bool resetState(){
     codeCurrentLen = 0;
     codeFinalLen = 0;
     lineNo = 0;
+    assembly.clear();
+    assembly.str("");
+    instructionSizes.clear();
+    addressLineNoMap.clear();
 
     if (uc != nullptr){
         uc_close(uc);

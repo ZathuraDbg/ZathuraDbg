@@ -8,6 +8,7 @@ std::stringstream assembly;
 
 std::map<std::string, std::string> addressLineNoMap{};
 std::vector<uint16_t> instructionSizes{};
+
 std::pair<std::string, std::size_t> assemble(const std::string& assemblyString, const keystoneSettings& ksSettings) {
     LOG_DEBUG("Assembling:\n" << assemblyString);
     ks_err err;
