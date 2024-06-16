@@ -286,6 +286,7 @@ bool resetState(){
     assembly.str("");
     instructionSizes.clear();
     addressLineNoMap.clear();
+    editor->SetCursorPosition(0, 0);
 
     if (uc != nullptr){
         uc_close(uc);
@@ -297,8 +298,7 @@ bool resetState(){
         registerValueMap[reg.first] = "00";
     }
 
-    auto err = createStack();
-    if (err){
+    if (!createStack()){
         LOG_DEBUG("Unable to create stack!");
         return false;
     }
@@ -344,6 +344,9 @@ bool stepCode(){
 }
 
 void hook(uc_engine *uc, uint64_t address, uint32_t size, void *user_data){
+    if (lineNo == 1){
+        editor->SelectLine(1);
+    }
    codeCurrentLen += size;
    uint64_t rip;
 
@@ -395,7 +398,6 @@ bool runCode(const std::string& code_in, uint64_t instructionCount)
             uc_context_alloc(uc, &context);
         }
         uc_context_save(uc, context);
-//        getLabelLineNo();
     }
 
     LOG_DEBUG("Ran code successfully!");
