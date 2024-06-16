@@ -337,30 +337,7 @@ bool stepCode(){
     char* ptr;
     unsigned long long ret;
     ret = strtoul(addressLineNoMap[std::to_string(rip)].c_str(), &ptr, 10);
-
-    if (expectedRIP != rip){
-        std::cout << "Jump detected" << std::endl;
-        editor->SelectLine(ret + 1);
-        std::cout << "Current Line: " << ret + 1 << std::endl;
-    }
-    else{
-//        std::cout << "Current Line: " << addressLineNoMap[std::to_string(rip)] << std::endl;
-        editor->SelectLine(ret + 1);
-    }
-//    else{
-//        std::cout << "Jump detected!" << std::endl;
-//        std::cout << "Current Line No. " << lineNo << std::endl;
-//        editor->SetCursorPosition(0, 0);
-//        editor->SelectNextOccurrenceOf("testlabel:", 10, true);
-//        int line;
-//        int column;
-//        editor->GetCursorPosition(line, column);
-//        std::cout << std::hex << std::endl;
-//        line = line + 1;
-//        std::cout << "Current Line after jump: " << line << std::endl;
-//        editor->SelectLine(line + 1);
-//    }
-
+    editor->SelectLine(ret);
 
 
     err = uc_emu_start(uc, rip, ENTRY_POINT_ADDRESS + CODE_BUF_SIZE, 0, 1);

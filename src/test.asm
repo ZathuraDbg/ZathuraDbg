@@ -5,10 +5,6 @@ main:
 	push rdi
 	hlt
 
-testlabel:
-	add rbx, rbx
-	push rbx
-
 square:
 	 push    rbp
      mov     rbp, rsp
