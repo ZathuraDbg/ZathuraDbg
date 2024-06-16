@@ -66,7 +66,7 @@ std::pair<std::string, std::size_t> assemble(const std::string& assemblyString, 
 void initInsSizeInfoMap(){
     std::string instructionStr;
 
-    uint64_t lineNo = 0;
+    uint64_t lineNo = 1;
     uint16_t index = 0;
     uint64_t currentAddr = ENTRY_POINT_ADDRESS;
 
@@ -86,13 +86,17 @@ void initInsSizeInfoMap(){
         instructionStr = instructionStr.substr(0, instructionStr.find_first_of(' '));
         instructionStr = toUpperCase(instructionStr);
 
+//       if it's valid instruction
         if (std::find(x86Instructions.begin(), x86Instructions.end(), instructionStr) != x86Instructions.end()){
             addressLineNoMap.insert({std::to_string(currentAddr), std::to_string(lineNo)});
             currentAddr += instructionSizes[index];
             index++;
         }
+//        else{
+            lineNo++;
+//        }
 
-        lineNo++;
+//        lineNo++;
     }
 }
 

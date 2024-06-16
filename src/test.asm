@@ -1,10 +1,9 @@
-main:
-	mov rax, 0x100
-	push rax
-	mov rdi, 0x13
-	call square
-	push rdi
-	hlt
+mov rax, 0x100
+push rax
+mov rdi, 0x13
+call square
+push rdi
+hlt
 
 square:
 	 push    rbp

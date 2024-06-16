@@ -323,23 +323,29 @@ bool stepCode(){
     uc_context_restore(uc, context);
     uc_reg_read(uc, UC_X86_REG_RIP, &rip);
 
-    {
-        char *ptr;
-        int ret;
-        if (std::find(breakpointLines.begin(), breakpointLines.end(), lineNo) != breakpointLines.end()){
-            std::cout << "Breakpoint reached" << std::endl;
-            std::cout << "Line: " << lineNo << std::endl;
-        }
-
-        ret = std::stoi(addressLineNoMap[std::to_string(rip)], reinterpret_cast<size_t *>(&ptr), 10);
-        editor->SetHighlightedLine(ret);
-        lineNo = ret;
-    }
 
     auto err = uc_emu_start(uc, rip, ENTRY_POINT_ADDRESS + CODE_BUF_SIZE, 0, 1);
     if (err) {
         printf("Failed on uc_emu_start() with error returned %u: %s\n",
                err, uc_strerror(err));
+    }
+
+    {
+        char *ptr;
+        int ret;
+//        if (std::find(breakpointLines.begin(), breakpointLines.end(), lineNo) != breakpointLines.end()){
+//            std::cout << "Breakpoint reached" << std::endl;
+//            std::cout << "Line: " << lineNo << std::endl;
+//        }
+
+        if (codeCurrentLen >= codeFinalLen){
+            LOG_DEBUG("Code execution is complete!");
+            return true;
+        }
+        uc_reg_read(uc, UC_X86_REG_RIP, &rip);
+        ret = std::stoi(addressLineNoMap[std::to_string(rip)], reinterpret_cast<size_t *>(&ptr), 10);
+        editor->SetHighlightedLine(ret - 1);
+        lineNo = ret;
     }
 
     uc_context_save(uc, context);
@@ -377,9 +383,9 @@ bool runCode(const std::string& code_in, uint64_t instructionCount)
 
     uc_reg_write(uc, UC_X86_REG_RIP, &ENTRY_POINT_ADDRESS);
 
+    uc_hook trace;
+    uc_hook_add(uc, &trace, UC_HOOK_CODE, (void*)hook, nullptr, 1, 0);
     if (instructionCount == 0 || (stepClickedOnce)){
-        uc_hook trace;
-        uc_hook_add(uc, &trace, UC_HOOK_CODE, (void*)hook, nullptr, 1, 0);
         err = uc_emu_start(uc, ENTRY_POINT_ADDRESS, ENTRY_POINT_ADDRESS + CODE_BUF_SIZE, 0, instructionCount);
 
         if (err) {
