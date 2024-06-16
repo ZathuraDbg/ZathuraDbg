@@ -96,7 +96,7 @@ void initInsSizeInfoMap(){
     }
 }
 
-void disassemble(const std::string& compiledAsm){
+void updateInstructionSizes(const std::string& compiledAsm){
     csh handle;
     cs_insn *insn;
     size_t count;
@@ -110,12 +110,11 @@ void disassemble(const std::string& compiledAsm){
         size_t line = 1;
         for (j = 0; j < count; j++) {
             instructionSizes.push_back(insn[j].size);
-            std::cout << "Line: " << line++ << " has the size: " << insn[j].size << '\n';
         }
 
         cs_free(insn, count);
     } else
-        printf("ERROR: Failed to disassemble given code!\n");
+        printf("ERROR: Failed to updateInstructionSizes given code!\n");
 
     cs_close(&handle);
 }
@@ -137,7 +136,7 @@ std::string getBytes(const std::string& fileName){
     keystoneSettings ksSettings = {.arch = KS_ARCH_X86, .mode = KS_MODE_64, .optionType=KS_OPT_SYNTAX, .optionValue=KS_OPT_SYNTAX_NASM};
     auto [bytes, size] = assemble(assembly.str(), ksSettings);
 
-    disassemble(bytes);
+    updateInstructionSizes(bytes);
     initInsSizeInfoMap();
     LOG_DEBUG("Got bytes, now hexlifying.");
     return hexlify({bytes.data(), size});
