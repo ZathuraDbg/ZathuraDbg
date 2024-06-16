@@ -11,10 +11,10 @@ uc_context* context = nullptr;
 uc_engine *uc = nullptr;
 
 uint64_t codeCurrentLen = 0;
-uint64_t expectedRIP = 0;
 uint64_t lineNo = 1;
 
 std::unordered_map <std::string, uint64_t> labelLineNoMap = {};
+std::vector<int> breakpointLines = {5};
 
 std::string toLowerCase(const std::string& input) {
     std::string result = input; // Create a copy of the input string
@@ -110,7 +110,7 @@ void showRegs(){
 uint64_t getRegisterValue(const std::string& regName){
     auto entry = x86RegInfoMap[toUpperCase(regName)];
     auto size = entry.first;
-    uint64_t value;
+    uint64_t value{};
 
     if (size == 8) {
         uint8_t valTemp8;
@@ -137,9 +137,8 @@ uint64_t getRegisterValue(const std::string& regName){
     return value;
 }
 
-std::pair<bool, uint64_t> getRegister(std::string name){
+std::pair<bool, uint64_t> getRegister(const std::string& name){
     std::pair<bool, uint64_t> res = {false, 0};
-
 
     if (!codeHasRun){
         return {true, 0x00};
@@ -278,15 +277,19 @@ void handleUCErrors(uc_err err){
 
 bool resetState(){
     codeHasRun = false;
+    stepClickedOnce = false;
 
     codeCurrentLen = 0;
     codeFinalLen = 0;
     lineNo = 0;
+
     assembly.clear();
     assembly.str("");
     instructionSizes.clear();
     addressLineNoMap.clear();
-    editor->SetCursorPosition(0, 0);
+    editor->ClearExtraCursors();
+    editor->ClearSelections();
+    editor->SetHighlightedLine(-1);
 
     if (uc != nullptr){
         uc_close(uc);
@@ -309,28 +312,31 @@ bool resetState(){
 
 bool stepCode(){
     LOG_DEBUG("Stepping into code!");
-    ++lineNo;
 
     if (codeCurrentLen >= codeFinalLen){
-        std::cout << "Current Len > Final Len" << std::endl;
+        LOG_DEBUG("Code execution is complete!");
         return true;
-    }
-
-    auto err = uc_context_restore(uc, context);
-    if (err != UC_ERR_OK){
-        std::cout << "ERROR: " << uc_strerror(err) << std::endl;
     }
 
     uint64_t rip;
 
+    uc_context_restore(uc, context);
     uc_reg_read(uc, UC_X86_REG_RIP, &rip);
-    char* ptr;
-    unsigned long long ret;
-    ret = strtoul(addressLineNoMap[std::to_string(rip)].c_str(), &ptr, 10);
-    editor->SelectLine(ret);
 
+    {
+        char *ptr;
+        int ret;
+        if (std::find(breakpointLines.begin(), breakpointLines.end(), lineNo) != breakpointLines.end()){
+            std::cout << "Breakpoint reached" << std::endl;
+            std::cout << "Line: " << lineNo << std::endl;
+        }
 
-    err = uc_emu_start(uc, rip, ENTRY_POINT_ADDRESS + CODE_BUF_SIZE, 0, 1);
+        ret = std::stoi(addressLineNoMap[std::to_string(rip)], reinterpret_cast<size_t *>(&ptr), 10);
+        editor->SetHighlightedLine(ret);
+        lineNo = ret;
+    }
+
+    auto err = uc_emu_start(uc, rip, ENTRY_POINT_ADDRESS + CODE_BUF_SIZE, 0, 1);
     if (err) {
         printf("Failed on uc_emu_start() with error returned %u: %s\n",
                err, uc_strerror(err));
@@ -344,14 +350,7 @@ bool stepCode(){
 }
 
 void hook(uc_engine *uc, uint64_t address, uint32_t size, void *user_data){
-    if (lineNo == 1){
-        editor->SelectLine(1);
-    }
    codeCurrentLen += size;
-   uint64_t rip;
-
-    expectedRIP = (uint64_t)(address + size);
-    std::cout << "Expected RIP: " << std::hex <<  expectedRIP << "\n";
 }
 
 bool runCode(const std::string& code_in, uint64_t instructionCount)
@@ -376,18 +375,19 @@ bool runCode(const std::string& code_in, uint64_t instructionCount)
         return false;
     }
 
-    uc_hook trace;
-    uc_hook_add(uc, &trace, UC_HOOK_CODE, (void*)hook, nullptr, 1, 0);
-    err = uc_emu_start(uc, ENTRY_POINT_ADDRESS, ENTRY_POINT_ADDRESS + CODE_BUF_SIZE, 0, instructionCount);
-    if (err) {
-        printf("Failed on uc_emu_start() with error returned %u: %s\n",
-               err, uc_strerror(err));
+    uc_reg_write(uc, UC_X86_REG_RIP, &ENTRY_POINT_ADDRESS);
+
+    if (instructionCount == 0 || (stepClickedOnce)){
+        uc_hook trace;
+        uc_hook_add(uc, &trace, UC_HOOK_CODE, (void*)hook, nullptr, 1, 0);
+        err = uc_emu_start(uc, ENTRY_POINT_ADDRESS, ENTRY_POINT_ADDRESS + CODE_BUF_SIZE, 0, instructionCount);
+
+        if (err) {
+            handleUCErrors(err);
+            return false;
+        }
     }
 
-    if (err) {
-        handleUCErrors(err);
-        return false;
-    }
 
     if (instructionCount == 0){
         free(codeBuf);
@@ -398,6 +398,8 @@ bool runCode(const std::string& code_in, uint64_t instructionCount)
             uc_context_alloc(uc, &context);
         }
         uc_context_save(uc, context);
+        editor->SetHighlightedLine(0);
+        stepClickedOnce = true;
     }
 
     LOG_DEBUG("Ran code successfully!");

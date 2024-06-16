@@ -11,9 +11,10 @@
 #include "../keystone/assembler.hpp"
 #include "../../windows/windows.hpp"
 #include "../../arch/x86.hpp"
+#include <array>
 
 extern bool createStack();
-std::pair<bool, uint64_t> getRegister(std::string name);
+std::pair<bool, uint64_t> getRegister(const std::string& name);
 extern bool ucInit();
 extern uc_engine *uc;
 extern int regNameToConstant(std::string name);
