@@ -14,6 +14,7 @@
 #include <array>
 
 extern bool createStack();
+extern bool debugStopped;
 std::pair<bool, uint64_t> getRegister(const std::string& name);
 extern bool ucInit();
 extern uc_engine *uc;
@@ -26,8 +27,10 @@ extern uintptr_t STACK_ADDRESS;
 extern uintptr_t STACK_SIZE;
 extern uint64_t CODE_BUF_SIZE;
 extern uc_context* context;
-extern bool stepCode();
+extern bool stepCode(size_t instructionCount = 1);
+extern std::vector<int> breakpointLines;
 extern bool resetState();
+extern bool continueOverBreakpoint;
 extern std::string toLowerCase(const std::string& input);
 extern std::string toUpperCase(const std::string& input);
 extern uint64_t codeCurrentLen;
