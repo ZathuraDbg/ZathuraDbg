@@ -51,6 +51,27 @@ void mainWindow() {
 
     ImGui::PushFont(io.Fonts->Fonts[JetBrainsMono20]);
     editor->Render("Editor");
+    if (ImGui::BeginPopupContextItem("TextEditorContextMenu"))
+    {
+        if (ImGui::MenuItem("Copy", nullptr, false)) // Enable only if there is a selection
+        {
+            std::cout << "copy" << std::endl;
+
+            //            Copy();
+        }
+        if (ImGui::MenuItem("Paste", nullptr, false)) // Enable only if not read-only and clipboard has text
+        {
+        }
+
+        if (ImGui::MenuItem("Breakpoint", nullptr, false)){
+            int line, _;
+            editor->GetCursorPosition(line, _);
+            breakpointLines.push_back(line + 1);
+            editor->SetHighlightedLine(line);
+        }
+        ImGui::EndPopup();
+    }
+
     ImGui::PopFont();
     ImGui::End();
 

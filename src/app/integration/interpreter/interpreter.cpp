@@ -361,9 +361,11 @@ bool stepCode(size_t instructionCount){
 
 void hook(uc_engine *uc, uint64_t address, uint32_t size, void *user_data){
     LOG_DEBUG("Hook called!");
+    int lineNumber =(stoi(addressLineNoMap[std::to_string(address)]));
 
-   if (std::find(breakpointLines.begin(), breakpointLines.end(), (stoi(addressLineNoMap[std::to_string(address)]))) != breakpointLines.end()){
+    if (std::find(breakpointLines.begin(), breakpointLines.end(), lineNumber) != breakpointLines.end()){
        uc_context_save(uc, context);
+       editor->SetHighlightedLine(lineNumber);
         if (!continueOverBreakpoint){
             LOG_DEBUG("Breakpoint hit!");
             uc_emu_stop(uc);
