@@ -1,4 +1,26 @@
 #include "app.hpp"
+void ShowContextMenu() {
+    ImGui::Begin("My Window");
+
+    if (ImGui::Button("Right-click me")) {
+    }
+
+    // Create a context menu when the item (button in this case) is right-clicked
+    if (ImGui::BeginPopupContextItem("ContextMenu")) {
+        if (ImGui::MenuItem("Option 1")) {
+            // Handle Option 1
+        }
+        if (ImGui::MenuItem("Option 2")) {
+            // Handle Option 2
+        }
+        if (ImGui::MenuItem("Option 3")) {
+            // Handle Option 3
+        }
+        ImGui::EndPopup();
+    }
+
+    ImGui::End();
+}
 
 bool setupButtons() {
     using namespace ImGui;
