@@ -20,6 +20,7 @@ void hexEditorWindow(){
     memset(data, 0, 0x3000);
 
     uc_mem_read(uc, ENTRY_POINT_ADDRESS, data, 0x3000);
+    memoryEditorWindow.HighlightColor = ImColor(59, 60, 79);
     memoryEditorWindow.DrawWindow("Memory Editor", (void*)data, 0x3000);
     ImGui::PopFont();
 }
