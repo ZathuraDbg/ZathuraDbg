@@ -67,7 +67,7 @@ void mainWindow() {
             int line, _;
             editor->GetCursorPosition(line, _);
             breakpointLines.push_back(line + 1);
-            editor->SetHighlightedLine(line);
+            editor->HighlightBreakpoints(line);
         }
         ImGui::EndPopup();
     }
