@@ -121,7 +121,7 @@ struct MemoryEditor
         OptMidColsCount = 8;
         OptAddrDigitsCount = 0;
         OptFooterExtraHeight = 0.0f;
-        HighlightColor = IM_COL32(255, 255, 255, 50);
+        HighlightColor = IM_COL32(59, 60, 79, 50);
         ReadFn = NULL;
         WriteFn = NULL;
         HighlightFn = NULL;
