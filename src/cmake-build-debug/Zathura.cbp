@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6"/>
+	<Project>
+		<Option title="Zathura"/>
+		<Option makefile_is_custom="1"/>
+		<Option compiler="gcc"/>
+		<Option virtualFolders="CMake Files\;"/>
+		<Build>
+			<Target title="all">
+				<Option working_dir="/tmp/Zathura-UI/src/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j12 -f &quot;/tmp/Zathura-UI/src/cmake-build-debug/Makefile&quot;  VERBOSE=1 all"/>
+					<CompileFile command="/usr/bin/make -j12 -f &quot;/tmp/Zathura-UI/src/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j12 -f &quot;/tmp/Zathura-UI/src/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j12 -f &quot;/tmp/Zathura-UI/src/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="Zathura">
+				<Option output="/tmp/Zathura-UI/src/Zathura" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/tmp/Zathura-UI/src"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/tmp/Zathura-UI/src/../vendor/imgui"/>
+					<Add directory="/tmp/Zathura-UI/src/../vendor/imgui/backends"/>
+					<Add directory="/tmp/Zathura-UI/src/../vendor/ImGuiColorTextEdit/vendor/regex/include"/>
+					<Add directory="/tmp/Zathura-UI/src/../vendor/ordered-map/include"/>
+					<Add directory="/tmp/Zathura-UI/src/app/dialogs"/>
+					<Add directory="/tmp/Zathura-UI/src/app/tasks"/>
+					<Add directory="/tmp/Zathura-UI/src/app/windows"/>
+					<Add directory="/tmp/Zathura-UI/src/../vendor/unicorn/include"/>
+					<Add directory="/tmp/Zathura-UI/src/../vendor/keystone/include"/>
+					<Add directory="/tmp/Zathura-UI/src/../vendor/capstone/include"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/14.1.1/../../../../include/c++/14.1.1"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/14.1.1/../../../../include/c++/14.1.1/x86_64-pc-linux-gnu"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/14.1.1/../../../../include/c++/14.1.1/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/14.1.1/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/14.1.1/include-fixed"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j12 -f &quot;/tmp/Zathura-UI/src/cmake-build-debug/Makefile&quot;  VERBOSE=1 Zathura"/>
+					<CompileFile command="/usr/bin/make -j12 -f &quot;/tmp/Zathura-UI/src/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j12 -f &quot;/tmp/Zathura-UI/src/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j12 -f &quot;/tmp/Zathura-UI/src/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="Zathura/fast">
+				<Option output="/tmp/Zathura-UI/src/Zathura" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/tmp/Zathura-UI/src"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/tmp/Zathura-UI/src/../vendor/imgui"/>
+					<Add directory="/tmp/Zathura-UI/src/../vendor/imgui/backends"/>
+					<Add directory="/tmp/Zathura-UI/src/../vendor/ImGuiColorTextEdit/vendor/regex/include"/>
+					<Add directory="/tmp/Zathura-UI/src/../vendor/ordered-map/include"/>
+					<Add directory="/tmp/Zathura-UI/src/app/dialogs"/>
+					<Add directory="/tmp/Zathura-UI/src/app/tasks"/>
+					<Add directory="/tmp/Zathura-UI/src/app/windows"/>
+					<Add directory="/tmp/Zathura-UI/src/../vendor/unicorn/include"/>
+					<Add directory="/tmp/Zathura-UI/src/../vendor/keystone/include"/>
+					<Add directory="/tmp/Zathura-UI/src/../vendor/capstone/include"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/14.1.1/../../../../include/c++/14.1.1"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/14.1.1/../../../../include/c++/14.1.1/x86_64-pc-linux-gnu"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/14.1.1/../../../../include/c++/14.1.1/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/14.1.1/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/14.1.1/include-fixed"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j12 -f &quot;/tmp/Zathura-UI/src/cmake-build-debug/Makefile&quot;  VERBOSE=1 Zathura/fast"/>
+					<CompileFile command="/usr/bin/make -j12 -f &quot;/tmp/Zathura-UI/src/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j12 -f &quot;/tmp/Zathura-UI/src/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j12 -f &quot;/tmp/Zathura-UI/src/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="run">
+				<Option working_dir="/tmp/Zathura-UI/src/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j12 -f &quot;/tmp/Zathura-UI/src/cmake-build-debug/Makefile&quot;  VERBOSE=1 run"/>
+					<CompileFile command="/usr/bin/make -j12 -f &quot;/tmp/Zathura-UI/src/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j12 -f &quot;/tmp/Zathura-UI/src/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j12 -f &quot;/tmp/Zathura-UI/src/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="clean-all">
+				<Option working_dir="/tmp/Zathura-UI/src/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j12 -f &quot;/tmp/Zathura-UI/src/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean-all"/>
+					<CompileFile command="/usr/bin/make -j12 -f &quot;/tmp/Zathura-UI/src/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j12 -f &quot;/tmp/Zathura-UI/src/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j12 -f &quot;/tmp/Zathura-UI/src/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="edit_cache">
+				<Option working_dir="/tmp/Zathura-UI/src/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j12 -f &quot;/tmp/Zathura-UI/src/cmake-build-debug/Makefile&quot;  VERBOSE=1 edit_cache"/>
+					<CompileFile command="/usr/bin/make -j12 -f &quot;/tmp/Zathura-UI/src/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j12 -f &quot;/tmp/Zathura-UI/src/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j12 -f &quot;/tmp/Zathura-UI/src/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="rebuild_cache">
+				<Option working_dir="/tmp/Zathura-UI/src/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j12 -f &quot;/tmp/Zathura-UI/src/cmake-build-debug/Makefile&quot;  VERBOSE=1 rebuild_cache"/>
+					<CompileFile command="/usr/bin/make -j12 -f &quot;/tmp/Zathura-UI/src/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j12 -f &quot;/tmp/Zathura-UI/src/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j12 -f &quot;/tmp/Zathura-UI/src/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+		</Build>
+		<Unit filename="/tmp/Zathura-UI/src/app/app.cpp">
+			<Option target="Zathura"/>
+		</Unit>
+		<Unit filename="/tmp/Zathura-UI/src/app/app.hpp">
+			<Option target="Zathura"/>
+		</Unit>
+		<Unit filename="/tmp/Zathura-UI/src/app/arch/x86.cpp">
+			<Option target="Zathura"/>
+		</Unit>
+		<Unit filename="/tmp/Zathura-UI/src/app/arch/x86.hpp">
+			<Option target="Zathura"/>
+		</Unit>
+		<Unit filename="/tmp/Zathura-UI/src/app/buttons.cpp">
+			<Option target="Zathura"/>
+		</Unit>
+		<Unit filename="/tmp/Zathura-UI/src/app/dialogs/fileDialogs.cpp">
+			<Option target="Zathura"/>
+		</Unit>
+		<Unit filename="/tmp/Zathura-UI/src/app/integration/interpreter/interpreter.cpp">
+			<Option target="Zathura"/>
+		</Unit>
+		<Unit filename="/tmp/Zathura-UI/src/app/integration/interpreter/interpreter.hpp">
+			<Option target="Zathura"/>
+		</Unit>
+		<Unit filename="/tmp/Zathura-UI/src/app/integration/keystone/assembler.cpp">
+			<Option target="Zathura"/>
+		</Unit>
+		<Unit filename="/tmp/Zathura-UI/src/app/integration/keystone/assembler.hpp">
+			<Option target="Zathura"/>
+		</Unit>
+		<Unit filename="/tmp/Zathura-UI/src/app/menuBar.cpp">
+			<Option target="Zathura"/>
+		</Unit>
+		<Unit filename="/tmp/Zathura-UI/src/app/tasks/editorTasks.cpp">
+			<Option target="Zathura"/>
+		</Unit>
+		<Unit filename="/tmp/Zathura-UI/src/app/tasks/editorTasks.hpp">
+			<Option target="Zathura"/>
+		</Unit>
+		<Unit filename="/tmp/Zathura-UI/src/app/tasks/fileTasks.cpp">
+			<Option target="Zathura"/>
+		</Unit>
+		<Unit filename="/tmp/Zathura-UI/src/app/tasks/fileTasks.hpp">
+			<Option target="Zathura"/>
+		</Unit>
+		<Unit filename="/tmp/Zathura-UI/src/app/windows/consoleWindow.cpp">
+			<Option target="Zathura"/>
+		</Unit>
+		<Unit filename="/tmp/Zathura-UI/src/app/windows/hexEditorWindow.cpp">
+			<Option target="Zathura"/>
+		</Unit>
+		<Unit filename="/tmp/Zathura-UI/src/app/windows/registerWindow.cpp">
+			<Option target="Zathura"/>
+		</Unit>
+		<Unit filename="/tmp/Zathura-UI/src/app/windows/stackWindow.cpp">
+			<Option target="Zathura"/>
+		</Unit>
+		<Unit filename="/tmp/Zathura-UI/src/main.cpp">
+			<Option target="Zathura"/>
+		</Unit>
+		<Unit filename="/tmp/Zathura-UI/src/utils/fonts.cpp">
+			<Option target="Zathura"/>
+		</Unit>
+		<Unit filename="/tmp/Zathura-UI/src/utils/fonts.hpp">
+			<Option target="Zathura"/>
+		</Unit>
+		<Unit filename="/tmp/Zathura-UI/vendor/ImGuiColorTextEdit/LanguageDefinitions.cpp">
+			<Option target="Zathura"/>
+		</Unit>
+		<Unit filename="/tmp/Zathura-UI/vendor/ImGuiColorTextEdit/TextEditor.cpp">
+			<Option target="Zathura"/>
+		</Unit>
+		<Unit filename="/tmp/Zathura-UI/vendor/ImGuiColorTextEdit/TextEditor.h">
+			<Option target="Zathura"/>
+		</Unit>
+		<Unit filename="/tmp/Zathura-UI/vendor/code/tinyfiledialogs.c">
+			<Option target="Zathura"/>
+		</Unit>
+		<Unit filename="/tmp/Zathura-UI/vendor/code/tinyfiledialogs.h">
+			<Option target="Zathura"/>
+		</Unit>
+		<Unit filename="/tmp/Zathura-UI/vendor/imgui/backends/imgui_impl_glfw.cpp">
+			<Option target="Zathura"/>
+		</Unit>
+		<Unit filename="/tmp/Zathura-UI/vendor/imgui/backends/imgui_impl_glfw.h">
+			<Option target="Zathura"/>
+		</Unit>
+		<Unit filename="/tmp/Zathura-UI/vendor/imgui/backends/imgui_impl_opengl3.cpp">
+			<Option target="Zathura"/>
+		</Unit>
+		<Unit filename="/tmp/Zathura-UI/vendor/imgui/backends/imgui_impl_opengl3.h">
+			<Option target="Zathura"/>
+		</Unit>
+		<Unit filename="/tmp/Zathura-UI/vendor/imgui/imgui.cpp">
+			<Option target="Zathura"/>
+		</Unit>
+		<Unit filename="/tmp/Zathura-UI/vendor/imgui/imgui.h">
+			<Option target="Zathura"/>
+		</Unit>
+		<Unit filename="/tmp/Zathura-UI/vendor/imgui/imgui_draw.cpp">
+			<Option target="Zathura"/>
+		</Unit>
+		<Unit filename="/tmp/Zathura-UI/vendor/imgui/imgui_tables.cpp">
+			<Option target="Zathura"/>
+		</Unit>
+		<Unit filename="/tmp/Zathura-UI/vendor/imgui/imgui_widgets.cpp">
+			<Option target="Zathura"/>
+		</Unit>
+		<Unit filename="/tmp/Zathura-UI/vendor/imgui/misc/cpp/imgui_stdlib.cpp">
+			<Option target="Zathura"/>
+		</Unit>
+		<Unit filename="/tmp/Zathura-UI/vendor/imgui/misc/cpp/imgui_stdlib.h">
+			<Option target="Zathura"/>
+		</Unit>
+		<Unit filename="/tmp/Zathura-UI/src/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\"/>
+		</Unit>
+	</Project>
+</CodeBlocks_project_file>

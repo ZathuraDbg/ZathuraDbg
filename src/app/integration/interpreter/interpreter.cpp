@@ -293,7 +293,8 @@ bool resetState(){
     addressLineNoMap.clear();
     editor->ClearExtraCursors();
     editor->ClearSelections();
-    editor->SetHighlightedLine(-1);
+    editor->HighlightDebugCurrentLine(-1);
+    editor->HighlightDebugCurrentLine(-1);
     breakpointLines.clear();
 
     if (uc != nullptr){
@@ -348,7 +349,7 @@ bool stepCode(size_t instructionCount){
 
         uc_reg_read(uc, UC_X86_REG_RIP, &rip);
         ret = std::stoi(addressLineNoMap[std::to_string(rip)]);
-        editor->SetHighlightedLine(ret - 1);
+        editor->HighlightDebugCurrentLine(ret - 1);
         lineNo = ret;
     }
 
@@ -365,7 +366,7 @@ void hook(uc_engine *uc, uint64_t address, uint32_t size, void *user_data){
 
     if (std::find(breakpointLines.begin(), breakpointLines.end(), lineNumber) != breakpointLines.end()){
        uc_context_save(uc, context);
-       editor->SetHighlightedLine(lineNumber);
+       editor->HighlightDebugCurrentLine(lineNumber - 1);
         if (!continueOverBreakpoint){
             LOG_DEBUG("Breakpoint hit!");
             uc_emu_stop(uc);
@@ -423,9 +424,8 @@ bool runCode(const std::string& code_in, uint64_t instructionCount)
         codeBuf = nullptr;
     }
     else{
-
         uc_context_save(uc, context);
-        editor->SetHighlightedLine(0);
+        editor->HighlightDebugCurrentLine(0);
         stepClickedOnce = true;
     }
 

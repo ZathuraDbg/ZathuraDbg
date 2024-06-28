@@ -71,7 +71,7 @@ bool setupButtons() {
 
         if (ImGui::Button(ICON_CI_DEBUG_CONTINUE, ImVec2(20, 20))){
             stepCode(0);
-            editor->SetHighlightedLine(-1);
+//            editor->SetHighlightedLine(-1);
         }
 
 
