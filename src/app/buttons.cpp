@@ -87,7 +87,7 @@ bool setupButtons() {
             uc_context_reg_read(context, regNameToConstant("RIP"), &rip);
             lineNo = std::stoi(addressLineNoMap[std::to_string(rip)]);
             breakpointLines.push_back(lineNo + 1);
-            stepCode(0);
+            stepCode(1);
             continueOverBreakpoint = true;
         }
 

@@ -294,7 +294,7 @@ bool resetState(){
     editor->ClearExtraCursors();
     editor->ClearSelections();
     editor->HighlightDebugCurrentLine(-1);
-    editor->HighlightDebugCurrentLine(-1);
+    editor->HighlightBreakpoints(-1);
     breakpointLines.clear();
 
     if (uc != nullptr){
@@ -364,12 +364,14 @@ void hook(uc_engine *uc, uint64_t address, uint32_t size, void *user_data){
     LOG_DEBUG("Hook called!");
     int lineNumber =(stoi(addressLineNoMap[std::to_string(address)]));
 
+    LOG_DEBUG("At line number: " << lineNumber);
     if (std::find(breakpointLines.begin(), breakpointLines.end(), lineNumber) != breakpointLines.end()){
-       uc_context_save(uc, context);
        editor->HighlightDebugCurrentLine(lineNumber - 1);
         if (!continueOverBreakpoint){
             LOG_DEBUG("Breakpoint hit!");
             uc_emu_stop(uc);
+            uc_context_save(uc, context);
+            continueOverBreakpoint = true;
             return;
         }
         else{
