@@ -121,7 +121,7 @@ struct MemoryEditor
         OptMidColsCount = 8;
         OptAddrDigitsCount = 0;
         OptFooterExtraHeight = 0.0f;
-        HighlightColor = IM_COL32(59, 60, 79, 50);
+        HighlightColor = IM_COL32(0, 0, 0, 0);
         ReadFn = NULL;
         WriteFn = NULL;
         HighlightFn = NULL;
@@ -410,7 +410,7 @@ struct MemoryEditor
                         if (addr == DataEditingAddr)
                         {
                             draw_list->AddRectFilled(pos, ImVec2(pos.x + s.GlyphWidth, pos.y + s.LineHeight), ImGui::GetColorU32(ImGuiCol_FrameBg));
-                            draw_list->AddRectFilled(pos, ImVec2(pos.x + s.GlyphWidth, pos.y + s.LineHeight), ImGui::GetColorU32(ImGuiCol_TextSelectedBg));
+                            draw_list->AddRectFilled(pos, ImVec2(pos.x + s.GlyphWidth, pos.y + s.LineHeight), ImColor(59, 60, 79));
                         }
                         unsigned char c = ReadFn ? ReadFn(mem_data, addr) : mem_data[addr];
                         char display_c = (c < 32 || c >= 128) ? '.' : c;
