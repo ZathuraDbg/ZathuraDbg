@@ -92,11 +92,8 @@ void initInsSizeInfoMap(){
             currentAddr += instructionSizes[index];
             index++;
         }
-//        else{
             lineNo++;
-//        }
 
-//        lineNo++;
     }
 }
 
@@ -108,7 +105,7 @@ void updateInstructionSizes(const std::string& compiledAsm){
     if (cs_open(CS_ARCH_X86, CS_MODE_64, &handle) != CS_ERR_OK)
         return;
 
-    count = cs_disasm(handle, reinterpret_cast<const uint8_t *>(compiledAsm.c_str()), compiledAsm.length() - 1, ENTRY_POINT_ADDRESS, 0, &insn);
+    count = cs_disasm(handle, reinterpret_cast<const uint8_t *>(compiledAsm.c_str()), compiledAsm.length(), ENTRY_POINT_ADDRESS, 0, &insn);
     if (count > 0) {
         size_t j;
         size_t line = 1;

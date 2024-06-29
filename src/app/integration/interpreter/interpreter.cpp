@@ -16,11 +16,32 @@ bool debugStopped = false;
 bool continueOverBreakpoint = false;
 
 std::unordered_map <std::string, uint64_t> labelLineNoMap = {};
-// either put values in this vector with n - 1 or set lineNo = lineNo - 1
 std::vector<int> breakpointLines = {};
 
+int getCurrentLine(){
+    uint64_t instructionPointer = -1;
+
+    if (context != nullptr){
+        uc_context_reg_read(context, regNameToConstant("RIP"), &instructionPointer);
+    }
+    else if (uc != nullptr){
+        uc_reg_read(uc, regNameToConstant("RIP"), &instructionPointer);
+    }
+
+    if (instructionPointer == -1){
+        return -1;
+    }
+
+    auto lineNumber= addressLineNoMap[std::to_string(instructionPointer)];
+    if (!lineNumber.empty()){
+        return std::stoi(lineNumber);
+    }
+
+    return -1;
+}
+
 std::string toLowerCase(const std::string& input) {
-    std::string result = input; // Create a copy of the input string
+    std::string result = input;
     std::transform(result.begin(), result.end(), result.begin(), [](unsigned char c) {
         return std::tolower(c);
     });
@@ -28,7 +49,7 @@ std::string toLowerCase(const std::string& input) {
 }
 
 std::string toUpperCase(const std::string& input) {
-    std::string result = input; // Create a copy of the input string
+    std::string result = input;
     std::transform(result.begin(), result.end(), result.begin(), [](unsigned char c) {
         return std::toupper(c);
     });
@@ -322,6 +343,7 @@ bool stepCode(size_t instructionCount){
     if (codeCurrentLen >= codeFinalLen){
         LOG_DEBUG("Code execution is complete!");
         uc_emu_stop(uc);
+        editor->HighlightDebugCurrentLine(getCurrentLine() - 1);
         return true;
     }
 
@@ -344,13 +366,21 @@ bool stepCode(size_t instructionCount){
         if (codeCurrentLen >= codeFinalLen){
             uc_context_save(uc, context);
             LOG_DEBUG("Code execution is complete!");
+            editor->HighlightDebugCurrentLine(getCurrentLine());
             return true;
         }
 
+        uc_context_save(uc, context);
         uc_reg_read(uc, UC_X86_REG_RIP, &rip);
-        ret = std::stoi(addressLineNoMap[std::to_string(rip)]);
-        editor->HighlightDebugCurrentLine(ret - 1);
-        lineNo = ret;
+        std::string str =  addressLineNoMap[std::to_string(rip)];
+        if (!str.empty()){
+            ret = std::stoi(str);
+            editor->HighlightDebugCurrentLine(ret - 1);
+            lineNo = ret;
+        }
+        else{
+            return true;
+        }
     }
 
     uc_context_save(uc, context);
@@ -362,9 +392,18 @@ bool stepCode(size_t instructionCount){
 
 void hook(uc_engine *uc, uint64_t address, uint32_t size, void *user_data){
     LOG_DEBUG("Hook called!");
-    int lineNumber =(stoi(addressLineNoMap[std::to_string(address)]));
+    std::string str = addressLineNoMap[std::to_string(address)];
+    int lineNumber;
+
+    if (!str.empty()){
+        lineNumber = stoi(str);
+    }
+    else{
+        lineNumber = -1;
+    }
 
     LOG_DEBUG("At line number: " << lineNumber);
+
     if (std::find(breakpointLines.begin(), breakpointLines.end(), lineNumber) != breakpointLines.end()){
        editor->HighlightDebugCurrentLine(lineNumber - 1);
         if (!continueOverBreakpoint){
@@ -427,6 +466,7 @@ bool runCode(const std::string& code_in, uint64_t instructionCount)
     }
     else{
         uc_context_save(uc, context);
+//       TODO: Only set it to 0 when the first line is not a label
         editor->HighlightDebugCurrentLine(0);
         stepClickedOnce = true;
     }
