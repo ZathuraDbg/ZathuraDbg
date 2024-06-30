@@ -34,6 +34,7 @@ typedef struct{
 extern std::map<std::string, std::string> addressLineNoMap;
 extern std::vector<uint16_t> instructionSizes;
 extern std::stringstream assembly;
+extern bool isFirstLineLabel;
 extern std::pair<std::string, std::size_t> assemble(const std::string& assemblyString, const keystoneSettings& ksSettings);
 extern std::string getBytes(const std::string& fileName);
 extern std::string getBytes(std::stringstream& assembly);

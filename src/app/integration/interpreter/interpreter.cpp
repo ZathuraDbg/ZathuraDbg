@@ -466,8 +466,13 @@ bool runCode(const std::string& code_in, uint64_t instructionCount)
     }
     else{
         uc_context_save(uc, context);
-//       TODO: Only set it to 0 when the first line is not a label
-        editor->HighlightDebugCurrentLine(0);
+
+        if (isFirstLineLabel){
+            editor->HighlightDebugCurrentLine(1);
+        }
+        else{
+            editor->HighlightDebugCurrentLine(0);
+        }
         stepClickedOnce = true;
     }
 
