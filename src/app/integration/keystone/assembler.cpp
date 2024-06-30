@@ -8,6 +8,7 @@ std::stringstream assembly;
 
 std::map<std::string, std::string> addressLineNoMap{};
 std::vector<uint16_t> instructionSizes{};
+bool isFirstLineLabel = false;
 
 std::pair<std::string, std::size_t> assemble(const std::string& assemblyString, const keystoneSettings& ksSettings) {
     LOG_DEBUG("Assembling:\n" << assemblyString);
@@ -71,10 +72,17 @@ void initInsSizeInfoMap(){
     uint64_t currentAddr = ENTRY_POINT_ADDRESS;
 
     while (std::getline(assembly, instructionStr, '\n')) {
-        if (instructionStr.contains(":") || (instructionStr.empty())){
+        if (instructionStr.contains(":")){
+            instructionStr.erase(std::remove_if(instructionStr.begin(), instructionStr.end(), ::isspace), instructionStr.end());
+            if (instructionStr.ends_with(":")){
+                isFirstLineLabel = true;
+            }
+        }
+        else if (instructionStr.empty()){
             lineNo++;
             continue;
         }
+
 
         if (instructionStr.starts_with("\t")){
             instructionStr = instructionStr.substr(instructionStr.find_first_not_of('\t'));
