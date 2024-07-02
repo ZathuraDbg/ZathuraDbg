@@ -343,7 +343,6 @@ bool stepCode(size_t instructionCount){
     if (codeCurrentLen >= codeFinalLen){
         LOG_DEBUG("Code execution is complete!");
         uc_emu_stop(uc);
-        editor->HighlightDebugCurrentLine(getCurrentLine() - 1);
         return true;
     }
 
@@ -366,7 +365,6 @@ bool stepCode(size_t instructionCount){
         if (codeCurrentLen >= codeFinalLen){
             uc_context_save(uc, context);
             LOG_DEBUG("Code execution is complete!");
-            editor->HighlightDebugCurrentLine(getCurrentLine());
             return true;
         }
 
@@ -375,6 +373,7 @@ bool stepCode(size_t instructionCount){
         std::string str =  addressLineNoMap[std::to_string(rip)];
         if (!str.empty()){
             ret = std::stoi(str);
+            LOG_DEBUG("Highlight from block 3 - stepCode");
             editor->HighlightDebugCurrentLine(ret - 1);
             lineNo = ret;
         }
@@ -406,6 +405,7 @@ void hook(uc_engine *uc, uint64_t address, uint32_t size, void *user_data){
 
     if (std::find(breakpointLines.begin(), breakpointLines.end(), lineNumber) != breakpointLines.end()){
        editor->HighlightDebugCurrentLine(lineNumber - 1);
+       LOG_DEBUG("Highlight from hook - breakpoint found at lineNo " << lineNumber);
         if (!continueOverBreakpoint){
             LOG_DEBUG("Breakpoint hit!");
             uc_emu_stop(uc);
@@ -469,9 +469,11 @@ bool runCode(const std::string& code_in, uint64_t instructionCount)
 
         if (isFirstLineLabel){
             editor->HighlightDebugCurrentLine(1);
+            LOG_DEBUG("Highlight from runCode first line is label");
         }
         else{
             editor->HighlightDebugCurrentLine(0);
+            LOG_DEBUG("Highlight from runCode first line is label");
         }
         stepClickedOnce = true;
     }
