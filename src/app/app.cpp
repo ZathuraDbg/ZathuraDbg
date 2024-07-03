@@ -1,7 +1,10 @@
 #include "app.hpp"
-bool isRunning = true;
+#include "tasks/editorTasks.hpp"
 
-void setupEditor(){
+bool isRunning = true;
+bool lineNumbersShown = true;
+
+void setupEditor() {
     editor = new TextEditor();
     editor->SetLanguageDefinition(TextEditor::LanguageDefinitionId::Asmx86_64);
     editor->SetPalette(TextEditor::PaletteId::Dark);
@@ -11,8 +14,7 @@ void setupEditor(){
 
     {
         std::ifstream t("test.asm");
-        if (t.good())
-        {
+        if (t.good()) {
             std::string str((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());
             editor->SetText(str);
         }
@@ -21,19 +23,18 @@ void setupEditor(){
 
 void setupViewPort() {
 //    set the poisition of the window just next to the menu bar (top left) using docking
-    ImGuiViewport* viewport = ImGui::GetMainViewport();
+    ImGuiViewport *viewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(ImVec2(viewport->Pos.x, viewport->Pos.y + ImGui::GetFrameHeight()));
     ImGui::SetNextWindowSize(ImVec2(500, 600));
     ImGui::SetNextWindowViewport(viewport->ID);
 }
 
 
-void LoadIniFile()
-{
+void LoadIniFile() {
     std::string filename = "/home/rc/Zathura-UI/src/config.zlyt";
-	std::filesystem::path dir(filename);
-	ImGui::LoadIniSettingsFromDisk(dir.string().c_str());
-    LOG_DEBUG("Loaded config file from " << dir.string());
+    std::filesystem::path dir(filename);
+    ImGui::LoadIniSettingsFromDisk(dir.string().c_str());
+            LOG_DEBUG("Loaded config file from " << dir.string());
 }
 
 void mainWindow() {
@@ -51,27 +52,89 @@ void mainWindow() {
 
     ImGui::PushFont(io.Fonts->Fonts[JetBrainsMono20]);
     editor->Render("Editor");
-    if (ImGui::BeginPopupContextItem("TextEditorContextMenu"))
-    {
-        if (ImGui::MenuItem("Copy", nullptr, false)) // Enable only if there is a selection
-        {
-            std::cout << "copy" << std::endl;
+    ImGui::PopFont();
 
-            //            Copy();
-        }
-        if (ImGui::MenuItem("Paste", nullptr, false)) // Enable only if not read-only and clipboard has text
+    ImGui::PushFont(io.Fonts->Fonts[RubikRegular16]);
+    if (ImGui::BeginPopupContextItem("TextEditorContextMenu")) {
+        if (ImGui::MenuItem("Copy", "Ctrl + C", false)) // Enable only if there is a selection
         {
+            editor->Copy();
+                    LOG_DEBUG("Copied text to clipboard");
         }
 
-        if (ImGui::MenuItem("Breakpoint", nullptr, false)){
+        ImGui::Separator();
+
+        if (ImGui::MenuItem("Cut", "Ctrl + X", false)) // Enable only if there is a selection
+        {
+            editor->Cut();
+                    LOG_DEBUG("Cut text to clipboard");
+        }
+
+        ImGui::Separator();
+
+        if (ImGui::MenuItem("Paste", "Ctrl + V", false)) // Enable only if not read-only and clipboard has text
+        {
+            editor->Paste();
+            LOG_DEBUG("Pasted text from clipboard");
+        }
+
+        ImGui::Separator();
+
+        if (ImGui::MenuItem("Undo", "Ctrl + Z", false)) // Enable only if not read-only and clipboard has text
+        {
+            if (editor->CanUndo()) {
+                editor->Undo();
+                LOG_DEBUG("Performed undo!");
+            }
+        }
+
+        ImGui::Separator();
+
+        if (ImGui::MenuItem("Redo", "Ctrl + Y", false)) // Enable only if not read-only and clipboard has text
+        {
+            if (editor->CanRedo()) {
+                editor->Redo();
+                LOG_DEBUG("Performed redo!");
+            }
+        }
+
+        ImGui::Separator();
+
+        if (ImGui::MenuItem("Toggle breakpoint", "F9", false)) {
             int line, _;
             editor->GetCursorPosition(line, _);
-            breakpointLines.push_back(line + 1);
-            editor->HighlightBreakpoints(line);
-        }
-        ImGui::EndPopup();
-    }
+            auto idx = (std::find(breakpointLines.begin(), breakpointLines.end(), line + 1));
+            if (idx != breakpointLines.end()){
+                breakpointLines.erase(idx);
+                editor->RemoveHighlight(line);
+            }
+            else{
+                breakpointLines.push_back(line + 1);
+                editor->HighlightBreakpoints(line);
+            }
 
+        }
+
+
+        ImGui::Separator();
+//
+        if (!lineNumbersShown) {
+            if (ImGui::MenuItem("Show line numbers", nullptr, false)) {
+                editor->SetShowLineNumbersEnabled(true);
+                lineNumbersShown = true;
+            }
+        } else {
+            if (ImGui::MenuItem("Hide line numbers", nullptr,
+                                false)) // Enable only if not read-only and clipboard has text
+            {
+                editor->SetShowLineNumbersEnabled(false);
+                lineNumbersShown = false;
+            }
+        }
+//        ImGui::Separator();
+
+            ImGui::EndPopup();
+    }
     ImGui::PopFont();
     ImGui::End();
 

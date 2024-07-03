@@ -342,6 +342,7 @@ bool stepCode(size_t instructionCount){
 
     if (codeCurrentLen >= codeFinalLen){
         LOG_DEBUG("Code execution is complete!");
+        editor->HighlightDebugCurrentLine(-1);
         uc_emu_stop(uc);
         return true;
     }
@@ -363,6 +364,7 @@ bool stepCode(size_t instructionCount){
         int ret;
 
         if (codeCurrentLen >= codeFinalLen){
+            editor->HighlightDebugCurrentLine(-1);
             uc_context_save(uc, context);
             LOG_DEBUG("Code execution is complete!");
             return true;

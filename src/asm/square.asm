@@ -3,7 +3,7 @@ main:
     push rax
     pop rdi 
     call square
-    push rdi        ; rdi = 42 * 42 = 1764
+    push rdi        ; rdi = 0x42 * 0x42 = 4356
     hlt
 
 square:
