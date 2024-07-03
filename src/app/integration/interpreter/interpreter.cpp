@@ -315,7 +315,7 @@ bool resetState(){
     editor->ClearExtraCursors();
     editor->ClearSelections();
     editor->HighlightDebugCurrentLine(-1);
-    editor->HighlightBreakpoints(-1);
+//    editor->HighlightBreakpoints(-1);
     breakpointLines.clear();
 
     if (uc != nullptr){

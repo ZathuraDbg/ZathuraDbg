@@ -22,7 +22,7 @@ void setupEditor() {
 }
 
 void setupViewPort() {
-//    set the poisition of the window just next to the menu bar (top left) using docking
+//    set the position of the window just next to the menu bar (top left) using docking
     ImGuiViewport *viewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(ImVec2(viewport->Pos.x, viewport->Pos.y + ImGui::GetFrameHeight()));
     ImGui::SetNextWindowSize(ImVec2(500, 600));
@@ -34,7 +34,7 @@ void LoadIniFile() {
     std::string filename = "/home/rc/Zathura-UI/src/config.zlyt";
     std::filesystem::path dir(filename);
     ImGui::LoadIniSettingsFromDisk(dir.string().c_str());
-            LOG_DEBUG("Loaded config file from " << dir.string());
+    LOG_DEBUG("Loaded config file from " << dir.string());
 }
 
 void mainWindow() {
@@ -59,7 +59,7 @@ void mainWindow() {
         if (ImGui::MenuItem("Copy", "Ctrl + C", false)) // Enable only if there is a selection
         {
             editor->Copy();
-                    LOG_DEBUG("Copied text to clipboard");
+            LOG_DEBUG("Copied text to clipboard");
         }
 
         ImGui::Separator();
@@ -67,7 +67,7 @@ void mainWindow() {
         if (ImGui::MenuItem("Cut", "Ctrl + X", false)) // Enable only if there is a selection
         {
             editor->Cut();
-                    LOG_DEBUG("Cut text to clipboard");
+            LOG_DEBUG("Cut text to clipboard");
         }
 
         ImGui::Separator();
@@ -112,12 +112,11 @@ void mainWindow() {
                 breakpointLines.push_back(line + 1);
                 editor->HighlightBreakpoints(line);
             }
-
         }
 
 
         ImGui::Separator();
-//
+
         if (!lineNumbersShown) {
             if (ImGui::MenuItem("Show line numbers", nullptr, false)) {
                 editor->SetShowLineNumbersEnabled(true);
@@ -125,13 +124,12 @@ void mainWindow() {
             }
         } else {
             if (ImGui::MenuItem("Hide line numbers", nullptr,
-                                false)) // Enable only if not read-only and clipboard has text
+                                false))
             {
                 editor->SetShowLineNumbersEnabled(false);
                 lineNumbersShown = false;
             }
         }
-//        ImGui::Separator();
 
             ImGui::EndPopup();
     }

@@ -5,6 +5,7 @@ void fileOpenTask(const std::string& fileName){
         if (!readFileIntoEditor(fileName)){
             LOG_ERROR("Read operation failed on the file: " << fileName);
         }
+        editor->HighlightBreakpoints(-1);
     }
 }
 
