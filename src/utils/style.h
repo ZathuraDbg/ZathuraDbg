@@ -29,7 +29,7 @@ static void SetupImGuiStyle()
     style.WindowMenuButtonPosition = ImGuiDir_Right;
     style.ChildRounding = 0.0f;
     style.ChildBorderSize = 1.0f;
-    style.PopupRounding = 0.0f;
+    style.PopupRounding = 8.0f;
     style.PopupBorderSize = 1.0f;
 //    style.FramePadding = ImVec2(5.0f, 3.400000095367432f);
 //    style.FrameRounding = 8.0f;
@@ -54,7 +54,7 @@ static void SetupImGuiStyle()
     style.Colors[ImGuiCol_TextDisabled] = ImVec4(0.2745098173618317f, 0.3176470696926117f, 0.4509803950786591f, 1.0f);
     style.Colors[ImGuiCol_WindowBg] = ImVec4(0.0784313753247261f, 0.08627451211214066f, 0.1019607856869698f, 1.0f);
     style.Colors[ImGuiCol_ChildBg] = ImVec4(0.09411764889955521f, 0.1019607856869698f, 0.1176470592617989f, 1.0f);
-    style.Colors[ImGuiCol_PopupBg] = ImVec4(0.0784313753247261f, 0.08627451211214066f, 0.1019607856869698f, 1.0f);
+    style.Colors[ImGuiCol_PopupBg] = ImColor(0x1C, 0x1F, 25);
     style.Colors[ImGuiCol_Border] = ImVec4(0.1568627506494522f, 0.168627455830574f, 0.1921568661928177f, 1.0f);
     style.Colors[ImGuiCol_BorderShadow] = ImVec4(0.0784313753247261f, 0.08627451211214066f, 0.1019607856869698f, 1.0f);
     style.Colors[ImGuiCol_FrameBg] = hexToImVec4("111111");
