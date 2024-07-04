@@ -211,7 +211,7 @@ void registerWindow() {
                 regsVec = parseRegisters(reg);
                 LOG_DEBUG("Adding the register " << reg);
                 reg = toUpperCase(reg);
-                registerValueMap[reg] = regInfo.second;
+                registerValueMap[reg] = std::to_string(regInfo.second);
             } else {
                 LOG_ERROR("Unable to get the register: " << reg);
             }

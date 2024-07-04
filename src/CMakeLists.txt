@@ -29,6 +29,7 @@ set(SOURCES
         app/tasks/fileTasks.cpp
         app/tasks/editorTasks.cpp
         utils/fonts.cpp
+        ../vendor/json/json.hpp
 )
 
 # Include directories

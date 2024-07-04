@@ -1,10 +1,13 @@
 #include "app.hpp"
+bool firstTime = true;
 
 void appMenuBar()
 {
     bool fileOpen = false;
     bool fileSave = false;
     bool fileSaveAs = false;
+    bool saveContextToFile = false;
+    bool fileLoadContext = false;
     bool quit = false;  // not using exit because it's a function from std to avoid confusion
 
     bool debugReset = false;
@@ -19,6 +22,8 @@ void appMenuBar()
             ImGui::MenuItem("Open", "Ctrl+O", &fileOpen);
             ImGui::MenuItem("Save", "Ctrl+S", &fileSave);
             ImGui::MenuItem("Save As", "Ctrl+Shift+S", &fileSaveAs);
+            ImGui::MenuItem("Save context to file", "Ctrl+Shift+M", &saveContextToFile);
+            ImGui::MenuItem("Load context from file", "Ctrl+Shift+M", &fileLoadContext);
             ImGui::Separator();
             ImGui::MenuItem("Exit", "Alt+F4", &quit);
             ImGui::Separator();
@@ -103,6 +108,11 @@ void appMenuBar()
     if (debugReset){
         resetState();
     }
-
+    if (saveContextToFile){
+        fileSaveUCContextAsJson(saveAsFileDialog());
+    }
+    if (fileLoadContext){
+        fileLoadUCContextFromJson(openFileDialog());
+    }
     ImGui::PopFont();
 }

@@ -27,6 +27,8 @@ extern bool isRunning;
 #include "../../vendor/hex/hex.h"
 #include "integration/interpreter/interpreter.hpp"
 #include "windows/windows.hpp"
+#include "nlohmann/json.hpp"
+using json = nlohmann::json;
 
 #define CONFIG_NAME "config"
 
