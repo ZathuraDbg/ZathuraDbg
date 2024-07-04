@@ -3,7 +3,7 @@ std::string selectedFile = "/home/rc/Zathura-UI/src/test.asm";
 
 std::string openFileDialog(){
     const char* fc = tinyfd_openFileDialog("Select assembly file", nullptr, 0, nullptr, "Assembly files", 0);
-    if (fc != NULL){
+    if (fc != nullptr){
         std::string f(fc);
 
         if (!f.empty()){
