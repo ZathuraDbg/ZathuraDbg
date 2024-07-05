@@ -23,7 +23,7 @@ void appMenuBar()
             ImGui::MenuItem("Save", "Ctrl+S", &fileSave);
             ImGui::MenuItem("Save As", "Ctrl+Shift+S", &fileSaveAs);
             ImGui::MenuItem("Save context to file", "Ctrl+Shift+M", &saveContextToFile);
-            ImGui::MenuItem("Load context from file", "Ctrl+Shift+M", &fileLoadContext);
+            ImGui::MenuItem("Load context from file", "Ctrl+Shift+O", &fileLoadContext);
             ImGui::Separator();
             ImGui::MenuItem("Exit", "Alt+F4", &quit);
             ImGui::Separator();
@@ -113,6 +113,15 @@ void appMenuBar()
     }
     if (fileLoadContext){
         fileLoadUCContextFromJson(openFileDialog());
+        uint64_t rip;
+        int lineNumber;
+
+        uc_reg_read(uc, regNameToConstant("RIP"), &rip);
+        std::string str =  addressLineNoMap[std::to_string(rip)];
+        if (!str.empty()) {
+            lineNumber = std::stoi(str);
+            editor->HighlightDebugCurrentLine(lineNumber - 1);
+        }
     }
 
     ImGui::PopFont();
