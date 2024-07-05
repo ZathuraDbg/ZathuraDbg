@@ -11,6 +11,7 @@ extern tsl::ordered_map<std::string, std::string> registerValueMap;
 extern bool codeHasRun;
 extern bool stepClickedOnce;
 extern void registerWindow();
+extern void updateRegs();
 extern void consoleWindow();
 extern void hexEditorWindow();
 extern void stackEditorWindow();

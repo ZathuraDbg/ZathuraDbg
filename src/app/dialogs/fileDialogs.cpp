@@ -2,14 +2,13 @@
 std::string selectedFile = "/home/rc/Zathura-UI/src/test.asm";
 
 std::string openFileDialog(){
-    const char* fc = tinyfd_openFileDialog("Select assembly file", nullptr, 0, nullptr, "Assembly files", 0);
-    if (fc != nullptr){
-        std::string f(fc);
+    const char* chosenFile = tinyfd_openFileDialog("Select assembly file", nullptr, 0, nullptr, "Assembly files", 0);
+    if (chosenFile != nullptr){
+        std::string chosenFileString(chosenFile);
 
-        if (!f.empty()){
-            selectedFile = f;
-                    LOG_DEBUG("User selected the file " << selectedFile);
-            return selectedFile;
+        if (!chosenFileString.empty()){
+            LOG_DEBUG("User selected the file " << chosenFile);
+            return chosenFileString;
         }
     }
 
@@ -18,15 +17,14 @@ std::string openFileDialog(){
 }
 
 std::string saveAsFileDialog(){
-    const char* fc = tinyfd_saveFileDialog("Save assembly file", nullptr, NULL, nullptr, nullptr);
+    const char* chosenFile = tinyfd_saveFileDialog("Save assembly file", nullptr, NULL, nullptr, nullptr);
 
-    if (fc != NULL){
-        std::string f(fc);
+    if (chosenFile != nullptr){
+        std::string chosenFileString(chosenFile);
 
-        if (!f.empty()){
-            selectedFile = f;
-                    LOG_DEBUG("User selected the file " << selectedFile);
-            return selectedFile;
+        if (!chosenFileString.empty()){
+            LOG_DEBUG("User selected the file " << selectedFile);
+            return chosenFileString;
         }
     }
 

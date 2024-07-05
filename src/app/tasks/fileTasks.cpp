@@ -7,6 +7,7 @@ void fileOpenTask(const std::string& fileName){
         if (!readFileIntoEditor(fileName)){
             LOG_ERROR("Read operation failed on the file: " << fileName);
         }
+        selectedFile = fileName;
         editor->HighlightBreakpoints(-1);
     }
 }
@@ -17,6 +18,7 @@ void fileSaveAsTask(const std::string &fileName){
         if (!writeEditorToFile(fileName)) {
             LOG_ERROR("Save as operation failed on the file: " << fileName << " !");
         }
+        selectedFile = fileName;
     }
 }
 
@@ -26,6 +28,7 @@ void fileSaveTask(const std::string &fileName){
         if (!writeEditorToFile(selectedFile)) {
             LOG_ERROR("Save operation failed on the file: " << fileName << " !");
         }
+        selectedFile = fileName;
     }
 }
 
@@ -63,7 +66,7 @@ void fileRunTask(uint64_t instructionCount){
     }
 }
 
-void fileSaveUCContextAsJson(const std::string& fileName){
+void fileSaveUCContextAsJson(const std::string& jsonFilename){
     json j;
     uint64_t value;
 
@@ -71,41 +74,36 @@ void fileSaveUCContextAsJson(const std::string& fileName){
         j[reg.first] = getRegister(reg.first).second;
     }
 
-    std::ofstream jsonFile(fileName, std::ios::out);
+    std::ofstream jsonFile(jsonFilename, std::ios::out);
     jsonFile << j.dump() << std::endl;
     jsonFile.close();
 }
 
-void fileLoadUCContextFromJson(const std::string& fileName){
-
-    if (context != nullptr){
-        uc_context_free(context);
-        uc_context_alloc(uc, &context);
-    }
-    else{
+void fileLoadUCContextFromJson(const std::string& jsonFilename){
+    if (jsonFilename.empty()){
+        return;
     }
 
-    std::ifstream jsonFile(fileName);
+    std::ifstream jsonFile(jsonFilename);
     json j;
     std::stringstream jsonStream;
+
     jsonStream << jsonFile.rdbuf();
     auto j2 = json::parse(jsonStream.str());
+
     for (json::iterator it = j2.begin(); it != j2.end(); ++it){
         auto value = it.value().dump();
-        if (it.key() == "GS"){
+
+        if (value.empty() || value == "\"-\"" || value == "-"){
+        // {"reg": '-'} signals to use the current value of the register
+        // and make no changes to it
             continue;
         }
-        if (it.key() == "RIP"){
-            it.key();
-        }
-        char *ptr;
 
+        char *ptr;
         auto ret = strtoul(value.data(), &ptr, 10);
-        std::cout << "Register: " << it.key() << ": " << it.value().dump() << std::endl;
-        uc_context_reg_write(context, regNameToConstant(it.key()), std::to_string(ret).c_str());
+        uc_reg_write(uc, regNameToConstant(it.key()), &ret);
+        uc_context_reg_write(context, regNameToConstant(it.key()), value.c_str());
         uc_context_save(uc, context);
-//        uc_reg_write(uc, regNameToConstant(it.key()), value.c_str());
-//        registerValueMap[it.key()] = it.value().dump();
     }
-    uc_context_restore(uc, context);
 }

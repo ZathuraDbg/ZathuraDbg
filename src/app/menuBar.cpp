@@ -114,5 +114,6 @@ void appMenuBar()
     if (fileLoadContext){
         fileLoadUCContextFromJson(openFileDialog());
     }
+
     ImGui::PopFont();
 }
