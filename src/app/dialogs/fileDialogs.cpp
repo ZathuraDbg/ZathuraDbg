@@ -17,7 +17,7 @@ std::string openFileDialog(){
 }
 
 std::string saveAsFileDialog(){
-    const char* chosenFile = tinyfd_saveFileDialog("Save assembly file", nullptr, NULL, nullptr, nullptr);
+    const char* chosenFile = tinyfd_saveFileDialog("Save assembly file", nullptr, 0, nullptr, nullptr);
 
     if (chosenFile != nullptr){
         std::string chosenFileString(chosenFile);

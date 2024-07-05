@@ -94,7 +94,7 @@ void fileLoadUCContextFromJson(const std::string& jsonFilename){
     for (json::iterator it = j2.begin(); it != j2.end(); ++it){
         auto value = it.value().dump();
 
-        if (value.empty() || value == "\"-\"" || value == "-"){
+        if (value.empty() || value == "\"-\"" || value == "'-'"){
         // {"reg": '-'} signals to use the current value of the register
         // and make no changes to it
             continue;
