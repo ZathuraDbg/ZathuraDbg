@@ -22,6 +22,7 @@ bool setupButtons() {
     ImGui::SameLine();
 
     if (ImGui::Button(ICON_CI_DEBUG_START, ImVec2(20, 20))){
+        resetState();
         fileRunTask(0);
     }
 
@@ -30,10 +31,10 @@ bool setupButtons() {
     ImGui::SameLine();
 
 
-    if (!debugStopped){
+    if (!debugModeEnabled){
         if (ImGui::Button(ICON_CI_DEBUG, ImVec2(20, 20))){
             resetState();
-            debugStopped = true;
+            debugModeEnabled = true;
             LOG_DEBUG("Context is empty!");
             fileRunTask(1);
         }
@@ -95,7 +96,7 @@ bool setupButtons() {
         ImGui::SameLine();
 
         if (ImGui::Button(ICON_CI_DEBUG_STOP, ImVec2(20, 20))){
-            debugStopped = false;
+            debugModeEnabled = false;
             resetState();
         }
     }

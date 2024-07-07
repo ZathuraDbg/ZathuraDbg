@@ -131,18 +131,17 @@ void mainWindow() {
             }
         }
 
-        if (ImGui::MenuItem("Run selected code", nullptr, false)){
-            std::stringstream selectedAssembly(editor->GetSelectedText());
-            if (!selectedAssembly.str().empty()) {
-                std::string bytes = getBytes(selectedAssembly);
-                if (!bytes.empty()) {
-//                    createStack(&uc);
-                    runTempCode(bytes);
+        if (!debugModeEnabled){
+            if (ImGui::MenuItem("Run selected code", nullptr, false)){
+                std::stringstream selectedAssembly(editor->GetSelectedText());
+                if (!selectedAssembly.str().empty()) {
+                    std::string bytes = getBytes(selectedAssembly);
+                    if (!bytes.empty()) {
+                        runTempCode(bytes);
+                    }
                 }
             }
-            //            getTemporaryPath();
         }
-
         ImGui::EndPopup();
     }
     ImGui::PopFont();

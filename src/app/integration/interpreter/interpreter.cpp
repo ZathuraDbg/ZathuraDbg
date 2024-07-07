@@ -17,7 +17,7 @@ uc_context *tempContext = nullptr;
 uint64_t codeCurrentLen = 0;
 uint64_t lineNo = 1;
 
-bool debugStopped = false;
+bool debugModeEnabled = false;
 bool continueOverBreakpoint = false;
 bool runningTempCode = false;
 
