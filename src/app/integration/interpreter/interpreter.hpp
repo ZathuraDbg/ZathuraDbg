@@ -13,10 +13,12 @@
 #include "../../arch/x86.hpp"
 #include <array>
 
-extern bool createStack();
+extern bool createStack(void* unicornEngine);
+extern bool runTempCode(const std::string& codeIn);
 extern bool debugStopped;
-std::pair<bool, uint64_t> getRegister(const std::string& name);
-extern bool ucInit();
+std::pair<bool, uint64_t> getRegister(const std::string& name, bool useTempContext = false);
+extern uc_context *tempContext;
+extern bool ucInit(void* unicornEngine);
 extern uc_engine *uc;
 extern int regNameToConstant(std::string name);
 extern bool runCode(const std::string& code_in, uint64_t instructionCount);

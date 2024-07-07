@@ -5,7 +5,9 @@
 #include "editorTasks.hpp"
 #include "../integration/interpreter/interpreter.hpp"
 #include <unicorn/unicorn.h>
+#include <filesystem>
 
+extern std::filesystem::path getTemporaryPath();
 void fileOpenTask(const std::string& fileName);
 void fileSaveAsTask(const std::string &fileName);
 void fileSaveTask(const std::string &fileName);

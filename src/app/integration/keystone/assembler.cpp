@@ -74,7 +74,7 @@ void initInsSizeInfoMap(){
     while (std::getline(assembly, instructionStr, '\n')) {
         if (instructionStr.contains(":")){
             instructionStr.erase(std::remove_if(instructionStr.begin(), instructionStr.end(), ::isspace), instructionStr.end());
-            if (instructionStr.ends_with(":")){
+            if (instructionStr.ends_with(":") && lineNo == 1){
                 isFirstLineLabel = true;
             }
         }
@@ -82,7 +82,6 @@ void initInsSizeInfoMap(){
             lineNo++;
             continue;
         }
-
 
         if (instructionStr.starts_with("\t")){
             instructionStr = instructionStr.substr(instructionStr.find_first_not_of('\t'));

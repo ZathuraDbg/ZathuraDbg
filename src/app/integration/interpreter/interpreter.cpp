@@ -7,13 +7,19 @@ uint64_t CODE_BUF_SIZE = 0x3000;
 uintptr_t STACK_SIZE = 5 * 1024 * 1024;
 
 uint8_t* codeBuf = nullptr;
-uc_context* context = nullptr;
+
 uc_engine *uc = nullptr;
+uc_context* context = nullptr;
+
+uc_engine *tempUC = nullptr;
+uc_context *tempContext = nullptr;
 
 uint64_t codeCurrentLen = 0;
 uint64_t lineNo = 1;
+
 bool debugStopped = false;
 bool continueOverBreakpoint = false;
+bool runningTempCode = false;
 
 std::unordered_map <std::string, uint64_t> labelLineNoMap = {};
 std::vector<int> breakpointLines = {};
@@ -131,29 +137,29 @@ void showRegs(){
 // TODO: Add a check while adding a new register so we don't have to add a check in the below
 // two functions
 
-uint64_t getRegisterValue(const std::string& regName){
+uint64_t getRegisterValue(const std::string& regName, bool useTempContext){
     auto entry = x86RegInfoMap[toUpperCase(regName)];
     auto size = entry.first;
     uint64_t value{};
 
     if (size == 8) {
         uint8_t valTemp8;
-        uc_reg_read(uc, entry.second, &valTemp8);
+        useTempContext ? uc_context_reg_read(tempContext, entry.second, &valTemp8) : uc_reg_read(uc, entry.second, &valTemp8);
         value = valTemp8; // force zero extension
     }
     else if (size == 16) {
         uint16_t valTemp16;
-        uc_reg_read(uc, entry.second, &valTemp16);
+        useTempContext ? uc_context_reg_read(tempContext, entry.second, &valTemp16) : uc_reg_read(uc, entry.second, &valTemp16);
         value = valTemp16; // force zero extension
     }
     else if (size == 32) {
         uint32_t valTemp32;
-        uc_reg_read(uc, entry.second, &valTemp32);
+        useTempContext ? uc_context_reg_read(tempContext, entry.second, &valTemp32) : uc_reg_read(uc, entry.second, &valTemp32);
         value = valTemp32; // force zero extension
     }
     else if (size == 64) {
         uint64_t valTemp64;
-        uc_reg_read(uc, entry.second, &valTemp64);
+        useTempContext ? uc_context_reg_read(tempContext, entry.second, &valTemp64) : uc_reg_read(uc, entry.second, &valTemp64);
         value = valTemp64; // force zero extension
     }
 
@@ -161,21 +167,27 @@ uint64_t getRegisterValue(const std::string& regName){
     return value;
 }
 
-std::pair<bool, uint64_t> getRegister(const std::string& name){
+std::pair<bool, uint64_t> getRegister(const std::string& name, bool useTempContext){
     std::pair<bool, uint64_t> res = {false, 0};
+
+    if (useTempContext){
+        return {true, getRegisterValue(name, true)};
+    }
+
 
     if (!codeHasRun){
         return {true, 0x00};
     }
 
-    auto value = getRegisterValue(name);
+
+    auto value = getRegisterValue(name, false);
     res = {true, value};
     return res;
 }
 
-bool ucInit(){
+bool ucInit(void* unicornEngine){
     LOG_DEBUG("Initializing unicorn engine");
-    auto err = uc_open(UC_ARCH_X86, UC_MODE_64, &uc);
+    auto err = uc_open(UC_ARCH_X86, UC_MODE_64, (uc_engine**)unicornEngine);
 
     if (err) {
         LOG_ERROR("Failed to initialise Unicorn Engine!");
@@ -186,10 +198,10 @@ bool ucInit(){
     return true;
 }
 
-bool createStack(){
+bool createStack(void* unicornEngine){
     LOG_DEBUG("Creating stack");
 
-    if (!ucInit()){
+    if (!ucInit(unicornEngine)){
         return false;
     }
 
@@ -212,7 +224,6 @@ bool createStack(){
         return false;
     }
 
-    LOG_DEBUG("wrote to rsp ");
     if (uc_reg_write(uc, UC_X86_REG_RBP, &stackBase)){
         printf("Failed to write base pointer to memory, quitting!\n");
         return false;
@@ -304,6 +315,7 @@ bool resetState(){
     stepClickedOnce = false;
     continueOverBreakpoint = false;
 
+
     codeCurrentLen = 0;
     codeFinalLen = 0;
     lineNo = 0;
@@ -315,20 +327,41 @@ bool resetState(){
     editor->ClearExtraCursors();
     editor->ClearSelections();
     editor->HighlightDebugCurrentLine(-1);
-//    editor->HighlightBreakpoints(-1);
     breakpointLines.clear();
 
     if (uc != nullptr){
+        if (tempUC == uc){
+            tempUC = nullptr;
+        }
+
         uc_close(uc);
         uc = nullptr;
     }
 
-    context = nullptr;
+    if (context != nullptr){
+        if (tempContext == context){
+            tempContext = nullptr;
+        }
+
+        uc_context_free(context);
+        context = nullptr;
+    }
+
+    if (tempContext != nullptr){
+        uc_context_free(tempContext);
+        tempContext = nullptr;
+    }
+
+    if (tempUC != nullptr){
+        uc_close(tempUC);
+        tempUC = nullptr;
+    }
+
     for (auto& reg: registerValueMap){
         registerValueMap[reg.first] = "00";
     }
 
-    if (!createStack()){
+    if (!createStack(&uc)){
         LOG_DEBUG("Unable to create stack!");
         return false;
     }
@@ -455,9 +488,21 @@ bool runCode(const std::string& code_in, uint64_t instructionCount)
     uc_hook_add(uc, &trace, UC_HOOK_CODE, (void*)hook, nullptr, 1, 0);
     if (instructionCount == 0 || (stepClickedOnce)){
         err = uc_emu_start(uc, ENTRY_POINT_ADDRESS, ENTRY_POINT_ADDRESS + CODE_BUF_SIZE, 0, instructionCount);
+        if (runningTempCode){
+            showRegs();
+            uc_context_save(uc, context);
+            updateRegs();
+        }
 
         if (err) {
-            handleUCErrors(err);
+            if (runningTempCode && ((err <= UC_ERR_READ_UNMAPPED) || (err >= UC_ERR_FETCH_UNMAPPED))){
+            }
+            else{
+                handleUCErrors(err);
+            }
+
+            free(codeBuf);
+            codeBuf = nullptr;
             return false;
         }
     }
@@ -482,5 +527,22 @@ bool runCode(const std::string& code_in, uint64_t instructionCount)
 
     LOG_DEBUG("Ran code successfully!");
     codeHasRun = true;
+    return true;
+}
+
+bool runTempCode(const std::string& codeIn){
+    resetState();
+    runningTempCode = true;
+    runCode(codeIn, 0);
+
+    tempUC = uc;
+    auto size = uc_context_size(uc);
+    tempContext = static_cast<uc_context *>(malloc(size));
+    memcpy(tempContext, context, size);
+
+    uint64_t rip;
+    uc_context_reg_read(tempContext, regNameToConstant("RIP"), &rip);
+    std::cout << rip << std::endl;
+    updateRegs(true);
     return true;
 }
