@@ -486,10 +486,9 @@ bool runCode(const std::string& code_in, uint64_t instructionCount)
 
     uc_hook trace;
     uc_hook_add(uc, &trace, UC_HOOK_CODE, (void*)hook, nullptr, 1, 0);
-    if (instructionCount == 0 || (stepClickedOnce)){
+    if (instructionCount != 1 || (stepClickedOnce)){
         err = uc_emu_start(uc, ENTRY_POINT_ADDRESS, ENTRY_POINT_ADDRESS + CODE_BUF_SIZE, 0, instructionCount);
         if (runningTempCode){
-            showRegs();
             uc_context_save(uc, context);
             updateRegs();
         }
@@ -507,11 +506,11 @@ bool runCode(const std::string& code_in, uint64_t instructionCount)
         }
     }
 
-    if (instructionCount == 0){
+    if (instructionCount != 1){
         free(codeBuf);
         codeBuf = nullptr;
     }
-    else{
+    else {
         uc_context_save(uc, context);
 
         if (isFirstLineLabel){

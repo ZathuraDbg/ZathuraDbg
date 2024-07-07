@@ -7,7 +7,7 @@ bool lineNumbersShown = true;
 void setupEditor() {
     editor = new TextEditor();
     editor->SetLanguageDefinition(TextEditor::LanguageDefinitionId::Asmx86_64);
-    editor->SetPalette(TextEditor::PaletteId::Dark);
+    editor->SetPalette(TextEditor::PaletteId::Catppuccin);
     editor->SetShowWhitespacesEnabled(false);
     editor->SetReadOnlyEnabled(false);
     editor->SetTabSize(4);
