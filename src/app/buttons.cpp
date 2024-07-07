@@ -23,7 +23,8 @@ bool setupButtons() {
 
     if (ImGui::Button(ICON_CI_DEBUG_START, ImVec2(20, 20))){
         resetState();
-        fileRunTask(0);
+//      -1 = it will be computed later in the function below
+        fileRunTask(-1);
     }
 
     ImGui::SameLine();

@@ -1,3 +1,4 @@
+main:
     mov rax, 0x100
     mov rbx, 0x200
     add rbx, rax
@@ -17,4 +18,3 @@ zero_regs:
     mov rbx, rax 
     mov rcx, rbx
     mov rdx, rcx
-    hlt 

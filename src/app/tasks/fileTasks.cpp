@@ -57,6 +57,10 @@ void fileRunTask(uint64_t instructionCount){
 
         if (createStack(&uc)){
             std::string bytes = getBytes(selectedFile);
+            if (instructionCount == -1){
+                instructionCount = totalInstructions;
+            }
+
             if (!bytes.empty()){
                 if (!runCode(bytes, instructionCount)){
                     tinyfd_messageBox("Unicorn engine error!", "Unable to run the code, please try again or report the "

@@ -4,6 +4,7 @@
 
 ks_engine *ks = nullptr;
 uint64_t codeFinalLen = 0;
+uint64_t totalInstructions = 0;
 std::stringstream assembly;
 
 std::map<std::string, std::string> addressLineNoMap{};
@@ -68,8 +69,9 @@ void initInsSizeInfoMap(){
     std::string instructionStr;
 
     uint64_t lineNo = 1;
-    uint16_t index = 0;
+    uint16_t count = 0;
     uint64_t currentAddr = ENTRY_POINT_ADDRESS;
+    uint64_t insCount = 0;
 
     while (std::getline(assembly, instructionStr, '\n')) {
         if (instructionStr.contains(":")){
@@ -96,12 +98,13 @@ void initInsSizeInfoMap(){
 //       if it's valid instruction
         if (std::find(x86Instructions.begin(), x86Instructions.end(), instructionStr) != x86Instructions.end()){
             addressLineNoMap.insert({std::to_string(currentAddr), std::to_string(lineNo)});
-            currentAddr += instructionSizes[index];
-            index++;
+            currentAddr += instructionSizes[count];
+            count++;
         }
-            lineNo++;
-
+        lineNo++;
     }
+    totalInstructions = count;
+    LOG_DEBUG("Total instructions to execute: " << totalInstructions);
 }
 
 void updateInstructionSizes(const std::string& compiledAsm){
