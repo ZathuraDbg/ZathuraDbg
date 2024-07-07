@@ -7,12 +7,12 @@ tsl::ordered_map<std::string, std::string> registerValueMap = {{"RIP", "0x00"}, 
                                                                {"RSI", "0x00"}, {"RDI", "0x00"}, {"R8", "0x00"}, {"R9", "0x00"}, {"R10", "0x00"}, {"R11", "0x00"}, {"R12", "0x00"},
                                                                {"R13", "0x00"}, {"R14", "0x00"}, {"R15", "0x00"}, {"CS", "0x00"}, {"DS", "0x00"}, {"ES", "0x00"}, {"FS", "0x00"}, {"GS", "0x00"}, {"SS", "0x00"}};
 
-void updateRegs(){
+void updateRegs(bool useTempContext){
     std::stringstream hex;
     std::pair<bool, uint64_t> val;
 
     for (const auto& [name, value]: registerValueMap) {
-        val = getRegister(toLowerCase(name));
+        val = useTempContext ? getRegister(toLowerCase(name), true) : getRegister(toLowerCase(name));
         auto const [isRegisterValid, registerValue] = val;
 
         hex << "0x";
@@ -97,7 +97,12 @@ uint64_t hexConv(const std::string& val){
 
 
 void registerWindow() {
-    updateRegs();
+    if (tempContext!= nullptr){
+        updateRegs(true);
+    }
+    else{
+        updateRegs();
+    }
     auto io = ImGui::GetIO();
     ImGui::PushFont(io.Fonts->Fonts[3]);
 

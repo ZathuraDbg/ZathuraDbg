@@ -94,7 +94,7 @@ int main(int, char**)
     stackEditor.Cols = 8;
     stackEditor.WriteFn = &stackWriteFunc;
 
-    if (!createStack()){
+    if (!createStack(&uc)){
         tinyfd_messageBox("Keystone Engine error!", "Unable to initialize the stack. If the issue persists please create a GitHub issue and report your logs.", "ok", "error", 0);
         LOG_ERROR("Failed to create stack!");
         exit(-1);
