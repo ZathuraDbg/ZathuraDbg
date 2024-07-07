@@ -15,7 +15,7 @@
 
 extern bool createStack(void* unicornEngine);
 extern bool runTempCode(const std::string& codeIn);
-extern bool debugStopped;
+extern bool debugModeEnabled;
 std::pair<bool, uint64_t> getRegister(const std::string& name, bool useTempContext = false);
 extern uc_context *tempContext;
 extern bool ucInit(void* unicornEngine);
