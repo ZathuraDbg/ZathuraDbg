@@ -358,7 +358,7 @@ bool resetState(){
     }
 
     for (auto& reg: registerValueMap){
-        registerValueMap[reg.first] = "00";
+        registerValueMap[reg.first] = "0x00";
     }
 
     if (!createStack(&uc)){
@@ -456,13 +456,27 @@ void hook(uc_engine *uc, uint64_t address, uint32_t size, void *user_data){
     codeCurrentLen += size;
 }
 
+bool initRegistersToDefinedVals(){
+    uint64_t intVal;
+
+    for(auto&[name, value]: tempRegisterValueMap){
+        intVal = hexStrToInt(value);
+        auto err = uc_reg_write(uc, regNameToConstant(name), &intVal);
+
+        if (err){
+            LOG_ERROR("Unable to write defined value for the register" << name);
+        }
+    }
+    return true;
+}
+
 bool runCode(const std::string& code_in, uint64_t instructionCount)
 {
     LOG_DEBUG("Running code...");
-
     uc_err err;
     uint8_t* code;
 
+    initRegistersToDefinedVals();
     if (codeBuf == nullptr){
         codeBuf = (uint8_t*)malloc(CODE_BUF_SIZE);
         memset(codeBuf, 0, CODE_BUF_SIZE);
@@ -513,14 +527,14 @@ bool runCode(const std::string& code_in, uint64_t instructionCount)
     else {
         uc_context_save(uc, context);
 
-        if (isFirstLineLabel){
-            editor->HighlightDebugCurrentLine(1);
-            LOG_DEBUG("Highlight from runCode first line is label");
+        auto line = addressLineNoMap[std::to_string(ENTRY_POINT_ADDRESS)];
+        if (line.empty()){
+            line = "1";
         }
-        else{
-            editor->HighlightDebugCurrentLine(0);
-            LOG_DEBUG("Highlight from runCode first line is label");
-        }
+
+        auto val = stoi(line);
+        editor->HighlightDebugCurrentLine(val - 1);
+        LOG_DEBUG("Highlight from runCode first line is label");
         stepClickedOnce = true;
     }
 

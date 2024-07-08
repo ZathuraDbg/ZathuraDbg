@@ -6,6 +6,7 @@ bool stepClickedOnce = false;
 tsl::ordered_map<std::string, std::string> registerValueMap = {{"RIP", "0x00"}, {"RSP", "0x00"}, {"RBP", "0x00"},{"RAX", "0x00"}, {"RBX", "0x00"}, {"RCX", "0x00"}, {"RDX", "0x00"},
                                                                {"RSI", "0x00"}, {"RDI", "0x00"}, {"R8", "0x00"}, {"R9", "0x00"}, {"R10", "0x00"}, {"R11", "0x00"}, {"R12", "0x00"},
                                                                {"R13", "0x00"}, {"R14", "0x00"}, {"R15", "0x00"}, {"CS", "0x00"}, {"DS", "0x00"}, {"ES", "0x00"}, {"FS", "0x00"}, {"GS", "0x00"}, {"SS", "0x00"}};
+std::unordered_map<std::string, std::string> tempRegisterValueMap =  {};
 
 void updateRegs(bool useTempContext){
     std::stringstream hex;
@@ -59,7 +60,7 @@ std::vector<std::string> parseRegisters(std::string registerString){
     return registers;
 }
 
-static int TextInputCallback(ImGuiInputTextCallbackData* data) {
+static int checkHexCharsCallback(ImGuiInputTextCallbackData* data) {
     std::string input(data->Buf, data->BufTextLen);
     std::string filteredString;
 
@@ -77,7 +78,7 @@ static int TextInputCallback(ImGuiInputTextCallbackData* data) {
     return 0;
 }
 
-uint64_t hexConv(const std::string& val){
+uint64_t hexStrToInt(const std::string& val){
     uint64_t ret;
     bool exceptionFired = false;
     std::string exception;
@@ -97,12 +98,15 @@ uint64_t hexConv(const std::string& val){
 
 
 void registerWindow() {
-    if (tempContext!= nullptr){
-        updateRegs(true);
+    if (codeHasRun){
+        if (tempContext!= nullptr){
+            updateRegs(true);
+        }
+        else{
+            updateRegs();
+        }
     }
-    else{
-        updateRegs();
-    }
+
     auto io = ImGui::GetIO();
     ImGui::PushFont(io.Fonts->Fonts[3]);
 
@@ -116,7 +120,6 @@ void registerWindow() {
         int index = 0;
         for (auto it = registerValueMap.begin(); it != registerValueMap.end(); ++index) {
             ImGui::TableNextRow();
-
             ImGui::TableSetColumnIndex(0);
             float textHeight = ImGui::GetTextLineHeight();
             float frameHeight = ImGui::GetFrameHeight();
@@ -129,12 +132,11 @@ void registerWindow() {
             strncpy(value1, it->second.c_str(), sizeof(value1) - 1);
             value1[sizeof(value1) - 1] = '\0';
 
-
             ImGui::PushID(index * 2);
             ImGui::SetNextItemWidth(-FLT_MIN);
-            if (ImGui::InputText(("##value1" + std::to_string(index)).c_str(), value1, IM_ARRAYSIZE(value1), ImGuiInputTextFlags_CharsNoBlank, TextInputCallback)) {
-                if (codeHasRun && (strlen(value1) != 0)) {
-                    uint64_t temp = hexConv(value1);
+            if (ImGui::InputText(("##value1" + std::to_string(index)).c_str(), value1, IM_ARRAYSIZE(value1), ImGuiInputTextFlags_CharsNoBlank, checkHexCharsCallback)) {
+                if ((strlen(value1) != 0)) {
+                    uint64_t temp = hexStrToInt(value1);
 
                     if (strncmp(value1, "0x", 2) != 0) {
                         registerValueMap[it->first] = "0x";
@@ -145,8 +147,15 @@ void registerWindow() {
                     }
 
                     LOG_DEBUG("Register: " << it->first << "\n\tValue: " << value1 << "; after hexconv: " << temp);
-                    uc_reg_write(uc, regNameToConstant(it->first), &temp);
-                    uc_context_save(uc, context);
+
+                    if (codeHasRun)
+                    {
+                        uc_reg_write(uc, regNameToConstant(it->first), &temp);
+                        uc_context_save(uc, context);
+                    }
+                    else{
+                        tempRegisterValueMap[it->first] = value1;
+                    }
                 }
             }
             ImGui::PopID();
@@ -165,7 +174,7 @@ void registerWindow() {
             ImGui::PushID(index * 2 + 1);
             ImGui::SetNextItemWidth(-FLT_MIN);
             if (ImGui::InputText(("##value2" + std::to_string(index)).c_str(), value2, IM_ARRAYSIZE(value2), ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CharsUppercase | ImGuiInputTextFlags_CharsNoBlank)) {
-                if (codeHasRun && (strlen(value2) != 0)) {
+                if ((strlen(value2) != 0)) {
 
                 if (strncmp(value2, "0x", 2) != 0) {
                     registerValueMap[it->first] = "0x";
@@ -175,11 +184,17 @@ void registerWindow() {
                 }
 
                 uint64_t temp;
-                temp = hexConv(value2);
+                temp = hexStrToInt(value2);
 
                 LOG_DEBUG("Register: " << it->first << "; Value: " << value2 << "; after hexconv: " << temp);
-                uc_reg_write(uc, regNameToConstant(it->first), &temp);
-                uc_context_save(uc, context);
+                    if (codeHasRun)
+                    {
+                        uc_reg_write(uc, regNameToConstant(it->first), &temp);
+                        uc_context_save(uc, context);
+                    }
+                    else{
+                        tempRegisterValueMap[it->first] = value2;
+                    }
             }
         }
             ImGui::PopID();
