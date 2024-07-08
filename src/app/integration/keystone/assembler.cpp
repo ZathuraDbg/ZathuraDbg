@@ -93,6 +93,12 @@ void initInsSizeInfoMap(){
         }
 
         instructionStr = instructionStr.substr(0, instructionStr.find_first_of(' '));
+
+        if (instructionStr.contains(";")){
+            lineNo++;
+            continue;
+        }
+
         instructionStr = toUpperCase(instructionStr);
 
 //       if it's valid instruction
