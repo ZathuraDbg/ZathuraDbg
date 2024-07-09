@@ -29,7 +29,7 @@ static void SetupImGuiStyle()
     style.WindowMenuButtonPosition = ImGuiDir_Right;
     style.ChildRounding = 0.0f;
     style.ChildBorderSize = 1.0f;
-    style.PopupRounding = 8.0f;
+    style.PopupRounding = 5.0f;
     style.PopupBorderSize = 1.0f;
 //    style.FramePadding = ImVec2(5.0f, 3.400000095367432f);
 //    style.FrameRounding = 8.0f;

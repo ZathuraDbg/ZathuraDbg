@@ -29,7 +29,7 @@ public:
     };
     enum class PaletteId
 	{
-		Dark, Light, Mariana, RetroBlue
+		Dark, Light, Mariana, RetroBlue, Catppuccin
 	};
 	enum class LanguageDefinitionId
 	{
@@ -43,6 +43,8 @@ public:
     void HighlightDebugCurrentLine(int line);
     void HighlightBreakpoints(int line, bool ignoreHighlight = false);
     void RemoveHighlight(int line);
+    bool SelectLabelDefinition(bool useScreenPos = true);
+    std::string GetClipboardText() const;
     int mLineToHighlight = -1;
 
 	void RenderContextMenu();
@@ -170,6 +172,8 @@ private:
 		Max
 	};
 
+    std::map<std::string, int> labelLineNoMap;
+    size_t mLinesSize = 0;
 	// Represents a character coordinate from the user's point of view,
 	// i. e. consider an uniform grid (assuming fixed-width font) on the
 	// screen as it is rendered, and each cell has its own coordinate, starting from 0.
@@ -344,7 +348,6 @@ private:
 	};
 
 	std::string GetText(const Coordinates& aStart, const Coordinates& aEnd) const;
-	std::string GetClipboardText() const;
 
 	void SetCursorPosition(const Coordinates& aPosition, int aCursor = -1, bool aClearSelection = true);
 
@@ -375,6 +378,7 @@ private:
 	void SelectNextOccurrenceOf(const char* aText, int aTextSize, int aCursor = -1, bool aCaseSensitive = true);
 	void AddCursorForNextOccurrence(bool aCaseSensitive = true);
 	bool FindNextOccurrence(const char* aText, int aTextSize, const Coordinates& aFrom, Coordinates& outStart, Coordinates& outEnd, bool aCaseSensitive = true);
+    bool CreateLabelsVector();
 	bool FindMatchingBracket(int aLine, int aCharIndex, Coordinates& out);
 	void ChangeCurrentLinesIndentation(bool aIncrease);
 	void MoveUpCurrentLines();
@@ -482,6 +486,7 @@ private:
 	static const Palette& GetMarianaPalette();
 	static const Palette& GetLightPalette();
 	static const Palette& GetRetroBluePalette();
+    static const Palette& GetCatppuccin();
 	static const std::unordered_map<char, char> OPEN_TO_CLOSE_CHAR;
 	static const std::unordered_map<char, char> CLOSE_TO_OPEN_CHAR;
 	static PaletteId defaultPalette;

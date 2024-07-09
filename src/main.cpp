@@ -88,7 +88,7 @@ int main(int, char**)
 
     SetupImGuiStyle();
     setupEditor();
-
+//    ImGui::PopFont();
     memoryEditorWindow.WriteFn = &hexWriteFunc;
     stackEditor.OptShowAscii = false;
     stackEditor.Cols = 8;

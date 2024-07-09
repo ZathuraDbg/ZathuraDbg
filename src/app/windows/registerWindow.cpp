@@ -214,7 +214,7 @@ void registerWindow() {
     char input[500] = {};
 
     ImGui::PushID(&input);
-    ImGui::Text("Add registers: ");
+    ImGui::Text("Toggle registers: ");
     ImGui::SameLine();
 
     if (ImGui::InputText("##registerInput", input, IM_ARRAYSIZE(input), ImGuiInputTextFlags_EnterReturnsTrue)) {
@@ -222,16 +222,29 @@ void registerWindow() {
         LOG_DEBUG("Request to add the register: " << input);
     }
 
-    std::vector<std::string> regsVec = {};
     if (!registerString.empty()) {
         auto regs = parseRegisters(registerString);
         for (auto& reg : regs) {
             auto regInfo = getRegister(reg);
             if (regInfo.first) {
-                regsVec = parseRegisters(reg);
+                auto regValue= std::to_string(regInfo.second);
                 LOG_DEBUG("Adding the register " << reg);
                 reg = toUpperCase(reg);
-                registerValueMap[reg] = std::to_string(regInfo.second);
+
+                if (x86RegInfoMap.count(reg) == 0){
+                    continue;
+                }
+
+//              remove the register if it already exists
+                if (registerValueMap.count(reg) != 0){
+                    registerValueMap.erase(reg);
+                    continue;
+                }
+
+                if (regValue == "0"){
+                    regValue = "0x00";
+                }
+                registerValueMap[reg] = regValue;
             } else {
                 LOG_ERROR("Unable to get the register: " << reg);
             }
