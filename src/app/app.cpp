@@ -37,6 +37,33 @@ void LoadIniFile() {
     LOG_DEBUG("Loaded config file from " << dir.string());
 }
 
+std::string getDataToCopy(std::stringstream &selectedAsmText, bool asArray) {
+    std::string bytes = getBytes(selectedAsmText);
+    std::string dataToCopy;
+    std::stringstream hexStream;
+    hexStream << std::hex << std::uppercase << std::setfill('0');
+
+    if (asArray){
+        if (!bytes.empty()) {
+
+            hexStream << "{";
+            for (size_t i = 0; i < bytes.length(); ++i) {
+                hexStream << "0x" << std::setw(2) << (static_cast<unsigned int>(bytes[i]) & 0xFF);
+                hexStream << ", ";
+            }
+            dataToCopy = hexStream.str().erase(hexStream.str().length() - 2, 2);
+            dataToCopy.append("}");
+        }
+    }
+    else{
+        for (size_t i = 0; i < bytes.length(); ++i) {
+            hexStream << "\\x" << std::setw(2) << (static_cast<unsigned int>(bytes[i]) & 0xFF);
+            dataToCopy = hexStream.str();
+        }
+    }
+
+    return dataToCopy;
+}
 void mainWindow() {
     ImGuiIO &io = ImGui::GetIO();
 
@@ -50,10 +77,11 @@ void mainWindow() {
     ImGui::Begin("Code", &k, ImGuiWindowFlags_NoCollapse);
     setupButtons();
 
-    ImGui::PushFont(io.Fonts->Fonts[JetBrainsMono20]);
+    ImGui::PushFont(io.Fonts->Fonts[JetBrainsMono24]);
     editor->Render("Editor");
     ImGui::PopFont();
-
+    ImGui::GetStyle().Colors[ImGuiCol_PopupBg] = ImColor(0x1e, 0x20, 0x30);
+    ImGui::GetStyle().Colors[ImGuiCol_HeaderHovered] = ImColor(0x18, 0x19, 0x26);
     ImGui::PushFont(io.Fonts->Fonts[RubikRegular16]);
     if (ImGui::BeginPopupContextItem("TextEditorContextMenu")) {
         if (ImGui::MenuItem("Copy", "Ctrl + C", false)) // Enable only if there is a selection
@@ -131,17 +159,42 @@ void mainWindow() {
             }
         }
 
+        ImGui::Separator();
+
+        if (ImGui::BeginMenu("Copy as")) {
+            std::stringstream selectedAsmText(editor->GetSelectedText());
+            if (ImGui::MenuItem("C array")){
+                if (!selectedAsmText.str().empty()) {
+                    ImGui::SetClipboardText(getDataToCopy(selectedAsmText, true).c_str());
+                }
+            }
+
+            if (ImGui::MenuItem("Hex")){
+                std::stringstream selectedAsmText(editor->GetSelectedText());
+                if (!selectedAsmText.str().empty()) {
+                    ImGui::SetClipboardText(getDataToCopy(selectedAsmText, false).c_str());
+                }
+            }
+            ImGui::EndMenu();
+        }
+
+        ImGui::Separator();
         if (!debugModeEnabled){
             if (ImGui::MenuItem("Run selected code", nullptr, false)){
-                std::stringstream selectedAssembly(editor->GetSelectedText());
-                if (!selectedAssembly.str().empty()) {
-                    std::string bytes = getBytes(selectedAssembly);
+                std::stringstream selectedAsmText(editor->GetSelectedText());
+                if (!selectedAsmText.str().empty()) {
+                    std::string bytes = getBytes(selectedAsmText);
                     if (!bytes.empty()) {
                         runTempCode(bytes);
                     }
                 }
             }
         }
+
+        if (ImGui::MenuItem("Go to definition")){
+            editor->SelectLabelDefinition(false);
+        }
+
         ImGui::EndPopup();
     }
     ImGui::PopFont();

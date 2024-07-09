@@ -29,6 +29,7 @@ ImGuiIO& setupIO(){
     io.Fonts->AddFontFromFileTTF( "../assets/codicon.ttf", iconFontSize, &icons_config, icons_ranges );
 
     io.Fonts->AddFontFromFileTTF("../assets/Satoshi-Regular.ttf", 16.0f);
+    io.Fonts->AddFontFromFileTTF("../assets/JetBrainsMono.ttf", 24.0f);
     return io;
 }
 

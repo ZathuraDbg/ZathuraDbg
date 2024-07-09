@@ -21,7 +21,6 @@ bool debugModeEnabled = false;
 bool continueOverBreakpoint = false;
 bool runningTempCode = false;
 
-std::unordered_map <std::string, uint64_t> labelLineNoMap = {};
 std::vector<int> breakpointLines = {};
 
 int getCurrentLine(){

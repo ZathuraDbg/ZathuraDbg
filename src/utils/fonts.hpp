@@ -21,7 +21,8 @@ enum fonts{
     RubikRegular16,
     SatoshiBold18,
     SatoshiMedium18,
-    SatoshiRegular16
+    SatoshiRegular16,
+    JetBrainsMono24
 };
 extern ImGuiIO& setupIO();
 
