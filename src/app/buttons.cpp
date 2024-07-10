@@ -54,7 +54,6 @@ bool setupButtons() {
             stepCode(0);
         }
 
-
         ImGui::SameLine();
         ImGui::Separator();
         ImGui::SameLine();
@@ -80,7 +79,9 @@ bool setupButtons() {
         ImGui::SameLine();
 
         if (ImGui::Button(ICON_CI_DEBUG_STEP_INTO, ImVec2(20, 20))){
-            stepCode();
+            stepIn = true;
+            stepCode(1);
+            stepIn = false;
         }
 
         ImGui::SameLine();

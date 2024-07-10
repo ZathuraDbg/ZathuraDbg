@@ -16,10 +16,14 @@ uc_context *tempContext = nullptr;
 
 uint64_t codeCurrentLen = 0;
 uint64_t lineNo = 1;
+uint64_t expectedIP = 0;
 
 bool debugModeEnabled = false;
 bool continueOverBreakpoint = false;
 bool runningTempCode = false;
+bool stepIn = false;
+bool stepOver = false;
+bool stepContinue = false;
 
 std::vector<int> breakpointLines = {};
 
@@ -314,7 +318,6 @@ bool resetState(){
     stepClickedOnce = false;
     continueOverBreakpoint = false;
 
-
     codeCurrentLen = 0;
     codeFinalLen = 0;
     lineNo = 0;
@@ -326,7 +329,6 @@ bool resetState(){
     editor->ClearExtraCursors();
     editor->ClearSelections();
     editor->HighlightDebugCurrentLine(-1);
-    breakpointLines.clear();
 
     if (uc != nullptr){
         if (tempUC == uc){
@@ -404,10 +406,13 @@ bool stepCode(size_t instructionCount){
 
         uc_context_save(uc, context);
         uc_reg_read(uc, UC_X86_REG_RIP, &rip);
+        if (rip != expectedIP){
+            expectedIP = rip;
+        }
         std::string str =  addressLineNoMap[std::to_string(rip)];
         if (!str.empty()){
             ret = std::stoi(str);
-            LOG_DEBUG("Highlight from block 3 - stepCode");
+            LOG_DEBUG("Highlight from block 3 - stepCode : line: " << ret);
             editor->HighlightDebugCurrentLine(ret - 1);
             lineNo = ret;
         }
@@ -425,8 +430,27 @@ bool stepCode(size_t instructionCount){
 
 void hook(uc_engine *uc, uint64_t address, uint32_t size, void *user_data){
     LOG_DEBUG("Hook called!");
+
     std::string str = addressLineNoMap[std::to_string(address)];
     int lineNumber;
+    int tempBPLineNum = -1;
+    uint64_t rip;
+
+    if (expectedIP == 0){
+        expectedIP = address;
+    }
+
+    uc_reg_read(uc, UC_X86_REG_RIP, &rip);
+    if (rip != expectedIP){
+        if (stepIn){
+            std::string bp = addressLineNoMap[std::to_string(rip)];
+            tempBPLineNum = std::stoi(bp);
+            if (!bp.empty()){
+                breakpointLines.push_back(tempBPLineNum);
+            }
+        }
+        expectedIP = rip;
+    }
 
     if (!str.empty()){
         lineNumber = stoi(str);
@@ -453,6 +477,11 @@ void hook(uc_engine *uc, uint64_t address, uint32_t size, void *user_data){
   }
 
     codeCurrentLen += size;
+    expectedIP += size;
+
+    if (tempBPLineNum != -1){
+        breakpointLines.erase(std::find(breakpointLines.begin(), breakpointLines.end(), tempBPLineNum));
+    }
 }
 
 bool initRegistersToDefinedVals(){

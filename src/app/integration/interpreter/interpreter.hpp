@@ -33,6 +33,10 @@ extern bool stepCode(size_t instructionCount = 1);
 extern std::vector<int> breakpointLines;
 extern bool resetState();
 extern bool continueOverBreakpoint;
+extern bool stepIn;
+extern bool stepOver;
+extern bool stepContinue;
+
 extern std::string toLowerCase(const std::string& input);
 extern std::string toUpperCase(const std::string& input);
 extern uint64_t codeCurrentLen;

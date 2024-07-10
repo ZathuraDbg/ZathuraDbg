@@ -9,6 +9,7 @@ main:
 subtract_hundred:
     sub rdi, 0x100
     mov rax, rdi
+    mov rbx, 0x12
     ret
 
 nextblock:
