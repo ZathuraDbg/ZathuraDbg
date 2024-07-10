@@ -440,48 +440,52 @@ void hook(uc_engine *uc, uint64_t address, uint32_t size, void *user_data){
         expectedIP = address;
     }
 
-    uc_reg_read(uc, UC_X86_REG_RIP, &rip);
-    if (rip != expectedIP){
-        if (stepIn){
-            std::string bp = addressLineNoMap[std::to_string(rip)];
-            tempBPLineNum = std::stoi(bp);
-            if (!bp.empty()){
-                breakpointLines.push_back(tempBPLineNum);
+    if (debugModeEnabled){
+        uc_reg_read(uc, UC_X86_REG_RIP, &rip);
+        if (rip != expectedIP){
+            if (stepIn){
+                std::string bp = addressLineNoMap[std::to_string(rip)];
+                tempBPLineNum = std::stoi(bp);
+                if (!bp.empty()){
+                    breakpointLines.push_back(tempBPLineNum);
+                }
             }
+            expectedIP = rip;
         }
-        expectedIP = rip;
-    }
 
-    if (!str.empty()){
-        lineNumber = stoi(str);
-    }
-    else{
-        lineNumber = -1;
-    }
-
-    LOG_DEBUG("At line number: " << lineNumber);
-
-    if (std::find(breakpointLines.begin(), breakpointLines.end(), lineNumber) != breakpointLines.end()){
-       editor->HighlightDebugCurrentLine(lineNumber - 1);
-       LOG_DEBUG("Highlight from hook - breakpoint found at lineNo " << lineNumber);
-        if (!continueOverBreakpoint){
-            LOG_DEBUG("Breakpoint hit!");
-            uc_emu_stop(uc);
-            uc_context_save(uc, context);
-            continueOverBreakpoint = true;
-            return;
+        if (!str.empty()){
+            lineNumber = stoi(str);
         }
         else{
-            continueOverBreakpoint = false;
+            lineNumber = -1;
         }
-  }
+
+        LOG_DEBUG("At line number: " << lineNumber);
+
+        if (std::find(breakpointLines.begin(), breakpointLines.end(), lineNumber) != breakpointLines.end()){
+            editor->HighlightDebugCurrentLine(lineNumber - 1);
+                    LOG_DEBUG("Highlight from hook - breakpoint found at lineNo " << lineNumber);
+            if (!continueOverBreakpoint){
+                        LOG_DEBUG("Breakpoint hit!");
+                uc_emu_stop(uc);
+                uc_context_save(uc, context);
+                continueOverBreakpoint = true;
+                return;
+            }
+            else{
+                continueOverBreakpoint = false;
+            }
+        }
+
+        if (tempBPLineNum != -1){
+            breakpointLines.erase(std::find(breakpointLines.begin(), breakpointLines.end(), tempBPLineNum));
+        }
+    }
 
     codeCurrentLen += size;
     expectedIP += size;
 
-    if (tempBPLineNum != -1){
-        breakpointLines.erase(std::find(breakpointLines.begin(), breakpointLines.end(), tempBPLineNum));
-    }
+
 }
 
 bool initRegistersToDefinedVals(){
