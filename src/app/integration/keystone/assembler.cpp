@@ -6,10 +6,10 @@ ks_engine *ks = nullptr;
 uint64_t codeFinalLen = 0;
 uint64_t totalInstructions = 0;
 std::stringstream assembly;
+std::vector<std::string> labels;
 
 std::map<std::string, std::string> addressLineNoMap{};
 std::vector<uint16_t> instructionSizes{};
-bool isFirstLineLabel = false;
 
 std::pair<std::string, std::size_t> assemble(const std::string& assemblyString, const keystoneSettings& ksSettings) {
     LOG_DEBUG("Assembling:\n" << assemblyString);
@@ -76,8 +76,15 @@ void initInsSizeInfoMap(){
     while (std::getline(assembly, instructionStr, '\n')) {
         if (instructionStr.contains(":")){
             instructionStr.erase(std::remove_if(instructionStr.begin(), instructionStr.end(), ::isspace), instructionStr.end());
-            if (instructionStr.ends_with(":") && lineNo == 1){
-                isFirstLineLabel = true;
+            if (instructionStr.ends_with(":")){
+                if (instructionStr.contains(';')){
+                    if (instructionStr.find_first_of(';') > instructionStr.find_last_of(':')){
+                        labels.push_back(instructionStr.substr(0, instructionStr.find_first_of(':')));
+                    }
+                }
+                else{
+                    labels.push_back(instructionStr.substr(0, instructionStr.find_first_of(':')));
+                }
             }
         }
         else if (instructionStr.empty()){
