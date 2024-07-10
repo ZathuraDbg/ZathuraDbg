@@ -64,13 +64,10 @@ std::string getDataToCopy(std::stringstream &selectedAsmText, bool asArray) {
 
     return dataToCopy;
 }
+
 void pushFont(){
     ImGuiIO &io = ImGui::GetIO();
     ImGui::PushFont(io.Fonts->Fonts[RubikRegular16]);
-}
-
-void popFont(){
-    ImGui::PopFont();
 }
 
 void mainWindow() {
@@ -86,14 +83,19 @@ void mainWindow() {
     ImGui::Begin("Code", &k, ImGuiWindowFlags_NoCollapse);
     setupButtons();
 
+    if (!editor->FontInit){
+        editor->FontInit = pushFont;
+        editor->CreateLabelLineMap = createLabelLineMapCallback;
+        editor->ParseStrIntoCoordinates = parseStrIntoCoordinates;
+        editor->CompletionCallback = reinterpret_cast<ImGuiInputTextCallback (*)(
+                ImGuiInputTextCallbackData *)>(labelCompletionCallback);
+    }
+
     ImGui::PushFont(io.Fonts->Fonts[JetBrainsMono24]);
-    editor->FontInit = pushFont;
-    editor->FontPop = popFont;
-    editor->CompletionCallback = reinterpret_cast<ImGuiInputTextCallback (*)(
-            ImGuiInputTextCallbackData *)>(labelCompletionCallback);
     editor->Render("Editor");
     ImGui::PopFont();
     ImGui::GetStyle().Colors[ImGuiCol_PopupBg] = ImColor(0x1e, 0x20, 0x30);
+
     ImGui::GetStyle().Colors[ImGuiCol_HeaderHovered] = ImColor(0x18, 0x19, 0x26);
     ImGui::PushFont(io.Fonts->Fonts[RubikRegular16]);
     if (ImGui::BeginPopupContextItem("TextEditorContextMenu")) {

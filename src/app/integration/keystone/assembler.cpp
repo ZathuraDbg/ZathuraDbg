@@ -9,6 +9,7 @@ std::stringstream assembly;
 std::vector<std::string> labels;
 
 std::map<std::string, std::string> addressLineNoMap{};
+std::map<std::string, int> labelLineNoMapInternal{};
 std::vector<uint16_t> instructionSizes{};
 
 std::pair<std::string, std::size_t> assemble(const std::string& assemblyString, const keystoneSettings& ksSettings) {
@@ -79,10 +80,12 @@ void initInsSizeInfoMap(){
             if (instructionStr.ends_with(":")){
                 if (instructionStr.contains(';')){
                     if (instructionStr.find_first_of(';') > instructionStr.find_last_of(':')){
+                        labelLineNoMapInternal.insert({instructionStr.substr(0, instructionStr.find_first_of(':')), lineNo});
                         labels.push_back(instructionStr.substr(0, instructionStr.find_first_of(':')));
                     }
                 }
                 else{
+                    labelLineNoMapInternal.insert({instructionStr.substr(0, instructionStr.find_first_of(':')), lineNo});
                     labels.push_back(instructionStr.substr(0, instructionStr.find_first_of(':')));
                 }
             }
