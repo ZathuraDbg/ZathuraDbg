@@ -2,11 +2,18 @@
 #include <cstring>
 bool codeHasRun = false;
 bool stepClickedOnce = false;
-
-tsl::ordered_map<std::string, std::string> registerValueMap = {{"RIP", "0x00"}, {"RSP", "0x00"}, {"RBP", "0x00"},{"RAX", "0x00"}, {"RBX", "0x00"}, {"RCX", "0x00"}, {"RDX", "0x00"},
-                                                               {"RSI", "0x00"}, {"RDI", "0x00"}, {"R8", "0x00"}, {"R9", "0x00"}, {"R10", "0x00"}, {"R11", "0x00"}, {"R12", "0x00"},
-                                                               {"R13", "0x00"}, {"R14", "0x00"}, {"R15", "0x00"}, {"CS", "0x00"}, {"DS", "0x00"}, {"ES", "0x00"}, {"FS", "0x00"}, {"GS", "0x00"}, {"SS", "0x00"}};
+std::vector<std::string> defaultShownRegs = {"RIP", "RSP", "RBP", "RAX", "RBX", "RCX", "RDX", "RSI", "RDI", "R8", "R9", "R10", "R11", "R12", "R13", "R14", "R15", "CS", "DS", "ES", "FS", "GS", "SS"};
+tsl::ordered_map<std::string, std::string> registerValueMap{};
+//= {{"RIP", "0x00"}, {"RSP", "0x00"}, {"RBP", "0x00"},{"RAX", "0x00"}, {"RBX", "0x00"}, {"RCX", "0x00"}, {"RDX", "0x00"},
+//                                                               {"RSI", "0x00"}, {"RDI", "0x00"}, {"R8", "0x00"}, {"R9", "0x00"}, {"R10", "0x00"}, {"R11", "0x00"}, {"R12", "0x00"},
+//                                                               {"R13", "0x00"}, {"R14", "0x00"}, {"R15", "0x00"}, {"CS", "0x00"}, {"DS", "0x00"}, {"ES", "0x00"}, {"FS", "0x00"}, {"GS", "0x00"}, {"SS", "0x00"}};
 std::unordered_map<std::string, std::string> tempRegisterValueMap =  {};
+
+void initDefaultRegs(){
+    for (auto& reg: defaultShownRegs){
+        registerValueMap[reg] = "0x00";
+    }
+}
 
 void updateRegs(bool useTempContext){
     std::stringstream hex;
@@ -105,6 +112,10 @@ void registerWindow() {
         else{
             updateRegs();
         }
+    }
+
+    if (registerValueMap.empty()){
+        initDefaultRegs();
     }
 
     auto io = ImGui::GetIO();
