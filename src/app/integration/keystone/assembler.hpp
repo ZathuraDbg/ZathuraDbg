@@ -32,6 +32,7 @@ typedef struct{
 
 extern uint64_t totalInstructions;
 extern std::map<std::string, std::string> addressLineNoMap;
+extern std::map<std::string, int> labelLineNoMapInternal;
 extern std::vector<uint16_t> instructionSizes;
 extern std::stringstream assembly;
 extern void initInsSizeInfoMap();

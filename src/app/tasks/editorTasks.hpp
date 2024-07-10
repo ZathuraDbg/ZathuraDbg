@@ -7,4 +7,6 @@ extern TextEditor* editor;
 extern bool writeEditorToFile(const std::string& filePath);
 extern bool readFileIntoEditor(const std::string& filePath);
 extern int labelCompletionCallback(ImGuiInputTextCallbackData* data);
+extern void createLabelLineMapCallback(std::map<std::string, int>& labelVector);
+extern std::pair<int, int> parseStrIntoCoordinates(const std::string& popupInput);
 #endif //ZATHURA_UI_EDITORTASKS_HPP
