@@ -64,6 +64,15 @@ std::string getDataToCopy(std::stringstream &selectedAsmText, bool asArray) {
 
     return dataToCopy;
 }
+void pushFont(){
+    ImGuiIO &io = ImGui::GetIO();
+    ImGui::PushFont(io.Fonts->Fonts[RubikRegular16]);
+}
+
+void popFont(){
+    ImGui::PopFont();
+}
+
 void mainWindow() {
     ImGuiIO &io = ImGui::GetIO();
 
@@ -78,6 +87,10 @@ void mainWindow() {
     setupButtons();
 
     ImGui::PushFont(io.Fonts->Fonts[JetBrainsMono24]);
+    editor->FontInit = pushFont;
+    editor->FontPop = popFont;
+    editor->CompletionCallback = reinterpret_cast<ImGuiInputTextCallback (*)(
+            ImGuiInputTextCallbackData *)>(labelCompletionCallback);
     editor->Render("Editor");
     ImGui::PopFont();
     ImGui::GetStyle().Colors[ImGuiCol_PopupBg] = ImColor(0x1e, 0x20, 0x30);
