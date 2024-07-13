@@ -67,7 +67,7 @@ bool setupButtons() {
             std::string str = addressLineNoMap[std::to_string(rip)];
 
             if (!str.empty()){
-                lineNo = std::stoi(str);
+                lineNo = std::atoi(str.c_str());
                 breakpointLines.push_back(lineNo + 1);
                 stepCode(0);
                 continueOverBreakpoint = true;
