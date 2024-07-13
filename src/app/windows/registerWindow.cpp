@@ -67,39 +67,46 @@ std::vector<std::string> parseRegisters(std::string registerString){
     return registers;
 }
 
-static int checkHexCharsCallback(ImGuiInputTextCallbackData* data) {
+int checkHexCharsCallback(ImGuiInputTextCallbackData* data) {
+    if (data->BufTextLen < 2){
+        return 0;
+    }
+
     std::string input(data->Buf, data->BufTextLen);
     std::string filteredString;
 
-    if (input.starts_with("0x")){
+    int i = 0;
+
+    if (toLowerCase(input).starts_with("0x")){
         filteredString += "0x";
+        i = 2;
+    }
+    else{
+        input = "0x" + input;
+        filteredString += "0x";
+        i = 2;
     }
 
-    for (int i = 2; i < input.length(); i++){
+    for (i; i < input.length(); i++){
         if ((input[i] >= '0' && input[i] <= '9') || (input[i] >= 'A' && input[i] <= 'F') || (input[i] >= 'a' && input[i] <= 'f')) {
             filteredString += input[i];
         }
+        else{
+            filteredString += ' ';
+        }
     }
 
-    strncpy(data->Buf, filteredString.c_str(), filteredString.length());
+    filteredString.erase(std::remove(filteredString.begin(), filteredString.end(), ' '), filteredString.end());
+    data->DeleteChars(0, data->BufTextLen);
+    data->InsertChars(0, filteredString.c_str());
+    data->BufTextLen = filteredString.length();
+    data->CursorPos = data->SelectionStart = data->SelectionEnd = filteredString.length();
     return 0;
 }
 
 uint64_t hexStrToInt(const std::string& val){
     uint64_t ret;
-    bool exceptionFired = false;
-    std::string exception;
-
-    try {
-        ret = std::stoul(val, nullptr, 16);
-    }
-    catch (const std::exception& ex){
-        exceptionFired = true;
-        exception = ex.what();
-        LOG_ERROR("Exception during stoi(): " << exception);
-        return 0;
-    }
-
+    ret = std::strtoul(val.c_str(), nullptr, 16);
     return ret;
 };
 

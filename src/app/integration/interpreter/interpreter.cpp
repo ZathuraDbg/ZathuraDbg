@@ -43,7 +43,7 @@ int getCurrentLine(){
 
     auto lineNumber= addressLineNoMap[std::to_string(instructionPointer)];
     if (!lineNumber.empty()){
-        return std::stoi(lineNumber);
+        return std::atoi(lineNumber.c_str());
     }
 
     return -1;
@@ -411,7 +411,7 @@ bool stepCode(size_t instructionCount){
         }
         std::string str =  addressLineNoMap[std::to_string(rip)];
         if (!str.empty()){
-            ret = std::stoi(str);
+            ret = std::atoi(str.c_str());
             LOG_DEBUG("Highlight from block 3 - stepCode : line: " << ret);
             editor->HighlightDebugCurrentLine(ret - 1);
             lineNo = ret;
@@ -445,7 +445,7 @@ void hook(uc_engine *uc, uint64_t address, uint32_t size, void *user_data){
         if (rip != expectedIP){
             if (stepIn){
                 std::string bp = addressLineNoMap[std::to_string(rip)];
-                tempBPLineNum = std::stoi(bp);
+                tempBPLineNum = std::atoi(bp.c_str());
                 if (!bp.empty()){
                     breakpointLines.push_back(tempBPLineNum);
                 }
@@ -464,9 +464,9 @@ void hook(uc_engine *uc, uint64_t address, uint32_t size, void *user_data){
 
         if (std::find(breakpointLines.begin(), breakpointLines.end(), lineNumber) != breakpointLines.end()){
             editor->HighlightDebugCurrentLine(lineNumber - 1);
-                    LOG_DEBUG("Highlight from hook - breakpoint found at lineNo " << lineNumber);
+            LOG_DEBUG("Highlight from hook - breakpoint found at lineNo " << lineNumber);
             if (!continueOverBreakpoint){
-                        LOG_DEBUG("Breakpoint hit!");
+                LOG_DEBUG("Breakpoint hit!");
                 uc_emu_stop(uc);
                 uc_context_save(uc, context);
                 continueOverBreakpoint = true;

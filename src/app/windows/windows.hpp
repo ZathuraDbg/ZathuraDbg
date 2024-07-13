@@ -1,11 +1,18 @@
 #ifndef windows_hpp
 #define windows_hpp
+#define IMGUI_DEFINE_MATH_OPERATORS
 #include "../tasks/editorTasks.hpp"
 #include "../../../vendor/ordered-map/include/tsl/ordered_map.h"
 #include "../../../vendor/log/clue.hpp"
 #include "../integration/interpreter/interpreter.hpp"
 #include "../../../vendor/imgui/misc/cpp/imgui_stdlib.h"
 #include <list>
+
+struct newMemEditWindowsInfo{
+    MemoryEditor memEditor;
+    uint64_t address{};
+    size_t size{};
+};
 
 extern tsl::ordered_map<std::string, std::string> registerValueMap;
 extern std::unordered_map<std::string, std::string> tempRegisterValueMap;
@@ -22,5 +29,5 @@ extern MemoryEditor memoryEditorWindow;
 extern void stackWriteFunc(ImU8* data, size_t off, ImU8 d);
 extern void hexWriteFunc(ImU8* data, size_t off, ImU8 d);
 extern MemoryEditor stackEditor;
-extern bool windowCreated;
+extern int checkHexCharsCallback(ImGuiInputTextCallbackData* data);
 #endif

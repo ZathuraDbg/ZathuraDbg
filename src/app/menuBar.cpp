@@ -119,7 +119,7 @@ void appMenuBar()
         uc_reg_read(uc, regNameToConstant("RIP"), &rip);
         std::string str =  addressLineNoMap[std::to_string(rip)];
         if (!str.empty()) {
-            lineNumber = std::stoi(str);
+            lineNumber = std::atoi(str.c_str());
             editor->HighlightDebugCurrentLine(lineNumber - 1);
         }
     }
