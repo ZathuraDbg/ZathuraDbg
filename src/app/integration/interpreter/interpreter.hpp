@@ -10,9 +10,9 @@
 #include <iomanip>
 #include "../keystone/assembler.hpp"
 #include "../../windows/windows.hpp"
+#include "../../arch/arch.hpp"
 #include "../../arch/x86.hpp"
 #include <array>
-
 extern bool createStack(void* unicornEngine);
 extern bool runTempCode(const std::string& codeIn);
 extern bool debugModeEnabled;
@@ -20,7 +20,6 @@ std::pair<bool, uint64_t> getRegister(const std::string& name, bool useTempConte
 extern uc_context *tempContext;
 extern bool ucInit(void* unicornEngine);
 extern uc_engine *uc;
-extern int regNameToConstant(std::string name);
 extern bool runCode(const std::string& code_in, uint64_t instructionCount);
 extern void showRegs();
 extern uintptr_t ENTRY_POINT_ADDRESS;

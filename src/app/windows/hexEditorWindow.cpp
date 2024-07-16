@@ -15,15 +15,6 @@ void hexWriteFunc(ImU8* data, size_t off, ImU8 d){
     }
 }
 
-int checkCB(ImGuiInputTextCallbackData* data) {
-    std::cout << data->BufTextLen << std::endl;
-    if (data->BufTextLen){
-        std::string input(data->Buf, data->BufTextLen);
-        std::cout << input << std::endl;
-    }
-    return 0;
-}
-
 std::pair<size_t, size_t> newWindowInfoFunc() {
     ImGui::OpenPopup("InputPopup");
     std::pair<size_t, size_t> windowInfo;
@@ -173,7 +164,6 @@ void hexEditorWindow(){
 
             uc_err err = uc_mem_read(uc, info.address, newMemData, info.size);
             if (err){
-//                std::cout << "Unable to read from the address" << std::endl;
             }
 
             info.memEditor.DrawWindow(("Memory Editor " + std::to_string(++i)).c_str(), (void*)newMemData, info.size);
