@@ -67,7 +67,7 @@ std::string getDataToCopy(std::stringstream &selectedAsmText, bool asArray) {
 
 void pushFont(){
     ImGuiIO &io = ImGui::GetIO();
-    ImGui::PushFont(io.Fonts->Fonts[RubikRegular16]);
+    ImGui::PushFont(io.Fonts->Fonts[SatoshiBold18]);
 }
 
 void mainWindow() {

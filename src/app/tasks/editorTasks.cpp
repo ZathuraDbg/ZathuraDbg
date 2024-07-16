@@ -15,7 +15,7 @@ bool writeEditorToFile(const std::string& filePath) {
     }
 
     tinyfd_messageBox("File write error!", ("Unable to write to the file " + filePath + "!\nPlease check if the "
-                                                                                        "file is not open in another program and/or you have the permissions to read it.").c_str(), "ok", "error", 0);
+                                                        "file is not open in another program and/or you have the permissions to read it.").c_str(), "ok", "error", 0);
     return false;
 }
 

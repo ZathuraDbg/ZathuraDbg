@@ -86,6 +86,7 @@ struct MemoryEditor
     bool            OptShowAscii;                               // = true   // display ASCII representation on the right side.
     bool            OptGreyOutZeroes;                           // = true   // display null/zero bytes using the TextDisabled color.
     bool            OptUpperCaseHex;                            // = true   // display hexadecimal values as "FF" instead of "ff".
+    bool            OptShowAddWindowButton;
     int             OptMidColsCount;                            // = 8      // set to 0 to disable extra spacing between every mid-cols.
     int             OptAddrDigitsCount;                         // = 0      // number of addr digits to display (default calculated based on maximum displayed addr).
     float           OptFooterExtraHeight;                       // = 0      // space to reserve at the bottom of the widget to add custom widgets
@@ -93,6 +94,7 @@ struct MemoryEditor
     ImU8            (*ReadFn)(const ImU8* data, size_t off);    // = 0      // optional handler to read bytes.
     void            (*WriteFn)(ImU8* data, size_t off, ImU8 d); // = 0      // optional handler to write bytes.
     bool            (*HighlightFn)(const ImU8* data, size_t off);//= 0      // optional handler to return Highlight property (to support non-contiguous highlighting).
+    bool            (*newWindowFn)();
 
     // [Internal State]
     bool            ContentsWidthChanged;
@@ -105,6 +107,7 @@ struct MemoryEditor
     size_t          HighlightMin, HighlightMax;
     int             PreviewEndianness;
     ImGuiDataType   PreviewDataType;
+    bool            Keep;
 
     MemoryEditor()
     {
@@ -125,7 +128,7 @@ struct MemoryEditor
         ReadFn = NULL;
         WriteFn = NULL;
         HighlightFn = NULL;
-
+        Keep = false;
         // State/Internals
         ContentsWidthChanged = false;
         DataPreviewAddr = DataEditingAddr = (size_t)-1;
@@ -136,6 +139,7 @@ struct MemoryEditor
         HighlightMin = HighlightMax = (size_t)-1;
         PreviewEndianness = 0;
         PreviewDataType = ImGuiDataType_S32;
+        newWindowFn = nullptr;
     }
 
     void GotoAddrAndHighlight(size_t addr_min, size_t addr_max)
@@ -214,6 +218,7 @@ struct MemoryEditor
         if (Cols < 1)
             Cols = 1;
 
+        static bool keep;
         ImU8* mem_data = (ImU8*)mem_data_void;
         Sizes s;
         CalcSizes(s, mem_size, base_display_addr);
@@ -449,6 +454,21 @@ struct MemoryEditor
             ImGui::Separator();
             DrawPreviewLine(s, mem_data, mem_size, base_display_addr);
         }
+
+
+        if (OptShowAddWindowButton){
+            ImGui::SameLine();
+            ImGui::SetCursorPosX(ImGui::GetWindowSize().x - 30);
+            if (ImGui::Button("+")){
+                keep = true;
+            }
+        }
+
+        if (keep && newWindowFn){
+            if (newWindowFn()){
+                keep = false;
+            }
+        }
     }
 
     void DrawOptionsLine(const Sizes& s, void* mem_data, size_t mem_size, size_t base_display_addr)
@@ -469,13 +489,13 @@ struct MemoryEditor
             if (ImGui::Checkbox("Show Ascii", &OptShowAscii)) { ContentsWidthChanged = true; }
             ImGui::Checkbox("Grey out zeroes", &OptGreyOutZeroes);
             ImGui::Checkbox("Uppercase Hex", &OptUpperCaseHex);
-
             ImGui::EndPopup();
         }
 
         ImGui::SameLine();
         ImGui::Text(format_range, s.AddrDigitsCount, base_display_addr, s.AddrDigitsCount, base_display_addr + mem_size - 1);
         ImGui::SameLine();
+
         ImGui::SetNextItemWidth((s.AddrDigitsCount + 1) * s.GlyphWidth + style.FramePadding.x * 2.0f);
         if (ImGui::InputText("##addr", AddrInputBuf, IM_ARRAYSIZE(AddrInputBuf), ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_EnterReturnsTrue))
         {
@@ -499,6 +519,7 @@ struct MemoryEditor
             }
             GotoAddr = (size_t)-1;
         }
+
     }
 
     void DrawPreviewLine(const Sizes& s, void* mem_data_void, size_t mem_size, size_t base_display_addr)
