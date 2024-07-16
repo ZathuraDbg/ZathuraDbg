@@ -8,6 +8,7 @@ void appMenuBar()
     bool fileSaveAs = false;
     bool saveContextToFile = false;
     bool fileLoadContext = false;
+    bool changeEmulationSettings = false;
     bool quit = false;  // not using exit because it's a function from std to avoid confusion
 
     bool debugReset = false;
@@ -64,6 +65,7 @@ void appMenuBar()
                 LOG_INFO("Editor pasted from clipboard");
             }
             ImGui::Separator();
+            ImGui::MenuItem("Change emulation settings", "CTRL+,", &changeEmulationSettings);
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu("Debug")){
@@ -122,6 +124,35 @@ void appMenuBar()
             lineNumber = std::atoi(str.c_str());
             editor->HighlightDebugCurrentLine(lineNumber - 1);
         }
+    }
+    if (changeEmulationSettings){
+        ImGui::OpenPopup("EmulationSettings");
+    }
+    const char* items[] = {"Intel x86", "ARM", "RISC-V", "Really long text frfr"};
+    const char* bits[] = {"16 bit", "32 bit", "64 bit"};
+    enum arch{
+        x86,
+        ARM,
+        RISCV
+    };
+
+    static int currentItem = 0;
+    static int currentItem2 = 0;
+
+    ImGui::SetNextWindowSize({250, 120});
+    if (ImGui::BeginPopupModal("EmulationSettings")){
+        ImGui::Text("Architecture: ");
+        ImGui::SameLine(0, 4);
+        ImGui::SetNextItemWidth(ImGui::CalcTextSize(items[currentItem]).x * 2);
+        ImGui::Combo("##Dropdown", &currentItem, items, IM_ARRAYSIZE(items));
+        if (currentItem == 0){
+            ImGui::Text("Mode: ");
+            ImGui::SameLine(0, ImGui::CalcTextSize("Architecture: ").x - ImGui::CalcTextSize("Mode: ").x + 4);
+            ImGui::SetNextItemWidth(ImGui::CalcTextSize(bits[currentItem2]).x * 2);
+            ImGui::Combo("##Dropdown2", &currentItem2, bits, IM_ARRAYSIZE(bits));
+            ImGui::Text("You selected %s", bits[currentItem2]);
+        }
+        ImGui::EndPopup();
     }
 
     ImGui::PopFont();
