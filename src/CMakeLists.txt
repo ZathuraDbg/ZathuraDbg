@@ -21,6 +21,13 @@ set(SOURCES
         ${CMAKE_SOURCE_DIR}/app/windows/hexEditorWindow.cpp
         ${CMAKE_SOURCE_DIR}/app/windows/stackWindow.cpp
         ${CMAKE_SOURCE_DIR}/app/menuBar.cpp
+        ${CMAKE_SOURCE_DIR}/app/arch/arch.cpp
+        ${CMAKE_SOURCE_DIR}/app/arch/arch.hpp
+        ${CMAKE_SOURCE_DIR}/app/arch/arch.hpp
+        ${CMAKE_SOURCE_DIR}/app/arch/arch.cpp
+        ${CMAKE_SOURCE_DIR}/app/arch/arm.cpp
+        ${CMAKE_SOURCE_DIR}/app/arch/arm.hpp
+        ${CMAKE_SOURCE_DIR}/app/arch/arm.hpp
         ${CMAKE_SOURCE_DIR}/app/integration/interpreter/interpreter.cpp
         ${CMAKE_SOURCE_DIR}/app/integration/keystone/assembler.cpp
         ${CMAKE_SOURCE_DIR}/app/arch/x86.cpp
@@ -30,6 +37,7 @@ set(SOURCES
         app/tasks/editorTasks.cpp
         utils/fonts.cpp
         ../vendor/json/json.hpp
+
 )
 
 # Include directories
@@ -40,6 +48,7 @@ include_directories(
         ${CMAKE_SOURCE_DIR}/../vendor/ordered-map/include
         ${CMAKE_SOURCE_DIR}/app/dialogs
         ${CMAKE_SOURCE_DIR}/app/tasks
+        ${CMAKE_SOURCE_DIR}/app/arch
         ${CMAKE_SOURCE_DIR}/app/windows
         ${CMAKE_SOURCE_DIR}/../vendor/unicorn/include
         ${CMAKE_SOURCE_DIR}/../vendor/keystone/include

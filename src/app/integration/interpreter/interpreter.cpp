@@ -31,10 +31,10 @@ int getCurrentLine(){
     uint64_t instructionPointer = -1;
 
     if (context != nullptr){
-        uc_context_reg_read(context, regNameToConstant("RIP"), &instructionPointer);
+        uc_context_reg_read(context, regNameToConstant(getArchIPStr(codeInformation.mode)), &instructionPointer);
     }
     else if (uc != nullptr){
-        uc_reg_read(uc, regNameToConstant("RIP"), &instructionPointer);
+        uc_reg_read(uc, regNameToConstant(getArchIPStr(codeInformation.mode)), &instructionPointer);
     }
 
     if (instructionPointer == -1){
@@ -63,15 +63,6 @@ std::string toUpperCase(const std::string& input) {
         return std::toupper(c);
     });
     return result;
-}
-
-int regNameToConstant(std::string name){
-    if (x86RegInfoMap.find(name) == x86RegInfoMap.end()){
-        LOG_ALERT("Requested register not found: " << name);
-        return UC_X86_REG_INVALID;
-    }
-
-    return x86RegInfoMap[name].second;
 }
 
 void showRegs(){
@@ -141,28 +132,28 @@ void showRegs(){
 // two functions
 
 uint64_t getRegisterValue(const std::string& regName, bool useTempContext){
-    auto entry = x86RegInfoMap[toUpperCase(regName)];
-    auto size = entry.first;
+    auto entry = regInfoMap[toUpperCase(regName)];
+    auto [size, constant] = entry;
     uint64_t value{};
 
     if (size == 8) {
         uint8_t valTemp8;
-        useTempContext ? uc_context_reg_read(tempContext, entry.second, &valTemp8) : uc_reg_read(uc, entry.second, &valTemp8);
+        useTempContext ? uc_context_reg_read(tempContext, constant, &valTemp8) : uc_reg_read(uc, constant, &valTemp8);
         value = valTemp8; // force zero extension
     }
     else if (size == 16) {
         uint16_t valTemp16;
-        useTempContext ? uc_context_reg_read(tempContext, entry.second, &valTemp16) : uc_reg_read(uc, entry.second, &valTemp16);
+        useTempContext ? uc_context_reg_read(tempContext, constant, &valTemp16) : uc_reg_read(uc, constant, &valTemp16);
         value = valTemp16; // force zero extension
     }
     else if (size == 32) {
         uint32_t valTemp32;
-        useTempContext ? uc_context_reg_read(tempContext, entry.second, &valTemp32) : uc_reg_read(uc, entry.second, &valTemp32);
+        useTempContext ? uc_context_reg_read(tempContext, constant, &valTemp32) : uc_reg_read(uc, constant, &valTemp32);
         value = valTemp32; // force zero extension
     }
     else if (size == 64) {
         uint64_t valTemp64;
-        useTempContext ? uc_context_reg_read(tempContext, entry.second, &valTemp64) : uc_reg_read(uc, entry.second, &valTemp64);
+        useTempContext ? uc_context_reg_read(tempContext, constant, &valTemp64) : uc_reg_read(uc, constant, &valTemp64);
         value = valTemp64; // force zero extension
     }
 
@@ -182,7 +173,6 @@ std::pair<bool, uint64_t> getRegister(const std::string& name, bool useTempConte
         return {true, 0x00};
     }
 
-
     auto value = getRegisterValue(name, false);
     res = {true, value};
     return res;
@@ -190,8 +180,11 @@ std::pair<bool, uint64_t> getRegister(const std::string& name, bool useTempConte
 
 bool ucInit(void* unicornEngine){
     LOG_DEBUG("Initializing unicorn engine");
-    auto err = uc_open(UC_ARCH_X86, UC_MODE_64, (uc_engine**)unicornEngine);
+    if (regInfoMap.empty()){
+        initArch();
+    }
 
+    auto err = uc_open(UC_ARCH_X86, UC_MODE_64, (uc_engine**)unicornEngine);
     if (err) {
         LOG_ERROR("Failed to initialise Unicorn Engine!");
         tinyfd_messageBox("ERROR!", "Could not initialize Unicorn Engine. Please check if the environment is correctly setup.", "ok", "error", 0);
@@ -222,7 +215,7 @@ bool createStack(void* unicornEngine){
     }
 
     uint64_t stackBase = STACK_ADDRESS + STACK_SIZE;
-    if (uc_reg_write(uc, UC_X86_REG_RSP, &stackBase)){
+    if (uc_reg_write(uc, regNameToConstant(getArchSPStr(codeInformation.mode)), &stackBase)){
         LOG_ERROR("Failed to write the stack pointer to base pointer, quitting!!");
         return false;
     }
@@ -381,13 +374,12 @@ bool stepCode(size_t instructionCount){
         return true;
     }
 
-    uint64_t rip;
+    uint64_t ip;
 
     uc_context_restore(uc, context);
-    uc_reg_read(uc, UC_X86_REG_RIP, &rip);
+    uc_reg_read(uc, regNameToConstant(getArchIPStr(codeInformation.mode)), &ip);
 
-
-    auto err = uc_emu_start(uc, rip, ENTRY_POINT_ADDRESS + CODE_BUF_SIZE, 0, instructionCount);
+    auto err = uc_emu_start(uc, ip, ENTRY_POINT_ADDRESS + CODE_BUF_SIZE, 0, instructionCount);
     if (err) {
         printf("Failed on uc_emu_start() with error returned %u: %s\n",
                err, uc_strerror(err));
@@ -405,11 +397,12 @@ bool stepCode(size_t instructionCount){
         }
 
         uc_context_save(uc, context);
-        uc_reg_read(uc, UC_X86_REG_RIP, &rip);
-        if (rip != expectedIP){
-            expectedIP = rip;
+        uc_reg_read(uc,regNameToConstant(getArchIPStr(codeInformation.mode)) , &ip);
+        if (ip != expectedIP){
+            expectedIP = ip;
         }
-        std::string str =  addressLineNoMap[std::to_string(rip)];
+
+        std::string str =  addressLineNoMap[std::to_string(ip)];
         if (!str.empty()){
             ret = std::atoi(str.c_str());
             LOG_DEBUG("Highlight from block 3 - stepCode : line: " << ret);
@@ -434,23 +427,23 @@ void hook(uc_engine *uc, uint64_t address, uint32_t size, void *user_data){
     std::string str = addressLineNoMap[std::to_string(address)];
     int lineNumber;
     int tempBPLineNum = -1;
-    uint64_t rip;
+    uint64_t ip;
 
     if (expectedIP == 0){
         expectedIP = address;
     }
 
     if (debugModeEnabled){
-        uc_reg_read(uc, UC_X86_REG_RIP, &rip);
-        if (rip != expectedIP){
+        uc_reg_read(uc, UC_X86_REG_RIP, &ip);
+        if (ip != expectedIP){
             if (stepIn){
-                std::string bp = addressLineNoMap[std::to_string(rip)];
+                std::string bp = addressLineNoMap[std::to_string(ip)];
                 tempBPLineNum = std::atoi(bp.c_str());
                 if (!bp.empty()){
                     breakpointLines.push_back(tempBPLineNum);
                 }
             }
-            expectedIP = rip;
+            expectedIP = ip;
         }
 
         if (!str.empty()){
@@ -524,7 +517,7 @@ bool runCode(const std::string& code_in, uint64_t instructionCount)
         return false;
     }
 
-    uc_reg_write(uc, UC_X86_REG_RIP, &ENTRY_POINT_ADDRESS);
+    uc_reg_write(uc, regNameToConstant(getArchIPStr(codeInformation.mode)), &ENTRY_POINT_ADDRESS);
 
     if (context == nullptr){
         uc_context_alloc(uc, &context);
@@ -585,9 +578,9 @@ bool runTempCode(const std::string& codeIn){
     tempContext = static_cast<uc_context *>(malloc(size));
     memcpy(tempContext, context, size);
 
-    uint64_t rip;
-    uc_context_reg_read(tempContext, regNameToConstant("RIP"), &rip);
-    std::cout << rip << std::endl;
+    uint64_t ip;
+    uc_context_reg_read(tempContext, regNameToConstant(getArchIPStr(codeInformation.mode)), &ip);
+    std::cout << ip << std::endl;
     updateRegs(true);
     return true;
 }
