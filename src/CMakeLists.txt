@@ -37,6 +37,10 @@ set(SOURCES
         app/tasks/editorTasks.cpp
         utils/fonts.cpp
         ../vendor/json/json.hpp
+        utils/stringHelper.cpp
+        utils/stringHelper.hpp
+        app/integration/interpreter/errorHandler.cpp
+        app/integration/interpreter/errorHandler.hpp
 
 )
 

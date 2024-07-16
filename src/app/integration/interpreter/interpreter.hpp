@@ -12,7 +12,10 @@
 #include "../../windows/windows.hpp"
 #include "../../arch/arch.hpp"
 #include "../../arch/x86.hpp"
+#include "../../../utils/stringHelper.hpp"
+#include "errorHandler.hpp"
 #include <array>
+
 extern bool createStack(void* unicornEngine);
 extern bool runTempCode(const std::string& codeIn);
 extern bool debugModeEnabled;
@@ -36,8 +39,6 @@ extern bool stepIn;
 extern bool stepOver;
 extern bool stepContinue;
 
-extern std::string toLowerCase(const std::string& input);
-extern std::string toUpperCase(const std::string& input);
 extern uint64_t codeCurrentLen;
 extern int getCurrentLine();
 
