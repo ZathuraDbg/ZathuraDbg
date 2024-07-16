@@ -43,7 +43,7 @@ std::pair<size_t, size_t> newWindowInfoFunc() {
     ImGui::SetNextWindowPos(popupPos, ImGuiCond_Appearing);
     static char addrNewWin[120] = "";
     static char size[30] = "";
-    bool enterRecieved = false;
+    bool enterReceived = false;
 
     if (ImGui::BeginPopup("InputPopup", ImGuiWindowFlags_AlwaysAutoResize)) {
         windowSize = ImGui::GetWindowSize();
@@ -56,25 +56,29 @@ std::pair<size_t, size_t> newWindowInfoFunc() {
 
         ImGui::Text("Address: ");
         ImGui::SameLine(0, 5);
+        ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[JetBrainsMono20]);
 
         ImGui::PushItemWidth(180);
         if (ImGui::InputTextWithHint("##text", "0x....", addrNewWin, IM_ARRAYSIZE(addrNewWin), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackAlways, checkHexCharsCallback, nullptr)){
             windowInfo.first = hexStrToInt(addrNewWin);
         }
 
+        ImGui::PopFont();
         ImGui::PopItemWidth();
         ImGui::Dummy(ImVec2(22.0f, 0.0f));
         ImGui::SameLine(0, 14);
         ImGui::Text("Size: ");
         ImGui::SameLine(0, 5);
 
-
+        ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[JetBrainsMono20]);
         ImGui::PushItemWidth(180);
-        if (ImGui::InputTextWithHint("##size", "in bytes", size, IM_ARRAYSIZE(size), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CharsDecimal, nullptr, nullptr)){
-            windowInfo.second = atol(size);
-            enterRecieved = true;
+        ImGui::InputTextWithHint("##size", "in bytes", size, IM_ARRAYSIZE(size), ImGuiInputTextFlags_CharsDecimal, nullptr, nullptr);
+
+        if (ImGui::IsKeyPressed(ImGuiKey_Enter)){
+            enterReceived = true;
         }
 
+        ImGui::PopFont();
         ImGui::PopItemWidth();
         ImGui::Dummy(ImVec2(0, 12.0f));
 
@@ -82,7 +86,7 @@ std::pair<size_t, size_t> newWindowInfoFunc() {
         ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[SatoshiBold18]);
 
         ImGui::SetCursorPosX(windowSize.y + 10);
-        if (ImGui::Button("OK") || (enterRecieved))
+        if (ImGui::Button("OK") || (enterReceived))
         {
             ImGui::PopFont();
             ImGui::PopFont();
@@ -126,8 +130,17 @@ bool createNewWindow(){
         MemoryEditor memEdit;
 
         memoryEditorWindow.HighlightColor = ImColor(59, 60, 79);
-        memoryEditorWindow.OptShowAddWindowButton = true;
-        memoryEditorWindow.newWindowFn = createNewWindow;
+
+       /*
+        * When the OptShowAddWindowButton is set and the user clicks on the "+" icon
+        * it causes an unidentified bug which leads to the program getting stuck
+        * if the newly created memory editor window is not docked.
+        * The easy fix for this is to find a way to dock the newly created windows automatically
+        * as tabs next to the previous memory editor window.
+       */
+
+        memoryEditorWindow.OptShowAddWindowButton = false;
+//        memoryEditorWindow.newWindowFn = createNewWindow;
         newMemEditWindowsInfo memWindowInfo = {memoryEditorWindow, address, size};
         newMemEditWindows.push_back(memWindowInfo);
 

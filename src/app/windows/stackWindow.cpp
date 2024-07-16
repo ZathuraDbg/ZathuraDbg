@@ -1,7 +1,6 @@
 #include "windows.hpp"
 MemoryEditor stackEditor;
 
-// Function to convert data from little-endian to big-endian
 static void* copyBigEndian(void* _dst, const void* _src, size_t s)
 {
     uint8_t* dst = (uint8_t*)_dst;
@@ -34,11 +33,9 @@ void stackEditorWindow() {
     static char data[5 * 1024 * 1024];
     static char temp[5 * 1024 * 1024];
 
-    // Clear buffers to ensure no leftover data
     memset(data, 0, sizeof(data));
     memset(temp, 0, sizeof(temp));
 
-    // Read memory into temp
     auto err = uc_mem_read(uc, STACK_ADDRESS, temp, STACK_SIZE);
     if (err) {
         LOG_ERROR("Failed to read memory. Address: " << std::hex << STACK_ADDRESS);
@@ -46,11 +43,8 @@ void stackEditorWindow() {
         return;
     }
 
-    // Convert to big endian in data
     copyBigEndian(data, temp, STACK_SIZE);
 
-    // Debug: Log data to verify correct conversion
-    // Draw the stack editor window
     stackEditor.DrawWindow("Stack", (void*)((uintptr_t)data), STACK_SIZE);
     ImGui::PopFont();
 }
