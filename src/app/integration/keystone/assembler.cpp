@@ -42,8 +42,12 @@ std::pair<std::string, std::size_t> assemble(const std::string& assemblyString, 
     if (ks_asm(ks, assemblyString.data(), 0, &encode, &size, &count)) {
         err = ks_errno(ks);
         std::string error(ks_strerror(err));
-
-        if (err >= KS_ERR_ASM){
+        if (err == KS_ERR_ASM_INVALIDOPERAND){
+            LOG_ERROR("Wrong architecture error!: " << error);
+            tinyfd_messageBox("Assembly syntax error!", "The code does not belong to the currently selected architecture!"
+                                    "\nPlease change the architecture in the settings.", "ok", "error", 0);
+        }
+        else if (err >= KS_ERR_ASM){
             LOG_ERROR("Assembly syntax error: " << error);
             tinyfd_messageBox("Assembly syntax error!", error.c_str(), "ok", "error", 0);
         }
@@ -160,7 +164,7 @@ std::string getBytes(const std::string& fileName){
     assembly << asmFile.rdbuf();
     asmFile.close();
 
-    keystoneSettings ksSettings = {.arch = KS_ARCH_X86, .mode = KS_MODE_64, .optionType=KS_OPT_SYNTAX, .optionValue=KS_OPT_SYNTAX_NASM};
+    keystoneSettings ksSettings = {.arch = codeInformation.archKS, .mode = codeInformation.modeKS, .optionType = KS_OPT_SYNTAX, .optionValue=KS_OPT_SYNTAX_NASM};
     auto [bytes, size] = assemble(assembly.str(), ksSettings);
 
     updateInstructionSizes(bytes);
@@ -170,7 +174,7 @@ std::string getBytes(const std::string& fileName){
 }
 
 std::string getBytes(std::stringstream &assemblyStream){
-    keystoneSettings ksSettings = {.arch = KS_ARCH_X86, .mode = KS_MODE_64, .optionType=KS_OPT_SYNTAX, .optionValue=KS_OPT_SYNTAX_NASM};
+    keystoneSettings ksSettings = {.arch = codeInformation.archKS, .mode = codeInformation.modeKS, .optionType = KS_OPT_SYNTAX, .optionValue=KS_OPT_SYNTAX_NASM};
     auto [bytes, size] = assemble(assemblyStream.str(), ksSettings);
 
     LOG_DEBUG("Got bytes, now hexlifying.");

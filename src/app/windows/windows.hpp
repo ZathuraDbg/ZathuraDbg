@@ -22,8 +22,8 @@ enum arch{
     RISCV
 };
 
-extern const uc_mode x86Modes[];
-extern const uc_mode armModes[];
+extern const uc_mode x86UCModes[];
+extern const uc_mode armUCModes[];
 extern const char* x86ModeStr[];
 extern const char* armModeStr[];
 extern tsl::ordered_map<std::string, std::string> registerValueMap;

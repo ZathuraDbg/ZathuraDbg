@@ -4,10 +4,13 @@
 #include <string>
 #include "x86.hpp"
 #include "arm.hpp"
+#include <keystone/keystone.h>
 
 struct codeInformationT{
-    uc_arch arch;
+    uc_arch archUC;
+    ks_arch archKS;
     uc_mode mode;
+    ks_mode modeKS;
 };
 
 extern codeInformationT codeInformation;

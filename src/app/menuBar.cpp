@@ -3,9 +3,11 @@ bool firstTime = true;
 
 const char* items[] = {"Intel x86", "ARM", "RISC-V", "Really long text frfr"};
 const char* x86ModeStr[] = {"16 bit", "32 bit", "64 bit"};
-const uc_mode x86Modes[] = {UC_MODE_16, UC_MODE_32, UC_MODE_64};
+const uc_mode x86UCModes[] = {UC_MODE_16, UC_MODE_32, UC_MODE_64};
+const ks_mode x86KSModes[] = {KS_MODE_16, KS_MODE_32, KS_MODE_64};
 const char* armModeStr[] = {"926", "946", "1176"};
-const uc_mode armModes[] = {UC_MODE_ARM926, UC_MODE_ARM946, UC_MODE_ARM1176};
+const uc_mode armUCModes[] = {UC_MODE_ARM926, UC_MODE_ARM946, UC_MODE_ARM1176};
+const ks_mode armKSModes[] = {KS_MODE_ARM, KS_MODE_THUMB, KS_MODE_V8, KS_MODE_V9};
 
 void appMenuBar()
 {
@@ -135,11 +137,15 @@ void appMenuBar()
         ImGui::OpenPopup("Emulation Settings");
     }
 
-    static int currentItem = 0;
-    static int currentItem2 = 0;
+    static int selectedArch = 0;
+    static int selectedMode = 2;
     static const char* headerText = "Architecture settings";
-    static uc_arch arch;
-    static uc_mode mode;
+
+    static uc_arch ucArch;
+    static uc_mode ucMode;
+    static ks_mode ksMode;
+    static ks_arch ksArch;
+
     ImVec2 windowSize;
     ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[SatoshiBold18]);
     ImGui::PushStyleVar(ImGuiStyleVar_PopupBorderSize, 5.0f);
@@ -162,45 +168,55 @@ void appMenuBar()
         ImGui::SameLine(0, 10);
         ImGui::Text("Architecture: ");
         ImGui::SameLine(0, 4);
-        ImGui::SetNextItemWidth(ImGui::CalcTextSize(items[currentItem]).x * 2);
-        ImGui::Combo("##Dropdown", &currentItem, items, IM_ARRAYSIZE(items));
+        ImGui::SetNextItemWidth(ImGui::CalcTextSize(items[selectedArch]).x * 2);
+
+        ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[SatoshiMedium18]);
+        ImGui::Combo("##Dropdown", &selectedArch, items, IM_ARRAYSIZE(items));
+        ImGui::PopFont();
         ImGui::Dummy({0, 1});
         ImGui::SameLine(0, 10);
         ImGui::Text("Mode: ");
         ImGui::SameLine(0, ImGui::CalcTextSize("Architecture: ").x - ImGui::CalcTextSize("Mode: ").x + 4);
 
-        if (currentItem == arch::x86){
-            ImGui::SetNextItemWidth(ImGui::CalcTextSize(x86ModeStr[currentItem2]).x * 2);
-            ImGui::Combo("##Dropdown2", &currentItem2, x86ModeStr, IM_ARRAYSIZE(x86ModeStr));
-            arch = UC_ARCH_X86;
-            mode = x86Modes[currentItem2];
+        ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[SatoshiMedium18]);
+        if (selectedArch == arch::x86){
+            ImGui::SetNextItemWidth(ImGui::CalcTextSize(x86ModeStr[selectedMode]).x * 2 + 10);
+            ImGui::Combo("##Dropdown2", &selectedMode, x86ModeStr, IM_ARRAYSIZE(x86ModeStr));
+            ucArch = UC_ARCH_X86;
+            ksArch = KS_ARCH_X86;
+            ucMode = x86UCModes[selectedMode];
+            ksMode = x86KSModes[selectedMode];
         }
-        else if (currentItem == arch::ARM){
-            ImGui::SetNextItemWidth(ImGui::CalcTextSize(armModeStr[currentItem2]).x * 2);
-            ImGui::Combo("##Dropdown2", &currentItem2, armModeStr, IM_ARRAYSIZE(armModeStr));
-            arch = UC_ARCH_ARM;
-            mode = armModes[currentItem2];
+        else if (selectedArch == arch::ARM){
+            ImGui::SetNextItemWidth(ImGui::CalcTextSize(armModeStr[selectedMode]).x * 2 + 10);
+            ImGui::Combo("##Dropdown2", &selectedMode, armModeStr, IM_ARRAYSIZE(armModeStr));
+            ucArch = UC_ARCH_ARM;
+            ksArch = KS_ARCH_ARM;
+            ucMode = armUCModes[selectedMode];
+            ksMode = armKSModes[selectedMode];
         }
+        ImGui::PopFont();
 
         ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[SatoshiBold18]);
         ImGui::Dummy({60, 4});
 
-        ImGui::SetCursorPosX(windowSize.y - 55);
+        ImGui::SetCursorPosX(windowSize.y - 20);
+        if (ImGui::Button("OK")){
+            codeInformation.archUC = ucArch;
+            codeInformation.mode = ucMode;
+            codeInformation.modeKS = ksMode;
+            codeInformation.archKS = ksArch;
+            ImGui::CloseCurrentPopup();
+       }
+        ImGui::SameLine();
         if (ImGui::Button("CANCEL")){
             ImGui::CloseCurrentPopup();
         }
-        ImGui::SameLine();
-        if (ImGui::Button("APPLY")){
-            codeInformation.arch = arch;
-            codeInformation.mode = mode;
-            ImGui::CloseCurrentPopup();
-       }
 
         ImGui::PopFont();
         ImGui::EndPopup();
     }
     ImGui::PopStyleColor();
-    codeInformation;
     ImGui::PopFont();
     ImGui::PopStyleVar();
     ImGui::PopFont();
