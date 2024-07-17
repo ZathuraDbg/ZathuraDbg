@@ -39,8 +39,13 @@ Collapsed=0
 DockId=0x00000007,0
 
 [Window][EmulationSettings]
-Pos=515,310
-Size=250,120
+Pos=628,359
+Size=250,140
+Collapsed=0
+
+[Window][Emulation Settings]
+Pos=515,290
+Size=220,120
 Collapsed=0
 
 [Table][0xB4C7751B,2]
