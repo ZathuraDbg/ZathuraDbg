@@ -1,12 +1,12 @@
 #include "arch.hpp"
 //codeInformationT codeInformation{.arch=UC_ARCH_MAX};
-codeInformationT codeInformation{.arch=UC_ARCH_X86, .mode=UC_MODE_64};
+codeInformationT codeInformation{.archUC=UC_ARCH_X86, .archKS = KS_ARCH_X86, .mode=UC_MODE_64, .modeKS = KS_MODE_64};
 std::unordered_map<std::string, std::pair<size_t, int>> regInfoMap = {};
 std::string (*getArchIPStr)(uc_mode) = nullptr;
 std::string (*getArchSPStr)(uc_mode) = nullptr;
 
 bool initArch(){
-    switch (codeInformation.arch) {
+    switch (codeInformation.archUC) {
         case UC_ARCH_X86:
             getArchIPStr = x86IPStr;
             getArchSPStr = x86SPStr;
@@ -33,7 +33,8 @@ int regNameToConstant(const std::string &name){
     return regInfoMap[name].second;
 }
 
-void setArchMode(uc_arch arch, uc_mode mode){
-    codeInformation.arch = arch;
-    codeInformation.mode = mode;
-}
+//void setArchMode(uc_arch arch, , uc_mode mode){
+//    codeInformation.archUC = arch;
+//    codeInformation.archKS =
+//    codeInformation.mode = mode;
+//}
