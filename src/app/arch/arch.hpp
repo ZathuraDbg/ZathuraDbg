@@ -16,7 +16,7 @@ extern std::vector<std::string> defaultShownRegs;
 extern codeInformationT codeInformation;
 extern bool initArch();
 extern std::string (*getArchIPStr)(uc_mode);
-extern std::string (*getArchSPStr)(uc_mode);
+extern std::pair<std::string, std::string> (*getArchSBPStr)(uc_mode);
 extern bool (*isRegisterValid)(const std::string&, uc_mode);
 extern int regNameToConstant(const std::string &name);
 extern std::unordered_map<std::string, std::pair<size_t, int>> regInfoMap;

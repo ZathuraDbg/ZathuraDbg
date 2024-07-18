@@ -3,7 +3,7 @@
 codeInformationT codeInformation{.archUC=UC_ARCH_X86, .archKS = KS_ARCH_X86, .mode=UC_MODE_64, .modeKS = KS_MODE_64};
 std::unordered_map<std::string, std::pair<size_t, int>> regInfoMap = {};
 std::string (*getArchIPStr)(uc_mode) = nullptr;
-std::string (*getArchSPStr)(uc_mode) = nullptr;
+std::pair<std::string, std::string> (*getArchSBPStr)(uc_mode) = nullptr;
 bool (*isRegisterValid)(const std::string&, uc_mode) = nullptr;
 void (*archModifyCallback)(uc_arch, uc_mode) = nullptr;
 std::vector<std::string> defaultShownRegs{};
@@ -20,7 +20,7 @@ bool initArch(){
     switch (codeInformation.archUC) {
         case UC_ARCH_X86:
             getArchIPStr = x86IPStr;
-            getArchSPStr = x86SPStr;
+            getArchSBPStr = x86SBPStr;
             regInfoMap = x86RegInfoMap;
             defaultShownRegs = x86DefaultShownRegs;
             isRegisterValid = x86IsRegisterValid;
