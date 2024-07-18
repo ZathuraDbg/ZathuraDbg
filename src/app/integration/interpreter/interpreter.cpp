@@ -291,6 +291,7 @@ bool stepCode(size_t instructionCount){
         printf("Failed on uc_emu_start() with error returned %u: %s\n",
                err, uc_strerror(err));
     }
+    LOG_DEBUG("Code executed by one step");
 
     {
         int ret;
@@ -303,7 +304,9 @@ bool stepCode(size_t instructionCount){
         }
 
         uc_context_save(uc, context);
-        uc_reg_read(uc,regNameToConstant(getArchIPStr(codeInformation.mode)) , &ip);
+        ip = getRegisterValue(getArchIPStr(codeInformation.mode), false);
+        LOG_DEBUG("Got IP it's " << std::hex << ip << std::hex);
+        //        uc_reg_read(uc,regNameToConstant(getArchIPStr(codeInformation.mode)) , &ip);
         if (ip != expectedIP){
             expectedIP = ip;
         }
