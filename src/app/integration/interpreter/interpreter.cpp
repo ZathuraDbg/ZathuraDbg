@@ -221,6 +221,7 @@ bool resetState(){
     codeCurrentLen = 0;
     codeFinalLen = 0;
     lineNo = 0;
+    expectedIP = 0;
 
     assembly.clear();
     assembly.str("");
@@ -357,7 +358,7 @@ void hook(uc_engine *uc, uint64_t address, uint32_t size, void *user_data){
         }
 
         if (!str.empty()){
-            lineNumber = stoi(str);
+            lineNumber = std::atoi(str.c_str());
         }
         else{
             lineNumber = -1;

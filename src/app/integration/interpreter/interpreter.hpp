@@ -38,7 +38,7 @@ extern bool continueOverBreakpoint;
 extern bool stepIn;
 extern bool stepOver;
 extern bool stepContinue;
-
+extern uint64_t expectedIP;
 extern uint64_t codeCurrentLen;
 extern int getCurrentLine();
 
