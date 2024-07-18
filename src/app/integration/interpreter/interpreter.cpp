@@ -168,7 +168,7 @@ bool ucInit(void* unicornEngine){
         initArch();
     }
 
-    auto err = uc_open(UC_ARCH_X86, UC_MODE_64, (uc_engine**)unicornEngine);
+    auto err = uc_open(codeInformation.archUC, codeInformation.mode, (uc_engine**)unicornEngine);
     if (err) {
         LOG_ERROR("Failed to initialise Unicorn Engine!");
         tinyfd_messageBox("ERROR!", "Could not initialize Unicorn Engine. Please check if the environment is correctly setup.", "ok", "error", 0);

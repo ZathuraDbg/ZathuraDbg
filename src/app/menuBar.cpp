@@ -206,6 +206,9 @@ void appMenuBar()
             codeInformation.mode = ucMode;
             codeInformation.modeKS = ksMode;
             codeInformation.archKS = ksArch;
+            registerValueMap.clear();
+            registerValueMap = {};
+            onArchChange();
             ImGui::CloseCurrentPopup();
        }
         ImGui::SameLine();
