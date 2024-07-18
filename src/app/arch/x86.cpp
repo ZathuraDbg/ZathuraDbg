@@ -1,5 +1,10 @@
 #include "x86.hpp"
 
+std::vector<std::string> x86DefaultShownRegs = {"RIP", "RSP", "RBP", "RAX", "RBX", "RCX", "RDX", "RSI", "RDI", "R8", "R9", "R10", "R11", "R12", "R13", "R14", "R15", "CS", "DS", "ES", "FS", "GS", "SS"};
+std::vector<std::string> x86DefaultShownRegs16 = {"IP", "SP", "BP", "AX", "BX", "CX", "DX", "SI", "DI", "CS", "DS", "ES", "FS", "GS", "SS"};
+std::vector<std::string> x86DefaultShownRegs32 = {"EIP", "ESP", "EBP", "EAX", "EBX", "ECX", "EDX", "ESI", "EDI", "CS", "DS", "ES", "FS", "SS"};
+std::vector<std::string> x86DefaultShownRegs64 = {"RIP", "RSP", "RBP", "RAX", "RBX", "RCX", "RDX", "RSI", "RDI", "R8", "R9", "R10", "R11", "R12", "R13", "R14", "R15", "CS", "DS", "ES", "FS", "GS", "SS"};
+
 std::unordered_map<std::string, std::pair<size_t, int>> x86RegInfoMap = {
         {"INVALID", {0,   UC_X86_REG_INVALID}},
         {"AH",      {8,   UC_X86_REG_AH}},
@@ -267,5 +272,65 @@ std::string x86SPStr(uc_mode mode){
             return "RSP";
         default:
             return "";
+    }
+}
+
+bool x86IsRegisterValid(const std::string& reg, uc_mode mode){
+    if (!x86RegInfoMap.contains(reg)){
+        return false;
+    }
+
+    switch (mode){
+        case UC_MODE_16:
+            if (x86RegInfoMap[reg].first == 16){
+                return true;
+            }
+
+            if (x86RegInfoMap[reg].first > 16){
+                return false;
+            }
+
+            break;
+        case UC_MODE_32:
+            if (!reg.contains("ST") || (!reg.contains("MM"))){
+                if (x86RegInfoMap[reg].first == 32){
+                    return true;
+                }
+                if (x86RegInfoMap[reg].first > 32){
+                    return false;
+                }
+            }
+            else {
+                if (x86RegInfoMap.contains(reg)){
+                    return true;
+                }
+            }
+            break;
+        case UC_MODE_64:
+            if (!reg.contains("ST") || (!reg.contains("MM") || (!reg.contains("XMM")) ||
+                (!reg.contains("YMM")) || (!reg.contains("ZMM")))){
+                if (x86RegInfoMap[reg].first == 64){
+                    return true;
+                }
+                if (x86RegInfoMap[reg].first > 64){
+                    return false;
+                }
+            }
+
+    }
+    return true;
+}
+
+void x86ModifyCallback(uc_arch arch, uc_mode mode){
+    switch (mode) {
+        case UC_MODE_16:
+            x86DefaultShownRegs = x86DefaultShownRegs16;
+            break;
+        case UC_MODE_32:
+            x86DefaultShownRegs = x86DefaultShownRegs32;
+            break;
+        case UC_MODE_64:
+            x86DefaultShownRegs = x86DefaultShownRegs64;
+            break;
     }
 }
