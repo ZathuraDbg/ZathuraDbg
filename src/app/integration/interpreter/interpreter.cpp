@@ -198,13 +198,14 @@ bool createStack(void* unicornEngine){
         return false;
     }
 
+    auto [sp, bp] = getArchSBPStr(codeInformation.mode);
     uint64_t stackBase = STACK_ADDRESS + STACK_SIZE;
-    if (uc_reg_write(uc, regNameToConstant(getArchSPStr(codeInformation.mode)), &stackBase)){
+    if (uc_reg_write(uc, regNameToConstant(sp), &stackBase)){
         LOG_ERROR("Failed to write the stack pointer to base pointer, quitting!!");
         return false;
     }
 
-    if (uc_reg_write(uc, UC_X86_REG_RBP, &stackBase)){
+    if (uc_reg_write(uc, regNameToConstant(bp), &stackBase)){
         printf("Failed to write base pointer to memory, quitting!\n");
         return false;
     }

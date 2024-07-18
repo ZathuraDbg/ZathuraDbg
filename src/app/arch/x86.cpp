@@ -262,16 +262,16 @@ std::string x86IPStr(uc_mode mode){
     }
 }
 
-std::string x86SPStr(uc_mode mode){
+std::pair<std::string, std::string> x86SBPStr(uc_mode mode){
     switch (mode) {
         case UC_MODE_16:
-            return "SP";
+            return {"SP", "BP"};
         case UC_MODE_32:
-            return "ESP";
+            return {"ESP", "EBP"};
         case UC_MODE_64:
-            return "RSP";
+            return {"RSP", "RBP"};
         default:
-            return "";
+            return {"", ""};
     }
 }
 
