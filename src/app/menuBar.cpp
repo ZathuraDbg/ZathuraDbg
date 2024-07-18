@@ -210,6 +210,9 @@ void appMenuBar()
             registerValueMap = {};
             onArchChange();
             resetState();
+            editor->HighlightBreakpoints(-1);
+            breakpointLines.clear();
+            breakpointLines = {};
             ImGui::CloseCurrentPopup();
        }
         ImGui::SameLine();
