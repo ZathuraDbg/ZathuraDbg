@@ -209,6 +209,7 @@ void appMenuBar()
             registerValueMap.clear();
             registerValueMap = {};
             onArchChange();
+            resetState();
             ImGui::CloseCurrentPopup();
        }
         ImGui::SameLine();

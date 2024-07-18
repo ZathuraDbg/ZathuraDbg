@@ -284,7 +284,7 @@ bool stepCode(size_t instructionCount){
     uint64_t ip;
 
     uc_context_restore(uc, context);
-    uc_reg_read(uc, regNameToConstant(getArchIPStr(codeInformation.mode)), &ip);
+    ip = getRegisterValue(getArchIPStr(codeInformation.mode), false);
 
     auto err = uc_emu_start(uc, ip, ENTRY_POINT_ADDRESS + CODE_BUF_SIZE, 0, instructionCount);
     if (err) {
@@ -340,7 +340,8 @@ void hook(uc_engine *uc, uint64_t address, uint32_t size, void *user_data){
     }
 
     if (debugModeEnabled){
-        uc_reg_read(uc, UC_X86_REG_RIP, &ip);
+        ip = getRegisterValue(getArchIPStr(codeInformation.mode), false);
+//        uc_reg_read(uc, regNameToConstant(getArchIPStr(codeInformation.mode)), &ip);
         if (ip != expectedIP){
             if (stepIn){
                 std::string bp = addressLineNoMap[std::to_string(ip)];

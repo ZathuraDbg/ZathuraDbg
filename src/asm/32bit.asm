@@ -5,6 +5,7 @@ main:
   push eax
   pop edi
   call add_hundred
+  push edi
 
 
 add_hundred:

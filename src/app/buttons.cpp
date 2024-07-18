@@ -59,12 +59,13 @@ bool setupButtons() {
         ImGui::SameLine();
 
         if (ImGui::Button(ICON_CI_DEBUG_STEP_OVER, ImVec2(20, 20))){
-            uint64_t rip;
+            uint64_t ip;
             int lineNo;
 
             uc_context_restore(uc, context);
-            uc_context_reg_read(context, regNameToConstant("RIP"), &rip);
-            std::string str = addressLineNoMap[std::to_string(rip)];
+            ip = getRegister(getArchIPStr(codeInformation.mode)).second;
+//            uc_context_reg_read(context, regNameToConstant("RIP"), &ip);
+            std::string str = addressLineNoMap[std::to_string(ip)];
 
             if (!str.empty()){
                 lineNo = std::atoi(str.c_str());
