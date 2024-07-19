@@ -164,7 +164,7 @@ std::string getBytes(const std::string& fileName){
     assembly << asmFile.rdbuf();
     asmFile.close();
 
-    keystoneSettings ksSettings = {.arch = codeInformation.archKS, .mode = codeInformation.modeKS, .optionType = KS_OPT_SYNTAX, .optionValue=KS_OPT_SYNTAX_NASM};
+    keystoneSettings ksSettings = {.arch = codeInformation.archKS, .mode = codeInformation.modeKS, .optionType = KS_OPT_SYNTAX, .optionValue=codeInformation.syntax};
     auto [bytes, size] = assemble(assembly.str(), ksSettings);
 
     updateInstructionSizes(bytes);
@@ -174,7 +174,7 @@ std::string getBytes(const std::string& fileName){
 }
 
 std::string getBytes(std::stringstream &assemblyStream){
-    keystoneSettings ksSettings = {.arch = codeInformation.archKS, .mode = codeInformation.modeKS, .optionType = KS_OPT_SYNTAX, .optionValue=KS_OPT_SYNTAX_NASM};
+    keystoneSettings ksSettings = {.arch = codeInformation.archKS, .mode = codeInformation.modeKS, .optionType = KS_OPT_SYNTAX, .optionValue=codeInformation.syntax};
     auto [bytes, size] = assemble(assemblyStream.str(), ksSettings);
 
     LOG_DEBUG("Got bytes, now hexlifying.");
