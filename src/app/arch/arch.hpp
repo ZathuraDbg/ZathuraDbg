@@ -11,7 +11,9 @@ struct codeInformationT{
     ks_arch archKS;
     uc_mode mode;
     ks_mode modeKS;
+    ks_opt_value syntax;
 };
+
 extern std::vector<std::string> defaultShownRegs;
 extern codeInformationT codeInformation;
 extern bool initArch();

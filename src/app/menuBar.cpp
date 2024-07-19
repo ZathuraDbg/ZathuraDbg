@@ -8,6 +8,8 @@ const ks_mode x86KSModes[] = {KS_MODE_16, KS_MODE_32, KS_MODE_64};
 const char* armModeStr[] = {"926", "946", "1176"};
 const uc_mode armUCModes[] = {UC_MODE_ARM926, UC_MODE_ARM946, UC_MODE_ARM1176};
 const ks_mode armKSModes[] = {KS_MODE_ARM, KS_MODE_THUMB, KS_MODE_V8, KS_MODE_V9};
+const char* ksSyntaxOptStr[] = {"Intel", "AT&T", "NASM", "GAS"};
+const ks_opt_value ksSyntaxtOpts[] = {KS_OPT_SYNTAX_INTEL, KS_OPT_SYNTAX_ATT, KS_OPT_SYNTAX_NASM, KS_OPT_SYNTAX_GAS};
 
 void appMenuBar()
 {
@@ -139,21 +141,24 @@ void appMenuBar()
 
     static int selectedArch = 0;
     static int selectedMode = 2;
+    static int selectedSyntax = 2;
     static const char* headerText = "Architecture settings";
 
     static uc_arch ucArch;
     static uc_mode ucMode;
     static ks_mode ksMode;
     static ks_arch ksArch;
+    static ks_opt_value syntax;
 
     ImVec2 windowSize;
     ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[SatoshiBold18]);
     ImGui::PushStyleVar(ImGuiStyleVar_PopupBorderSize, 5.0f);
     auto windowTextPos = ImGui::CalcTextSize(headerText);
-    ImGui::SetNextWindowSize({240, 150});
+    // {width, height}
+    ImVec2 popup_size = ImVec2(240, 175);
+    ImGui::SetNextWindowSize(popup_size);
     ImGui::PushStyleColor(ImGuiCol_PopupBg, ImColor(0x1e, 0x20, 0x2f).Value);
     ImVec2 window_size = ImGui::GetIO().DisplaySize;
-    ImVec2 popup_size = ImVec2(300, 150); // Define your popup size here
     ImVec2 popup_pos = ImVec2((window_size.x - popup_size.x) * 0.5f, (window_size.y - popup_size.y) * 0.5f);
 
     // Set next window position to center the popup
@@ -195,17 +200,25 @@ void appMenuBar()
             ucMode = armUCModes[selectedMode];
             ksMode = armKSModes[selectedMode];
         }
+        ImGui::Dummy({0, 1});
+        ImGui::SameLine(0, 10);
+        ImGui::Text("Syntax: ");
+        ImGui::SameLine(0, ImGui::CalcTextSize("Architecture: ").x - ImGui::CalcTextSize("Mode: ").x + 2);
+        ImGui::SetNextItemWidth(ImGui::CalcTextSize(ksSyntaxOptStr[selectedSyntax]).x * 2 + 10);
+        ImGui::Combo("##Dropdown3", &selectedSyntax, ksSyntaxOptStr, IM_ARRAYSIZE(ksSyntaxtOpts));
+
         ImGui::PopFont();
 
         ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[SatoshiBold18]);
         ImGui::Dummy({60, 4});
 
-        ImGui::SetCursorPosX(windowSize.y - 20);
+        ImGui::SetCursorPosX(windowSize.y - 50);
         if (ImGui::Button("OK")){
             codeInformation.archUC = ucArch;
             codeInformation.mode = ucMode;
             codeInformation.modeKS = ksMode;
             codeInformation.archKS = ksArch;
+            codeInformation.syntax = syntax;
             registerValueMap.clear();
             registerValueMap = {};
             onArchChange();
