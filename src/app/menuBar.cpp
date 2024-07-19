@@ -218,7 +218,7 @@ void appMenuBar()
             codeInformation.mode = ucMode;
             codeInformation.modeKS = ksMode;
             codeInformation.archKS = ksArch;
-            codeInformation.syntax = syntax;
+            codeInformation.syntax = ksSyntaxtOpts[selectedSyntax];
             registerValueMap.clear();
             registerValueMap = {};
             onArchChange();
