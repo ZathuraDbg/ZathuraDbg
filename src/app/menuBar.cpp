@@ -3,13 +3,16 @@ bool firstTime = true;
 
 const char* items[] = {"Intel x86", "ARM", "RISC-V", "Really long text frfr"};
 const char* x86ModeStr[] = {"16 bit", "32 bit", "64 bit"};
+const cs_arch csArchs[] = {CS_ARCH_X86, CS_ARCH_ARM, CS_ARCH_RISCV};
 const uc_mode x86UCModes[] = {UC_MODE_16, UC_MODE_32, UC_MODE_64};
 const ks_mode x86KSModes[] = {KS_MODE_16, KS_MODE_32, KS_MODE_64};
+const cs_mode x86CSModes[] = {CS_MODE_16, CS_MODE_32, CS_MODE_64};
 const char* armModeStr[] = {"926", "946", "1176"};
 const uc_mode armUCModes[] = {UC_MODE_ARM926, UC_MODE_ARM946, UC_MODE_ARM1176};
 const ks_mode armKSModes[] = {KS_MODE_ARM, KS_MODE_THUMB, KS_MODE_V8, KS_MODE_V9};
+const cs_mode armCSMOdes[] = {CS_MODE_ARM, CS_MODE_THUMB, CS_MODE_V8, CS_MODE_V9};
 const char* ksSyntaxOptStr[] = {"Intel", "AT&T", "NASM", "GAS"};
-const ks_opt_value ksSyntaxtOpts[] = {KS_OPT_SYNTAX_INTEL, KS_OPT_SYNTAX_ATT, KS_OPT_SYNTAX_NASM, KS_OPT_SYNTAX_GAS};
+const ks_opt_value ksSyntaxOpts[] = {KS_OPT_SYNTAX_INTEL, KS_OPT_SYNTAX_ATT, KS_OPT_SYNTAX_NASM, KS_OPT_SYNTAX_GAS};
 
 void appMenuBar()
 {
@@ -148,7 +151,8 @@ void appMenuBar()
     static uc_mode ucMode;
     static ks_mode ksMode;
     static ks_arch ksArch;
-    static ks_opt_value syntax;
+    static cs_arch csArch;
+    static cs_mode csMode;
 
     ImVec2 windowSize;
     ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[SatoshiBold18]);
@@ -189,23 +193,27 @@ void appMenuBar()
             ImGui::Combo("##Dropdown2", &selectedMode, x86ModeStr, IM_ARRAYSIZE(x86ModeStr));
             ucArch = UC_ARCH_X86;
             ksArch = KS_ARCH_X86;
+            csArch = CS_ARCH_X86;
             ucMode = x86UCModes[selectedMode];
             ksMode = x86KSModes[selectedMode];
+            csMode = x86CSModes[selectedMode];
         }
         else if (selectedArch == arch::ARM){
             ImGui::SetNextItemWidth(ImGui::CalcTextSize(armModeStr[selectedMode]).x * 2 + 10);
             ImGui::Combo("##Dropdown2", &selectedMode, armModeStr, IM_ARRAYSIZE(armModeStr));
             ucArch = UC_ARCH_ARM;
             ksArch = KS_ARCH_ARM;
+            csArch = CS_ARCH_ARM;
             ucMode = armUCModes[selectedMode];
             ksMode = armKSModes[selectedMode];
         }
+
         ImGui::Dummy({0, 1});
         ImGui::SameLine(0, 10);
         ImGui::Text("Syntax: ");
         ImGui::SameLine(0, ImGui::CalcTextSize("Architecture: ").x - ImGui::CalcTextSize("Mode: ").x + 2);
         ImGui::SetNextItemWidth(ImGui::CalcTextSize(ksSyntaxOptStr[selectedSyntax]).x * 2 + 10);
-        ImGui::Combo("##Dropdown3", &selectedSyntax, ksSyntaxOptStr, IM_ARRAYSIZE(ksSyntaxtOpts));
+        ImGui::Combo("##Dropdown3", &selectedSyntax, ksSyntaxOptStr, IM_ARRAYSIZE(ksSyntaxOpts));
 
         ImGui::PopFont();
 
@@ -218,7 +226,9 @@ void appMenuBar()
             codeInformation.mode = ucMode;
             codeInformation.modeKS = ksMode;
             codeInformation.archKS = ksArch;
-            codeInformation.syntax = ksSyntaxtOpts[selectedSyntax];
+            codeInformation.syntax = ksSyntaxOpts[selectedSyntax];
+            codeInformation.archCS = csArch;
+            codeInformation.modeCS = csMode;
             registerValueMap.clear();
             registerValueMap = {};
             onArchChange();

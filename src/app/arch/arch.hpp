@@ -5,12 +5,15 @@
 #include "x86.hpp"
 #include "arm.hpp"
 #include <keystone/keystone.h>
+#include <capstone/capstone.h>
 
 struct codeInformationT{
     uc_arch archUC;
     ks_arch archKS;
+    cs_arch archCS;
     uc_mode mode;
     ks_mode modeKS;
+    cs_mode modeCS;
     ks_opt_value syntax;
 };
 
