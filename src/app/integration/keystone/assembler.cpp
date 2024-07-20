@@ -132,7 +132,7 @@ void updateInstructionSizes(const std::string& compiledAsm){
     cs_insn *insn;
     size_t count;
 
-    if (cs_open(CS_ARCH_X86, CS_MODE_64, &handle) != CS_ERR_OK)
+    if (cs_open(codeInformation.archCS, codeInformation.modeCS, &handle) != CS_ERR_OK)
         return;
 
     count = cs_disasm(handle, reinterpret_cast<const uint8_t *>(compiledAsm.c_str()), compiledAsm.length(), ENTRY_POINT_ADDRESS, 0, &insn);
