@@ -13,7 +13,6 @@ const ks_mode armKSModes[] = {KS_MODE_ARM, KS_MODE_THUMB, KS_MODE_V8, KS_MODE_V9
 const cs_mode armCSMOdes[] = {CS_MODE_ARM, CS_MODE_THUMB, CS_MODE_V8, CS_MODE_V9};
 const char* ksSyntaxOptStr[] = {"Intel", "AT&T", "NASM", "GAS"};
 const ks_opt_value ksSyntaxOpts[] = {KS_OPT_SYNTAX_INTEL, KS_OPT_SYNTAX_ATT, KS_OPT_SYNTAX_NASM, KS_OPT_SYNTAX_GAS};
-bool showEmuSettings = false;
 
 bool debugRestart = false;
 bool debugStepIn = false;
@@ -22,6 +21,10 @@ bool debugContinue = false;
 bool debugPause = false;
 bool debugStop = false;
 bool debugRun = false;
+bool saveContextToFile = false;
+bool fileLoadContext = false;
+bool changeEmulationSettingsOpt = false;
+bool showEmuSettings = false;
 
 void changeEmulationSettings(){
     showEmuSettings = true;
@@ -70,6 +73,7 @@ void changeEmulationSettings(){
         ImGui::SameLine(0, 10);
         ImGui::Text("Mode: ");
         ImGui::SameLine(0, ImGui::CalcTextSize("Architecture: ").x - ImGui::CalcTextSize("Mode: ").x + 4);
+
 
         ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[SatoshiMedium18]);
         if (selectedArch == arch::x86){
@@ -122,11 +126,13 @@ void changeEmulationSettings(){
             breakpointLines = {};
             ImGui::CloseCurrentPopup();
             showEmuSettings = false;
+            changeEmulationSettingsOpt = false;
         }
         ImGui::SameLine();
         if (ImGui::Button("CANCEL")){
             ImGui::CloseCurrentPopup();
             showEmuSettings = false;
+            changeEmulationSettingsOpt = false;
         }
 
         ImGui::PopFont();
@@ -137,14 +143,9 @@ void changeEmulationSettings(){
     ImGui::PopFont();
 }
 
+
 void appMenuBar()
 {
-    bool fileOpen = false;
-    bool fileSave = false;
-    bool fileSaveAs = false;
-    bool saveContextToFile = false;
-    bool fileLoadContext = false;
-    bool changeEmulationSettingsOpt = false;
     bool quit = false;  // not using exit because it's a function from std to avoid confusion
 
     ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[RubikRegular16]);
@@ -152,9 +153,9 @@ void appMenuBar()
     {
         if (ImGui::BeginMenu("File"))
         {
-            ImGui::MenuItem("Open", "Ctrl+O", &fileOpen);
-            ImGui::MenuItem("Save", "Ctrl+S", &fileSave);
-            ImGui::MenuItem("Save As", "Ctrl+Shift+S", &fileSaveAs);
+            ImGui::MenuItem("Open", "Ctrl+O", &openFile);
+            ImGui::MenuItem("Save", "Ctrl+S", &saveFile);
+            ImGui::MenuItem("Save As", "Ctrl+Shift+S", &saveFileAs);
             ImGui::MenuItem("Save context to file", "Ctrl+Shift+M", &saveContextToFile);
             ImGui::MenuItem("Load context from file", "Ctrl+Shift+O", &fileLoadContext);
             ImGui::Separator();
@@ -197,7 +198,7 @@ void appMenuBar()
                 LOG_INFO("Editor pasted from clipboard");
             }
             ImGui::Separator();
-            ImGui::MenuItem("Change emulation settings", "CTRL+,", &changeEmulationSettingsOpt);
+            ImGui::MenuItem("Change emulation settings", "CTRL+.", &changeEmulationSettingsOpt);
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu("Debug")){
@@ -218,44 +219,9 @@ void appMenuBar()
         ImGui::EndMainMenuBar();
     }
 
-    if (fileOpen)
-    {
-        LOG_INFO("File open dialog requested!");
-        fileOpenTask(openFileDialog());
-    }
-    if (fileSaveAs) {
-        LOG_INFO("File save as dialog requested!");
-        fileSaveAsTask( saveAsFileDialog());
-    }
-    if (fileSave){
-        LOG_INFO("File save requested for the file: " << selectedFile);
-        fileSaveTask(selectedFile);
-    }
     if (quit){
         isRunning = false;
     }
 
-    if (saveContextToFile){
-        fileSaveUCContextAsJson(saveAsFileDialog());
-    }
-    if (fileLoadContext){
-        fileLoadUCContextFromJson(openFileDialog());
-        uint64_t rip;
-        int lineNumber;
-
-        uc_reg_read(uc, regNameToConstant("RIP"), &rip);
-        std::string str =  addressLineNoMap[std::to_string(rip)];
-        if (!str.empty()) {
-            lineNumber = std::atoi(str.c_str());
-            editor->HighlightDebugCurrentLine(lineNumber - 1);
-        }
-    }
-    if (changeEmulationSettingsOpt){
-        showEmuSettings = true;
-    }
-    if (showEmuSettings){
-        changeEmulationSettings();
-    }
-//    ImGui::PopStyleVar();
     ImGui::PopFont();
 }

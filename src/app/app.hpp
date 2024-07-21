@@ -33,6 +33,9 @@ extern bool isRunning;
 using json = nlohmann::json;
 
 #define CONFIG_NAME "config"
+extern bool openFile;
+extern bool saveFile;
+extern bool saveFileAs;
 
 extern void setupViewPort();
 void appMenuBar();

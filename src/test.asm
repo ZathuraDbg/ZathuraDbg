@@ -2,9 +2,11 @@ main:
     mov rbx, 0x400
     add rbx, rax
     mov rdi, rbx
+    push rdi
     call subtract_hundred
     jmp nextblock
     push rax
+    push rbx
     
 subtract_hundred:
     sub rdi, 0x100
