@@ -43,7 +43,7 @@ void debugStopAction(){
     debugModeEnabled = false;
     resetState();
 }
-
+bool show = false;
 void handleKeyboardInput(){
     if (enableDebugMode){
         startDebugging();
@@ -80,4 +80,43 @@ void handleKeyboardInput(){
         debugStop = false;
     }
 
+    if (saveFile){
+        LOG_INFO("File save requested!");
+        fileSaveTask(selectedFile);
+        saveFile = false;
+    }
+    if (openFile){
+        LOG_INFO("File open dialog requested!");
+        resetState();
+        fileOpenTask(openFileDialog());
+        openFile = false;
+    }
+    if (saveFileAs){
+        LOG_INFO("File save as requested!");
+        fileSaveAsTask(saveAsFileDialog());
+        saveFileAs = false;
+    }
+    if (saveContextToFile){
+        if (context == nullptr || uc == nullptr){
+            return;
+        }
+
+        fileSaveUCContextAsJson(saveAsFileDialog());
+    }
+    if (fileLoadContext){
+        fileLoadUCContextFromJson(openFileDialog());
+        uint64_t rip;
+        int lineNumber;
+
+        uc_reg_read(uc, regNameToConstant("RIP"), &rip);
+        std::string str =  addressLineNoMap[std::to_string(rip)];
+        if (!str.empty()) {
+            lineNumber = std::atoi(str.c_str());
+            editor->HighlightDebugCurrentLine(lineNumber - 1);
+        }
+    }
+
+    if (changeEmulationSettingsOpt){
+        changeEmulationSettings();
+    }
 }

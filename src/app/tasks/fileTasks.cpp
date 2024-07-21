@@ -84,15 +84,14 @@ void fileRunTask(uint64_t instructionCount){
 }
 
 void fileSaveUCContextAsJson(const std::string& jsonFilename){
-    json j;
-    uint64_t value;
+    json contextJson;
 
     for (auto& reg: x86RegInfoMap){
-        j[reg.first] = getRegister(reg.first).second;
+        contextJson[reg.first] = getRegister(reg.first).second;
     }
 
     std::ofstream jsonFile(jsonFilename, std::ios::out);
-    jsonFile << j.dump() << std::endl;
+    jsonFile << contextJson.dump() << std::endl;
     jsonFile.close();
 }
 

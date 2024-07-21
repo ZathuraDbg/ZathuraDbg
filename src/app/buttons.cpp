@@ -1,5 +1,8 @@
 #include "app.hpp"
 bool enableDebugMode = false;
+bool openFile = false;
+bool saveFile = false;
+bool saveFileAs = false;
 
 bool setupButtons() {
     using namespace ImGui;
@@ -7,8 +10,7 @@ bool setupButtons() {
     ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[6]);
 
     if (ImGui::Button(ICON_CI_FOLDER_OPENED, ImVec2(20, 20))) {
-        resetState();
-        fileOpenTask(openFileDialog());
+        openFile = true;
     }
 
     ImGui::SameLine();
@@ -78,7 +80,7 @@ bool setupButtons() {
         ImGui::Separator();
         ImGui::SameLine();
 
-        if (ImGui::Button(ICON_CI_DEBUG_STOP, ImVec2(20, 20))){\
+        if (ImGui::Button(ICON_CI_DEBUG_STOP, ImVec2(20, 20))){
             debugStop = true;
        }
     }

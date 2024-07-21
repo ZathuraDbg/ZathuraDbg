@@ -21,6 +21,10 @@ enum arch{
     ARM,
     RISCV
 };
+extern bool saveContextToFile;
+extern bool fileLoadContext;
+extern bool changeEmulationSettingsOpt;
+
 extern bool debugRestart;
 extern bool debugStepIn;
 extern bool debugStepOver;
@@ -34,6 +38,13 @@ extern const uc_mode x86UCModes[];
 extern const uc_mode armUCModes[];
 extern const char* x86ModeStr[];
 extern const char* armModeStr[];
+extern const cs_arch csArchs[];
+extern const ks_mode x86KSModes[];
+extern const cs_mode x86CSModes[];
+extern const ks_mode armKSModes[];
+extern const cs_mode armCSMOdes[];
+extern const char* ksSyntaxOptStr[];
+extern const ks_opt_value ksSyntaxOpts[];
 extern tsl::ordered_map<std::string, std::string> registerValueMap;
 extern void changeEmulationSettings();
 extern std::unordered_map<std::string, std::string> tempRegisterValueMap;
