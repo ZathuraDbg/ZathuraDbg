@@ -70,6 +70,7 @@ void pushFont(){
     ImGui::PushFont(io.Fonts->Fonts[SatoshiBold18]);
 }
 
+
 void mainWindow() {
     ImGuiIO &io = ImGui::GetIO();
 
@@ -228,6 +229,8 @@ void mainWindow() {
     stackEditorWindow();
 
     ImGui::End();
-//    Utils::LayoutManager::save(CONFIG_NAME);
+    manageShortcuts();
+    handleKeyboardInput();
+    //    Utils::LayoutManager::save(CONFIG_NAME);
     ImGui::Render();
 }

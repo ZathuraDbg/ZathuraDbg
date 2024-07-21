@@ -1,4 +1,6 @@
 #include "app.hpp"
+bool enableDebugMode = false;
+
 bool setupButtons() {
     using namespace ImGui;
 
@@ -22,9 +24,7 @@ bool setupButtons() {
     ImGui::SameLine();
 
     if (ImGui::Button(ICON_CI_DEBUG_START, ImVec2(20, 20))){
-        resetState();
-//      -1 = it will be computed later in the function below
-        fileRunTask(-1);
+        debugRun = true;
     }
 
     ImGui::SameLine();
@@ -34,16 +34,12 @@ bool setupButtons() {
 
     if (!debugModeEnabled){
         if (ImGui::Button(ICON_CI_DEBUG, ImVec2(20, 20))){
-            resetState();
-            debugModeEnabled = true;
-            LOG_DEBUG("Context is empty!");
-            fileRunTask(1);
+            enableDebugMode = true;
         }
     }
     else{
         if (ImGui::Button(ICON_CI_DEBUG_RERUN, ImVec2(20, 20))){
-            resetState();
-            fileRunTask(1);
+            debugRestart = true;
         }
 
         ImGui::SameLine();
@@ -51,7 +47,7 @@ bool setupButtons() {
         ImGui::SameLine();
 
         if (ImGui::Button(ICON_CI_DEBUG_CONTINUE, ImVec2(20, 20))){
-            stepCode(0);
+            debugContinue = true;
         }
 
         ImGui::SameLine();
@@ -59,20 +55,7 @@ bool setupButtons() {
         ImGui::SameLine();
 
         if (ImGui::Button(ICON_CI_DEBUG_STEP_OVER, ImVec2(20, 20))){
-            uint64_t ip;
-            int lineNo;
-
-            uc_context_restore(uc, context);
-            ip = getRegister(getArchIPStr(codeInformation.mode)).second;
-//            uc_context_reg_read(context, regNameToConstant("RIP"), &ip);
-            std::string str = addressLineNoMap[std::to_string(ip)];
-
-            if (!str.empty()){
-                lineNo = std::atoi(str.c_str());
-                breakpointLines.push_back(lineNo + 1);
-                stepCode(0);
-                continueOverBreakpoint = true;
-            }
+            debugStepOver = true;
         }
 
         ImGui::SameLine();
@@ -80,9 +63,7 @@ bool setupButtons() {
         ImGui::SameLine();
 
         if (ImGui::Button(ICON_CI_DEBUG_STEP_INTO, ImVec2(20, 20))){
-            stepIn = true;
-            stepCode(1);
-            stepIn = false;
+            debugStepIn = true;
         }
 
         ImGui::SameLine();
@@ -90,26 +71,26 @@ bool setupButtons() {
         ImGui::SameLine();
 
         if (ImGui::Button(ICON_CI_DEBUG_PAUSE, ImVec2(20, 20))){
-            uc_context_save(uc, context);
-            uc_emu_stop(uc);
+            debugPause = true;
         }
 
         ImGui::SameLine();
         ImGui::Separator();
         ImGui::SameLine();
 
-        if (ImGui::Button(ICON_CI_DEBUG_STOP, ImVec2(20, 20))){
-            debugModeEnabled = false;
-            resetState();
-        }
+        if (ImGui::Button(ICON_CI_DEBUG_STOP, ImVec2(20, 20))){\
+            debugStop = true;
+       }
     }
 
     ImGui::SameLine();
     ImGui::Separator();
     ImGui::SameLine();
 
-    if (ImGui::Button(ICON_CI_DEBUG_RESTART, ImVec2(20, 20))){
-        resetState();
+    if (!debugModeEnabled){
+        if (ImGui::Button(ICON_CI_DEBUG_RESTART, ImVec2(20, 20))){
+            resetState();
+        }
     }
 
     ImGui::SameLine();

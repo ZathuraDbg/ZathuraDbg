@@ -13,135 +13,19 @@ const ks_mode armKSModes[] = {KS_MODE_ARM, KS_MODE_THUMB, KS_MODE_V8, KS_MODE_V9
 const cs_mode armCSMOdes[] = {CS_MODE_ARM, CS_MODE_THUMB, CS_MODE_V8, CS_MODE_V9};
 const char* ksSyntaxOptStr[] = {"Intel", "AT&T", "NASM", "GAS"};
 const ks_opt_value ksSyntaxOpts[] = {KS_OPT_SYNTAX_INTEL, KS_OPT_SYNTAX_ATT, KS_OPT_SYNTAX_NASM, KS_OPT_SYNTAX_GAS};
+bool showEmuSettings = false;
 
-void appMenuBar()
-{
-    bool fileOpen = false;
-    bool fileSave = false;
-    bool fileSaveAs = false;
-    bool saveContextToFile = false;
-    bool fileLoadContext = false;
-    bool changeEmulationSettings = false;
-    bool quit = false;  // not using exit because it's a function from std to avoid confusion
+bool debugRestart = false;
+bool debugStepIn = false;
+bool debugStepOver = false;
+bool debugContinue = false;
+bool debugPause = false;
+bool debugStop = false;
+bool debugRun = false;
 
-    bool debugReset = false;
-    bool debugStep = false;
-    bool debugRun = false;
-
-    ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[RubikRegular16]);
-    if (ImGui::BeginMainMenuBar())
-    {
-        if (ImGui::BeginMenu("File"))
-        {
-            ImGui::MenuItem("Open", "Ctrl+O", &fileOpen);
-            ImGui::MenuItem("Save", "Ctrl+S", &fileSave);
-            ImGui::MenuItem("Save As", "Ctrl+Shift+S", &fileSaveAs);
-            ImGui::MenuItem("Save context to file", "Ctrl+Shift+M", &saveContextToFile);
-            ImGui::MenuItem("Load context from file", "Ctrl+Shift+O", &fileLoadContext);
-            ImGui::Separator();
-            ImGui::MenuItem("Exit", "Alt+F4", &quit);
-            ImGui::Separator();
-            ImGui::EndMenu();
-        }
-        if (ImGui::BeginMenu("Edit"))
-        {
-            if (ImGui::MenuItem("Undo", "CTRL+Z")) {
-                if (editor->CanUndo()){
-                    editor->Undo();
-                    LOG_INFO("Editor serviced undo");
-                }
-                else{
-                    LOG_ERROR("Undo requested but couldn't be fulfilled by editor");
-                }
-            }
-            if (ImGui::MenuItem("Redo", "CTRL+Y", false)) {
-                if (editor->CanRedo()){
-                    editor->Redo();
-                    LOG_INFO("Editor serviced redo");
-                }
-                else{
-                    LOG_ERROR("Redo requested but couldn't be fulfilled by editor");
-                }
-
-            }
-            ImGui::Separator();
-            if (ImGui::MenuItem("Cut", "CTRL+X")) {
-                editor->Cut();
-                LOG_INFO("Editor cut to clipboard");
-            }
-            if (ImGui::MenuItem("Copy", "CTRL+C")) {
-                editor->Copy();
-                LOG_INFO("Editor copied to clipboard");
-            }
-            if (ImGui::MenuItem("Paste", "CTRL+V")) {
-                editor->Paste();
-                LOG_INFO("Editor pasted from clipboard");
-            }
-            ImGui::Separator();
-            ImGui::MenuItem("Change emulation settings", "CTRL+,", &changeEmulationSettings);
-            ImGui::EndMenu();
-        }
-        if (ImGui::BeginMenu("Debug")){
-            ImGui::MenuItem("Reset", "CTRL+Shift+R", &debugReset);
-            ImGui::MenuItem("Run", "CTRL+R", &debugRun);
-            ImGui::MenuItem("Step", "CTRL+J", &debugStep);
-            ImGui::Separator();
-            ImGui::EndMenu();
-        }
-        ImGui::EndMainMenuBar();
-    }
-
-    if (fileOpen)
-    {
-        LOG_INFO("File open dialog requested!");
-        fileOpenTask(openFileDialog());
-    }
-    if (fileSaveAs) {
-        LOG_INFO("File save as dialog requested!");
-        fileSaveAsTask( saveAsFileDialog());
-    }
-    if (fileSave){
-        LOG_INFO("File save requested for the file: " << selectedFile);
-        fileSaveTask(selectedFile);
-    }
-    if (quit){
-        isRunning = false;
-    }
-    if (debugRun){
-        fileRunTask();
-    }
-    if (debugStep){
-        if (context == nullptr){
-            LOG_DEBUG("Context is empty!");
-            fileRunTask(1);
-        }
-        else{
-            LOG_DEBUG("Context is not empty!");
-            stepCode();
-        }
-    }
-    if (debugReset){
-        resetState();
-    }
-    if (saveContextToFile){
-        fileSaveUCContextAsJson(saveAsFileDialog());
-    }
-    if (fileLoadContext){
-        fileLoadUCContextFromJson(openFileDialog());
-        uint64_t rip;
-        int lineNumber;
-
-        uc_reg_read(uc, regNameToConstant("RIP"), &rip);
-        std::string str =  addressLineNoMap[std::to_string(rip)];
-        if (!str.empty()) {
-            lineNumber = std::atoi(str.c_str());
-            editor->HighlightDebugCurrentLine(lineNumber - 1);
-        }
-    }
-    if (changeEmulationSettings){
-        ImGui::OpenPopup("Emulation Settings");
-    }
-
+void changeEmulationSettings(){
+    showEmuSettings = true;
+    ImGui::OpenPopup("Emulation Settings");
     static int selectedArch = 0;
     static int selectedMode = 2;
     static int selectedSyntax = 2;
@@ -237,17 +121,141 @@ void appMenuBar()
             breakpointLines.clear();
             breakpointLines = {};
             ImGui::CloseCurrentPopup();
-       }
+            showEmuSettings = false;
+        }
         ImGui::SameLine();
         if (ImGui::Button("CANCEL")){
             ImGui::CloseCurrentPopup();
+            showEmuSettings = false;
         }
 
         ImGui::PopFont();
         ImGui::EndPopup();
     }
+    ImGui::PopStyleVar();
     ImGui::PopStyleColor();
     ImGui::PopFont();
-    ImGui::PopStyleVar();
+}
+
+void appMenuBar()
+{
+    bool fileOpen = false;
+    bool fileSave = false;
+    bool fileSaveAs = false;
+    bool saveContextToFile = false;
+    bool fileLoadContext = false;
+    bool changeEmulationSettingsOpt = false;
+    bool quit = false;  // not using exit because it's a function from std to avoid confusion
+
+    ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[RubikRegular16]);
+    if (ImGui::BeginMainMenuBar())
+    {
+        if (ImGui::BeginMenu("File"))
+        {
+            ImGui::MenuItem("Open", "Ctrl+O", &fileOpen);
+            ImGui::MenuItem("Save", "Ctrl+S", &fileSave);
+            ImGui::MenuItem("Save As", "Ctrl+Shift+S", &fileSaveAs);
+            ImGui::MenuItem("Save context to file", "Ctrl+Shift+M", &saveContextToFile);
+            ImGui::MenuItem("Load context from file", "Ctrl+Shift+O", &fileLoadContext);
+            ImGui::Separator();
+            ImGui::MenuItem("Exit", "Alt+F4", &quit);
+            ImGui::Separator();
+            ImGui::EndMenu();
+        }
+        if (ImGui::BeginMenu("Edit"))
+        {
+            if (ImGui::MenuItem("Undo", "CTRL+Z")) {
+                if (editor->CanUndo()){
+                    editor->Undo();
+                    LOG_INFO("Editor serviced undo");
+                }
+                else{
+                    LOG_ERROR("Undo requested but couldn't be fulfilled by editor");
+                }
+            }
+            if (ImGui::MenuItem("Redo", "CTRL+Y", false)) {
+                if (editor->CanRedo()){
+                    editor->Redo();
+                    LOG_INFO("Editor serviced redo");
+                }
+                else{
+                    LOG_ERROR("Redo requested but couldn't be fulfilled by editor");
+                }
+
+            }
+            ImGui::Separator();
+            if (ImGui::MenuItem("Cut", "CTRL+X")) {
+                editor->Cut();
+                LOG_INFO("Editor cut to clipboard");
+            }
+            if (ImGui::MenuItem("Copy", "CTRL+C")) {
+                editor->Copy();
+                LOG_INFO("Editor copied to clipboard");
+            }
+            if (ImGui::MenuItem("Paste", "CTRL+V")) {
+                editor->Paste();
+                LOG_INFO("Editor pasted from clipboard");
+            }
+            ImGui::Separator();
+            ImGui::MenuItem("Change emulation settings", "CTRL+,", &changeEmulationSettingsOpt);
+            ImGui::EndMenu();
+        }
+        if (ImGui::BeginMenu("Debug")){
+            if (!debugModeEnabled){
+                ImGui::MenuItem("Debug", "F5", &enableDebugMode);
+            }
+            else{
+                ImGui::MenuItem("Stop debugging", "Shift+F5", &debugStop);
+            }
+            ImGui::MenuItem("Step In", "CTRL+J", &debugStepIn, debugModeEnabled ? true : false);
+            ImGui::MenuItem("Step Over", "CTRL+K", &debugStepOver, debugModeEnabled ? true : false);
+            ImGui::MenuItem("Continue", "F5", &debugContinue, debugModeEnabled ? true : false);
+            ImGui::MenuItem("Reset", "CTRL+F5", &debugRestart, debugModeEnabled ? true : false);
+//            ImGui::MenuItem("Run", "CTRL+R", &debugRun, debugModeEnabled ? true : false);
+            ImGui::Separator();
+            ImGui::EndMenu();
+        }
+        ImGui::EndMainMenuBar();
+    }
+
+    if (fileOpen)
+    {
+        LOG_INFO("File open dialog requested!");
+        fileOpenTask(openFileDialog());
+    }
+    if (fileSaveAs) {
+        LOG_INFO("File save as dialog requested!");
+        fileSaveAsTask( saveAsFileDialog());
+    }
+    if (fileSave){
+        LOG_INFO("File save requested for the file: " << selectedFile);
+        fileSaveTask(selectedFile);
+    }
+    if (quit){
+        isRunning = false;
+    }
+
+    if (saveContextToFile){
+        fileSaveUCContextAsJson(saveAsFileDialog());
+    }
+    if (fileLoadContext){
+        fileLoadUCContextFromJson(openFileDialog());
+        uint64_t rip;
+        int lineNumber;
+
+        uc_reg_read(uc, regNameToConstant("RIP"), &rip);
+        std::string str =  addressLineNoMap[std::to_string(rip)];
+        if (!str.empty()) {
+            lineNumber = std::atoi(str.c_str());
+            editor->HighlightDebugCurrentLine(lineNumber - 1);
+        }
+    }
+    if (changeEmulationSettingsOpt){
+        showEmuSettings = true;
+    }
+    if (showEmuSettings){
+        changeEmulationSettings();
+    }
+//    ImGui::PopStyleVar();
     ImGui::PopFont();
 }

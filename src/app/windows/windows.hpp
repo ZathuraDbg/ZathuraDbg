@@ -21,12 +21,21 @@ enum arch{
     ARM,
     RISCV
 };
+extern bool debugRestart;
+extern bool debugStepIn;
+extern bool debugStepOver;
+extern bool debugContinue;
+extern bool debugStop;
+extern bool debugPause;
+extern bool debugRun;
+extern bool enableDebugMode;
 
 extern const uc_mode x86UCModes[];
 extern const uc_mode armUCModes[];
 extern const char* x86ModeStr[];
 extern const char* armModeStr[];
 extern tsl::ordered_map<std::string, std::string> registerValueMap;
+extern void changeEmulationSettings();
 extern std::unordered_map<std::string, std::string> tempRegisterValueMap;
 extern bool codeHasRun;
 extern bool stepClickedOnce;
