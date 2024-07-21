@@ -8,7 +8,7 @@ main:
     call subtract_hundred
     jmp nextblock
     push %rax
-    
+
 subtract_hundred:
     sub $0x100, %rdi
     mov %rdi, %rax
