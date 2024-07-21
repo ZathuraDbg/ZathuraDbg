@@ -91,6 +91,8 @@ void initInsSizeInfoMap(){
                 else{
                     labelLineNoMapInternal.insert({instructionStr.substr(0, instructionStr.find_first_of(':')), lineNo});
                     labels.push_back(instructionStr.substr(0, instructionStr.find_first_of(':')));
+                    lineNo++;
+                    continue;
                 }
             }
         }
@@ -100,13 +102,21 @@ void initInsSizeInfoMap(){
         }
 
         if (instructionStr.starts_with("\t")){
-            instructionStr = instructionStr.substr(instructionStr.find_first_not_of('\t'));
+            auto idx = instructionStr.find_first_not_of('\t');
+            if (idx != std::string::npos){
+                instructionStr = instructionStr.substr(idx);
+            }
         }
         if (instructionStr.starts_with(" ")){
-            instructionStr = instructionStr.substr(instructionStr.find_first_not_of(' '));
+            auto idx = instructionStr.find_first_not_of(' ');
+            if (idx != std::string::npos){
+                instructionStr = instructionStr.substr(idx);
+            }
         }
 
-        instructionStr = instructionStr.substr(0, instructionStr.find_first_of(' '));
+        if (auto idx = instructionStr.find_first_of(' '); idx != std::string::npos){
+            instructionStr = instructionStr.substr(0, idx);
+        }
 
         if (instructionStr.contains(";")){
             lineNo++;

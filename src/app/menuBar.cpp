@@ -1,7 +1,7 @@
 #include "app.hpp"
 bool firstTime = true;
 
-const char* items[] = {"Intel x86", "ARM", "RISC-V", "Really long text frfr"};
+const char* items[] = {"Intel x86", "ARM", "RISC-V", "PowerPC"};
 const char* x86ModeStr[] = {"16 bit", "32 bit", "64 bit"};
 const cs_arch csArchs[] = {CS_ARCH_X86, CS_ARCH_ARM, CS_ARCH_RISCV};
 const uc_mode x86UCModes[] = {UC_MODE_16, UC_MODE_32, UC_MODE_64};

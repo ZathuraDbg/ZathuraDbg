@@ -1,6 +1,6 @@
 #include "arch.hpp"
 //codeInformationT codeInformation{.arch=UC_ARCH_MAX};
-codeInformationT codeInformation{.archUC=UC_ARCH_X86, .archKS = KS_ARCH_X86, .mode=UC_MODE_64, .modeKS = KS_MODE_64, .syntax = KS_OPT_SYNTAX_NASM};
+codeInformationT codeInformation{.archUC=UC_ARCH_X86, .archKS = KS_ARCH_X86,  .archCS = CS_ARCH_X86, .mode=UC_MODE_64, .modeKS = KS_MODE_64,.modeCS = CS_MODE_64, .syntax = KS_OPT_SYNTAX_NASM};
 std::unordered_map<std::string, std::pair<size_t, int>> regInfoMap = {};
 std::string (*getArchIPStr)(uc_mode) = nullptr;
 std::pair<std::string, std::string> (*getArchSBPStr)(uc_mode) = nullptr;
