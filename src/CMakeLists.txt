@@ -41,6 +41,10 @@ set(SOURCES
         utils/stringHelper.hpp
         app/integration/interpreter/errorHandler.cpp
         app/integration/interpreter/errorHandler.hpp
+        app/shortcuts.cpp
+        app/shortcuts.hpp
+        app/actions/actions.cpp
+        app/actions/actions.hpp
 
 )
 

@@ -29,13 +29,14 @@ extern bool isRunning;
 #include "windows/windows.hpp"
 #include "nlohmann/json.hpp"
 #include <capstone/capstone.h>
+#include "actions/actions.hpp"
 using json = nlohmann::json;
 
 #define CONFIG_NAME "config"
 
 extern void setupViewPort();
 void appMenuBar();
-
+extern void manageShortcuts();
 extern void LoadIniFile();
 extern bool setupButtons();
 extern void mainWindow();
