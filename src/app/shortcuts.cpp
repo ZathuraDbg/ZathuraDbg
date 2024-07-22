@@ -1,6 +1,7 @@
 #include "shortcuts.hpp"
 
 void manageShortcuts(){
+    using namespace ImGui;
     ImGuiIO& io = ImGui::GetIO();
     auto isOSX = io.ConfigMacOSXBehaviors;
     auto alt = io.KeyAlt;
@@ -19,24 +20,50 @@ void manageShortcuts(){
     io.WantTextInput = true;
 
     if (isCtrlShortcut && (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_S)))){
-        fileSaveTask(selectedFile);
+        saveFile = true;
     }
     if (isCtrlShiftShortcut && (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_S)))){
-        fileSaveAsTask(saveAsFileDialog());
+        saveFileAs = true;
     }
     if (isCtrlShortcut && (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_O)))){
-        fileOpenTask(openFileDialog());
+        openFile = true;
     }
-
     if (isCtrlShortcut && (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Period)))){
-        changeEmulationSettings();
+        changeEmulationSettingsOpt = true;
     }
-
     if (isCtrlShiftShortcut && (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_M)))){
-        fileSaveUCContextAsJson(saveAsFileDialog());
+       saveContextToFile = true;
     }
-
     if (isCtrlShiftShortcut && (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_O)))){
-        fileLoadUCContextFromJson(openFileDialog());
+        fileLoadContext = true;
+    }
+    if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_F5))){
+        if (!debugModeEnabled){
+            enableDebugMode = true;
+        }
+        else{
+            debugContinue = true;
+        }
+    }
+    if (isCtrlShortcut && (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_J)))){
+        debugStepIn = true;
+    }
+    if (isCtrlShortcut && (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_K)))){
+        debugStepOver = true;
+    }
+    if (isCtrlShortcut && (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_F5)))){
+        debugRestart = true;
+    }
+    if (isShiftOnly && (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_F5)))){
+        debugStop = true;
+    }
+    if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_F9))){
+        toggleBreakpoint = true;
+    }
+    if (IsKeyPressed(GetKeyIndex(ImGuiKey_F3))){
+        runSelectedCode = true;
+    }
+    if (IsKeyPressed(GetKeyIndex(ImGuiKey_F4))){
+        goToDefinition = true;
     }
 }
