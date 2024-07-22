@@ -16,6 +16,7 @@
 #include "errorHandler.hpp"
 #include <array>
 
+extern bool skipCheck;
 extern bool createStack(void* unicornEngine);
 extern bool runTempCode(const std::string& codeIn);
 extern bool debugModeEnabled;
@@ -38,6 +39,7 @@ extern bool continueOverBreakpoint;
 extern bool stepIn;
 extern bool stepOver;
 extern bool stepContinue;
+extern uint64_t getRegisterValue(const std::string& regName, bool useTempContext);
 extern uint64_t expectedIP;
 extern uint64_t codeCurrentLen;
 extern int getCurrentLine();
