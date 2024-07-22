@@ -210,8 +210,8 @@ void appMenuBar()
             }
             ImGui::MenuItem("Step In", "CTRL+J", &debugStepIn, debugModeEnabled ? true : false);
             ImGui::MenuItem("Step Over", "CTRL+K", &debugStepOver, debugModeEnabled ? true : false);
-            ImGui::MenuItem("Continue", "F5", &debugContinue, debugModeEnabled ? true : false);
-            ImGui::MenuItem("Reset", "CTRL+F5", &debugRestart, debugModeEnabled ? true : false);
+            ImGui::MenuItem("Continue", debugModeEnabled ? "F5" : nullptr, &debugContinue, debugModeEnabled ? true : false);
+            ImGui::MenuItem("Restart debugging", "CTRL+F5", &debugRestart, debugModeEnabled ? true : false);
 //            ImGui::MenuItem("Run", "CTRL+R", &debugRun, debugModeEnabled ? true : false);
             ImGui::Separator();
             ImGui::EndMenu();

@@ -43,6 +43,31 @@ void debugStopAction(){
     debugModeEnabled = false;
     resetState();
 }
+
+void debugToggleBreakpoint(){
+    int line, _;
+    editor->GetCursorPosition(line, _);
+    auto idx = (std::find(breakpointLines.begin(), breakpointLines.end(), line + 1));
+    if (idx != breakpointLines.end()){
+        breakpointLines.erase(idx);
+        editor->RemoveHighlight(line);
+    }
+    else{
+        breakpointLines.push_back(line + 1);
+        editor->HighlightBreakpoints(line);
+    }
+}
+
+void debugRunSelectionAction(){
+    std::stringstream selectedAsmText(editor->GetSelectedText());
+    if (!selectedAsmText.str().empty()) {
+        std::string bytes = getBytes(selectedAsmText);
+        if (!bytes.empty()) {
+            runTempCode(bytes);
+        }
+    }
+}
+
 bool show = false;
 void handleKeyboardInput(){
     if (enableDebugMode){
@@ -98,10 +123,12 @@ void handleKeyboardInput(){
     }
     if (saveContextToFile){
         if (context == nullptr || uc == nullptr){
+            saveContextToFile = false;
             return;
         }
 
         fileSaveUCContextAsJson(saveAsFileDialog());
+        saveContextToFile = false;
     }
     if (fileLoadContext){
         fileLoadUCContextFromJson(openFileDialog());
@@ -114,9 +141,25 @@ void handleKeyboardInput(){
             lineNumber = std::atoi(str.c_str());
             editor->HighlightDebugCurrentLine(lineNumber - 1);
         }
+        fileLoadContext = false;
     }
 
     if (changeEmulationSettingsOpt){
         changeEmulationSettings();
+    }
+
+    if (toggleBreakpoint){
+        debugToggleBreakpoint();
+        toggleBreakpoint = false;
+    }
+
+    if (runSelectedCode){
+        debugRunSelectionAction();
+        runSelectedCode = false;
+    }
+
+    if (goToDefinition){
+        editor->SelectLabelDefinition(false);
+        goToDefinition = false;
     }
 }

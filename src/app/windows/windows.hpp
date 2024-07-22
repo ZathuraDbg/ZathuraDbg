@@ -21,10 +21,16 @@ enum arch{
     ARM,
     RISCV
 };
+
 extern bool saveContextToFile;
 extern bool fileLoadContext;
 extern bool changeEmulationSettingsOpt;
-
+extern bool toggleBreakpoint;
+extern bool runSelectedCode;
+extern bool goToDefinition;
+extern bool openFile;
+extern bool saveFile;
+extern bool saveFileAs;
 extern bool debugRestart;
 extern bool debugStepIn;
 extern bool debugStepOver;

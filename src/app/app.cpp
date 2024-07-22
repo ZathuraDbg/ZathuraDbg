@@ -1,8 +1,10 @@
 #include "app.hpp"
 #include "tasks/editorTasks.hpp"
-
+bool toggleBreakpoint = false;
 bool isRunning = true;
 bool lineNumbersShown = true;
+bool runSelectedCode = false;
+bool goToDefinition = false;
 
 void setupEditor() {
     editor = new TextEditor();
@@ -145,17 +147,7 @@ void mainWindow() {
         ImGui::Separator();
 
         if (ImGui::MenuItem("Toggle breakpoint", "F9", false)) {
-            int line, _;
-            editor->GetCursorPosition(line, _);
-            auto idx = (std::find(breakpointLines.begin(), breakpointLines.end(), line + 1));
-            if (idx != breakpointLines.end()){
-                breakpointLines.erase(idx);
-                editor->RemoveHighlight(line);
-            }
-            else{
-                breakpointLines.push_back(line + 1);
-                editor->HighlightBreakpoints(line);
-            }
+            toggleBreakpoint = true;
         }
 
 
@@ -196,19 +188,13 @@ void mainWindow() {
 
         ImGui::Separator();
         if (!debugModeEnabled){
-            if (ImGui::MenuItem("Run selected code", nullptr, false)){
-                std::stringstream selectedAsmText(editor->GetSelectedText());
-                if (!selectedAsmText.str().empty()) {
-                    std::string bytes = getBytes(selectedAsmText);
-                    if (!bytes.empty()) {
-                        runTempCode(bytes);
-                    }
-                }
+            if (ImGui::MenuItem("Run selected code", "F3", false)){
+                runSelectedCode = true;
             }
         }
 
-        if (ImGui::MenuItem("Go to definition")){
-            editor->SelectLabelDefinition(false);
+        if (ImGui::MenuItem("Go to definition", "F4")){
+            goToDefinition = true;
         }
 
         ImGui::EndPopup();
