@@ -1,5 +1,5 @@
 #include "actions.hpp"
-
+#include "../integration/interpreter/interpreter.hpp"
 void startDebugging(){
     resetState();
     debugModeEnabled = true;
@@ -24,6 +24,7 @@ void stepOverAction(){
         lineNo = std::atoi(str.c_str());
         breakpointLines.push_back(lineNo + 1);
         stepCode(0);
+//        breakpointLines.pop_back();
         continueOverBreakpoint = true;
     }
 }
@@ -34,7 +35,13 @@ void stepInAction(){
     stepIn = false;
 }
 
+bool skipCheck = false;
 void debugPauseAction(){
+    auto ip = getRegisterValue(getArchIPStr(codeInformation.mode), false);
+    std::string str = addressLineNoMap[std::to_string(ip)];
+    auto lineNumber = std::atoi(str.c_str());
+    editor->HighlightDebugCurrentLine(lineNumber - 1);
+    skipCheck = true;
     uc_context_save(uc, context);
     uc_emu_stop(uc);
 }
@@ -85,15 +92,19 @@ void handleKeyboardInput(){
         debugRun = false;
     }
     if (debugContinue){
-        stepCode(0);
+        pthread_t thread;
+        int arg = 0;
+        pthread_create(&thread, nullptr, reinterpret_cast<void *(*)(void *)>(stepCode), &arg);
         debugContinue = false;
     }
     if (debugStepOver){
-        stepOverAction();
+        pthread_t thread;
+        pthread_create(&thread, nullptr, reinterpret_cast<void *(*)(void *)>(stepOverAction), nullptr);
         debugStepOver = false;
     }
     if (debugStepIn){
-        stepInAction();
+        pthread_t thread;
+        pthread_create(&thread, nullptr, reinterpret_cast<void *(*)(void *)>(stepInAction), nullptr);
         debugStepIn = false;
     }
     if (debugPause){

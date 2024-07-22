@@ -217,6 +217,7 @@ bool resetState(){
     codeHasRun = false;
     stepClickedOnce = false;
     continueOverBreakpoint = false;
+    skipCheck = false;
 
     codeCurrentLen = 0;
     codeFinalLen = 0;
@@ -273,13 +274,15 @@ bool resetState(){
 
 
 bool stepCode(size_t instructionCount){
-    LOG_DEBUG("Stepping into code!");
+   LOG_DEBUG("Stepping into code!");
 
     if (codeCurrentLen >= codeFinalLen){
         LOG_DEBUG("Code execution is complete!");
-        editor->HighlightDebugCurrentLine(-1);
-        uc_emu_stop(uc);
-        return true;
+        if (!skipCheck){
+            editor->HighlightDebugCurrentLine(-1);
+            uc_emu_stop(uc);
+            return true;
+        }
     }
 
     uint64_t ip;
@@ -298,16 +301,15 @@ bool stepCode(size_t instructionCount){
         int ret;
 
         if (codeCurrentLen >= codeFinalLen){
-            editor->HighlightDebugCurrentLine(-1);
-            uc_context_save(uc, context);
-            LOG_DEBUG("Code execution is complete!");
-            return true;
+            if (!skipCheck){
+                editor->HighlightDebugCurrentLine(-1);
+                uc_emu_stop(uc);
+                return true;
+            }
         }
 
         uc_context_save(uc, context);
         ip = getRegisterValue(getArchIPStr(codeInformation.mode), false);
-        LOG_DEBUG("Got IP it's " << std::hex << ip << std::hex);
-        //        uc_reg_read(uc,regNameToConstant(getArchIPStr(codeInformation.mode)) , &ip);
         if (ip != expectedIP){
             expectedIP = ip;
         }
@@ -333,6 +335,11 @@ bool stepCode(size_t instructionCount){
 
 void hook(uc_engine *uc, uint64_t address, uint32_t size, void *user_data){
     LOG_DEBUG("Hook called!");
+    if (!debugModeEnabled) {
+        uc_emu_stop(uc);
+        uc_context_save(uc, context);
+        return;
+    }
 
     std::string str = addressLineNoMap[std::to_string(address)];
     int lineNumber;
@@ -347,6 +354,7 @@ void hook(uc_engine *uc, uint64_t address, uint32_t size, void *user_data){
         ip = getRegisterValue(getArchIPStr(codeInformation.mode), false);
 //        uc_reg_read(uc, regNameToConstant(getArchIPStr(codeInformation.mode)), &ip);
         if (ip != expectedIP){
+            updateRegs();
             if (stepIn){
                 std::string bp = addressLineNoMap[std::to_string(ip)];
                 tempBPLineNum = std::atoi(bp.c_str());

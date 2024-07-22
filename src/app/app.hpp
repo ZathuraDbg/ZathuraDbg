@@ -34,7 +34,6 @@ using json = nlohmann::json;
 
 #define CONFIG_NAME "config"
 
-
 extern void setupViewPort();
 void appMenuBar();
 extern void manageShortcuts();
