@@ -102,7 +102,7 @@ void mainWindow() {
     ImGui::GetStyle().Colors[ImGuiCol_HeaderHovered] = ImColor(0x18, 0x19, 0x26);
     ImGui::PushFont(io.Fonts->Fonts[RubikRegular16]);
     if (ImGui::BeginPopupContextItem("TextEditorContextMenu")) {
-        if (ImGui::MenuItem("Copy", "Ctrl + C", false)) // Enable only if there is a selection
+        if (ImGui::MenuItem("Copy", "Ctrl + C", false))
         {
             editor->Copy();
             LOG_DEBUG("Copied text to clipboard");
@@ -110,7 +110,7 @@ void mainWindow() {
 
         ImGui::Separator();
 
-        if (ImGui::MenuItem("Cut", "Ctrl + X", false)) // Enable only if there is a selection
+        if (ImGui::MenuItem("Cut", "Ctrl + X", false))
         {
             editor->Cut();
             LOG_DEBUG("Cut text to clipboard");
@@ -118,7 +118,7 @@ void mainWindow() {
 
         ImGui::Separator();
 
-        if (ImGui::MenuItem("Paste", "Ctrl + V", false)) // Enable only if not read-only and clipboard has text
+        if (ImGui::MenuItem("Paste", "Ctrl + V", false))
         {
             editor->Paste();
             LOG_DEBUG("Pasted text from clipboard");
@@ -126,7 +126,7 @@ void mainWindow() {
 
         ImGui::Separator();
 
-        if (ImGui::MenuItem("Undo", "Ctrl + Z", false)) // Enable only if not read-only and clipboard has text
+        if (ImGui::MenuItem("Undo", "Ctrl + Z", false))
         {
             if (editor->CanUndo()) {
                 editor->Undo();
@@ -136,7 +136,7 @@ void mainWindow() {
 
         ImGui::Separator();
 
-        if (ImGui::MenuItem("Redo", "Ctrl + Y", false)) // Enable only if not read-only and clipboard has text
+        if (ImGui::MenuItem("Redo", "Ctrl + Y", false))
         {
             if (editor->CanRedo()) {
                 editor->Redo();

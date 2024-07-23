@@ -1,5 +1,4 @@
 #include "interpreter.hpp"
-
 uintptr_t ENTRY_POINT_ADDRESS = 0x1000;
 uintptr_t MEMORY_ALLOCATION_SIZE = 2 * 1024 * 1024;
 uintptr_t STACK_ADDRESS = 0x300000;
@@ -18,6 +17,9 @@ uint64_t codeCurrentLen = 0;
 uint64_t lineNo = 1;
 uint64_t expectedIP = 0;
 int stepOverBPLineNo = -1;
+
+std::mutex execMutex;
+std::mutex breakpointMutex;
 
 bool debugModeEnabled = false;
 bool continueOverBreakpoint = false;
@@ -51,7 +53,7 @@ int getCurrentLine(){
 }
 
 void showRegs(){
-    LOG_DEBUG("Showing registers");
+//    LOG_DEBUG("Showing registers");
     int rax, rbx, rcx, rdx, rsi, rdi, rbp, rsp, r8, r9, r10, r11, r12, r13, r14, r15, rip,
         ah, al, ax, bh, bl, bx, ch, cl, cx, dh, dl, dx, si, di, bp, sp, r8d, r9d, r10d, r11d, r12d,
         r13d, r14d, r15d, r8w, r9w, r10w, r11w, r12w, r13w, r14w, r15w, r8b, r9b, r10b, r11b, r12b, r13b, r14b,
@@ -164,7 +166,7 @@ std::pair<bool, uint64_t> getRegister(const std::string& name, bool useTempConte
 }
 
 bool ucInit(void* unicornEngine){
-    LOG_DEBUG("Initializing unicorn engine");
+//    LOG_DEBUG("Initializing unicorn engine");
     if (regInfoMap.empty()){
         initArch();
     }
@@ -180,7 +182,7 @@ bool ucInit(void* unicornEngine){
 }
 
 bool createStack(void* unicornEngine){
-    LOG_DEBUG("Creating stack");
+//    LOG_DEBUG("Creating stack");
 
     if (!ucInit(unicornEngine)){
         return false;
@@ -266,19 +268,21 @@ bool resetState(){
     }
 
     if (!createStack(&uc)){
-        LOG_DEBUG("Unable to create stack!");
+//        LOG_DEBUG("Unable to create stack!");
         return false;
     }
 
     return true;
 }
 
-
+bool isCodeRunning = false;
 bool stepCode(size_t instructionCount){
-   LOG_DEBUG("Stepping into code!");
-
+//   LOG_DEBUG("Stepping into code!");
+    if (isCodeRunning){
+        return true;
+    }
     if (codeCurrentLen >= codeFinalLen){
-        LOG_DEBUG("Code execution is complete!");
+//        LOG_DEBUG("Code execution is complete!");
         if (!skipCheck){
             editor->HighlightDebugCurrentLine(-1);
             uc_emu_stop(uc);
@@ -291,12 +295,16 @@ bool stepCode(size_t instructionCount){
     uc_context_restore(uc, context);
     ip = getRegisterValue(getArchIPStr(codeInformation.mode), false);
 
+    execMutex.lock();
+    isCodeRunning = true;
     auto err = uc_emu_start(uc, ip, ENTRY_POINT_ADDRESS + CODE_BUF_SIZE, 0, instructionCount);
     if (err) {
         printf("Failed on uc_emu_start() with error returned %u: %s\n",
                err, uc_strerror(err));
     }
-    LOG_DEBUG("Code executed by one step");
+    isCodeRunning = false;
+    execMutex.unlock();
+//    LOG_DEBUG("Code executed by one step");
 
     {
         int lineNum;
@@ -318,7 +326,7 @@ bool stepCode(size_t instructionCount){
         std::string str =  addressLineNoMap[std::to_string(ip)];
         if (!str.empty()){
             lineNo = std::atoi(str.c_str());
-            LOG_DEBUG("Highlight from block 3 - stepCode : line: " << lineNo);
+//            LOG_DEBUG("Highlight from block 3 - stepCode : line: " << lineNo);
             editor->HighlightDebugCurrentLine(lineNo - 1);
 
         }
@@ -330,14 +338,14 @@ bool stepCode(size_t instructionCount){
     uc_context_save(uc, context);
     codeHasRun = true;
 
-    LOG_DEBUG("Code ran once!");
+//    LOG_DEBUG("Code ran once!");
     return true;
 }
 
 int tempBPLineNum = -1;
 void hook(uc_engine *uc, uint64_t address, uint32_t size, void *user_data){
-    LOG_DEBUG("Hook called!");
-    if (!debugModeEnabled) {
+//    LOG_DEBUG("Hook called!");
+    if (!debugModeEnabled && !debugRun) {
         uc_emu_stop(uc);
         uc_context_save(uc, context);
         return;
@@ -353,14 +361,15 @@ void hook(uc_engine *uc, uint64_t address, uint32_t size, void *user_data){
 
     if (debugModeEnabled){
         ip = getRegisterValue(getArchIPStr(codeInformation.mode), false);
-//        uc_reg_read(uc, regNameToConstant(getArchIPStr(codeInformation.mode)), &ip);
         if (ip != expectedIP){
             updateRegs();
             if (stepIn){
                 std::string bp = addressLineNoMap[std::to_string(ip)];
                 tempBPLineNum = std::atoi(bp.c_str());
                 if (!bp.empty()){
+                    breakpointMutex.lock();
                     breakpointLines.push_back(tempBPLineNum);
+                    breakpointMutex.unlock();
                 }
             }
             expectedIP = ip;
@@ -373,13 +382,13 @@ void hook(uc_engine *uc, uint64_t address, uint32_t size, void *user_data){
             lineNumber = -1;
         }
 
-        LOG_DEBUG("At line number: " << lineNumber);
+//        LOG_DEBUG("At line number: " << lineNumber);
 
         if (std::find(breakpointLines.begin(), breakpointLines.end(), lineNumber) != breakpointLines.end()){
             editor->HighlightDebugCurrentLine(lineNumber - 1);
-            LOG_DEBUG("Highlight from hook - breakpoint found at lineNo " << lineNumber);
+//            LOG_DEBUG("Highlight from hook - breakpoint found at lineNo " << lineNumber);
             if (!continueOverBreakpoint){
-                LOG_DEBUG("Breakpoint hit!");
+//                LOG_DEBUG("Breakpoint hit!");
                 uc_emu_stop(uc);
                 uc_context_save(uc, context);
                 continueOverBreakpoint = true;
@@ -391,7 +400,9 @@ void hook(uc_engine *uc, uint64_t address, uint32_t size, void *user_data){
         }
 
         if (tempBPLineNum != -1){
+            breakpointMutex.lock();
             breakpointLines.erase(std::find(breakpointLines.begin(), breakpointLines.end(), tempBPLineNum));
+            breakpointMutex.unlock();
         }
     }
 
@@ -415,7 +426,7 @@ bool initRegistersToDefinedVals(){
 
 bool runCode(const std::string& code_in, uint64_t instructionCount)
 {
-    LOG_DEBUG("Running code...");
+//    LOG_DEBUG("Running code...");
     uc_err err;
     uint8_t* code;
 
@@ -423,7 +434,7 @@ bool runCode(const std::string& code_in, uint64_t instructionCount)
     if (codeBuf == nullptr){
         codeBuf = (uint8_t*)malloc(CODE_BUF_SIZE);
         memset(codeBuf, 0, CODE_BUF_SIZE);
-        LOG_DEBUG("Code buffer allocated!");
+//        LOG_DEBUG("Code buffer allocated!");
     }
 
     code = (uint8_t*)(code_in.c_str());
@@ -475,13 +486,14 @@ bool runCode(const std::string& code_in, uint64_t instructionCount)
             line = "1";
         }
 
-        auto val = stoi(line);
+        auto val = std::atoi(line.data());
         editor->HighlightDebugCurrentLine(val - 1);
-        LOG_DEBUG("Highlight from runCode first line is label");
+//        LOG_DEBUG("Highlight from runCode first line is label");
         stepClickedOnce = true;
     }
 
-    LOG_DEBUG("Ran code successfully!");
+    updateRegs();
+//    LOG_DEBUG("Ran code successfully!");
     codeHasRun = true;
     return true;
 }
