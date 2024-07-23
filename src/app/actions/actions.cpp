@@ -25,14 +25,17 @@ void stepOverAction(){
         breakpointMutex.lock();
         breakpointLines.push_back(lineNo + 1);
         breakpointMutex.unlock();
+        skipCheck = true;
         stepCode(0);
         if (stepOverBPLineNo == lineNo){
             breakpointMutex.lock();
+            LOG_DEBUG("Removing step over breakpoint line number: " << stepOverBPLineNo);
             breakpointLines.erase(std::find(breakpointLines.begin(), breakpointLines.end(), stepOverBPLineNo));
             breakpointMutex.unlock();
             stepOverBPLineNo = -1;
         }
         stepOverBPLineNo = lineNo + 1;
+        LOG_DEBUG("Step over breakpoint line number: " << stepOverBPLineNo);
         continueOverBreakpoint = true;
     }
 }
@@ -83,6 +86,16 @@ void debugRunSelectionAction(){
     }
 }
 
+void debugContinueAction(){
+    pthread_t thread;
+    int arg = 0;
+    if (std::find(breakpointLines.begin(), breakpointLines.end(), stepOverBPLineNo) != breakpointLines.end()){
+        breakpointLines.erase(std::find(breakpointLines.begin(), breakpointLines.end(), tempBPLineNum));
+        stepOverBPLineNo = -1;
+    }
+    pthread_create(&thread, nullptr, reinterpret_cast<void *(*)(void *)>(stepCode), &arg);
+}
+
 bool show = false;
 void handleKeyboardInput(){
     if (enableDebugMode){
@@ -96,20 +109,18 @@ void handleKeyboardInput(){
     if (debugRun){
         resetState();
 //      -1 = it will be computed later in the function below
-        fileRunTask(-1);
-        debugRun = false;
+        startDebugging();
+        editor->HighlightDebugCurrentLine(-1);
+        debugContinueAction();
+
+       debugRun = false;
     }
     if (debugContinue){
-        pthread_t thread;
-        int arg = 0;
-        if (std::find(breakpointLines.begin(), breakpointLines.end(), stepOverBPLineNo) != breakpointLines.end()){
-            breakpointLines.erase(std::find(breakpointLines.begin(), breakpointLines.end(), tempBPLineNum));
-            stepOverBPLineNo = -1;
-        }
-        pthread_create(&thread, nullptr, reinterpret_cast<void *(*)(void *)>(stepCode), &arg);
+        debugContinueAction();
         debugContinue = false;
     }
     if (debugStepOver){
+//        stepOverAction();
         pthread_t thread;
         pthread_create(&thread, nullptr, reinterpret_cast<void *(*)(void *)>(stepOverAction), nullptr);
         debugStepOver = false;
