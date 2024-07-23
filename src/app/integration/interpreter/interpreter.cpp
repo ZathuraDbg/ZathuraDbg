@@ -17,6 +17,7 @@ uc_context *tempContext = nullptr;
 uint64_t codeCurrentLen = 0;
 uint64_t lineNo = 1;
 uint64_t expectedIP = 0;
+int stepOverBPLineNo = -1;
 
 bool debugModeEnabled = false;
 bool continueOverBreakpoint = false;
@@ -298,7 +299,7 @@ bool stepCode(size_t instructionCount){
     LOG_DEBUG("Code executed by one step");
 
     {
-        int ret;
+        int lineNum;
 
         if (codeCurrentLen >= codeFinalLen){
             if (!skipCheck){
@@ -316,10 +317,10 @@ bool stepCode(size_t instructionCount){
 
         std::string str =  addressLineNoMap[std::to_string(ip)];
         if (!str.empty()){
-            ret = std::atoi(str.c_str());
-            LOG_DEBUG("Highlight from block 3 - stepCode : line: " << ret);
-            editor->HighlightDebugCurrentLine(ret - 1);
-            lineNo = ret;
+            lineNo = std::atoi(str.c_str());
+            LOG_DEBUG("Highlight from block 3 - stepCode : line: " << lineNo);
+            editor->HighlightDebugCurrentLine(lineNo - 1);
+
         }
         else{
             return true;
@@ -333,6 +334,7 @@ bool stepCode(size_t instructionCount){
     return true;
 }
 
+int tempBPLineNum = -1;
 void hook(uc_engine *uc, uint64_t address, uint32_t size, void *user_data){
     LOG_DEBUG("Hook called!");
     if (!debugModeEnabled) {
@@ -343,7 +345,6 @@ void hook(uc_engine *uc, uint64_t address, uint32_t size, void *user_data){
 
     std::string str = addressLineNoMap[std::to_string(address)];
     int lineNumber;
-    int tempBPLineNum = -1;
     uint64_t ip;
 
     if (expectedIP == 0){
@@ -396,8 +397,6 @@ void hook(uc_engine *uc, uint64_t address, uint32_t size, void *user_data){
 
     codeCurrentLen += size;
     expectedIP += size;
-
-
 }
 
 bool initRegistersToDefinedVals(){

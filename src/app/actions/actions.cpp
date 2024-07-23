@@ -22,9 +22,14 @@ void stepOverAction(){
 
     if (!str.empty()){
         lineNo = std::atoi(str.c_str());
+
         breakpointLines.push_back(lineNo + 1);
         stepCode(0);
-//        breakpointLines.pop_back();
+        if (stepOverBPLineNo == lineNo){
+            breakpointLines.erase(std::find(breakpointLines.begin(), breakpointLines.end(), stepOverBPLineNo));
+            stepOverBPLineNo = -1;
+        }
+        stepOverBPLineNo = lineNo + 1;
         continueOverBreakpoint = true;
     }
 }
@@ -94,6 +99,10 @@ void handleKeyboardInput(){
     if (debugContinue){
         pthread_t thread;
         int arg = 0;
+        if (std::find(breakpointLines.begin(), breakpointLines.end(), stepOverBPLineNo) != breakpointLines.end()){
+            breakpointLines.erase(std::find(breakpointLines.begin(), breakpointLines.end(), tempBPLineNum));
+            stepOverBPLineNo = -1;
+        }
         pthread_create(&thread, nullptr, reinterpret_cast<void *(*)(void *)>(stepCode), &arg);
         debugContinue = false;
     }
