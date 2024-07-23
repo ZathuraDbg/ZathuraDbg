@@ -30,6 +30,7 @@ extern uintptr_t ENTRY_POINT_ADDRESS;
 extern uintptr_t MEMORY_ALLOCATION_SIZE;
 extern uintptr_t STACK_ADDRESS;
 extern uintptr_t STACK_SIZE;
+extern int tempBPLineNum;
 extern uint64_t CODE_BUF_SIZE;
 extern uc_context* context;
 extern bool stepCode(size_t instructionCount = 1);
@@ -41,6 +42,7 @@ extern bool stepOver;
 extern bool stepContinue;
 extern uint64_t getRegisterValue(const std::string& regName, bool useTempContext);
 extern uint64_t expectedIP;
+extern int stepOverBPLineNo;
 extern uint64_t codeCurrentLen;
 extern int getCurrentLine();
 
