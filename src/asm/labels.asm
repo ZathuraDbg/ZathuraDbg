@@ -5,7 +5,7 @@ main:
     mov rdi, rbx
     call subtract_hundred 
     cmp rax, 0x100
-    jne zero_regs
+    call zero_regs
 
 subtract_hundred:
     sub rdi, 0x100
@@ -17,4 +17,4 @@ zero_regs:
     mov rbx, rax 
     mov rcx, rbx
     mov rdx, rcx
-    hlt 
+    ret

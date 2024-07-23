@@ -3,7 +3,7 @@
 void startDebugging(){
     resetState();
     debugModeEnabled = true;
-    LOG_DEBUG("Context is empty!");
+//    LOG_DEBUG("Context is empty!");
     fileRunTask(1);
 }
 
@@ -22,11 +22,14 @@ void stepOverAction(){
 
     if (!str.empty()){
         lineNo = std::atoi(str.c_str());
-
+        breakpointMutex.lock();
         breakpointLines.push_back(lineNo + 1);
+        breakpointMutex.unlock();
         stepCode(0);
         if (stepOverBPLineNo == lineNo){
+            breakpointMutex.lock();
             breakpointLines.erase(std::find(breakpointLines.begin(), breakpointLines.end(), stepOverBPLineNo));
+            breakpointMutex.unlock();
             stepOverBPLineNo = -1;
         }
         stepOverBPLineNo = lineNo + 1;
@@ -126,18 +129,18 @@ void handleKeyboardInput(){
     }
 
     if (saveFile){
-        LOG_INFO("File save requested!");
+//        LOG_INFO("File save requested!");
         fileSaveTask(selectedFile);
         saveFile = false;
     }
     if (openFile){
-        LOG_INFO("File open dialog requested!");
+//        LOG_INFO("File open dialog requested!");
         resetState();
         fileOpenTask(openFileDialog());
         openFile = false;
     }
     if (saveFileAs){
-        LOG_INFO("File save as requested!");
+//        LOG_INFO("File save as requested!");
         fileSaveAsTask(saveAsFileDialog());
         saveFileAs = false;
     }

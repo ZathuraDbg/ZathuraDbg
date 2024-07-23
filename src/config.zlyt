@@ -38,16 +38,6 @@ Size=219,443
 Collapsed=0
 DockId=0x00000007,0
 
-[Window][EmulationSettings]
-Pos=628,359
-Size=250,140
-Collapsed=0
-
-[Window][Emulation Settings]
-Pos=515,290
-Size=220,120
-Collapsed=0
-
 [Table][0xB4C7751B,2]
 Column 0  Weight=3.4118
 Column 1  Weight=20.5882
