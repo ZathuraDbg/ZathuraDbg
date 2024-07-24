@@ -111,10 +111,7 @@ void handleKeyboardInput(){
         codeRunFromButton = true;
         resetState();
 //      -1 = it will be computed later in the function below
-//        startDebugging();
-//        editor->HighlightDebugCurrentLine(-1);
-//        debugContinueAction();
-        fileRunTask(-1);
+        fileRunTask(0);
         debugRun = false;
     }
     if (debugContinue){
@@ -122,15 +119,15 @@ void handleKeyboardInput(){
         debugContinue = false;
     }
     if (debugStepOver){
-//        stepOverAction();
-//        pthread_t thread;
-//        pthread_create(&thread, nullptr, reinterpret_cast<void *(*)(void *)>(stepOverAction), nullptr);
+        stepOverAction();
+        pthread_t thread;
+        pthread_create(&thread, nullptr, reinterpret_cast<void *(*)(void *)>(stepOverAction), nullptr);
         debugStepOver = false;
     }
     if (debugStepIn){
-        stepInAction();
-//        pthread_t thread;
-//        pthread_create(&thread, nullptr, reinterpret_cast<void *(*)(void *)>(stepInAction), nullptr);
+//        stepInAction();
+        pthread_t thread;
+        pthread_create(&thread, nullptr, reinterpret_cast<void *(*)(void *)>(stepInAction), nullptr);
         debugStepIn = false;
     }
     if (debugPause){

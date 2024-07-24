@@ -27,6 +27,7 @@ bool runningTempCode = false;
 bool stepIn = false;
 bool stepOver = false;
 bool stepContinue = false;
+bool executionComplete = false;
 
 std::vector<int> breakpointLines = {};
 
@@ -221,6 +222,8 @@ bool resetState(){
     stepClickedOnce = false;
     continueOverBreakpoint = false;
     skipCheck = false;
+    codeRunFromButton = false;
+    executionComplete = false;
 
     codeCurrentLen = 0;
     codeFinalLen = 0;
@@ -277,22 +280,11 @@ bool resetState(){
 
 bool isCodeRunning = false;
 bool codeRunFromButton = false;
-bool executionComplete = false;
 bool stepCode(size_t instructionCount){
    LOG_DEBUG("Stepping into code!");
     if (isCodeRunning){
         return true;
     }
-
-//    if (executionComplete){
-//        LOG_DEBUG("Code execution is complete!");
-//                //        //            if (!skipCheck){
-//////                editor->HighlightDebugCurrentLine(-1);
-//        uc_emu_stop(uc);
-//        instructionCount = 1;
-////        return true;
-////            }
-//    }
 
     uint64_t ip;
 
@@ -312,16 +304,6 @@ bool stepCode(size_t instructionCount){
 
     {
         int lineNum;
-
-//        if (executionComplete){
-//            LOG_DEBUG("Code execution is complete!");
-//            //            if (!skipCheck){
-////                editor->HighlightDebugCurrentLine(-1);
-//            uc_emu_stop(uc);
-//            uc_context_save(uc, context);
-//                return true;
-////            }
-//        }
 
         uc_context_save(uc, context);
         ip = getRegisterValue(getArchIPStr(codeInformation.mode), false);
@@ -395,6 +377,10 @@ void hook(uc_engine *uc, uint64_t address, uint32_t size, void *user_data){
         expectedIP = address;
     }
 
+    if (lineNumber == lastInstructionLineNo){
+                LOG_DEBUG("At last instruction line number!");
+        executionComplete = true;
+    }
 
     if (debugModeEnabled){
         ip = getRegisterValue(getArchIPStr(codeInformation.mode), false);
@@ -417,10 +403,7 @@ void hook(uc_engine *uc, uint64_t address, uint32_t size, void *user_data){
         editor->HighlightDebugCurrentLine(lineNumber - 1);
 
         LOG_DEBUG("At line number: " << lineNumber);
-        if (lineNumber == lastInstructionLineNo){
-            LOG_DEBUG("At last instruction line number!");
-            executionComplete = true;
-        }
+
 
         if (std::find(breakpointLines.begin(), breakpointLines.end(), lineNumber) != breakpointLines.end() && (!codeRunFromButton)){
             editor->HighlightDebugCurrentLine(lineNumber - 1);
@@ -466,7 +449,7 @@ bool initRegistersToDefinedVals(){
 
 bool runCode(const std::string& code_in, uint64_t instructionCount)
 {
-//    LOG_DEBUG("Running code...");
+    LOG_DEBUG("Running code...");
     uc_err err;
     uint8_t* code;
 
@@ -474,7 +457,7 @@ bool runCode(const std::string& code_in, uint64_t instructionCount)
     if (codeBuf == nullptr){
         codeBuf = (uint8_t*)malloc(CODE_BUF_SIZE);
         memset(codeBuf, 0, CODE_BUF_SIZE);
-//        LOG_DEBUG("Code buffer allocated!");
+        LOG_DEBUG("Code buffer allocated!");
     }
 
     code = (uint8_t*)(code_in.c_str());
@@ -528,12 +511,12 @@ bool runCode(const std::string& code_in, uint64_t instructionCount)
 
         auto val = std::atoi(line.data());
         editor->HighlightDebugCurrentLine(val - 1);
-//        LOG_DEBUG("Highlight from runCode first line is label");
+        LOG_DEBUG("Highlight from runCode first line is label");
         stepClickedOnce = true;
     }
 
     updateRegs();
-//    LOG_DEBUG("Ran code successfully!");
+    LOG_DEBUG("Ran code successfully!");
     codeHasRun = true;
     return true;
 }

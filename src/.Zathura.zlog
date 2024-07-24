@@ -1,0 +1,244 @@
+2024-07-24T22:30:19     Debug: Zathura: Loaded config file from /home/rc/Zathura-UI/src/config.zlyt
+2024-07-24T22:30:19     Debug: Zathura: Getting bytes from the file: /home/rc/Zathura-UI/src/test.asm
+2024-07-24T22:30:19     Debug: Zathura: Assembling:
+main:
+    mov rbx, 0x400
+    add rbx, rax
+    mov rdi, rbx
+    push rdi
+    call subtract_hundred
+    cmp r11, 2
+    jne nextblock
+    push rax
+    push rbx
+    
+subtract_hundred:
+    sub rdi, 0x100
+    mov rax, rdi
+    mov rbx, 0x12
+    ret
+
+nextblock:
+	mov rax, rbx
+	jmp nextblockagain
+
+nextblockagain:
+	mov rbx, rcx
+	jmp nextblocktwice
+
+nextblocktwice:
+	mov rdx, rcx
+	jmp anewblock
+
+anewblock:
+	mov r8, r9
+	inc r11
+	jmp main
+2024-07-24T22:30:19     Debug: Zathura: Keystone object initialised.
+2024-07-24T22:30:19     Debug: Zathura: Assembled: 68 bytes
+2024-07-24T22:30:19     Debug: Zathura: Total instructions to execute: 22
+2024-07-24T22:30:19     Debug: Zathura: Got bytes, now hexlifying.
+2024-07-24T22:30:19     Debug: Zathura: Total instructions to execute: 0
+2024-07-24T22:30:21     Debug: Zathura: Running code from: /home/rc/Zathura-UI/src/test.asm
+2024-07-24T22:30:21     Debug: Zathura: Getting bytes from the file: /home/rc/Zathura-UI/src/test.asm
+2024-07-24T22:30:21     Debug: Zathura: Assembling:
+main:
+    mov rbx, 0x400
+    add rbx, rax
+    mov rdi, rbx
+    push rdi
+    call subtract_hundred
+    cmp r11, 2
+    jne nextblock
+    push rax
+    push rbx
+    
+subtract_hundred:
+    sub rdi, 0x100
+    mov rax, rdi
+    mov rbx, 0x12
+    ret
+
+nextblock:
+	mov rax, rbx
+	jmp nextblockagain
+
+nextblockagain:
+	mov rbx, rcx
+	jmp nextblocktwice
+
+nextblocktwice:
+	mov rdx, rcx
+	jmp anewblock
+
+anewblock:
+	mov r8, r9
+	inc r11
+	jmp main
+2024-07-24T22:30:21     Debug: Zathura: Keystone object initialised.
+2024-07-24T22:30:21     Debug: Zathura: Assembled: 68 bytes
+2024-07-24T22:30:21     Debug: Zathura: Total instructions to execute: 22
+2024-07-24T22:30:21     Debug: Zathura: Got bytes, now hexlifying.
+2024-07-24T22:30:22     Debug: Stepping into code!
+2024-07-24T22:30:22     Debug: Hook called!
+2024-07-24T22:30:22     Debug: At line number: 2
+2024-07-24T22:30:22     Debug: Hook called!
+2024-07-24T22:30:22     Debug: At line number: 3
+2024-07-24T22:30:22     Debug: Hook called!
+2024-07-24T22:30:22     Debug: At line number: 4
+2024-07-24T22:30:22     Debug: Hook called!
+2024-07-24T22:30:22     Debug: At line number: 5
+2024-07-24T22:30:22     Debug: Hook called!
+2024-07-24T22:30:22     Debug: At line number: 6
+2024-07-24T22:30:22     Debug: Hook called!
+2024-07-24T22:30:22     Debug: Jump detected!
+2024-07-24T22:30:22     Debug: At line number: 13
+2024-07-24T22:30:22     Debug: Hook called!
+2024-07-24T22:30:22     Debug: At line number: 14
+2024-07-24T22:30:22     Debug: Hook called!
+2024-07-24T22:30:22     Debug: At line number: 15
+2024-07-24T22:30:22     Debug: Hook called!
+2024-07-24T22:30:22     Debug: At line number: 16
+2024-07-24T22:30:22     Debug: Hook called!
+2024-07-24T22:30:22     Debug: At line number: 7
+2024-07-24T22:30:22     Debug: Hook called!
+2024-07-24T22:30:22     Debug: At line number: 8
+2024-07-24T22:30:22     Debug: Hook called!
+2024-07-24T22:30:22     Debug: At line number: 19
+2024-07-24T22:30:22     Debug: Hook called!
+2024-07-24T22:30:22     Debug: At line number: 20
+2024-07-24T22:30:22     Debug: Hook called!
+2024-07-24T22:30:22     Debug: At line number: 23
+2024-07-24T22:30:22     Debug: Hook called!
+2024-07-24T22:30:22     Debug: At line number: 24
+2024-07-24T22:30:22     Debug: Hook called!
+2024-07-24T22:30:22     Debug: At line number: 27
+2024-07-24T22:30:22     Debug: Hook called!
+2024-07-24T22:30:22     Debug: At line number: 28
+2024-07-24T22:30:22     Debug: Hook called!
+2024-07-24T22:30:22     Debug: At line number: 31
+2024-07-24T22:30:22     Debug: Hook called!
+2024-07-24T22:30:22     Debug: At line number: 32
+2024-07-24T22:30:22     Debug: Hook called!
+2024-07-24T22:30:22     Debug: At line number: 33
+2024-07-24T22:30:22     Debug: Hook called!
+2024-07-24T22:30:22     Debug: At line number: 2
+2024-07-24T22:30:22     Debug: Hook called!
+2024-07-24T22:30:22     Debug: At line number: 3
+2024-07-24T22:30:22     Debug: Hook called!
+2024-07-24T22:30:22     Debug: At line number: 4
+2024-07-24T22:30:22     Debug: Hook called!
+2024-07-24T22:30:22     Debug: At line number: 5
+2024-07-24T22:30:22     Debug: Hook called!
+2024-07-24T22:30:22     Debug: At line number: 6
+2024-07-24T22:30:22     Debug: Hook called!
+2024-07-24T22:30:22     Debug: At line number: 13
+2024-07-24T22:30:22     Debug: Hook called!
+2024-07-24T22:30:22     Debug: At line number: 14
+2024-07-24T22:30:22     Debug: Hook called!
+2024-07-24T22:30:22     Debug: At line number: 15
+2024-07-24T22:30:22     Debug: Hook called!
+2024-07-24T22:30:22     Debug: At line number: 16
+2024-07-24T22:30:22     Debug: Hook called!
+2024-07-24T22:30:22     Debug: At line number: 7
+2024-07-24T22:30:22     Debug: Hook called!
+2024-07-24T22:30:22     Debug: At line number: 8
+2024-07-24T22:30:22     Debug: Hook called!
+2024-07-24T22:30:22     Debug: At line number: 19
+2024-07-24T22:30:22     Debug: Hook called!
+2024-07-24T22:30:22     Debug: At line number: 20
+2024-07-24T22:30:22     Debug: Hook called!
+2024-07-24T22:30:22     Debug: At line number: 23
+2024-07-24T22:30:22     Debug: Hook called!
+2024-07-24T22:30:22     Debug: At line number: 24
+2024-07-24T22:30:22     Debug: Hook called!
+2024-07-24T22:30:22     Debug: At line number: 27
+2024-07-24T22:30:22     Debug: Hook called!
+2024-07-24T22:30:22     Debug: At line number: 28
+2024-07-24T22:30:22     Debug: Hook called!
+2024-07-24T22:30:22     Debug: At line number: 31
+2024-07-24T22:30:22     Debug: Hook called!
+2024-07-24T22:30:22     Debug: At line number: 32
+2024-07-24T22:30:22     Debug: Hook called!
+2024-07-24T22:30:22     Debug: At line number: 33
+2024-07-24T22:30:22     Debug: Hook called!
+2024-07-24T22:30:22     Debug: At line number: 2
+2024-07-24T22:30:22     Debug: Hook called!
+2024-07-24T22:30:22     Debug: At line number: 3
+2024-07-24T22:30:22     Debug: Hook called!
+2024-07-24T22:30:22     Debug: At line number: 4
+2024-07-24T22:30:22     Debug: Hook called!
+2024-07-24T22:30:22     Debug: At line number: 5
+2024-07-24T22:30:22     Debug: Hook called!
+2024-07-24T22:30:22     Debug: At line number: 6
+2024-07-24T22:30:22     Debug: Hook called!
+2024-07-24T22:30:22     Debug: At line number: 13
+2024-07-24T22:30:22     Debug: Hook called!
+2024-07-24T22:30:22     Debug: At line number: 14
+2024-07-24T22:30:22     Debug: Hook called!
+2024-07-24T22:30:22     Debug: At line number: 15
+2024-07-24T22:30:22     Debug: Hook called!
+2024-07-24T22:30:22     Debug: At line number: 16
+2024-07-24T22:30:22     Debug: Hook called!
+2024-07-24T22:30:22     Debug: At line number: 7
+2024-07-24T22:30:22     Debug: Hook called!
+2024-07-24T22:30:22     Debug: At line number: 8
+2024-07-24T22:30:22     Debug: Hook called!
+2024-07-24T22:30:22     Debug: At line number: 9
+2024-07-24T22:30:22     Debug: Hook called!
+2024-07-24T22:30:22     Debug: At line number: 10
+2024-07-24T22:30:22     Debug: At last instruction line number!
+2024-07-24T22:30:22     Debug: Hook called!
+2024-07-24T22:30:22     Debug: Code executed by one step
+2024-07-24T22:30:25     Debug: Stepping into code!
+2024-07-24T22:30:25     Debug: Hook called!
+2024-07-24T22:30:25     Debug: Code executed by one step
+2024-07-24T22:30:26     Debug: Stepping into code!
+2024-07-24T22:30:26     Debug: Hook called!
+2024-07-24T22:30:26     Debug: Code executed by one step
+2024-07-24T22:30:26     Debug: Stepping into code!
+2024-07-24T22:30:26     Debug: Hook called!
+2024-07-24T22:30:26     Debug: Code executed by one step
+2024-07-24T22:30:29     Debug: Zathura: Running code from: /home/rc/Zathura-UI/src/test.asm
+2024-07-24T22:30:29     Debug: Zathura: Getting bytes from the file: /home/rc/Zathura-UI/src/test.asm
+2024-07-24T22:30:29     Debug: Zathura: Assembling:
+main:
+    mov rbx, 0x400
+    add rbx, rax
+    mov rdi, rbx
+    push rdi
+    call subtract_hundred
+    cmp r11, 2
+    jne nextblock
+    push rax
+    push rbx
+    
+subtract_hundred:
+    sub rdi, 0x100
+    mov rax, rdi
+    mov rbx, 0x12
+    ret
+
+nextblock:
+	mov rax, rbx
+	jmp nextblockagain
+
+nextblockagain:
+	mov rbx, rcx
+	jmp nextblocktwice
+
+nextblocktwice:
+	mov rdx, rcx
+	jmp anewblock
+
+anewblock:
+	mov r8, r9
+	inc r11
+	jmp main
+2024-07-24T22:30:29     Debug: Zathura: Keystone object initialised.
+2024-07-24T22:30:29     Debug: Zathura: Assembled: 68 bytes
+2024-07-24T22:30:29     Debug: Zathura: Total instructions to execute: 22
+2024-07-24T22:30:29     Debug: Zathura: Got bytes, now hexlifying.
+2024-07-24T22:30:30     Debug: Stepping into code!
+2024-07-24T22:30:30     Debug: Hook called!
+2024-07-24T22:30:30     Debug: Code executed by one step
