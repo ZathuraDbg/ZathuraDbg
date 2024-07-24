@@ -276,18 +276,22 @@ bool resetState(){
 }
 
 bool isCodeRunning = false;
+bool codeRunFromButton = false;
+bool executionComplete = false;
 bool stepCode(size_t instructionCount){
    LOG_DEBUG("Stepping into code!");
     if (isCodeRunning){
         return true;
     }
-//    if (codeCurrentLen >= codeFinalLen){
-////        LOG_DEBUG("Code execution is complete!");
-//        if (!skipCheck){
-//            editor->HighlightDebugCurrentLine(-1);
-//            uc_emu_stop(uc);
-//            return true;
-//        }
+
+//    if (executionComplete){
+//        LOG_DEBUG("Code execution is complete!");
+//                //        //            if (!skipCheck){
+//////                editor->HighlightDebugCurrentLine(-1);
+//        uc_emu_stop(uc);
+//        instructionCount = 1;
+////        return true;
+////            }
 //    }
 
     uint64_t ip;
@@ -309,12 +313,14 @@ bool stepCode(size_t instructionCount){
     {
         int lineNum;
 
-//        if (codeCurrentLen >= codeFinalLen){
-//            if (!skipCheck){
-//                editor->HighlightDebugCurrentLine(-1);
-//                uc_emu_stop(uc);
+//        if (executionComplete){
+//            LOG_DEBUG("Code execution is complete!");
+//            //            if (!skipCheck){
+////                editor->HighlightDebugCurrentLine(-1);
+//            uc_emu_stop(uc);
+//            uc_context_save(uc, context);
 //                return true;
-//            }
+////            }
 //        }
 
         uc_context_save(uc, context);
@@ -324,11 +330,10 @@ bool stepCode(size_t instructionCount){
         }
 
         std::string str =  addressLineNoMap[std::to_string(ip)];
-        if (!str.empty()){
+        if (!str.empty() && (!codeRunFromButton) && (!executionComplete)){
             lineNo = std::atoi(str.c_str());
             LOG_DEBUG("Highlight from block 3 - stepCode : line: " << lineNo);
             editor->HighlightDebugCurrentLine(lineNo - 1);
-
         }
         else{
             return true;
@@ -337,42 +342,63 @@ bool stepCode(size_t instructionCount){
 
     uc_context_save(uc, context);
     codeHasRun = true;
-
+    if (codeRunFromButton){
+        codeRunFromButton = false;
+    }
     LOG_DEBUG("Code ran once!");
     return true;
 }
 
 int tempBPLineNum = -1;
-bool check = false;
+bool eraseTempBP = false;
+
+/*
+ *  The current system of detecting when the execution is done is as follows:
+ *  The assembling code identifies the second label in the code, and then
+ *  it saves the line number of the last valid instruction.
+ *  We can assume that in general, the last instruction of the first label
+ *  is the last instruction of the code because the code executes from top to bottom.
+ */
+
 void hook(uc_engine *uc, uint64_t address, uint32_t size, void *user_data){
     LOG_DEBUG("Hook called!");
-    if (!debugModeEnabled && !debugRun) {
+    if (!debugModeEnabled && !debugRun || (executionComplete)) {
         uc_emu_stop(uc);
         uc_context_save(uc, context);
+        if (executionComplete){
+            editor->HighlightDebugCurrentLine(lastInstructionLineNo - 1);
+        }
         return;
     }
 
-    if (check) {
+    int lineNumber;
+    uint64_t ip;
+    std::string str = addressLineNoMap[std::to_string(address)];
+    if (!str.empty()){
+        lineNumber = std::atoi(str.c_str());
+    }
+    else{
+        lineNumber = -1;
+    }
+
+    if (eraseTempBP) {
 //      erase the temporary breakpoint
         breakpointMutex.lock();
         LOG_DEBUG("Removing step over breakpoint line number: " << stepOverBPLineNo);
         breakpointLines.erase(std::find(breakpointLines.begin(), breakpointLines.end(), stepOverBPLineNo));
         breakpointMutex.unlock();
         stepOverBPLineNo = -1;
-        check = false;
+        eraseTempBP = false;
     }
-
-    std::string str = addressLineNoMap[std::to_string(address)];
-    int lineNumber;
-    uint64_t ip;
 
     if (expectedIP == 0){
         expectedIP = address;
     }
 
+
     if (debugModeEnabled){
         ip = getRegisterValue(getArchIPStr(codeInformation.mode), false);
-        if (ip != expectedIP){
+        if (ip != expectedIP && (ip > expectedIP) && (!codeRunFromButton)){
             LOG_DEBUG("Jump detected!");
             updateRegs();
             if (stepIn){
@@ -388,18 +414,15 @@ void hook(uc_engine *uc, uint64_t address, uint32_t size, void *user_data){
             expectedIP = ip;
         }
 
-        if (!str.empty()){
-            lineNumber = std::atoi(str.c_str());
-        }
-        else{
-            lineNumber = -1;
-        }
-
         editor->HighlightDebugCurrentLine(lineNumber - 1);
 
         LOG_DEBUG("At line number: " << lineNumber);
+        if (lineNumber == lastInstructionLineNo){
+            LOG_DEBUG("At last instruction line number!");
+            executionComplete = true;
+        }
 
-        if (std::find(breakpointLines.begin(), breakpointLines.end(), lineNumber) != breakpointLines.end()){
+        if (std::find(breakpointLines.begin(), breakpointLines.end(), lineNumber) != breakpointLines.end() && (!codeRunFromButton)){
             editor->HighlightDebugCurrentLine(lineNumber - 1);
             LOG_DEBUG("Highlight from hook - breakpoint found at lineNo " << lineNumber);
             if (!continueOverBreakpoint){
@@ -421,7 +444,7 @@ void hook(uc_engine *uc, uint64_t address, uint32_t size, void *user_data){
         }
     }
     if (stepOverBPLineNo != -1){
-        check = true;
+        eraseTempBP = true;
     }
     codeCurrentLen += size;
     expectedIP += size;

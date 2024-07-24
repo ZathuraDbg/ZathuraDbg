@@ -18,6 +18,7 @@
 #include <array>
 extern std::mutex execMutex;
 extern std::mutex breakpointMutex;
+extern bool codeRunFromButton;
 extern bool skipCheck;
 extern bool createStack(void* unicornEngine);
 extern bool runTempCode(const std::string& codeIn);

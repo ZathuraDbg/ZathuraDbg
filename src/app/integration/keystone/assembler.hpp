@@ -31,6 +31,7 @@ typedef struct{
 } keystoneSettings;
 
 extern uint64_t totalInstructions;
+extern uint lastInstructionLineNo;
 extern std::map<std::string, std::string> addressLineNoMap;
 extern std::map<std::string, int> labelLineNoMapInternal;
 extern std::vector<uint16_t> instructionSizes;

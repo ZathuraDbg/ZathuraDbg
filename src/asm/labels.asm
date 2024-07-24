@@ -6,6 +6,7 @@ main:
     call subtract_hundred 
     cmp rax, 0x100
     call zero_regs
+    hlt
 
 subtract_hundred:
     sub rdi, 0x100

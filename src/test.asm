@@ -4,7 +4,8 @@ main:
     mov rdi, rbx
     push rdi
     call subtract_hundred
-    jmp nextblock
+    cmp r11, 2
+    jne nextblock
     push rax
     push rbx
     
@@ -28,4 +29,5 @@ nextblocktwice:
 
 anewblock:
 	mov r8, r9
+	inc r11
 	jmp main

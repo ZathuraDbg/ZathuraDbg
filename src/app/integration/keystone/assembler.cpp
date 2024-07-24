@@ -70,13 +70,15 @@ std::pair<std::string, std::size_t> assemble(const std::string& assemblyString, 
 }
 
 
+uint lastInstructionLineNo = 0;
 void initInsSizeInfoMap(){
     std::string instructionStr;
 
-    uint64_t lineNo = 1;
+    uint lineNo = 1;
     uint16_t count = 0;
     uint64_t currentAddr = ENTRY_POINT_ADDRESS;
     uint64_t insCount = 0;
+    bool foundFirstLabel = false;
 
     while (std::getline(assembly, instructionStr, '\n')) {
         if (instructionStr.contains(":")){
@@ -84,11 +86,26 @@ void initInsSizeInfoMap(){
             if (instructionStr.ends_with(":")){
                 if (instructionStr.contains(';')){
                     if (instructionStr.find_first_of(';') > instructionStr.find_last_of(':')){
+                        if (labels.empty()){
+                            foundFirstLabel = true;
+                        }
+                        else if (foundFirstLabel){
+                            lastInstructionLineNo = std::atoi(std::prev(addressLineNoMap.end())->second.data());
+                            foundFirstLabel = false;
+                        }
+
                         labelLineNoMapInternal.insert({instructionStr.substr(0, instructionStr.find_first_of(':')), lineNo});
                         labels.push_back(instructionStr.substr(0, instructionStr.find_first_of(':')));
                     }
                 }
                 else{
+                    if (labels.empty()){
+                        foundFirstLabel = true;
+                    }
+                    else if (foundFirstLabel) {
+                        lastInstructionLineNo = std::atoi(std::prev(addressLineNoMap.end())->second.data());
+                        foundFirstLabel = false;
+                    }
                     labelLineNoMapInternal.insert({instructionStr.substr(0, instructionStr.find_first_of(':')), lineNo});
                     labels.push_back(instructionStr.substr(0, instructionStr.find_first_of(':')));
                     lineNo++;
