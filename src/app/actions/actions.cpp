@@ -93,7 +93,8 @@ void debugContinueAction(){
         breakpointLines.erase(std::find(breakpointLines.begin(), breakpointLines.end(), tempBPLineNum));
         stepOverBPLineNo = -1;
     }
-    pthread_create(&thread, nullptr, reinterpret_cast<void *(*)(void *)>(stepCode), &arg);
+    stepCode(0);
+//    pthread_create(&thread, nullptr, reinterpret_cast<void *(*)(void *)>(stepCode), &arg);
 }
 
 bool show = false;
@@ -107,13 +108,14 @@ void handleKeyboardInput(){
         debugRestart = false;
     }
     if (debugRun){
+        codeRunFromButton = true;
         resetState();
 //      -1 = it will be computed later in the function below
-        startDebugging();
-        editor->HighlightDebugCurrentLine(-1);
-        debugContinueAction();
-
-       debugRun = false;
+//        startDebugging();
+//        editor->HighlightDebugCurrentLine(-1);
+//        debugContinueAction();
+        fileRunTask(-1);
+        debugRun = false;
     }
     if (debugContinue){
         debugContinueAction();
@@ -121,13 +123,14 @@ void handleKeyboardInput(){
     }
     if (debugStepOver){
 //        stepOverAction();
-        pthread_t thread;
-        pthread_create(&thread, nullptr, reinterpret_cast<void *(*)(void *)>(stepOverAction), nullptr);
+//        pthread_t thread;
+//        pthread_create(&thread, nullptr, reinterpret_cast<void *(*)(void *)>(stepOverAction), nullptr);
         debugStepOver = false;
     }
     if (debugStepIn){
-        pthread_t thread;
-        pthread_create(&thread, nullptr, reinterpret_cast<void *(*)(void *)>(stepInAction), nullptr);
+        stepInAction();
+//        pthread_t thread;
+//        pthread_create(&thread, nullptr, reinterpret_cast<void *(*)(void *)>(stepInAction), nullptr);
         debugStepIn = false;
     }
     if (debugPause){
