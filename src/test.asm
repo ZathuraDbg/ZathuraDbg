@@ -4,7 +4,7 @@ main:
     mov rdi, rbx
     push rdi
     call subtract_hundred
-    cmp r11, 2
+    cmp r11, 10000
     jne nextblock
     push rax
     push rbx

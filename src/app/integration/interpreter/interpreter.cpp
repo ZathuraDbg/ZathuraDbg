@@ -343,8 +343,9 @@ bool eraseTempBP = false;
  */
 
 void hook(uc_engine *uc, uint64_t address, uint32_t size, void *user_data){
-    LOG_DEBUG("Hook called!");
+//    LOG_DEBUG("Hook called!");
     if (!debugModeEnabled && !debugRun || (executionComplete)) {
+        LOG_DEBUG("Execution complete.");
         uc_emu_stop(uc);
         uc_context_save(uc, context);
         if (executionComplete){
@@ -378,7 +379,7 @@ void hook(uc_engine *uc, uint64_t address, uint32_t size, void *user_data){
     }
 
     if (lineNumber == lastInstructionLineNo){
-                LOG_DEBUG("At last instruction line number!");
+        LOG_DEBUG("At last instruction line number!");
         executionComplete = true;
     }
 

@@ -37,7 +37,10 @@ void manageShortcuts(){
     if (isCtrlShiftShortcut && (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_O)))){
         fileLoadContext = true;
     }
-    if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_F5))){
+    if (isShiftOnly && (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_F5)))){
+        debugStop = true;
+    }
+    else if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_F5))){
         if (!debugModeEnabled){
             enableDebugMode = true;
         }
@@ -54,9 +57,7 @@ void manageShortcuts(){
     if (isCtrlShortcut && (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_F5)))){
         debugRestart = true;
     }
-    if (isShiftOnly && (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_F5)))){
-        debugStop = true;
-    }
+
     if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_F9))){
         toggleBreakpoint = true;
     }
