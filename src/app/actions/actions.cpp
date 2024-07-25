@@ -1,3 +1,4 @@
+#include <thread>
 #include "actions.hpp"
 #include "../integration/interpreter/interpreter.hpp"
 void startDebugging(){
@@ -87,14 +88,13 @@ void debugRunSelectionAction(){
 }
 
 void debugContinueAction(){
-    pthread_t thread;
-    int arg = 0;
     if (std::find(breakpointLines.begin(), breakpointLines.end(), stepOverBPLineNo) != breakpointLines.end()){
         breakpointLines.erase(std::find(breakpointLines.begin(), breakpointLines.end(), tempBPLineNum));
         stepOverBPLineNo = -1;
     }
-    stepCode(0);
-//    pthread_create(&thread, nullptr, reinterpret_cast<void *(*)(void *)>(stepCode), &arg);
+    std::thread stepCodeThread(stepCode, 0);
+    stepCodeThread.detach();
+//    stepCode(0);
 }
 
 bool show = false;
@@ -110,24 +110,25 @@ void handleKeyboardInput(){
     if (debugRun){
         codeRunFromButton = true;
         resetState();
-//      -1 = it will be computed later in the function below
-        fileRunTask(0);
+        fileRunTask(-1);
         debugRun = false;
     }
     if (debugContinue){
-        debugContinueAction();
+//        debugContinueAction();
+        std::thread continueActionThread(debugContinueAction);
+        continueActionThread.detach();
         debugContinue = false;
     }
     if (debugStepOver){
-        stepOverAction();
-        pthread_t thread;
-        pthread_create(&thread, nullptr, reinterpret_cast<void *(*)(void *)>(stepOverAction), nullptr);
+//        stepOverAction();
+        std::thread stepOverActionThread(stepOverAction);
+        stepOverActionThread.detach();
         debugStepOver = false;
     }
     if (debugStepIn){
 //        stepInAction();
-        pthread_t thread;
-        pthread_create(&thread, nullptr, reinterpret_cast<void *(*)(void *)>(stepInAction), nullptr);
+        std::thread stepInActionThread(stepInAction);
+        stepInActionThread.detach();
         debugStepIn = false;
     }
     if (debugPause){
@@ -166,11 +167,11 @@ void handleKeyboardInput(){
     }
     if (fileLoadContext){
         fileLoadUCContextFromJson(openFileDialog());
-        uint64_t rip;
+        uint64_t ip;
         int lineNumber;
 
-        uc_reg_read(uc, regNameToConstant("RIP"), &rip);
-        std::string str =  addressLineNoMap[std::to_string(rip)];
+        uc_reg_read(uc, regNameToConstant(getArchIPStr(codeInformation.mode)), &ip);
+        std::string str =  addressLineNoMap[std::to_string(ip)];
         if (!str.empty()) {
             lineNumber = std::atoi(str.c_str());
             editor->HighlightDebugCurrentLine(lineNumber - 1);
