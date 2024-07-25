@@ -98,12 +98,15 @@ void debugContinueAction(){
 }
 
 bool show = false;
-void handleKeyboardInput(){
+void runActions(){
     if (enableDebugMode){
         startDebugging();
         enableDebugMode = false;
     }
     if (debugRestart){
+        if (isCodeRunning){
+            debugPauseAction();
+        }
         restartDebugging();
         debugRestart = false;
     }
