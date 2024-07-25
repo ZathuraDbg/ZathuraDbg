@@ -94,7 +94,9 @@ void fileSaveUCContextAsJson(const std::string& jsonFilename){
     json contextJson;
 
     for (auto& reg: x86RegInfoMap){
-        contextJson[reg.first] = getRegister(reg.first).second;
+        if (isRegisterValid(reg.first, codeInformation.mode) && (reg.first != "INVALID")){
+            contextJson[reg.first] = getRegister(reg.first).second;
+        }
     }
 
     std::ofstream jsonFile(jsonFilename, std::ios::out);
@@ -108,8 +110,20 @@ void fileLoadUCContextFromJson(const std::string& jsonFilename){
     }
 
     std::ifstream jsonFile(jsonFilename);
+
+    if (jsonFile.bad() || jsonFile.fail() || !jsonFile.is_open()){
+        LOG_ERROR("Unable to open the file: " << jsonFilename << " for saving the context!");
+        return;
+    }
+
     json j;
     std::stringstream jsonStream;
+
+    if (context == nullptr){
+        enableDebugMode = true;
+        fileLoadContext = false;
+        runActions();
+    }
 
     jsonStream << jsonFile.rdbuf();
     auto j2 = json::parse(jsonStream.str());

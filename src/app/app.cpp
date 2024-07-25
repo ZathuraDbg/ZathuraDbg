@@ -216,7 +216,7 @@ void mainWindow() {
 
     ImGui::End();
     manageShortcuts();
-    handleKeyboardInput();
+    runActions();
     //    Utils::LayoutManager::save(CONFIG_NAME);
     ImGui::Render();
 }

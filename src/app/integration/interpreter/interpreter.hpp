@@ -20,6 +20,7 @@ extern std::mutex execMutex;
 extern std::mutex breakpointMutex;
 extern bool codeRunFromButton;
 extern bool skipCheck;
+extern bool isCodeRunning;
 extern bool createStack(void* unicornEngine);
 extern bool runTempCode(const std::string& codeIn);
 extern bool debugModeEnabled;
