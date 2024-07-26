@@ -68,6 +68,7 @@ void fileRunTask(uint64_t instructionCount){
                     runCode(bytes, 0);
                     std::thread stepCodeThread(stepCode, instructionCount);
                     stepCodeThread.detach();
+                    return;
                 }
 //if (!runCode(bytes, instructionCount)){
 //                    tinyfd_messageBox("Unicorn engine error!", "Unable to run the code, please try again or report the "

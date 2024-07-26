@@ -265,6 +265,11 @@ bool resetState(){
         uc_close(tempUC);
         tempUC = nullptr;
     }
+    labels.clear();
+    labelLineNoMapInternal.clear();
+    labelLineNoMapInternal = {};
+    labels = {};
+    getBytes(selectedFile);
 
     for (auto& reg: registerValueMap){
         registerValueMap[reg.first] = "0x00";
@@ -326,7 +331,7 @@ bool stepCode(size_t instructionCount){
         }
     }
 
-//    uc_context_save(uc, context);
+    uc_context_save(uc, context);
     codeHasRun = true;
     if (codeRunFromButton){
         codeRunFromButton = false;
