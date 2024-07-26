@@ -26,7 +26,6 @@ void stepOverAction(){
         breakpointMutex.lock();
         breakpointLines.push_back(lineNo + 1);
         breakpointMutex.unlock();
-        skipCheck = true;
         stepCode(0);
         if (stepOverBPLineNo == lineNo){
             breakpointMutex.lock();
@@ -45,15 +44,16 @@ void stepInAction(){
     stepIn = true;
     stepCode(1);
     stepIn = false;
+    pauseNext = false;
 }
 
-bool skipCheck = false;
+bool debugPaused = false;
 void debugPauseAction(){
     auto ip = getRegisterValue(getArchIPStr(codeInformation.mode), false);
     std::string str = addressLineNoMap[std::to_string(ip)];
     auto lineNumber = std::atoi(str.c_str());
     editor->HighlightDebugCurrentLine(lineNumber - 1);
-    skipCheck = true;
+    debugPaused = true;
     uc_context_save(uc, context);
     uc_emu_stop(uc);
 }
@@ -111,6 +111,10 @@ void runActions(){
         debugRestart = false;
     }
     if (debugRun){
+        if (isCodeRunning){
+            debugRun = false;
+            return;
+        }
         codeRunFromButton = true;
         resetState();
         fileRunTask(-1);
@@ -124,38 +128,49 @@ void runActions(){
     }
     if (debugStepOver){
 //        stepOverAction();
+        if (isCodeRunning){
+            debugStepOver = false;
+            return;
+        }
         std::thread stepOverActionThread(stepOverAction);
         stepOverActionThread.detach();
         debugStepOver = false;
     }
-    if (debugStepIn){
-//        stepInAction();
-        std::thread stepInActionThread(stepInAction);
-        stepInActionThread.detach();
+    else if (debugStepIn){
+        if (isCodeRunning){
+            debugStepIn = false;
+            return;
+        }
+        stepInAction();
+
+//      should executing only one instruction really require a separate thread?
+//      std::thread stepInActionThread(stepInAction);
+//      stepInActionThread.detach();
+
         debugStepIn = false;
     }
     if (debugPause){
         debugPauseAction();
         debugPause = false;
     }
-    if (debugStop){
+    else if (debugStop){
         debugStopAction();
         debugStop = false;
     }
 
     if (saveFile){
-//        LOG_INFO("File save requested!");
+        LOG_INFO("File save requested!");
         fileSaveTask(selectedFile);
         saveFile = false;
     }
     if (openFile){
-//        LOG_INFO("File open dialog requested!");
+        LOG_INFO("File open dialog requested!");
         resetState();
         fileOpenTask(openFileDialog());
         openFile = false;
     }
     if (saveFileAs){
-//        LOG_INFO("File save as requested!");
+        LOG_INFO("File save as requested!");
         fileSaveAsTask(saveAsFileDialog());
         saveFileAs = false;
     }
