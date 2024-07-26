@@ -54,11 +54,13 @@ void manageShortcuts(){
             debugContinue = true;
         }
     }
-    if (isCtrlShortcut && (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_J)))){
-        debugStepIn = true;
-    }
-    if (isCtrlShortcut && (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_K)))){
-        debugStepOver = true;
+    if (debugModeEnabled){
+        if (isCtrlShortcut && (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_J)))){
+            debugStepIn = true;
+        }
+        if (isCtrlShortcut && (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_K)))){
+            debugStepOver = true;
+        }
     }
     if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_F9))){
         toggleBreakpoint = true;

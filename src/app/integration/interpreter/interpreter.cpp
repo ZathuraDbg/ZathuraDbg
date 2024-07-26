@@ -221,7 +221,7 @@ bool resetState(){
     codeHasRun = false;
     stepClickedOnce = false;
     continueOverBreakpoint = false;
-    skipCheck = false;
+    debugPaused = false;
     codeRunFromButton = false;
     executionComplete = false;
 
@@ -282,7 +282,7 @@ bool isCodeRunning = false;
 bool codeRunFromButton = false;
 bool stepCode(size_t instructionCount){
    LOG_DEBUG("Stepping into code!");
-    if (isCodeRunning){
+    if (isCodeRunning || executionComplete){
         return true;
     }
 
@@ -301,6 +301,10 @@ bool stepCode(size_t instructionCount){
     isCodeRunning = false;
     execMutex.unlock();
     LOG_DEBUG("Code executed by one step");
+
+    if (executionComplete){
+        return true;
+    }
 
     {
         int lineNum;
@@ -322,12 +326,13 @@ bool stepCode(size_t instructionCount){
         }
     }
 
-    uc_context_save(uc, context);
+//    uc_context_save(uc, context);
     codeHasRun = true;
     if (codeRunFromButton){
         codeRunFromButton = false;
     }
-    LOG_DEBUG("Code ran once!");
+
+   LOG_DEBUG("Code ran once!");
     return true;
 }
 
@@ -341,15 +346,20 @@ bool eraseTempBP = false;
  *  We can assume that in general, the last instruction of the first label
  *  is the last instruction of the code because the code executes from top to bottom.
  */
-
+bool pauseNext = false;
 void hook(uc_engine *uc, uint64_t address, uint32_t size, void *user_data){
 //    LOG_DEBUG("Hook called!");
-    if (!debugModeEnabled && !debugRun || (executionComplete)) {
+    if (!debugModeEnabled && !debugRun || (executionComplete) || (pauseNext)){
         LOG_DEBUG("Execution complete.");
         uc_emu_stop(uc);
         uc_context_save(uc, context);
         if (executionComplete){
             editor->HighlightDebugCurrentLine(lastInstructionLineNo - 1);
+        }
+        if (pauseNext){
+            LOG_DEBUG("Pause next detected!");
+            pauseNext = false;
+//            debugPaused = false;
         }
         return;
     }
@@ -403,9 +413,6 @@ void hook(uc_engine *uc, uint64_t address, uint32_t size, void *user_data){
 
         editor->HighlightDebugCurrentLine(lineNumber - 1);
 
-        LOG_DEBUG("At line number: " << lineNumber);
-
-
         if (std::find(breakpointLines.begin(), breakpointLines.end(), lineNumber) != breakpointLines.end() && (!codeRunFromButton)){
             editor->HighlightDebugCurrentLine(lineNumber - 1);
             LOG_DEBUG("Highlight from hook - breakpoint found at lineNo " << lineNumber);
@@ -430,6 +437,13 @@ void hook(uc_engine *uc, uint64_t address, uint32_t size, void *user_data){
     if (stepOverBPLineNo != -1){
         eraseTempBP = true;
     }
+
+    if (debugPaused && stepIn){
+        LOG_DEBUG("Step In detected after pause!");
+        stepIn = false;
+        pauseNext = true;
+    }
+
     codeCurrentLen += size;
     expectedIP += size;
 }

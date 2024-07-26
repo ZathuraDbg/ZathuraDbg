@@ -100,7 +100,6 @@ int main(int, char**)
         exit(-1);
     }
 
-
     while (!glfwWindowShouldClose(window))
     {
         glfwPollEvents();

@@ -33,7 +33,6 @@ bool setupButtons() {
     ImGui::Separator();
     ImGui::SameLine();
 
-
     if (!debugModeEnabled){
         if (ImGui::Button(ICON_CI_DEBUG, ImVec2(20, 20))){
             enableDebugMode = true;

@@ -3,8 +3,9 @@ main:
     add rbx, rax
     mov rdi, rbx
     push rdi
+    inc rdi
     call subtract_hundred
-    cmp r11, 10000
+    cmp r11, 90000
     jne nextblock
     push rax
     push rbx
