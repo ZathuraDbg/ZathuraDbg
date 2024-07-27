@@ -82,7 +82,9 @@ void debugRunSelectionAction(){
     if (!selectedAsmText.str().empty()) {
         std::string bytes = getBytes(selectedAsmText);
         if (!bytes.empty()) {
+            debugRun = true;
             runTempCode(bytes);
+            debugRun = false;
         }
     }
 }
@@ -110,6 +112,17 @@ void runActions(){
         }
         restartDebugging();
         debugRestart = false;
+    }
+    if (runUntilHere){
+        int _;
+        editor->GetCursorPosition(runUntilLine, _);
+        runUntilLine++;
+        if (!debugModeEnabled){
+            startDebugging();
+        }
+        std::thread continueActionThread(debugContinueAction, false);
+        continueActionThread.detach();
+        runUntilHere = false;
     }
     if (debugRun){
         if (isCodeRunning){

@@ -1,6 +1,7 @@
 #include "app.hpp"
 #include "tasks/editorTasks.hpp"
 bool toggleBreakpoint = false;
+bool runUntilHere = false;
 bool isRunning = true;
 bool lineNumbersShown = true;
 bool runSelectedCode = false;
@@ -184,6 +185,12 @@ void mainWindow() {
                 }
             }
             ImGui::EndMenu();
+        }
+
+        ImGui::Separator();
+
+        if (ImGui::MenuItem("Run until here", "F6", false)) {
+            runUntilHere = true;
         }
 
         ImGui::Separator();
