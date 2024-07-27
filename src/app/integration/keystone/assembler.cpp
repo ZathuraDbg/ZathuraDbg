@@ -7,6 +7,7 @@ uint64_t codeFinalLen = 0;
 uint64_t totalInstructions = 0;
 std::stringstream assembly;
 std::vector<std::string> labels;
+uint64_t tempTotalIns = 0;
 
 std::map<std::string, std::string> addressLineNoMap{};
 std::map<std::string, int> labelLineNoMapInternal{};
@@ -154,6 +155,49 @@ void initInsSizeInfoMap(){
     LOG_DEBUG("Total instructions to execute: " << totalInstructions);
 }
 
+uint64_t countValidInstructions(std::stringstream& asmStream){
+    std::string instructionStr;
+    uint16_t count = 0;
+
+    while (std::getline(asmStream, instructionStr, '\n')) {
+        if (instructionStr.starts_with("\t")){
+            auto idx = instructionStr.find_first_not_of('\t');
+            if (idx != std::string::npos){
+                instructionStr = instructionStr.substr(idx);
+            }
+        }
+        if (instructionStr.starts_with(" ")){
+            auto idx = instructionStr.find_first_not_of(' ');
+            if (idx != std::string::npos){
+                instructionStr = instructionStr.substr(idx);
+            }
+        }
+
+        if (instructionStr.starts_with(" ") || instructionStr.starts_with("\t")){
+            instructionStr = instructionStr.substr(1);
+        }
+
+        if (instructionStr.empty()){
+            continue;
+        }
+
+        if (instructionStr.contains(";")){
+            continue;
+        }
+
+        instructionStr = toUpperCase(instructionStr);
+        auto spaceIt = instructionStr.find_first_of(' ');
+        if (spaceIt != std::string::npos){
+            instructionStr = instructionStr.substr(0, spaceIt);
+        }
+
+        if (std::find(x86Instructions.begin(), x86Instructions.end(), instructionStr) != x86Instructions.end()){
+            count++;
+        }
+    }
+    return count;
+}
+
 void updateInstructionSizes(const std::string& compiledAsm){
     csh handle;
     cs_insn *insn;
@@ -199,11 +243,9 @@ std::string getBytes(const std::string& fileName){
     LOG_DEBUG("Got bytes, now hexlifying.");
     return hexlify({bytes.data(), size});
 }
-
 std::string getBytes(std::stringstream &assemblyStream){
     keystoneSettings ksSettings = {.arch = codeInformation.archKS, .mode = codeInformation.modeKS, .optionType = KS_OPT_SYNTAX, .optionValue=codeInformation.syntax};
     auto [bytes, size] = assemble(assemblyStream.str(), ksSettings);
-
     LOG_DEBUG("Got bytes, now hexlifying.");
     return hexlify({bytes.data(), size});
 }

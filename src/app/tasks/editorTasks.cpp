@@ -75,7 +75,6 @@ int labelCompletionCallback(ImGuiInputTextCallbackData* data){
 void createLabelLineMapCallback(std::map<std::string, int>& labelVector){
     if (labelLineNoMapInternal.empty()){
         getBytes(selectedFile);
-        initInsSizeInfoMap();
     }
 
     labelVector = labelLineNoMapInternal;

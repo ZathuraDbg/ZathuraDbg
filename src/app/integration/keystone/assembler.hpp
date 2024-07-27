@@ -40,6 +40,7 @@ extern void initInsSizeInfoMap();
 extern std::vector<std::string> labels;
 extern bool isFirstLineLabel;
 extern std::pair<std::string, std::size_t> assemble(const std::string& assemblyString, const keystoneSettings& ksSettings);
+extern uint64_t countValidInstructions(std::stringstream& asmStream);
 extern std::string getBytes(const std::string& fileName);
 extern std::string getBytes(std::stringstream& assembly);
 extern uint64_t codeFinalLen;
