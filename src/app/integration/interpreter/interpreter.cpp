@@ -218,11 +218,12 @@ bool createStack(void* unicornEngine){
 }
 
 bool resetState(){
+    LOG_DEBUG("Resetting state!");
     codeHasRun = false;
     stepClickedOnce = false;
     continueOverBreakpoint = false;
     debugPaused = false;
-    codeRunFromButton = false;
+    skipBreakpoints = false;
     executionComplete = false;
 
     codeCurrentLen = 0;
@@ -284,7 +285,7 @@ bool resetState(){
 }
 
 bool isCodeRunning = false;
-bool codeRunFromButton = false;
+bool skipBreakpoints = false;
 bool stepCode(size_t instructionCount){
    LOG_DEBUG("Stepping into code!");
     if (isCodeRunning || executionComplete){
@@ -305,7 +306,7 @@ bool stepCode(size_t instructionCount){
     }
     isCodeRunning = false;
     execMutex.unlock();
-    LOG_DEBUG("Code executed by one step");
+    LOG_DEBUG("Code executed by " << instructionCount << ((instructionCount) ? "step" : "steps") << "!");
 
     if (executionComplete){
         return true;
@@ -321,7 +322,7 @@ bool stepCode(size_t instructionCount){
         }
 
         std::string str =  addressLineNoMap[std::to_string(ip)];
-        if (!str.empty() && (!codeRunFromButton) && (!executionComplete)){
+        if (!str.empty() && (!executionComplete)){
             lineNo = std::atoi(str.c_str());
             LOG_DEBUG("Highlight from block 3 - stepCode : line: " << lineNo);
             editor->HighlightDebugCurrentLine(lineNo - 1);
@@ -333,8 +334,8 @@ bool stepCode(size_t instructionCount){
 
     uc_context_save(uc, context);
     codeHasRun = true;
-    if (codeRunFromButton){
-        codeRunFromButton = false;
+    if (skipBreakpoints){
+        skipBreakpoints = false;
     }
 
    LOG_DEBUG("Code ran once!");
@@ -355,7 +356,7 @@ bool pauseNext = false;
 void hook(uc_engine *uc, uint64_t address, uint32_t size, void *user_data){
 //    LOG_DEBUG("Hook called!");
     if (!debugModeEnabled && !debugRun || (executionComplete) || (pauseNext)){
-        LOG_DEBUG("Execution complete.");
+        LOG_DEBUG("Execution halted.");
         uc_emu_stop(uc);
         uc_context_save(uc, context);
         if (executionComplete){
@@ -398,9 +399,9 @@ void hook(uc_engine *uc, uint64_t address, uint32_t size, void *user_data){
         executionComplete = true;
     }
 
-    if (debugModeEnabled){
+    if (debugModeEnabled && !skipBreakpoints){
         ip = getRegisterValue(getArchIPStr(codeInformation.mode), false);
-        if (ip != expectedIP && (ip > expectedIP) && (!codeRunFromButton)){
+        if (ip != expectedIP && (ip > expectedIP)){
             LOG_DEBUG("Jump detected!");
             updateRegs();
             if (stepIn){
@@ -418,7 +419,7 @@ void hook(uc_engine *uc, uint64_t address, uint32_t size, void *user_data){
 
         editor->HighlightDebugCurrentLine(lineNumber - 1);
 
-        if (std::find(breakpointLines.begin(), breakpointLines.end(), lineNumber) != breakpointLines.end() && (!codeRunFromButton)){
+        if (std::find(breakpointLines.begin(), breakpointLines.end(), lineNumber) != breakpointLines.end() && (!skipBreakpoints)){
             editor->HighlightDebugCurrentLine(lineNumber - 1);
             LOG_DEBUG("Highlight from hook - breakpoint found at lineNo " << lineNumber);
             if (!continueOverBreakpoint){
@@ -531,7 +532,7 @@ bool runCode(const std::string& code_in, uint64_t instructionCount)
 
         auto val = std::atoi(line.data());
         editor->HighlightDebugCurrentLine(val - 1);
-        LOG_DEBUG("Highlight from runCode first line is label");
+        LOG_DEBUG("Highlight from runCode");
         stepClickedOnce = true;
     }
 

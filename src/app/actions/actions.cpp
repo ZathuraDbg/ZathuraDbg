@@ -87,11 +87,12 @@ void debugRunSelectionAction(){
     }
 }
 
-void debugContinueAction(){
+void debugContinueAction(bool skipBP){
     if (std::find(breakpointLines.begin(), breakpointLines.end(), stepOverBPLineNo) != breakpointLines.end()){
         breakpointLines.erase(std::find(breakpointLines.begin(), breakpointLines.end(), tempBPLineNum));
         stepOverBPLineNo = -1;
     }
+    skipBreakpoints = skipBP;
     std::thread stepCodeThread(stepCode, 0);
     stepCodeThread.detach();
 //    stepCode(0);
@@ -115,14 +116,14 @@ void runActions(){
             debugRun = false;
             return;
         }
-        codeRunFromButton = true;
+        skipBreakpoints = true;
         resetState();
         fileRunTask(-1);
         debugRun = false;
     }
     if (debugContinue){
 //        debugContinueAction();
-        std::thread continueActionThread(debugContinueAction);
+        std::thread continueActionThread(debugContinueAction, false);
         continueActionThread.detach();
         debugContinue = false;
     }
