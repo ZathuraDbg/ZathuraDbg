@@ -353,9 +353,11 @@ bool eraseTempBP = false;
  *  is the last instruction of the code because the code executes from top to bottom.
  */
 bool pauseNext = false;
+int runUntilLine = 0;
+
 void hook(uc_engine *uc, uint64_t address, uint32_t size, void *user_data){
 //    LOG_DEBUG("Hook called!");
-    if (!debugModeEnabled && !debugRun || (executionComplete) || (pauseNext)){
+    if ((!debugModeEnabled && !debugRun) || (executionComplete) || (pauseNext)){
         LOG_DEBUG("Execution halted.");
         uc_emu_stop(uc);
         uc_context_save(uc, context);
@@ -366,6 +368,12 @@ void hook(uc_engine *uc, uint64_t address, uint32_t size, void *user_data){
             LOG_DEBUG("Pause next detected!");
             pauseNext = false;
 //            debugPaused = false;
+        }
+        int lineNumber;
+        uint64_t ip;
+        std::string str = addressLineNoMap[std::to_string(address)];
+        if (!str.empty()){
+            lineNumber = std::atoi(str.c_str());
         }
         return;
     }
@@ -378,6 +386,15 @@ void hook(uc_engine *uc, uint64_t address, uint32_t size, void *user_data){
     }
     else{
         lineNumber = -1;
+    }
+
+    if (lineNumber == runUntilLine){
+        LOG_DEBUG("Run until here detected!");
+        LOG_DEBUG("At lineNo: " << lineNumber);
+        runUntilLine = 0;
+        runUntilHere = false;
+        uc_emu_stop(uc);
+        uc_context_save(uc, context);
     }
 
     if (eraseTempBP) {
@@ -554,7 +571,6 @@ bool runTempCode(const std::string& codeIn){
 
     uint64_t ip;
     uc_context_reg_read(tempContext, regNameToConstant(getArchIPStr(codeInformation.mode)), &ip);
-    std::cout << ip << std::endl;
     updateRegs(true);
     return true;
 }
