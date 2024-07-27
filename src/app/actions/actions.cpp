@@ -81,9 +81,10 @@ void debugRunSelectionAction(){
     std::stringstream selectedAsmText(editor->GetSelectedText());
     if (!selectedAsmText.str().empty()) {
         std::string bytes = getBytes(selectedAsmText);
+        totalInstructions;
         if (!bytes.empty()) {
             debugRun = true;
-            runTempCode(bytes);
+            runTempCode(bytes, countValidInstructions(selectedAsmText));
             debugRun = false;
         }
     }

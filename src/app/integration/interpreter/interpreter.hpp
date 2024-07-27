@@ -25,7 +25,7 @@ extern bool runUntilHere;
 extern int runUntilLine;
 extern bool isCodeRunning;
 extern bool createStack(void* unicornEngine);
-extern bool runTempCode(const std::string& codeIn);
+extern bool runTempCode(const std::string& codeIn, uint64_t instructionCount);
 extern bool debugModeEnabled;
 std::pair<bool, uint64_t> getRegister(const std::string& name, bool useTempContext = false);
 extern uc_context *tempContext;

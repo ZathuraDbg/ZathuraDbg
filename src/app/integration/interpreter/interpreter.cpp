@@ -523,11 +523,7 @@ bool runCode(const std::string& code_in, uint64_t instructionCount)
         }
 
         if (err) {
-            if (runningTempCode && ((err <= UC_ERR_READ_UNMAPPED) || (err >= UC_ERR_FETCH_UNMAPPED))){
-            }
-            else{
-                handleUCErrors(err);
-            }
+            handleUCErrors(err);
 
             free(codeBuf);
             codeBuf = nullptr;
@@ -559,10 +555,10 @@ bool runCode(const std::string& code_in, uint64_t instructionCount)
     return true;
 }
 
-bool runTempCode(const std::string& codeIn){
+bool runTempCode(const std::string& codeIn, uint64_t instructionCount){
     resetState();
     runningTempCode = true;
-    runCode(codeIn, 0);
+    runCode(codeIn, instructionCount);
 
     tempUC = uc;
     auto size = uc_context_size(uc);
