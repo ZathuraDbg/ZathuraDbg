@@ -45,7 +45,6 @@ void fileSaveTask(const std::string &fileName){
         selectedFile = fileName;
     }
 }
-#include <thread>
 void fileRunTask(uint64_t instructionCount){
     if (!selectedFile.empty()){
         LOG_DEBUG("Running code from: " << selectedFile);
@@ -56,28 +55,15 @@ void fileRunTask(uint64_t instructionCount){
         }
 
         if (createStack(&uc)){
-            std::string bytes = getBytes(selectedFile);
-
-            if (!bytes.empty()){
-                if (instructionCount == 1){
-                    runCode(bytes, instructionCount);
-                }
-                //                std::thread t(runCode, bytes, instructionCount);
-
-                if (instructionCount == -1){
-                    runCode(bytes, 0);
-                    std::thread stepCodeThread(stepCode, instructionCount);
-                    stepCodeThread.detach();
-                    return;
-                }
-//if (!runCode(bytes, instructionCount)){
-//                    tinyfd_messageBox("Unicorn engine error!", "Unable to run the code, please try again or report the "
-//                                                               "issue on GitHub with your logs!", "ok", "error", 0);
-//                    LOG_ERROR("Unable to run code!");
-//                    return;
-//                }
+            if (instructionCount == 1){
+                std::string bytes = getBytes(selectedFile);
+                if (!bytes.empty()){
+                     runCode(bytes, instructionCount);
+                 }
             }
-            else{
+            else if (instructionCount == -1){
+                startDebugging();
+                debugContinueAction(true);
                 return;
             }
         }
@@ -87,8 +73,7 @@ void fileRunTask(uint64_t instructionCount){
     }
     else{
         LOG_ERROR("No file selected to run!");
-        tinyfd_messageBox("No file selected!", "Please open a file to run the code!", "ok", "error", 0);
-    }
+        tinyfd_messageBox("No file selected!", "Please open a file to run the code!", "ok", "error", 0); }
 }
 
 void fileSaveUCContextAsJson(const std::string& jsonFilename){

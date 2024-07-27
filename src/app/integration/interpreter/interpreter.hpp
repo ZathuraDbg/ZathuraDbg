@@ -18,7 +18,7 @@
 #include <array>
 extern std::mutex execMutex;
 extern std::mutex breakpointMutex;
-extern bool codeRunFromButton;
+extern bool skipBreakpoints;
 extern bool debugPaused;
 extern bool pauseNext;
 extern bool isCodeRunning;
