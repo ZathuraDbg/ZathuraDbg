@@ -31,9 +31,9 @@ extern bool isRunning;
 #include <capstone/capstone.h>
 #include "actions/actions.hpp"
 using json = nlohmann::json;
-
 #define CONFIG_NAME "config"
 
+extern float frameRate;
 extern void setupViewPort();
 void appMenuBar();
 extern void manageShortcuts();

@@ -12,6 +12,9 @@
 #endif
 #include <GLFW/glfw3.h> // Will drag system OpenGL headers
 #include <fstream>
+#include <chrono>
+#include <thread>
+
 GLFWwindow* window = nullptr;
 #if defined(_MSC_VER) && (_MSC_VER >= 1900) && !defined(IMGUI_DISABLE_WIN32_FUNCTIONS)
 #pragma comment(lib, "legacy_stdio_definitions")
@@ -30,7 +33,7 @@ void destroyWindow(){
     glfwDestroyWindow(window);
     glfwTerminate();
 }
-
+float frameRate = 120;
 int main(int, char**)
 {
     glfwSetErrorCallback(glfw_error_callback);
