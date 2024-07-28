@@ -85,7 +85,7 @@ void mainWindow() {
     setupViewPort();
 
     ImGui::Begin("Code", &k, ImGuiWindowFlags_NoCollapse);
-    setupButtons();
+   setupButtons();
 
     if (!editor->FontInit){
         editor->FontInit = pushFont;
