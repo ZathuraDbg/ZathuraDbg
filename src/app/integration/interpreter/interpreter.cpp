@@ -116,8 +116,6 @@ void showRegs(){
     printf("FS_BASE = 0x%x\n", fs_base);
     printf("GS_BASE = 0x%x\n", gs_base);
 }
-// TODO: Add a check while adding a new register so we don't have to add a check in the below
-// two functions
 
 uint64_t getRegisterValue(const std::string& regName, bool useTempContext){
     auto entry = regInfoMap[toUpperCase(regName)];

@@ -6,6 +6,7 @@ set(CMAKE_CXX_STANDARD 23)
 set(SOURCES
         ${CMAKE_SOURCE_DIR}/main.cpp
         ${CMAKE_SOURCE_DIR}/../vendor/imgui/imgui.cpp
+        ${CMAKE_SOURCE_DIR}/../vendor/tinyexpr/tinyexpr.c
         ${CMAKE_SOURCE_DIR}/../vendor/imgui/imgui_draw.cpp
         ${CMAKE_SOURCE_DIR}/../vendor/imgui/imgui_tables.cpp
         ${CMAKE_SOURCE_DIR}/../vendor/imgui/imgui_widgets.cpp
@@ -45,7 +46,7 @@ set(SOURCES
         app/shortcuts.hpp
         app/actions/actions.cpp
         app/actions/actions.hpp
-
+        ${CMAKE_SOURCE_DIR}/../vendor/tinyexpr/tinyexpr.h
 )
 
 # Include directories

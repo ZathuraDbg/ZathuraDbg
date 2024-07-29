@@ -1,10 +1,47 @@
 #include "windows.hpp"
 
 std::vector<std::string> commands = {};
-void parseVals(std::string val){
+
+std::string convToDec(const std::string& str){
+    std::string outStr;
+    bool foundHexStr = false;
+
+    for (int i = 0; i < str.length(); i++){
+        if (str[i] == '0' && str[i+1] == 'x'){
+            i++;
+            foundHexStr = true;
+            continue;
+        }
+
+//      "0x 10f0+"
+        if (foundHexStr){
+            char* endptr = nullptr;
+            auto convVal = strtoul(str.substr(i).c_str(), &endptr, 16);
+            size_t diff = endptr - str.substr(i).c_str() - 1;
+            outStr += std::to_string(convVal);
+            i += diff;
+            foundHexStr = false;
+            continue;
+        }
+
+        outStr += str[i];
+    }
+    return outStr;
+}
+
+uint64_t doubleToUint64(double d) {
+    double rounded = std::round(d);
+
+    if (rounded < 0 || rounded > static_cast<double>(std::numeric_limits<uint64_t>::max())) {
+        return 0;
+    }
+
+    return static_cast<uint64_t>(rounded);
+}
+
+uint64_t parseVals(std::string val){
     std::string result;
     std::string regName;
-
     std::vector<std::string> regNames = {};
     bool foundReg = false;
     bool foundValidReg = false;
@@ -23,8 +60,18 @@ void parseVals(std::string val){
                     foundReg = false;
                     foundValidReg = false;
                     regNames.push_back(regName);
-                    result += std::to_string(getRegisterValue(regName, false));
-                    result += c;
+                    auto registerValue = (!codeHasRun) ? tempRegisterValueMap[regName] : (std::to_string(getRegisterValue(regName, (tempContext != nullptr) ? true : false)));
+                    if (registerValue.starts_with("0x")){
+                         result += std::to_string(hexStrToInt(registerValue));
+                    }
+                    else{
+                        result += registerValue;
+                    }
+
+                    if (c!=' '){
+                        result += c;
+                    }
+
                     regName.clear();
                     i++;
                     continue;
@@ -51,10 +98,8 @@ void parseVals(std::string val){
             i++;
         }
     }
-    if (!regName.empty()){
-        regNames.push_back(regName);
-    }
-    std::cout << result << std::endl;
+
+    return doubleToUint64(te_interp(convToDec(result).data(), nullptr));
 }
 
 void consoleWindow()
@@ -72,8 +117,7 @@ void consoleWindow()
 
     ImGui::PushID(&input);
      if (ImGui::InputText("Command", input, IM_ARRAYSIZE(input), ImGuiInputTextFlags_EnterReturnsTrue)){
-        commands.emplace_back(input);
-        parseVals(input);
+        commands.emplace_back((std::string(input) + ": " + std::to_string(parseVals(input))));
         input[0] = '\0';
     }
 
