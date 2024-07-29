@@ -82,19 +82,31 @@ void createLabelLineMapCallback(std::map<std::string, int> &labelVector) {
     labelVector = labelLineNoMapInternal;
 }
 
-std::pair<int, int> parseStrIntoCoordinates(const std::string &popupInput) {
+std::pair<int, int> parseStrIntoCoordinates(std::string &popupInput) {
     if (labelLineNoMapInternal.empty()) {
         getBytes(selectedFile);
         initInsSizeInfoMap();
     }
 
-    std::cout << parseVals(popupInput) << std::endl;
+    if (popupInput.contains('$')) {
+        auto s = parseVals(popupInput);
+        if (addressLineNoMap.contains((s))){
+            popupInput = addressLineNoMap[(parseVals(popupInput))];
+        }
+        else{
+            popupInput = '0';
+        }
+    }
 
     int lineNo = -1;
     int colNo = 0;
 
     std::string convStr;
     std::string labelStr;
+
+    if (popupInput.contains("0x")){
+        popupInput = std::to_string(hexStrToInt(popupInput));
+    }
 
     for (auto &c: popupInput) {
         if (c == ':' && lineNo == -1) {
@@ -150,7 +162,7 @@ std::pair<int, int> parseStrIntoCoordinates(const std::string &popupInput) {
         }
     }
 
-    if (lineNo < 0) {
+    if (lineNo <= 0) {
         lineNo = 1;
     } else if (colNo < 0) {
         colNo = 0;

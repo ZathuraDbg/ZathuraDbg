@@ -32,7 +32,7 @@ extern bool isRunning;
 #include "actions/actions.hpp"
 using json = nlohmann::json;
 #define CONFIG_NAME "config"
-extern uint64_t parseVals(std::string val);
+extern std::string parseVals(std::string val);
 extern float frameRate;
 extern void setupViewPort();
 void appMenuBar();

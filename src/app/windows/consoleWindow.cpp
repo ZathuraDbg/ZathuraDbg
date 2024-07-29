@@ -7,7 +7,7 @@ std::string convToDec(const std::string& str){
     bool foundHexStr = false;
 
     for (int i = 0; i < str.length(); i++){
-        if (str[i] == '0' && str[i+1] == 'x'){
+        if (str[i] == '0' && (str[i+1] == 'x' || str[i+1] == 'X' )){
             i++;
             foundHexStr = true;
             continue;
@@ -39,7 +39,7 @@ uint64_t doubleToUint64(double d) {
     return static_cast<uint64_t>(rounded);
 }
 
-uint64_t parseVals(std::string val){
+std::string parseVals(std::string val){
     std::string result;
     std::string regName;
     std::vector<std::string> regNames = {};
@@ -49,6 +49,7 @@ uint64_t parseVals(std::string val){
 
     size_t i = 0;
     if (val.contains('$')){
+        val = toUpperCase(val);
         val += " ";
         for (auto& c: val){
             if (isRegisterValid(regName, codeInformation.mode) && (!foundValidReg)){
@@ -66,6 +67,10 @@ uint64_t parseVals(std::string val){
                     }
                     else{
                         result += registerValue;
+                    }
+
+                    if (result.empty()){
+                        result += "0";
                     }
 
                     if (c!=' '){
@@ -98,8 +103,11 @@ uint64_t parseVals(std::string val){
             i++;
         }
     }
+    else{
+        return val;
+    }
 
-    return doubleToUint64(te_interp(convToDec(result).data(), nullptr));
+    return std::to_string(doubleToUint64(te_interp(convToDec(result).data(), nullptr)));
 }
 
 void consoleWindow()
@@ -117,7 +125,7 @@ void consoleWindow()
 
     ImGui::PushID(&input);
      if (ImGui::InputText("Command", input, IM_ARRAYSIZE(input), ImGuiInputTextFlags_EnterReturnsTrue)){
-        commands.emplace_back((std::string(input) + ": " + std::to_string(parseVals(input))));
+        commands.emplace_back((std::string(input) + ": " + (parseVals(input))));
         input[0] = '\0';
     }
 
