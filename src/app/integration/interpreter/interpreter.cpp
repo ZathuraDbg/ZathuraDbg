@@ -165,7 +165,7 @@ std::pair<bool, uint64_t> getRegister(const std::string& name, bool useTempConte
 }
 
 bool ucInit(void* unicornEngine){
-//    LOG_DEBUG("Initializing unicorn engine");
+    LOG_DEBUG("Initializing unicorn engine");
     if (regInfoMap.empty()){
         initArch();
     }
@@ -181,7 +181,7 @@ bool ucInit(void* unicornEngine){
 }
 
 bool createStack(void* unicornEngine){
-//    LOG_DEBUG("Creating stack");
+    LOG_DEBUG("Creating stack");
 
     if (!ucInit(unicornEngine)){
         return false;
