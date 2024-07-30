@@ -38,6 +38,11 @@ Size=219,443
 Collapsed=0
 DockId=0x00000007,0
 
+[Window][Stack in unmapped region!]
+Pos=580,381
+Size=362,92
+Collapsed=0
+
 [Table][0xB4C7751B,2]
 Column 0  Weight=3.4118
 Column 1  Weight=20.5882

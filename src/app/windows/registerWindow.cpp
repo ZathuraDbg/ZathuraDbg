@@ -110,7 +110,6 @@ uint64_t hexStrToInt(const std::string& val){
     return ret;
 };
 
-
 void registerWindow() {
     if (codeHasRun){
         if (tempContext!= nullptr){
@@ -136,8 +135,8 @@ void registerWindow() {
         ImGui::TableHeadersRow();
 
         int index = 0;
-        for (auto it = registerValueMap.begin(); it != registerValueMap.end(); ++index) {
-            if (!isRegisterValid(toUpperCase(it->first), codeInformation.mode)){
+        for (auto regValMapInfo = registerValueMap.begin(); regValMapInfo != registerValueMap.end(); ++index) {
+            if (!isRegisterValid(toUpperCase(regValMapInfo->first), codeInformation.mode)){
                 continue;
             }
 
@@ -147,81 +146,97 @@ void registerWindow() {
             float frameHeight = ImGui::GetFrameHeight();
             float spacing = (frameHeight - textHeight) / 2.0f;
             ImGui::SetCursorPosY(ImGui::GetCursorPosY() + spacing);
-            ImGui::Text("%s", it->first.c_str());
+            ImGui::Text("%s", regValMapInfo->first.c_str());
 
             ImGui::TableSetColumnIndex(1);
-            static char value1[64] = {};
-            strncpy(value1, it->second.c_str(), sizeof(value1) - 1);
-            value1[sizeof(value1) - 1] = '\0';
+            static char regValueFirst[64] = {};
+            strncpy(regValueFirst, regValMapInfo->second.c_str(), sizeof(regValueFirst) - 1);
+            regValueFirst[sizeof(regValueFirst) - 1] = '\0';
 
             ImGui::PushID(index * 2);
             ImGui::SetNextItemWidth(-FLT_MIN);
-            if (ImGui::InputText(("##value1" + std::to_string(index)).c_str(), value1, IM_ARRAYSIZE(value1), ImGuiInputTextFlags_CharsNoBlank, checkHexCharsCallback)) {
-                if ((strlen(value1) != 0)) {
-                    uint64_t temp = hexStrToInt(value1);
+            if (ImGui::InputText(("##regValueFirst" + std::to_string(index)).c_str(), regValueFirst, IM_ARRAYSIZE(regValueFirst), ImGuiInputTextFlags_CharsNoBlank | ImGuiInputTextFlags_EnterReturnsTrue, checkHexCharsCallback )) {
+                if ((strlen(regValueFirst) != 0)) {
+                    uint64_t temp = hexStrToInt(regValueFirst);
 
-                    if (strncmp(value1, "0x", 2) != 0) {
-                        registerValueMap[it->first] = "0x";
-                        registerValueMap[it->first].append(value1);
+                    if (strncmp(regValueFirst, "0x", 2) != 0) {
+                        registerValueMap[regValMapInfo->first] = "0x";
+                        registerValueMap[regValMapInfo->first].append(regValueFirst);
 
                     } else {
-                        registerValueMap[it->first] = value1;
+                        registerValueMap[regValMapInfo->first] = regValueFirst;
                     }
-
-                    LOG_DEBUG("Register: " << it->first << "\n\tValue: " << value1 << "; after hexconv: " << temp);
 
                     if (codeHasRun)
                     {
-                        uc_reg_write(uc, regNameToConstant(it->first), &temp);
+                        uc_reg_write(uc, regNameToConstant(regValMapInfo->first), &temp);
                         uc_context_save(uc, context);
                     }
                     else{
-                        tempRegisterValueMap[it->first] = value1;
+                        if (regValMapInfo->first == getArchIPStr(codeInformation.mode)){
+                            ENTRY_POINT_ADDRESS = strtoul(regValueFirst, nullptr, 16);
+                        }
+                        else if (regValMapInfo->first == getArchSBPStr(codeInformation.mode).first || (regValMapInfo->first == getArchSBPStr(codeInformation.mode).second)){
+                            STACK_ADDRESS = strtoul(regValueFirst, nullptr, 16);
+                        }
+
+                        tempRegisterValueMap[regValMapInfo->first] = regValueFirst;
                     }
                 }
             }
             ImGui::PopID();
 
-            ++it;
-            if (it == registerValueMap.end()) break;
+            ++regValMapInfo;
+            if (regValMapInfo == registerValueMap.end()) break;
 
             ImGui::TableSetColumnIndex(2);
-            ImGui::Text("%s", it->first.c_str());
+            ImGui::Text("%s", regValMapInfo->first.c_str());
 
             ImGui::TableSetColumnIndex(3);
             static char value2[64] = {};
-            strncpy(value2, it->second.c_str(), sizeof(value2) - 1);
+            strncpy(value2, regValMapInfo->second.c_str(), sizeof(value2) - 1);
             value2[sizeof(value2) - 1] = '\0';
 
             ImGui::PushID(index * 2 + 1);
             ImGui::SetNextItemWidth(-FLT_MIN);
-            if (ImGui::InputText(("##value2" + std::to_string(index)).c_str(), value2, IM_ARRAYSIZE(value2), ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CharsUppercase | ImGuiInputTextFlags_CharsNoBlank)) {
+            if (ImGui::InputText(("##value2" + std::to_string(index)).c_str(), value2, IM_ARRAYSIZE(value2), ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CharsUppercase | ImGuiInputTextFlags_CharsNoBlank | ImGuiInputTextFlags_EnterReturnsTrue)) {
                 if ((strlen(value2) != 0)) {
 
                 if (strncmp(value2, "0x", 2) != 0) {
-                    registerValueMap[it->first] = "0x";
-                    registerValueMap[it->first].append(value2);
+                    registerValueMap[regValMapInfo->first] = "0x";
+                    registerValueMap[regValMapInfo->first].append(value2);
                 } else {
-                    registerValueMap[it->first] = value2;
+                    registerValueMap[regValMapInfo->first] = value2;
                 }
 
                 uint64_t temp;
                 temp = hexStrToInt(value2);
 
-                LOG_DEBUG("Register: " << it->first << "; Value: " << value2 << "; after hexconv: " << temp);
-                    if (codeHasRun)
-                    {
-                        uc_reg_write(uc, regNameToConstant(it->first), &temp);
-                        uc_context_save(uc, context);
+                if (codeHasRun)
+                {
+                    uc_reg_write(uc, regNameToConstant(regValMapInfo->first), &temp);
+                    uc_context_save(uc, context);
+                }
+                else{
+                    if (regValMapInfo->first == getArchIPStr(codeInformation.mode)){
+                        ENTRY_POINT_ADDRESS = strtoul(regValueFirst, nullptr, 10);
                     }
                     else{
-                        tempRegisterValueMap[it->first] = value2;
+                        if (regValMapInfo->first == getArchIPStr(codeInformation.mode)){
+                            ENTRY_POINT_ADDRESS = strtoul(regValueFirst, nullptr, 16);
+                        }
+                        else if (regValMapInfo->first == getArchSBPStr(codeInformation.mode).first || (regValMapInfo->first == getArchSBPStr(codeInformation.mode).second)){
+                            STACK_ADDRESS = strtoul(regValueFirst, nullptr, 16);
+                        }
+
+                        tempRegisterValueMap[regValMapInfo->first] = regValueFirst;
                     }
+                }
             }
         }
             ImGui::PopID();
-            ++it;
-            if (it == registerValueMap.end()) break;
+            ++regValMapInfo;
+            if (regValMapInfo == registerValueMap.end()) break;
         }
 
         ImGui::EndTable();
