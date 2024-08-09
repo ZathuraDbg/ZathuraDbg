@@ -58,6 +58,7 @@ void popup(){
         ImGui::SetCursorPosX(ImGui::CalcTextSize(text).x - 40);
         if (ImGui::Button("Allocate"))
         {
+            uc_mem_map(uc, STACK_ADDRESS, STACK_SIZE, UC_PROT_ALL);
             showPopupError = false;
             ImGui::CloseCurrentPopup();
         }
@@ -72,42 +73,6 @@ void popup(){
     }
     ImGui::PopFont();
 }
-
-//void showError(const std::string& error){
-//    ImGui::OpenPopup("InputPopup");
-//    popup();
-//    auto size = ImGui::CalcTextSize(error.c_str());
-//    ImVec2 windowPos = ImGui::GetWindowPos();
-//    ImVec2 windowSize = ImGui::GetWindowSize();
-//    ImVec2 popupSize = ImVec2(size.x - 20, 92);
-//    ImGui::SetNextWindowSize(popupSize, ImGuiCond_Appearing);
-//    ImGui::GetStyle().Colors[ImGuiCol_PopupBg] = ImColor(0x1e, 0x20, 0x30);
-//    ImGui::GetStyle().PopupBorderSize = 3.0f;
-//    ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[SatoshiBold18]);
-//    if (ImGui::BeginPopupModal("Stack in unmapped region!")){
-//        ImGui::Dummy({3, 0});
-//        ImGui::SameLine();
-//
-//        ImGui::SetCursorPosX((windowSize.x - windowTextPos.x) * 0.5f);
-//        ImGui::Text("%s", error.c_str());
-//        ImGui::Dummy({30, 30});
-//        ImGui::SameLine(30, 10);
-//        ImGui::SetCursorPosX(size.x/2 + 26);
-//        if (ImGui::Button("Allocate")){
-//            showPopupError = false;
-//            ImGui::CloseCurrentPopup();
-//        }
-//        ImGui::SameLine();
-//        if (ImGui::Button("Close")){
-//            showPopupError = false;
-//            ImGui::CloseCurrentPopup();
-//        }
-//        ImGui::EndPopup();
-//    }
-//    ImGui::PopFont();
-//}
-
-
 
 void stackEditorWindow() {
     auto io = ImGui::GetIO();
