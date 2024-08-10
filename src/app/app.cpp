@@ -73,19 +73,31 @@ void pushFont(){
     ImGui::PushFont(io.Fonts->Fonts[SatoshiBold18]);
 }
 
+//ImU32 bgColorFn(const ImU8* data, size_t off){
+//    if (off % 2 == 0){
+//        return ImColor(0xff, 0xab, 0x12);
+//    }
+//
+//    return ImColor(0xaa, 0xcb, 0x12);
+//}
+//
+//void interactFn(const ImU8* data, size_t off){
+//    printf("%ld\n", off);
+//    std::cout << std::endl;
+//}
 
 void mainWindow() {
     ImGuiIO &io = ImGui::GetIO();
 
     bool k = true;
     SetupImGuiStyle();
-    ImGui::DockSpaceOverViewport(ImGui::GetMainViewport()->ID);
+    ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
 
     appMenuBar();
     setupViewPort();
 
     ImGui::Begin("Code", &k, ImGuiWindowFlags_NoCollapse);
-   setupButtons();
+    setupButtons();
 
     if (!editor->FontInit){
         editor->FontInit = pushFont;

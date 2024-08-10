@@ -5,7 +5,7 @@ main:
     push rdi
     inc rdi
     call subtract_hundred
-    cmp r11, 10000
+    cmp r11, 60000
     jne nextblock
     push rax
     push rbx
