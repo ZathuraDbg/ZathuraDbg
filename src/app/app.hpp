@@ -32,6 +32,9 @@ extern bool isRunning;
 #include "actions/actions.hpp"
 using json = nlohmann::json;
 #define CONFIG_NAME "config"
+
+//extern ImU32 bgColorFn(const ImU8* data, size_t off);
+//extern void interactFn(const ImU8* data, size_t off);
 extern std::string parseVals(std::string val);
 extern float frameRate;
 extern void setupViewPort();
