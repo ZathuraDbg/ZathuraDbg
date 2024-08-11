@@ -704,7 +704,10 @@ struct MemoryEditor
                 PasteWriteToMemory(true);
             }
             ImGui::Separator();
-            ImGui::MenuItem("Select All", "CTRL + A", false);
+            if (ImGui::MenuItem("Select All", "CTRL + A", false)){
+                SelectionStartAddr = 0;
+                SelectionEndAddr = SelectionStartAddr + mem_size;
+            }
 //            ImGui::Separator();
             ImGui::PopFont();
             ImGui::EndPopup();
