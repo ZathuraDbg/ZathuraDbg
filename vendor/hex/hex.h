@@ -56,6 +56,7 @@
 #include <string>
 #include <sstream>
 #include <iomanip>
+#include <vector>
 #include "../../src/utils/iconfont.h"
 
 #ifdef _MSC_VER
@@ -243,12 +244,9 @@ struct MemoryEditor
         for (size_t i = 0; i < blockSize; ++i) {
             ss << std::setw(2) << static_cast<int>(buffer[i]) << " ";
         }
-
-        if (!ss.str().empty()){
-            ss.str().pop_back();
-        }
-
-        return ss.str();
+        std::string res = ss.str();
+        res.pop_back();
+        return res;
     }
 
     // Memory Editor contents only
@@ -609,6 +607,55 @@ struct MemoryEditor
         return dataToCopy;
     }
 
+    bool WriteVectorToMemory(std::vector<int> vec) {
+        auto currentAddr = SelectionStartAddr;
+        auto endAddr = SelectionEndAddr;
+
+        if (WriteFn) {
+            for (int i = 0; currentAddr != endAddr + 1 && i < vec.size(); currentAddr++, i++) {
+                WriteFn(MemData, currentAddr, vec[i]);
+            }
+        }
+
+        return true;
+    }
+
+    bool validateHex(char toValidate){
+        if ((toValidate >= '0' && toValidate <= '9') || (toValidate >= 'A' && toValidate <= 'F') || (toValidate >= 'a' && toValidate <= 'f')) {
+            return true;
+        }
+        else{
+            return false;
+        }
+    }
+
+    bool PasteWriteToMemory(){
+        std::string clipboardText = ImGui::GetClipboardText();
+        std::vector<int> convertedInts;
+        std::string hex;
+
+        for (int i = 0; i < clipboardText.length(); i++){
+            if (clipboardText[i] == ' '){
+                continue;
+            }
+
+            if (validateHex(clipboardText[i]) && (i+1 <= clipboardText.length() && (validateHex(clipboardText[++i])))){
+                hex += clipboardText[i];
+            }
+            else{
+                return false;
+            }
+
+            hex += clipboardText[++i];
+            convertedInts.push_back(std::strtol(hex.c_str(), nullptr, 16));
+            hex.clear();
+            hex = "";
+        }
+
+        WriteVectorToMemory(convertedInts);
+        return false;
+    }
+
     void DrawOptionsLine(const Sizes& s, void* mem_data, size_t mem_size, size_t base_display_addr)
     {
         IM_UNUSED(mem_data);
@@ -634,7 +681,9 @@ struct MemoryEditor
             }
 
             ImGui::Separator();
-            ImGui::MenuItem("Paste", "CTRL + V", false);
+            if (ImGui::MenuItem("Paste", "CTRL + V", false)){
+                PasteWriteToMemory();
+            }
             ImGui::Separator();
             ImGui::MenuItem("Select All", "CTRL + A", false);
 //            ImGui::Separator();
