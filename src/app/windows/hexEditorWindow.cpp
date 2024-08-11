@@ -1,4 +1,5 @@
 #include "windows.hpp"
+#include "../app.hpp"
 
 MemoryEditor memoryEditorWindow;
 std::vector<newMemEditWindowsInfo> newMemEditWindows{};
@@ -154,7 +155,8 @@ void hexEditorWindow(){
     memoryEditorWindow.HighlightColor = ImColor(59, 60, 79);
     memoryEditorWindow.OptShowAddWindowButton = true;
     memoryEditorWindow.newWindowFn = createNewWindow;
-    memoryEditorWindow.DrawWindow("Memory Editor", (void*)data, 0x3000);
+    memoryEditorWindow.ShowRequiredButton = stackEditor.ShowRequiredButton = &showRequiredButton;
+    memoryEditorWindow.DrawWindow("Memory Editor", (void*)data, 0x3000, ENTRY_POINT_ADDRESS);
     int i = 0;
 
     if (!newMemEditWindows.empty()){
@@ -166,7 +168,7 @@ void hexEditorWindow(){
             if (err){
             }
 
-            info.memEditor.DrawWindow(("Memory Editor " + std::to_string(++i)).c_str(), (void*)newMemData, info.size);
+            info.memEditor.DrawWindow(("Memory Editor " + std::to_string(++i)).c_str(), (void*)newMemData, info.size, info.address);
         }
     }
     ImGui::PopFont();

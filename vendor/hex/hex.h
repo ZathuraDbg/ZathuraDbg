@@ -111,6 +111,7 @@ struct MemoryEditor
     size_t          DataEditingAddr;
     size_t          SelectionStartAddr;
     size_t          SelectionEndAddr;
+    size_t          HoveredAddr;
     bool            DataEditingTakeFocus;
     char            DataInputBuf[32];
     char            AddrInputBuf[32];
@@ -468,19 +469,21 @@ struct MemoryEditor
                             DataEditingTakeFocus = true;
                             data_editing_addr_next = addr;
                         }
-                        else if (InteractFn && ImGui::IsItemHovered())
-                        {
-                          if (!interact_invoked)
-                            {
-                            // Revert padding/spacing to let users draw popups/windows without interference
-                            ImGui::PopStyleVar(2);
-                            InteractFn(mem_data, addr);
-                            interact_invoked = true;
-                            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
-                            ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
-                        }
-                      }
+                        else if (InteractFn && ImGui::IsItemHovered()) {
+                            if (!interact_invoked) {
+                                // Revert padding/spacing to let users draw popups/windows without interference
+                                ImGui::PopStyleVar(2);
+                                InteractFn(mem_data, addr);
+                                interact_invoked = true;
+                                ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+                                ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
+                            }
 
+
+                      }
+                        if (ImGui::IsItemHovered()){
+                            HoveredAddr = addr;
+                        }
                     }
                 }
 
@@ -607,14 +610,26 @@ struct MemoryEditor
         return dataToCopy;
     }
 
-    bool WriteVectorToMemory(std::vector<int> vec) {
+    bool WriteVectorToMemory(std::vector<int> vec, bool PasteAll = false) {
         auto currentAddr = SelectionStartAddr;
         auto endAddr = SelectionEndAddr;
 
+        if (currentAddr == -1){
+            currentAddr = endAddr = HoveredAddr;
+        }
+
         if (WriteFn) {
-            for (int i = 0; currentAddr != endAddr + 1 && i < vec.size(); currentAddr++, i++) {
-                WriteFn(MemData, currentAddr, vec[i]);
+            if (PasteAll){
+                for (int i = 0; i < vec.size(); currentAddr++, i++) {
+                    WriteFn(MemData, currentAddr, vec[i]);
+                }
             }
+            else{
+                for (int i = 0; currentAddr != endAddr + 1 && i < vec.size(); currentAddr++, i++) {
+                    WriteFn(MemData, currentAddr, vec[i]);
+                }
+            }
+
         }
 
         return true;
@@ -629,7 +644,7 @@ struct MemoryEditor
         }
     }
 
-    bool PasteWriteToMemory(){
+    bool PasteWriteToMemory(bool PasteAll = false){
         std::string clipboardText = ImGui::GetClipboardText();
         std::vector<int> convertedInts;
         std::string hex;
@@ -646,13 +661,13 @@ struct MemoryEditor
                 return false;
             }
 
-            hex += clipboardText[++i];
+            hex += clipboardText[i];
             convertedInts.push_back(std::strtol(hex.c_str(), nullptr, 16));
             hex.clear();
             hex = "";
         }
 
-        WriteVectorToMemory(convertedInts);
+        WriteVectorToMemory(convertedInts, PasteAll);
         return false;
     }
 
@@ -683,6 +698,10 @@ struct MemoryEditor
             ImGui::Separator();
             if (ImGui::MenuItem("Paste", "CTRL + V", false)){
                 PasteWriteToMemory();
+            }
+            ImGui::Separator();
+            if (ImGui::MenuItem("Paste All", "CTRL + V", false)){
+                PasteWriteToMemory(true);
             }
             ImGui::Separator();
             ImGui::MenuItem("Select All", "CTRL + A", false);
