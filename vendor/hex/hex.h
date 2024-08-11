@@ -50,8 +50,13 @@
 
 #pragma once
 
-#include <stdio.h>      // sprintf, scanf
-#include <stdint.h>     // uint8_t, etc.
+#include <cstdio>      // sprintf, scanf
+#include <cstdint>     // uint8_t, etc.
+#include <iostream>
+#include <string>
+#include <sstream>
+#include <iomanip>
+#include "../../src/utils/iconfont.h"
 
 #ifdef _MSC_VER
 #define _PRISizeT   "I"
@@ -86,7 +91,7 @@ struct MemoryEditor
     bool            OptShowAscii;                               // = true   // display ASCII representation on the right side.
     bool            OptGreyOutZeroes;                           // = true   // display null/zero bytes using the TextDisabled color.
     bool            OptUpperCaseHex;                            // = true   // display hexadecimal values as "FF" instead of "ff".
-    bool            OptShowAddWindowButton;
+    bool            OptShowAddWindowButton;                     // = false  // display a "+" to add a new window
     int             OptMidColsCount;                            // = 8      // set to 0 to disable extra spacing between every mid-cols.
     int             OptAddrDigitsCount;                         // = 0      // number of addr digits to display (default calculated based on maximum displayed addr).
     float           OptFooterExtraHeight;                       // = 0      // space to reserve at the bottom of the widget to add custom widgets
@@ -97,11 +102,14 @@ struct MemoryEditor
     void            (*WriteFn)(ImU8* data, size_t off, ImU8 d); // = 0      // optional handler to write bytes.
     bool            (*HighlightFn)(const ImU8* data, size_t off);//= 0      // optional handler to return Highlight property (to support non-contiguous highlighting).
     bool            (*newWindowFn)();
+    bool            (*ShowRequiredButton)(const std::string& buttonName, bool state);
 
     // [Internal State]
     bool            ContentsWidthChanged;
     size_t          DataPreviewAddr;
     size_t          DataEditingAddr;
+    size_t          SelectionStartAddr;
+    size_t          SelectionEndAddr;
     bool            DataEditingTakeFocus;
     char            DataInputBuf[32];
     char            AddrInputBuf[32];
@@ -110,6 +118,8 @@ struct MemoryEditor
     int             PreviewEndianness;
     ImGuiDataType   PreviewDataType;
     bool            Keep;
+    bool            CopySelection;
+    uint8_t*        MemData;
 
     MemoryEditor()
     {
@@ -127,11 +137,13 @@ struct MemoryEditor
         OptAddrDigitsCount = 0;
         OptFooterExtraHeight = 0.0f;
         HighlightColor = IM_COL32(0, 0, 0, 0);
-        ReadFn = NULL;
-        WriteFn = NULL;
-        HighlightFn = NULL;
-        BgColorFn = NULL;
-        InteractFn = NULL;
+        SelectionEndAddr = SelectionStartAddr = -1;
+        ReadFn = nullptr;
+        WriteFn = nullptr;
+        HighlightFn = nullptr;
+        BgColorFn = nullptr;
+        InteractFn = nullptr;
+        ShowRequiredButton = nullptr;
         Keep = false;
         // State/Internals
         ContentsWidthChanged = false;
@@ -144,6 +156,7 @@ struct MemoryEditor
         PreviewEndianness = 0;
         PreviewDataType = ImGuiDataType_S32;
         newWindowFn = nullptr;
+        MemData = nullptr;
     }
 
     void GotoAddrAndHighlight(size_t addr_min, size_t addr_max)
@@ -216,6 +229,28 @@ struct MemoryEditor
         ImGui::End();
     }
 
+    std::string ReadMemory(uint64_t startAddr, uint64_t endAddr){
+        if (startAddr > endAddr){
+            std::swap(startAddr, endAddr);
+        }
+
+        uint64_t blockSize = (endAddr - startAddr) + 1;
+
+        auto *buffer = (unsigned char*)malloc(blockSize);
+        memcpy(buffer, MemData + startAddr, blockSize);
+        std::stringstream ss;
+        ss << std::hex << std::uppercase << std::setfill('0');
+        for (size_t i = 0; i < blockSize; ++i) {
+            ss << std::setw(2) << static_cast<int>(buffer[i]) << " ";
+        }
+
+        if (!ss.str().empty()){
+            ss.str().pop_back();
+        }
+
+        return ss.str();
+    }
+
     // Memory Editor contents only
     void DrawContents(void* mem_data_void, size_t mem_size, size_t base_display_addr = 0x0000)
     {
@@ -224,6 +259,7 @@ struct MemoryEditor
 
         static bool keep;
         ImU8* mem_data = (ImU8*)mem_data_void;
+        MemData = static_cast<uint8_t *>(mem_data_void);
         Sizes s;
         CalcSizes(s, mem_size, base_display_addr);
         ImGuiStyle& style = ImGui::GetStyle();
@@ -301,7 +337,13 @@ struct MemoryEditor
                     bool is_highlight_from_user_range = (addr >= HighlightMin && addr < HighlightMax);
                     bool is_highlight_from_user_func = (HighlightFn && HighlightFn(mem_data, addr));
                     bool is_highlight_from_preview = (addr >= DataPreviewAddr && addr < DataPreviewAddr + preview_data_type_size);
-                    if (is_highlight_from_user_range || is_highlight_from_user_func || is_highlight_from_preview)
+                    bool is_selection_highlight = false;
+                    if (((SelectionStartAddr != -1))){
+                        if ((addr <= SelectionEndAddr && addr >= SelectionStartAddr) || ((addr >= SelectionEndAddr && addr <= SelectionStartAddr) && (SelectionStartAddr > SelectionEndAddr))){
+                            is_selection_highlight = true;
+                        }
+                    };
+                    if (is_highlight_from_user_range || is_highlight_from_user_func || is_highlight_from_preview || is_selection_highlight)
                     {
                         ImVec2 pos = ImGui::GetCursorScreenPos();
                         float highlight_width = s.GlyphWidth * 2;
@@ -366,6 +408,18 @@ struct MemoryEditor
                         UserData user_data;
                         user_data.CursorPos = -1;
                         sprintf(user_data.CurrentBufOverwrite, format_byte, ReadFn ? ReadFn(mem_data, addr) : mem_data[addr]);
+
+                        if ((ImGui::IsKeyDown(ImGuiKey_LeftShift))){
+                            if (SelectionStartAddr == -1){
+                                SelectionStartAddr = addr;
+                                SelectionEndAddr = addr;
+                            }
+
+                            SelectionEndAddr = addr;
+                        }
+                        else if (SelectionStartAddr != -1 && (addr != SelectionEndAddr)){
+                            SelectionStartAddr = -1;
+                        }
                         ImGuiInputTextFlags flags = ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_NoHorizontalScroll | ImGuiInputTextFlags_CallbackAlways;
                         flags |= ImGuiInputTextFlags_AlwaysOverwrite; // was ImGuiInputTextFlags_AlwaysInsertMode
                         ImGui::SetNextItemWidth(s.GlyphWidth * 2);
@@ -428,6 +482,7 @@ struct MemoryEditor
                             ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
                         }
                       }
+
                     }
                 }
 
@@ -461,7 +516,7 @@ struct MemoryEditor
                     {
                         if (addr == DataEditingAddr)
                         {
-                            draw_list->AddRectFilled(pos, ImVec2(pos.x + s.GlyphWidth, pos.y + s.LineHeight), ImGui::GetColorU32(ImGuiCol_FrameBg));
+//                            draw_list->AddRectFilled(pos, ImVec2(pos.x + s.GlyphWidth, pos.y + s.LineHeight), ImGui::GetColorU32(ImGuiCol_FrameBg));
                             draw_list->AddRectFilled(pos, ImVec2(pos.x + s.GlyphWidth, pos.y + s.LineHeight), ImColor(59, 60, 79));
                         }
                         else if (BgColorFn)
@@ -522,41 +577,95 @@ struct MemoryEditor
         }
     }
 
+    std::string GetDataToCopy(std::string bytes, bool asArray) {
+        std::string dataToCopy = asArray ? "{0x" : "\\x";
+        bytes.pop_back();
+
+        if (asArray){
+            if (!bytes.empty()) {
+                for (size_t i = 0; i < bytes.length(); ++i) {
+                    if (bytes[i]!=' '){
+                        dataToCopy += bytes[i];
+                    }
+                    else{
+                        dataToCopy += ", 0x";
+                    }
+                }
+
+                dataToCopy.append("}");
+            }
+        }
+        else{
+            for (size_t i = 0; i < bytes.length(); ++i){
+                if (bytes[i] != ' '){
+                    dataToCopy += bytes[i];
+                }
+                else{
+                    dataToCopy += "\\x";
+                }
+            }
+        }
+
+        return dataToCopy;
+    }
+
     void DrawOptionsLine(const Sizes& s, void* mem_data, size_t mem_size, size_t base_display_addr)
     {
         IM_UNUSED(mem_data);
         ImGuiStyle& style = ImGui::GetStyle();
-        const char* format_range = OptUpperCaseHex ? "Range %0*" _PRISizeT "X..%0*" _PRISizeT "X" : "Range %0*" _PRISizeT "x..%0*" _PRISizeT "x";
 
-        // Options menu
-        if (ImGui::Button("Options"))
-            ImGui::OpenPopup("context");
+        ImGui::GetStyle().Colors[ImGuiCol_HeaderHovered] = ImColor(0x18, 0x19, 0x26);
         if (ImGui::BeginPopup("context"))
         {
-            ImGui::SetNextItemWidth(s.GlyphWidth * 7 + style.FramePadding.x * 2.0f);
-            if (ImGui::DragInt("##cols", &Cols, 0.2f, 4, 32, "%d cols")) { ContentsWidthChanged = true; if (Cols < 1) Cols = 1; }
-            ImGui::Checkbox("Show Data Preview", &OptShowDataPreview);
-            ImGui::Checkbox("Show HexII", &OptShowHexII);
-            if (ImGui::Checkbox("Show Ascii", &OptShowAscii)) { ContentsWidthChanged = true; }
-            ImGui::Checkbox("Grey out zeroes", &OptGreyOutZeroes);
-            ImGui::Checkbox("Uppercase Hex", &OptUpperCaseHex);
+            ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[4]);
+            if (ImGui::MenuItem("Copy", "CTRL + C", false)){
+                ImGui::SetClipboardText(ReadMemory(SelectionStartAddr, SelectionEndAddr).c_str());
+            }
+            ImGui::Separator();
+            if (ImGui::BeginMenu("Copy as")) {
+                if (ImGui::MenuItem("C array")){
+                    ImGui::SetClipboardText(GetDataToCopy(ReadMemory(SelectionStartAddr, SelectionEndAddr), true).c_str());
+                }
+
+                if (ImGui::MenuItem("Hex")){
+                    ImGui::SetClipboardText(GetDataToCopy(ReadMemory(SelectionStartAddr, SelectionEndAddr), false).c_str());
+                }
+                ImGui::EndMenu();
+            }
+
+            ImGui::Separator();
+            ImGui::MenuItem("Paste", "CTRL + V", false);
+            ImGui::Separator();
+            ImGui::MenuItem("Select All", "CTRL + A", false);
+//            ImGui::Separator();
+            ImGui::PopFont();
             ImGui::EndPopup();
         }
 
         ImGui::SameLine();
-        ImGui::Text(format_range, s.AddrDigitsCount, base_display_addr, s.AddrDigitsCount, base_display_addr + mem_size - 1);
-        ImGui::SameLine();
-
-        ImGui::SetNextItemWidth((s.AddrDigitsCount + 1) * s.GlyphWidth + style.FramePadding.x * 2.0f);
-        if (ImGui::InputText("##addr", AddrInputBuf, IM_ARRAYSIZE(AddrInputBuf), ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_EnterReturnsTrue))
-        {
-            size_t goto_addr;
-            if (sscanf(AddrInputBuf, "%" _PRISizeT "X", &goto_addr) == 1)
-            {
-                GotoAddr = goto_addr - base_display_addr;
-                HighlightMin = HighlightMax = (size_t)-1;
+        if (!ShowRequiredButton){
+            if (ImGui::Button("^^")){
+                OptShowDataPreview = !OptShowDataPreview;
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Aa")){
+                OptUpperCaseHex = !OptUpperCaseHex;
             }
         }
+        else{
+            if (ShowRequiredButton("Preview", OptShowDataPreview)){
+                OptShowDataPreview = !OptShowDataPreview;
+            }
+            ImGui::SameLine();
+            if (ShowRequiredButton("Case", OptUpperCaseHex)){
+                OptUpperCaseHex = !OptUpperCaseHex;
+            }
+            ImGui::SameLine();
+            if (ShowRequiredButton("Ascii", OptShowAscii)){
+                OptShowAscii = !OptShowAscii;
+            }
+            ImGui::SameLine();
+       }
 
         if (GotoAddr != (size_t)-1)
         {
@@ -570,6 +679,7 @@ struct MemoryEditor
             }
             GotoAddr = (size_t)-1;
         }
+
 
     }
 
