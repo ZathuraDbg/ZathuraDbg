@@ -35,6 +35,7 @@ using json = nlohmann::json;
 
 //extern ImU32 bgColorFn(const ImU8* data, size_t off);
 //extern void interactFn(const ImU8* data, size_t off);
+extern bool showRequiredButton(const std::string& buttonName, bool state = false);
 extern std::string parseVals(std::string val);
 extern float frameRate;
 extern void setupViewPort();

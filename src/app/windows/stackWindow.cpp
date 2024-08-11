@@ -103,6 +103,6 @@ void stackEditorWindow() {
 
     copyBigEndian(data, temp, STACK_SIZE);
 
-    stackEditor.DrawWindow("Stack", (void*)((uintptr_t)data), STACK_SIZE);
+    stackEditor.DrawWindow("Stack", (void*)((uintptr_t)data), STACK_SIZE, STACK_ADDRESS);
     ImGui::PopFont();
 }
