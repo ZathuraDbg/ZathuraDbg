@@ -57,6 +57,7 @@
 #include <sstream>
 #include <iomanip>
 #include <vector>
+#include <stack>
 #include "../../src/utils/iconfont.h"
 
 #ifdef _MSC_VER
@@ -80,6 +81,20 @@ struct MemoryEditor
         DataFormat_Dec = 1,
         DataFormat_Hex = 2,
         DataFormat_COUNT
+    };
+
+    enum ActionType{
+        MemWrite,
+        MemWriteBatch
+    };
+
+    struct Actions{
+        ActionType Action;
+        uint64_t startAddr;
+        uint64_t endAddr;
+        size_t operationSize;
+        std::vector<int> operationData;
+        std::vector<int> originalData;
     };
 
     // Settings
@@ -122,6 +137,8 @@ struct MemoryEditor
     bool            Keep;
     bool            CopySelection;
     uint8_t*        MemData;
+    std::stack<Actions> UndoActions;
+    std::stack<Actions> RedoActions;
 
     MemoryEditor()
     {
@@ -159,6 +176,8 @@ struct MemoryEditor
         PreviewDataType = ImGuiDataType_S32;
         newWindowFn = nullptr;
         MemData = nullptr;
+        UndoActions = {};
+        RedoActions = {};
     }
 
     void GotoAddrAndHighlight(size_t addr_min, size_t addr_max)
@@ -167,6 +186,7 @@ struct MemoryEditor
         HighlightMin = addr_min;
         HighlightMax = addr_max;
     }
+
 
     struct Sizes
     {
@@ -183,6 +203,8 @@ struct MemoryEditor
 
         Sizes() { memset(this, 0, sizeof(*this)); }
     };
+
+
 
     void CalcSizes(Sizes& s, size_t mem_size, size_t base_display_addr)
     {
@@ -246,7 +268,9 @@ struct MemoryEditor
             ss << std::setw(2) << static_cast<int>(buffer[i]) << " ";
         }
         std::string res = ss.str();
-        res.pop_back();
+        if (res.ends_with(' ')){
+            res.pop_back();
+        }
         return res;
     }
 
@@ -576,15 +600,19 @@ struct MemoryEditor
                 keep = false;
             }
         }
+
+        if (ImGui::IsKeyDown(ImGuiKey_LeftCtrl) && ImGui::IsKeyPressed(ImGuiKey_Z)){
+            std::cout << "Called undo" << std::endl;
+            Undo();
+        }
     }
 
     std::string GetDataToCopy(std::string bytes, bool asArray) {
         std::string dataToCopy = asArray ? "{0x" : "\\x";
-        bytes.pop_back();
-
+        
         if (asArray){
             if (!bytes.empty()) {
-                for (size_t i = 0; i < bytes.length(); ++i) {
+                for (size_t i = 0; i < bytes.length(); i++) {
                     if (bytes[i]!=' '){
                         dataToCopy += bytes[i];
                     }
@@ -597,7 +625,7 @@ struct MemoryEditor
             }
         }
         else{
-            for (size_t i = 0; i < bytes.length(); ++i){
+            for (size_t i = 0; i < bytes.length(); i++){
                 if (bytes[i] != ' '){
                     dataToCopy += bytes[i];
                 }
@@ -610,6 +638,37 @@ struct MemoryEditor
         return dataToCopy;
     }
 
+    void Undo(){
+        if (UndoActions.empty()){
+            return;
+        }
+
+        Actions undoAction = UndoActions.top();
+        switch (undoAction.Action) {
+            case ActionType::MemWrite:
+            {
+                if (WriteFn){
+                    WriteFn(MemData, undoAction.startAddr, 69);
+                }
+                break;
+            }
+            case ActionType::MemWriteBatch:
+            {
+                if (WriteFn){
+                    for (int i = 0; i < undoAction.operationSize; i++){
+                        WriteFn(MemData, undoAction.startAddr + i, 69);
+                    }
+                }
+                break;
+            }
+            default:
+                break;
+        }
+
+        RedoActions.push(UndoActions.top());
+        UndoActions.pop();
+    }
+
     bool WriteVectorToMemory(std::vector<int> vec, bool PasteAll = false) {
         auto currentAddr = SelectionStartAddr;
         auto endAddr = SelectionEndAddr;
@@ -618,16 +677,29 @@ struct MemoryEditor
             currentAddr = endAddr = HoveredAddr;
         }
 
+
         if (WriteFn) {
             if (PasteAll){
+                Actions undoAction = {.Action = MemWriteBatch, .startAddr = currentAddr, .endAddr = currentAddr + vec.size(), .operationSize = vec.size(),
+                        .operationData = vec};
                 for (int i = 0; i < vec.size(); currentAddr++, i++) {
+                    undoAction.originalData.push_back(MemData[currentAddr]);
                     WriteFn(MemData, currentAddr, vec[i]);
                 }
+                UndoActions.push(undoAction);
             }
             else{
+                Actions undoAction = {.Action = MemWriteBatch, .startAddr = currentAddr,
+                        .operationData = vec};
+
                 for (int i = 0; currentAddr != endAddr + 1 && i < vec.size(); currentAddr++, i++) {
+                    undoAction.originalData.push_back(MemData[currentAddr]);
                     WriteFn(MemData, currentAddr, vec[i]);
                 }
+
+                undoAction.endAddr = currentAddr + 1;
+                undoAction.operationSize = currentAddr - (endAddr);
+                UndoActions.push(undoAction);
             }
 
         }
@@ -654,13 +726,13 @@ struct MemoryEditor
                 continue;
             }
 
-            if (validateHex(clipboardText[i]) && (i+1 <= clipboardText.length() && (validateHex(clipboardText[++i])))){
+            if (validateHex(clipboardText[i]) && (i+1 <= clipboardText.length() && (validateHex(clipboardText[i+1])))){
                 hex += clipboardText[i];
             }
             else{
                 return false;
             }
-
+            ++i;
             hex += clipboardText[i];
             convertedInts.push_back(std::strtol(hex.c_str(), nullptr, 16));
             hex.clear();
