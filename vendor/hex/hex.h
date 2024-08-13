@@ -458,8 +458,13 @@ struct MemoryEditor
                         unsigned int data_input_value = 0;
                         if (data_write && sscanf(DataInputBuf, "%X", &data_input_value) == 1)
                         {
-                            if (WriteFn)
+                            if (WriteFn){
                                 WriteFn(mem_data, addr, (ImU8)data_input_value);
+                                Actions undoAction = {.Action = MemWrite, .startAddr = addr, .endAddr = addr + 1, .operationSize = 1};
+                                undoAction.operationData.push_back(data_input_value);
+                                undoAction.originalData.push_back(mem_data[addr]);
+                                UndoActions.push(undoAction);
+                            }
                             else
                                 mem_data[addr] = (ImU8)data_input_value;
                         }
@@ -765,6 +770,14 @@ struct MemoryEditor
         if (ImGui::BeginPopup("context"))
         {
             ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[4]);
+            if (ImGui::MenuItem("Undo", "CTRL + Z", false)){
+                UndoRedo(false);
+            }
+            ImGui::Separator();
+            if (ImGui::MenuItem("Redo", "CTRL + Y", false)){
+                UndoRedo(true);
+            }
+            ImGui::Separator();
             if (ImGui::MenuItem("Copy", "CTRL + C", false)){
                 ImGui::SetClipboardText(ReadMemory(SelectionStartAddr, SelectionEndAddr).c_str());
             }
