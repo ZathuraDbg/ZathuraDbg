@@ -602,8 +602,11 @@ struct MemoryEditor
         }
 
         if (ImGui::IsKeyDown(ImGuiKey_LeftCtrl) && ImGui::IsKeyPressed(ImGuiKey_Z)){
-            std::cout << "Called undo" << std::endl;
-            Undo();
+            UndoRedo();
+        }
+
+        if (ImGui::IsKeyDown(ImGuiKey_LeftCtrl) && ImGui::IsKeyPressed(ImGuiKey_Y)){
+            UndoRedo(true);
         }
     }
 
@@ -638,26 +641,30 @@ struct MemoryEditor
         return dataToCopy;
     }
 
-    void Undo(){
-        if (UndoActions.empty()){
+    void UndoRedo(bool redo = false){
+        auto currentAction = redo ? RedoActions : UndoActions;
+        if (currentAction.empty()){
             return;
         }
 
-        Actions undoAction = UndoActions.top();
-        switch (undoAction.Action) {
+        Actions currentActionTop = currentAction.top();
+        switch (currentActionTop.Action) {
             case ActionType::MemWrite:
             {
                 if (WriteFn){
-                    WriteFn(MemData, undoAction.startAddr, 69);
+                    WriteFn(MemData, currentActionTop.startAddr, currentActionTop.originalData[0]);
                 }
+
+                std::swap(currentActionTop.operationData[0],  currentActionTop.originalData[0]);
                 break;
             }
             case ActionType::MemWriteBatch:
             {
                 if (WriteFn){
-                    for (int i = 0; i < undoAction.operationSize; i++){
-                        WriteFn(MemData, undoAction.startAddr + i, 69);
+                    for (int i = 0; i < currentActionTop.operationSize; i++){
+                        WriteFn(MemData, currentActionTop.startAddr + i, currentActionTop.originalData[i]);
                     }
+                    std::swap(currentActionTop.operationData,  currentActionTop.originalData);
                 }
                 break;
             }
@@ -665,8 +672,14 @@ struct MemoryEditor
                 break;
         }
 
-        RedoActions.push(UndoActions.top());
-        UndoActions.pop();
+        if (redo){
+            UndoActions.push(currentActionTop);
+            RedoActions.pop();
+        }
+        else{
+            RedoActions.push(currentActionTop);
+            UndoActions.pop();
+        }
     }
 
     bool WriteVectorToMemory(std::vector<int> vec, bool PasteAll = false) {
