@@ -155,7 +155,7 @@ void registerWindow() {
 
             ImGui::PushID(index * 2);
             ImGui::SetNextItemWidth(-FLT_MIN);
-            if (ImGui::InputText(("##regValueFirst" + std::to_string(index)).c_str(), regValueFirst, IM_ARRAYSIZE(regValueFirst), ImGuiInputTextFlags_CharsNoBlank | ImGuiInputTextFlags_EnterReturnsTrue, checkHexCharsCallback )) {
+            if (ImGui::InputText(("##regValueFirst" + std::to_string(index)).c_str(), regValueFirst, IM_ARRAYSIZE(regValueFirst), ImGuiInputTextFlags_CharsNoBlank | ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackCharFilter, checkHexCharsCallback )) {
                 if ((strlen(regValueFirst) != 0)) {
                     uint64_t temp = hexStrToInt(regValueFirst);
 

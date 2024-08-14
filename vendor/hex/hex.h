@@ -97,6 +97,12 @@ struct MemoryEditor
         std::vector<int> originalData;
     };
 
+    struct fillRangeInfoT{
+        uint64_t address;
+        int size;
+        char character;
+    };
+
     // Settings
     bool            Open;                                       // = true   // set to false when DrawWindow() was closed. ignore if not using DrawWindow().
     bool            ReadOnly;                                   // = false  // disable any editing.
@@ -111,6 +117,7 @@ struct MemoryEditor
     int             OptMidColsCount;                            // = 8      // set to 0 to disable extra spacing between every mid-cols.
     int             OptAddrDigitsCount;                         // = 0      // number of addr digits to display (default calculated based on maximum displayed addr).
     bool            OptShowSetBaseAddrOption;                   // = false  // show the option to set the update the base address of the window
+    bool            OptFillMemoryRange;                         // = false  // allows you to have a function which can fill memory ranges
     float           OptFooterExtraHeight;                       // = 0      // space to reserve at the bottom of the widget to add custom widgets
     ImU32           HighlightColor;                             //          // background color of highlighted bytes.
     ImU32 (*BgColorFn)(const ImU8* data, size_t off);
@@ -121,6 +128,7 @@ struct MemoryEditor
     bool            (*NewWindowInfoFn)();
     bool            (*ShowRequiredButton)(const std::string& buttonName, bool state);
     bool            (*SetBaseAddress)();
+    fillRangeInfoT  (*FillMemoryRange)();
 
     // [Internal State]
     bool            ContentsWidthChanged;
@@ -139,6 +147,7 @@ struct MemoryEditor
     ImGuiDataType   PreviewDataType;
     bool            Keep;
     bool            KeepSetBaseAddrWindow;
+    bool            KeepFillMemoryWindow;
     bool            CopySelection;
     uint8_t*        MemData;
     std::stack<Actions> UndoActions;
@@ -603,6 +612,19 @@ struct MemoryEditor
             }
         }
 
+        if (KeepFillMemoryWindow && FillMemoryRange){
+            auto [address, upto, character] = FillMemoryRange();
+            if ((address == 0 && upto == 1 && character == -1)){
+                // cancel
+                KeepFillMemoryWindow = false;
+            }
+            else if (!(address == 0 && upto == 0 && character <= 0)){
+                FillRangeWithByte(address, upto, character);
+                KeepFillMemoryWindow = false;
+            }
+
+        }
+
         if (KeepNewWindowInfoFn && NewWindowInfoFn){
             if (NewWindowInfoFn()){
                 KeepNewWindowInfoFn = false;
@@ -627,6 +649,7 @@ struct MemoryEditor
             KeepSetBaseAddrWindow = true;
         }
         if (ImGui::IsKeyDown(ImGuiKey_LeftCtrl) && ImGui::IsKeyDown(ImGuiKey_LeftShift) && ImGui::IsKeyPressed(ImGuiKey_K)){
+            KeepFillMemoryWindow = true;
         }
     }
 
@@ -703,13 +726,14 @@ struct MemoryEditor
     }
 
     bool FillRangeWithByte(uint64_t address, size_t upto, char byte){
-        Actions undoAction = {.Action = MemWriteBatch, .startAddr = address, .endAddr = address + upto, .operationSize = upto};
+        Actions undoAction = {.Action = MemWriteBatch, .startAddr = address - BaseDisplayAddr, .endAddr = (address + upto) - BaseDisplayAddr, .operationSize = upto};
         if (WriteFn){
-            for (auto i = 0; i < (upto+1); address++, i++){
+            for (auto i = 0; i < (upto); address++, i++){
                 undoAction.originalData.push_back(MemData[address]);
                 undoAction.operationData.push_back(byte);
                 WriteFn(MemData, address - BaseDisplayAddr, byte);
             }
+            UndoActions.push(undoAction);
         }
         return true;
     }
@@ -839,6 +863,16 @@ struct MemoryEditor
                     if (SetBaseAddress){
                         SetBaseAddress();
                         KeepSetBaseAddrWindow = true;
+                    }
+                }
+            }
+
+            if (OptFillMemoryRange){
+                ImGui::Separator();
+                if (ImGui::MenuItem("Fill memory with byte", "CTRL + Shift + K", false)){
+                    if (FillMemoryRange){
+                        FillMemoryRange();
+                        KeepFillMemoryWindow = true;
                     }
                 }
             }

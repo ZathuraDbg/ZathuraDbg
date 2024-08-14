@@ -51,7 +51,7 @@ std::pair<size_t, size_t> infoPopup(const std::string& title = "", const std::st
         ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[JetBrainsMono20]);
 
         ImGui::PushItemWidth(180);
-        if (ImGui::InputTextWithHint("##text", "0x....", addrNewWin, IM_ARRAYSIZE(addrNewWin), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackAlways, checkHexCharsCallback, nullptr)){
+        if (ImGui::InputTextWithHint("##text", "0x....", addrNewWin, IM_ARRAYSIZE(addrNewWin), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackCharFilter, checkHexCharsCallback, nullptr)){
             windowInfo.first = hexStrToInt(addrNewWin);
         }
 
@@ -116,10 +116,10 @@ std::pair<size_t, size_t> infoPopup(const std::string& title = "", const std::st
     return windowInfo;
 }
 
-std::pair<size_t, size_t> popupTwo(std::string title, std::string sizeHint) {
+MemoryEditor::fillRangeInfoT popupTwo() {
     ImGui::OpenPopup("InputPopup");
-    std::pair<size_t, size_t> windowInfo;
-
+    MemoryEditor::fillRangeInfoT fillRangeInfo{};
+//    std::pair<size_t, size_t> fillRangeInfo;
     ImVec2 parentPos = ImGui::GetWindowPos();
     ImVec2 parentSize = ImGui::GetWindowSize();
     ImVec2 windowSize = ImGui::GetWindowSize();
@@ -127,7 +127,7 @@ std::pair<size_t, size_t> popupTwo(std::string title, std::string sizeHint) {
     ImVec2 popupSize = ImVec2(290, 160);
     ImVec2 popupPos = parentPos + ImVec2((parentSize.x - popupSize.x) * 0.5f, (parentSize.y - popupSize.y) * 0.5f);
 
-    const char *text = title.c_str();
+    const char *text = "Fill memory with byte";
     auto windowTextPos = ImGui::CalcTextSize(text);
 
     ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[SatoshiBold18]);
@@ -135,7 +135,7 @@ std::pair<size_t, size_t> popupTwo(std::string title, std::string sizeHint) {
     ImGui::SetNextWindowPos(popupPos, ImGuiCond_Appearing);
     static char addrNewWin[120] = "";
     static char size[30] = "";
-    static char size2[40] = "";
+    static char byteHex[40] = "";
     bool enterReceived = false;
 
     if (ImGui::BeginPopup("InputPopup", ImGuiWindowFlags_AlwaysAutoResize)) {
@@ -152,8 +152,8 @@ std::pair<size_t, size_t> popupTwo(std::string title, std::string sizeHint) {
         ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[JetBrainsMono20]);
 
         ImGui::PushItemWidth(180);
-        if (ImGui::InputTextWithHint("##text", "0x....", addrNewWin, IM_ARRAYSIZE(addrNewWin), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackAlways, checkHexCharsCallback, nullptr)){
-            windowInfo.first = hexStrToInt(addrNewWin);
+        if (ImGui::InputTextWithHint("##text", "0x....", addrNewWin, IM_ARRAYSIZE(addrNewWin), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackCharFilter, checkHexCharsCallback, nullptr)){
+            fillRangeInfo.address = hexStrToInt(addrNewWin);
         }
 
         ImGui::PopFont();
@@ -165,8 +165,7 @@ std::pair<size_t, size_t> popupTwo(std::string title, std::string sizeHint) {
 
         ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[JetBrainsMono20]);
         ImGui::PushItemWidth(180);
-        ImGui::InputTextWithHint("##size", sizeHint.empty() ? "in bytes" : sizeHint.c_str(),  size, IM_ARRAYSIZE(size), ImGuiInputTextFlags_CharsDecimal, nullptr, nullptr);
-//        ImGui::PopFont();
+        ImGui::InputTextWithHint("##size", "Size to fill",  size, IM_ARRAYSIZE(size), ImGuiInputTextFlags_CharsDecimal, nullptr, nullptr);
         ImGui::PopFont();
         ImGui::PopItemWidth();
         ImGui::Dummy(ImVec2(22.0f, 0.0f));
@@ -175,7 +174,7 @@ std::pair<size_t, size_t> popupTwo(std::string title, std::string sizeHint) {
         ImGui::SameLine(0, 5);
         ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[JetBrainsMono20]);
         ImGui::PushItemWidth(180);
-        ImGui::InputTextWithHint("##size2", sizeHint.empty() ? "in bytes." : sizeHint.c_str(),  size2, IM_ARRAYSIZE(size2), ImGuiInputTextFlags_CharsDecimal, nullptr, nullptr);
+        ImGui::InputTextWithHint("##byteHex", "As Hex", byteHex, IM_ARRAYSIZE(byteHex), ImGuiInputTextFlags_CharsNoBlank | ImGuiInputTextFlags_CallbackAlways, checkHexCharsCallback, nullptr);
 
         if (ImGui::IsKeyPressed(ImGuiKey_Enter)){
             enterReceived = true;
@@ -196,14 +195,15 @@ std::pair<size_t, size_t> popupTwo(std::string title, std::string sizeHint) {
             ImGui::CloseCurrentPopup();
             ImGui::EndPopup();
             ImGui::PopStyleVar();
-            windowInfo.first = hexStrToInt(addrNewWin);
-            windowInfo.second = atol(size);
+            fillRangeInfo.address = hexStrToInt(addrNewWin);
+            fillRangeInfo.size = atol(size);
+            fillRangeInfo.character = (char)strtol(byteHex, nullptr, 16);
 
-            if (!windowInfo.first && (!windowInfo.second)){
-                return {0, 1};
+            if (!fillRangeInfo.address && (!fillRangeInfo.size) && (!fillRangeInfo.character)){
+                return {0, 0, 0};
             }
 
-            return windowInfo;
+            return fillRangeInfo;
         }
 
         ImGui::SameLine(0, 3);
@@ -215,7 +215,7 @@ std::pair<size_t, size_t> popupTwo(std::string title, std::string sizeHint) {
             ImGui::CloseCurrentPopup();
             ImGui::EndPopup();
             ImGui::PopStyleVar();
-            return {0, 1};
+            return {0, 1, -1};
         }
 
         ImGui::PopFont();
@@ -224,7 +224,7 @@ std::pair<size_t, size_t> popupTwo(std::string title, std::string sizeHint) {
     ImGui::PopStyleVar();
     ImGui::PopFont();
 
-    return windowInfo;
+    return fillRangeInfo;
 }
 
 bool createNewWindow(){
@@ -269,6 +269,20 @@ bool setBaseAddr(){
     return false;
 }
 
+
+bool fillMemoryRange(){
+    auto [address, size, character] = popupTwo();
+    if (address && size && character){
+//        fillMemoryRange(address, size, character);
+        return true;
+    }
+    else if (address && (!size) || (!address && size)){
+        return true;
+    }
+
+    return false;
+}
+
 void hexEditorWindow(){
     auto io = ImGui::GetIO();
     char data[0x3000];
@@ -281,7 +295,9 @@ void hexEditorWindow(){
     memoryEditorWindow.NewWindowInfoFn = createNewWindow;
     memoryEditorWindow.ShowRequiredButton = stackEditor.ShowRequiredButton = &showRequiredButton;
     memoryEditorWindow.OptShowSetBaseAddrOption = true;
+    memoryEditorWindow.OptFillMemoryRange = true;
     memoryEditorWindow.SetBaseAddress = setBaseAddr;
+    memoryEditorWindow.FillMemoryRange = popupTwo;
     memoryEditorWindow.DrawWindow("Memory Editor", (void*)data, 0x3000, MEMORY_EDITOR_BASE);
     int i = 0;
 
