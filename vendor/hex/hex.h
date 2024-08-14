@@ -129,6 +129,7 @@ struct MemoryEditor
     size_t          SelectionStartAddr;
     size_t          SelectionEndAddr;
     size_t          HoveredAddr;
+    uint64_t        BaseDisplayAddr;
     bool            DataEditingTakeFocus;
     char            DataInputBuf[32];
     char            AddrInputBuf[32];
@@ -240,7 +241,7 @@ struct MemoryEditor
         CalcSizes(s, mem_size, base_display_addr);
         ImGui::SetNextWindowSize(ImVec2(s.WindowWidth, s.WindowWidth * 0.60f), ImGuiCond_FirstUseEver);
         ImGui::SetNextWindowSizeConstraints(ImVec2(0.0f, 0.0f), ImVec2(s.WindowWidth, FLT_MAX));
-
+        BaseDisplayAddr = base_display_addr;
         Open = true;
         if (ImGui::Begin(title, &Open, ImGuiWindowFlags_NoScrollbar))
         {
@@ -549,7 +550,6 @@ struct MemoryEditor
                     {
                         if (addr == DataEditingAddr)
                         {
-//                            draw_list->AddRectFilled(pos, ImVec2(pos.x + s.GlyphWidth, pos.y + s.LineHeight), ImGui::GetColorU32(ImGuiCol_FrameBg));
                             draw_list->AddRectFilled(pos, ImVec2(pos.x + s.GlyphWidth, pos.y + s.LineHeight), ImColor(59, 60, 79));
                         }
                         else if (BgColorFn)
@@ -615,13 +615,18 @@ struct MemoryEditor
             }
         }
 
-
         if (ImGui::IsKeyDown(ImGuiKey_LeftCtrl) && ImGui::IsKeyPressed(ImGuiKey_Z)){
             UndoRedo();
         }
 
         if (ImGui::IsKeyDown(ImGuiKey_LeftCtrl) && ImGui::IsKeyPressed(ImGuiKey_Y)){
             UndoRedo(true);
+        }
+
+        if (ImGui::IsKeyDown(ImGuiKey_LeftCtrl) && ImGui::IsKeyDown(ImGuiKey_LeftShift) && ImGui::IsKeyDown(ImGuiKey_E)){
+            KeepSetBaseAddrWindow = true;
+        }
+        if (ImGui::IsKeyDown(ImGuiKey_LeftCtrl) && ImGui::IsKeyDown(ImGuiKey_LeftShift) && ImGui::IsKeyPressed(ImGuiKey_K)){
         }
     }
 
@@ -697,6 +702,18 @@ struct MemoryEditor
         }
     }
 
+    bool FillRangeWithByte(uint64_t address, size_t upto, char byte){
+        Actions undoAction = {.Action = MemWriteBatch, .startAddr = address, .endAddr = address + upto, .operationSize = upto};
+        if (WriteFn){
+            for (auto i = 0; i < (upto+1); address++, i++){
+                undoAction.originalData.push_back(MemData[address]);
+                undoAction.operationData.push_back(byte);
+                WriteFn(MemData, address - BaseDisplayAddr, byte);
+            }
+        }
+        return true;
+    }
+
     bool WriteVectorToMemory(std::vector<int> vec, bool PasteAll = false) {
         auto currentAddr = SelectionStartAddr;
         auto endAddr = SelectionEndAddr;
@@ -704,7 +721,6 @@ struct MemoryEditor
         if (currentAddr == -1){
             currentAddr = endAddr = HoveredAddr;
         }
-
 
         if (WriteFn) {
             if (PasteAll){
