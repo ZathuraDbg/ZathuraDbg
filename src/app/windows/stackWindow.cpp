@@ -56,7 +56,7 @@ void popup(){
 //        ImGui::SameLine(0, 5);
         ImGui::Dummy(ImVec2(0, 4.0f));
         ImGui::SetCursorPosX(ImGui::CalcTextSize(text).x - 40);
-        if (ImGui::Button("Allocate"))
+        if (ImGui::Button("MAP"))
         {
             uc_mem_map(uc, STACK_ADDRESS, STACK_SIZE, UC_PROT_ALL);
             showPopupError = false;
@@ -88,17 +88,14 @@ void stackEditorWindow() {
     if ((err == UC_ERR_READ_UNMAPPED) && (stackErrorAddr != STACK_ADDRESS && (STACK_ADDRESS != 0))) {
         LOG_ERROR("Failed to read memory. Address: " << std::hex << STACK_ADDRESS);
         stackErrorAddr = STACK_ADDRESS;
-//        tinyfd_messageBox("ERROR!", "Failed to read memory!!", "ok", "error", 0);
         showPopupError = true;
         ImGui::PopFont();
         return;
     }
 
     if (showPopupError){
-//        ImGui::OpenPopup("Stack in unmapped region!");
         ImGui::OpenPopup("InputPopup");
         popup();
-//        showError("Do you want to map the memory to continue?");
     }
 
     copyBigEndian(data, temp, STACK_SIZE);

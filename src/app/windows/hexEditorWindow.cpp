@@ -16,7 +16,7 @@ void hexWriteFunc(ImU8* data, size_t off, ImU8 d){
     }
 }
 
-std::pair<size_t, size_t> newWindowInfoFunc(const std::string& title = "", const std::string& sizeHint = "") {
+std::pair<size_t, size_t> infoPopup(const std::string& title = "", const std::string& sizeHint = "") {
     ImGui::OpenPopup("InputPopup");
     std::pair<size_t, size_t> windowInfo;
 
@@ -28,7 +28,6 @@ std::pair<size_t, size_t> newWindowInfoFunc(const std::string& title = "", const
     ImVec2 popupPos = parentPos + ImVec2((parentSize.x - popupSize.x) * 0.5f, (parentSize.y - popupSize.y) * 0.5f);
 
     const char *text = title.c_str();
-    // "New Memory Editor Window";
     auto windowTextPos = ImGui::CalcTextSize(text);
 
     ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[SatoshiBold18]);
@@ -117,8 +116,119 @@ std::pair<size_t, size_t> newWindowInfoFunc(const std::string& title = "", const
     return windowInfo;
 }
 
+std::pair<size_t, size_t> popupTwo(std::string title, std::string sizeHint) {
+    ImGui::OpenPopup("InputPopup");
+    std::pair<size_t, size_t> windowInfo;
+
+    ImVec2 parentPos = ImGui::GetWindowPos();
+    ImVec2 parentSize = ImGui::GetWindowSize();
+    ImVec2 windowSize = ImGui::GetWindowSize();
+
+    ImVec2 popupSize = ImVec2(290, 160);
+    ImVec2 popupPos = parentPos + ImVec2((parentSize.x - popupSize.x) * 0.5f, (parentSize.y - popupSize.y) * 0.5f);
+
+    const char *text = title.c_str();
+    auto windowTextPos = ImGui::CalcTextSize(text);
+
+    ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[SatoshiBold18]);
+    ImGui::PushStyleVar(ImGuiStyleVar_PopupBorderSize, 5.0f);
+    ImGui::SetNextWindowPos(popupPos, ImGuiCond_Appearing);
+    static char addrNewWin[120] = "";
+    static char size[30] = "";
+    static char size2[40] = "";
+    bool enterReceived = false;
+
+    if (ImGui::BeginPopup("InputPopup", ImGuiWindowFlags_AlwaysAutoResize)) {
+        windowSize = ImGui::GetWindowSize();
+        ImGui::SetCursorPosX((windowSize.x - windowTextPos.x) * 0.5f);
+        ImGui::Text("%s", text);
+        ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal, 3);
+        ImGui::Dummy(ImVec2(0.0f, 10.0f));
+        ImGui::NewLine();
+        ImGui::SameLine(0, 10);
+
+        ImGui::Text("Address: ");
+        ImGui::SameLine(0, 5);
+        ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[JetBrainsMono20]);
+
+        ImGui::PushItemWidth(180);
+        if (ImGui::InputTextWithHint("##text", "0x....", addrNewWin, IM_ARRAYSIZE(addrNewWin), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackAlways, checkHexCharsCallback, nullptr)){
+            windowInfo.first = hexStrToInt(addrNewWin);
+        }
+
+        ImGui::PopFont();
+        ImGui::PopItemWidth();
+        ImGui::Dummy(ImVec2(22.0f, 0.0f));
+        ImGui::SameLine(0, 14);
+        ImGui::Text("Size: ");
+        ImGui::SameLine(0, 5);
+
+        ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[JetBrainsMono20]);
+        ImGui::PushItemWidth(180);
+        ImGui::InputTextWithHint("##size", sizeHint.empty() ? "in bytes" : sizeHint.c_str(),  size, IM_ARRAYSIZE(size), ImGuiInputTextFlags_CharsDecimal, nullptr, nullptr);
+//        ImGui::PopFont();
+        ImGui::PopFont();
+        ImGui::PopItemWidth();
+        ImGui::Dummy(ImVec2(22.0f, 0.0f));
+        ImGui::SameLine(0, 12);
+        ImGui::Text("Byte: ");
+        ImGui::SameLine(0, 5);
+        ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[JetBrainsMono20]);
+        ImGui::PushItemWidth(180);
+        ImGui::InputTextWithHint("##size2", sizeHint.empty() ? "in bytes." : sizeHint.c_str(),  size2, IM_ARRAYSIZE(size2), ImGuiInputTextFlags_CharsDecimal, nullptr, nullptr);
+
+        if (ImGui::IsKeyPressed(ImGuiKey_Enter)){
+            enterReceived = true;
+        }
+
+        ImGui::PopFont();
+        ImGui::PopItemWidth();
+        ImGui::Dummy(ImVec2(0, 12.0f));
+
+        windowSize = ImGui::GetWindowSize();
+        ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[SatoshiBold18]);
+
+        ImGui::SetCursorPosX(windowSize.y + 10);
+        if (ImGui::Button("OK") || (enterReceived))
+        {
+            ImGui::PopFont();
+            ImGui::PopFont();
+            ImGui::CloseCurrentPopup();
+            ImGui::EndPopup();
+            ImGui::PopStyleVar();
+            windowInfo.first = hexStrToInt(addrNewWin);
+            windowInfo.second = atol(size);
+
+            if (!windowInfo.first && (!windowInfo.second)){
+                return {0, 1};
+            }
+
+            return windowInfo;
+        }
+
+        ImGui::SameLine(0, 3);
+
+        if (ImGui::Button("CANCEL"))
+        {
+            ImGui::PopFont();
+            ImGui::PopFont();
+            ImGui::CloseCurrentPopup();
+            ImGui::EndPopup();
+            ImGui::PopStyleVar();
+            return {0, 1};
+        }
+
+        ImGui::PopFont();
+        ImGui::EndPopup();
+    }
+    ImGui::PopStyleVar();
+    ImGui::PopFont();
+
+    return windowInfo;
+}
+
 bool createNewWindow(){
-    auto [address, size] = newWindowInfoFunc("New Memory Editor Window");
+    auto [address, size] = infoPopup("New Memory Editor Window");
     if (address && size){
         MemoryEditor memEdit;
 
@@ -147,7 +257,7 @@ bool createNewWindow(){
 }
 
 bool setBaseAddr(){
-    auto [address, size] = newWindowInfoFunc("Modify Base Address", "8192 bytes default");
+    auto [address, size] = infoPopup("Modify Base Address", "8192 bytes default");
     if (address && size){
         MEMORY_EDITOR_BASE = address;
         return true;
