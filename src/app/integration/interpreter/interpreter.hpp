@@ -34,6 +34,8 @@ extern uc_engine *uc;
 extern bool runCode(const std::string& code_in, uint64_t instructionCount);
 extern void showRegs();
 extern uintptr_t ENTRY_POINT_ADDRESS;
+extern uintptr_t MEMORY_EDITOR_BASE; // default
+extern uintptr_t MEMORY_DEFAULT_SIZE; // default
 extern uintptr_t MEMORY_ALLOCATION_SIZE;
 extern uintptr_t STACK_ADDRESS;
 extern uintptr_t STACK_SIZE;

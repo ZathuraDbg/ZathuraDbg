@@ -110,6 +110,7 @@ struct MemoryEditor
     bool            OptShowAddWindowButton;                     // = false  // display a "+" to add a new window
     int             OptMidColsCount;                            // = 8      // set to 0 to disable extra spacing between every mid-cols.
     int             OptAddrDigitsCount;                         // = 0      // number of addr digits to display (default calculated based on maximum displayed addr).
+    bool            OptShowSetBaseAddrOption;                   // = false  // show the option to set the update the base address of the window
     float           OptFooterExtraHeight;                       // = 0      // space to reserve at the bottom of the widget to add custom widgets
     ImU32           HighlightColor;                             //          // background color of highlighted bytes.
     ImU32 (*BgColorFn)(const ImU8* data, size_t off);
@@ -117,8 +118,9 @@ struct MemoryEditor
     ImU8            (*ReadFn)(const ImU8* data, size_t off);    // = 0      // optional handler to read bytes.
     void            (*WriteFn)(ImU8* data, size_t off, ImU8 d); // = 0      // optional handler to write bytes.
     bool            (*HighlightFn)(const ImU8* data, size_t off);//= 0      // optional handler to return Highlight property (to support non-contiguous highlighting).
-    bool            (*newWindowFn)();
+    bool            (*NewWindowInfoFn)();
     bool            (*ShowRequiredButton)(const std::string& buttonName, bool state);
+    bool            (*SetBaseAddress)();
 
     // [Internal State]
     bool            ContentsWidthChanged;
@@ -135,6 +137,7 @@ struct MemoryEditor
     int             PreviewEndianness;
     ImGuiDataType   PreviewDataType;
     bool            Keep;
+    bool            KeepSetBaseAddrWindow;
     bool            CopySelection;
     uint8_t*        MemData;
     std::stack<Actions> UndoActions;
@@ -174,7 +177,7 @@ struct MemoryEditor
         HighlightMin = HighlightMax = (size_t)-1;
         PreviewEndianness = 0;
         PreviewDataType = ImGuiDataType_S32;
-        newWindowFn = nullptr;
+        NewWindowInfoFn = nullptr;
         MemData = nullptr;
         UndoActions = {};
         RedoActions = {};
@@ -280,7 +283,7 @@ struct MemoryEditor
         if (Cols < 1)
             Cols = 1;
 
-        static bool keep;
+        static bool KeepNewWindowInfoFn;
         ImU8* mem_data = (ImU8*)mem_data_void;
         MemData = static_cast<uint8_t *>(mem_data_void);
         Sizes s;
@@ -596,15 +599,22 @@ struct MemoryEditor
             ImGui::SameLine();
             ImGui::SetCursorPosX(ImGui::GetWindowSize().x - 30);
             if (ImGui::Button("+")){
-                keep = true;
+                KeepNewWindowInfoFn = true;
             }
         }
 
-        if (keep && newWindowFn){
-            if (newWindowFn()){
-                keep = false;
+        if (KeepNewWindowInfoFn && NewWindowInfoFn){
+            if (NewWindowInfoFn()){
+                KeepNewWindowInfoFn = false;
             }
         }
+
+        if (KeepSetBaseAddrWindow && SetBaseAddress){
+            if (SetBaseAddress()){
+                KeepSetBaseAddrWindow = false;
+            }
+        }
+
 
         if (ImGui::IsKeyDown(ImGuiKey_LeftCtrl) && ImGui::IsKeyPressed(ImGuiKey_Z)){
             UndoRedo();
@@ -806,6 +816,17 @@ struct MemoryEditor
                 SelectionStartAddr = 0;
                 SelectionEndAddr = SelectionStartAddr + mem_size;
             }
+
+            if (OptShowSetBaseAddrOption){
+                ImGui::Separator();
+                if (ImGui::MenuItem("Set Base Address", "CTRL + Shift + E", false)){
+                    if (SetBaseAddress){
+                        SetBaseAddress();
+                        KeepSetBaseAddrWindow = true;
+                    }
+                }
+            }
+
 //            ImGui::Separator();
             ImGui::PopFont();
             ImGui::EndPopup();

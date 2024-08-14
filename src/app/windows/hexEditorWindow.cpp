@@ -5,10 +5,10 @@ MemoryEditor memoryEditorWindow;
 std::vector<newMemEditWindowsInfo> newMemEditWindows{};
 
 void hexWriteFunc(ImU8* data, size_t off, ImU8 d){
-    auto err = uc_mem_write(uc, ENTRY_POINT_ADDRESS + off, &d, 1);
+    auto err = uc_mem_write(uc, MEMORY_EDITOR_BASE + off, &d, 1);
 
     if (err){
-        LOG_ERROR("Failed to write to memory. Address: " << ENTRY_POINT_ADDRESS + off);
+        LOG_ERROR("Failed to write to memory. Address: " << MEMORY_EDITOR_BASE + off);
         char* hex = (char*)malloc(24);
         sprintf((char*)hex, "Data change: %x", d);
         LOG_ERROR(hex);
@@ -16,7 +16,7 @@ void hexWriteFunc(ImU8* data, size_t off, ImU8 d){
     }
 }
 
-std::pair<size_t, size_t> newWindowInfoFunc() {
+std::pair<size_t, size_t> newWindowInfoFunc(const std::string& title = "", const std::string& sizeHint = "") {
     ImGui::OpenPopup("InputPopup");
     std::pair<size_t, size_t> windowInfo;
 
@@ -27,7 +27,8 @@ std::pair<size_t, size_t> newWindowInfoFunc() {
     ImVec2 popupSize = ImVec2(290, 160);
     ImVec2 popupPos = parentPos + ImVec2((parentSize.x - popupSize.x) * 0.5f, (parentSize.y - popupSize.y) * 0.5f);
 
-    const char *text = "New Memory Editor Window";
+    const char *text = title.c_str();
+    // "New Memory Editor Window";
     auto windowTextPos = ImGui::CalcTextSize(text);
 
     ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[SatoshiBold18]);
@@ -64,7 +65,7 @@ std::pair<size_t, size_t> newWindowInfoFunc() {
 
         ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[JetBrainsMono20]);
         ImGui::PushItemWidth(180);
-        ImGui::InputTextWithHint("##size", "in bytes", size, IM_ARRAYSIZE(size), ImGuiInputTextFlags_CharsDecimal, nullptr, nullptr);
+        ImGui::InputTextWithHint("##size", sizeHint.empty() ? "in bytes" : sizeHint.c_str(),  size, IM_ARRAYSIZE(size), ImGuiInputTextFlags_CharsDecimal, nullptr, nullptr);
 
         if (ImGui::IsKeyPressed(ImGuiKey_Enter)){
             enterReceived = true;
@@ -117,7 +118,7 @@ std::pair<size_t, size_t> newWindowInfoFunc() {
 }
 
 bool createNewWindow(){
-    auto [address, size] = newWindowInfoFunc();
+    auto [address, size] = newWindowInfoFunc("New Memory Editor Window");
     if (address && size){
         MemoryEditor memEdit;
 
@@ -132,7 +133,7 @@ bool createNewWindow(){
        */
 
         memoryEditorWindow.OptShowAddWindowButton = false;
-//        memoryEditorWindow.newWindowFn = createNewWindow;
+//        memoryEditorWindow.NewWindowInfoFn = createNewWindow;
         newMemEditWindowsInfo memWindowInfo = {memoryEditorWindow, address, size};
         newMemEditWindows.push_back(memWindowInfo);
 
@@ -145,18 +146,33 @@ bool createNewWindow(){
     return false;
 }
 
+bool setBaseAddr(){
+    auto [address, size] = newWindowInfoFunc("Modify Base Address", "8192 bytes default");
+    if (address && size){
+        MEMORY_EDITOR_BASE = address;
+        return true;
+    }
+    else if (address && (!size) || (!address && size)){
+        return true;
+    }
+
+    return false;
+}
+
 void hexEditorWindow(){
     auto io = ImGui::GetIO();
+    char data[0x3000];
     ImGui::PushFont(io.Fonts->Fonts[3]);
-    static char data[0x3000];
     memset(data, 0, 0x3000);
 
-    uc_mem_read(uc, ENTRY_POINT_ADDRESS, data, 0x3000);
+    uc_mem_read(uc, MEMORY_EDITOR_BASE, data, 0x3000);
     memoryEditorWindow.HighlightColor = ImColor(59, 60, 79);
     memoryEditorWindow.OptShowAddWindowButton = true;
-    memoryEditorWindow.newWindowFn = createNewWindow;
+    memoryEditorWindow.NewWindowInfoFn = createNewWindow;
     memoryEditorWindow.ShowRequiredButton = stackEditor.ShowRequiredButton = &showRequiredButton;
-    memoryEditorWindow.DrawWindow("Memory Editor", (void*)data, 0x3000, ENTRY_POINT_ADDRESS);
+    memoryEditorWindow.OptShowSetBaseAddrOption = true;
+    memoryEditorWindow.SetBaseAddress = setBaseAddr;
+    memoryEditorWindow.DrawWindow("Memory Editor", (void*)data, 0x3000, MEMORY_EDITOR_BASE);
     int i = 0;
 
     if (!newMemEditWindows.empty()){
