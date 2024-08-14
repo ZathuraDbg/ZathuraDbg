@@ -96,6 +96,7 @@ int main(int, char**)
     stackEditor.OptShowAscii = false;
     stackEditor.Cols = 8;
     stackEditor.WriteFn = &stackWriteFunc;
+    MEMORY_EDITOR_BASE = ENTRY_POINT_ADDRESS;
 //    stackEditor.BgColorFn = &bgColorFn;
 //    stackEditor.InteractFn = &interactFn;
 
