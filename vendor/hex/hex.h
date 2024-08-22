@@ -58,8 +58,9 @@
 #include <iomanip>
 #include <vector>
 #include <stack>
-#include "../../src/utils/iconfont.h"
 
+#include "../../src/utils/iconfont.h"
+#include "../../src/utils/fonts.hpp"
 #ifdef _MSC_VER
 #define _PRISizeT   "I"
 #define ImSnprintf  _snprintf
@@ -129,6 +130,7 @@ struct MemoryEditor
     bool            (*ShowRequiredButton)(const std::string& buttonName, bool state);
     bool            (*SetBaseAddress)();
     fillRangeInfoT  (*FillMemoryRange)();
+    void GoToPopup();
 
     // [Internal State]
     bool            ContentsWidthChanged;
@@ -148,6 +150,7 @@ struct MemoryEditor
     bool            Keep;
     bool            KeepSetBaseAddrWindow;
     bool            KeepFillMemoryWindow;
+    bool            KeepGoToPopup;
     bool            CopySelection;
     uint8_t*        MemData;
     std::stack<Actions> UndoActions;
@@ -622,7 +625,10 @@ struct MemoryEditor
                 FillRangeWithByte(address, upto, character);
                 KeepFillMemoryWindow = false;
             }
+        }
 
+        if (KeepGoToPopup){
+            GoToPopup();
         }
 
         if (KeepNewWindowInfoFn && NewWindowInfoFn){
@@ -729,7 +735,7 @@ struct MemoryEditor
         Actions undoAction = {.Action = MemWriteBatch, .startAddr = address - BaseDisplayAddr, .endAddr = (address + upto) - BaseDisplayAddr, .operationSize = upto};
         if (WriteFn){
             for (auto i = 0; i < (upto); address++, i++){
-                undoAction.originalData.push_back(MemData[address]);
+                undoAction.originalData.push_back(MemData[address - BaseDisplayAddr]);
                 undoAction.operationData.push_back(byte);
                 WriteFn(MemData, address - BaseDisplayAddr, byte);
             }
@@ -877,7 +883,10 @@ struct MemoryEditor
                 }
             }
 
-//            ImGui::Separator();
+            ImGui::Separator();
+            if (ImGui::MenuItem("Goto", "CTRL + G")){
+                KeepGoToPopup = true;
+            }
             ImGui::PopFont();
             ImGui::EndPopup();
         }

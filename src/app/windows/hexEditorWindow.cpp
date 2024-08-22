@@ -227,6 +227,93 @@ MemoryEditor::fillRangeInfoT popupTwo() {
     return fillRangeInfo;
 }
 
+void MemoryEditor::GoToPopup(){
+    char inputText[200] = "";
+    static bool setFocus = true;
+    auto io = ImGui::GetIO();
+    ImGui::PushFont(io.Fonts->Fonts[SatoshiBold18]);
+
+    ImGui::OpenPopup("Gotopopup");
+    auto text = "Go to address";
+
+    ImVec2 windowPos = ImGui::GetWindowPos();
+    ImVec2 windowTextPos= ImGui::CalcTextSize(text);
+    ImVec2 windowSize = ImGui::GetWindowSize();
+
+    ImVec2 popupSize = ImVec2(300, 100); // Adjust based on your popup size
+    ImVec2 popupPos = windowPos + ImVec2((windowSize.x - popupSize.x) * 0.5f, (windowSize.y - popupSize.y) * 0.5f);
+
+    ImGui::SetNextWindowPos(popupPos, ImGuiCond_Appearing);
+
+    ImGui::GetStyle().Colors[ImGuiCol_PopupBg] = ImColor(0x1e, 0x20, 0x30);
+    ImGui::GetStyle().PopupBorderSize = 5.0f;
+
+    uint64_t hexInt = -1;
+    ImGui::SetNextWindowSize(popupSize, ImGuiCond_Appearing);
+    if (ImGui::BeginPopup("Gotopopup", ImGuiWindowFlags_AlwaysAutoResize))
+    {
+        windowSize = ImGui::GetWindowSize();
+
+        ImGui::SetCursorPosX((windowSize.x - windowTextPos.x) * 0.5f);
+        ImGui::Text("%s", text);
+
+        ImGui::Dummy(ImVec2(0.0f, 15.0f));
+        ImGui::NewLine();
+        ImGui::SameLine(0, 10);
+
+        ImGui::Text("Address: ");
+
+        ImGui::SameLine(0, 5);
+        ImGui::PushItemWidth(150);
+
+        bool entered;
+        auto flags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackAlways;
+
+        entered = ImGui::InputTextWithHint("##input", "0x...", inputText, IM_ARRAYSIZE(inputText), flags, checkHexCharsCallback);
+
+        if (setFocus){
+            ImGui::SetKeyboardFocusHere(-1);
+            setFocus = false;
+        }
+
+        if (entered){
+            hexInt = hexStrToInt(inputText);
+            KeepGoToPopup = false;
+            setFocus = true;
+        }
+
+        ImGui::PopItemWidth();
+        ImGui::Dummy(ImVec2(0, 8.0f));
+        ImGui::SetCursorPosX(windowSize.y + windowSize.y - 100);
+
+        if (ImGui::Button("OK") || (hexInt != -1))
+        {
+            if (hexInt == -1){
+                hexInt = hexStrToInt(inputText);
+            }
+
+            GotoAddr = hexInt - BaseDisplayAddr;
+            setFocus = true;
+            KeepGoToPopup = false;
+            ImGui::CloseCurrentPopup();
+        }
+
+        ImGui::SameLine(0, 3);
+
+        if (ImGui::Button("CANCEL"))
+        {
+
+            KeepGoToPopup = false;
+            setFocus = true;
+            ImGui::CloseCurrentPopup();
+        }
+
+        ImGui::EndPopup();
+    }
+
+        ImGui::PopFont();
+}
+
 bool createNewWindow(){
     auto [address, size] = infoPopup("New Memory Editor Window");
     if (address && size){

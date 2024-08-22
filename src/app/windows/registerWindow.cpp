@@ -3,8 +3,8 @@
 bool codeHasRun = false;
 bool stepClickedOnce = false;
 tsl::ordered_map<std::string, std::string> registerValueMap{};
-
 std::unordered_map<std::string, std::string> tempRegisterValueMap =  {};
+std::string hoveredReg;
 
 void initDefaultRegs(){
     for (auto& reg: defaultShownRegs){
@@ -104,11 +104,81 @@ int checkHexCharsCallback(ImGuiInputTextCallbackData* data) {
     return 0;
 }
 
+bool contextShown = false;
+void registerContextMenu(){
+    ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[RubikRegular16]);
+    if (ImGui::BeginPopupContextItem("RegisterContextMenu")) {
+        contextShown = true;
+        if (ImGui::MenuItem("Hide register")) {
+            auto id = registerValueMap.find(hoveredReg);
+            registerValueMap.erase(id);
+        }
+        ImGui::Separator();
+        if (ImGui::MenuItem("Copy name")) {
+            ImGui::SetClipboardText(registerValueMap[hoveredReg].c_str());
+        }
+        ImGui::Separator();
+        if (ImGui::MenuItem("Copy value")) {
+            ImGui::SetClipboardText(hoveredReg.c_str());
+        }
+        ImGui::EndPopup();
+    }
+    ImGui::PopFont();
+}
+
 uint64_t hexStrToInt(const std::string& val){
     uint64_t ret;
     ret = std::strtoul(val.c_str(), nullptr, 16);
     return ret;
 };
+
+void registerCommandsUI(){
+    const float footer_height_to_reserve = ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
+
+    ImGui::BeginChild("ScrollingRegion", ImVec2(0, -footer_height_to_reserve), false, ImGuiWindowFlags_None);
+    ImGui::EndChild();
+
+    std::string registerString;
+    char input[500] = {};
+
+    ImGui::PushID(&input);
+    ImGui::Text("Toggle registers: ");
+    ImGui::SameLine();
+
+    if (ImGui::InputText("##registerInput", input, IM_ARRAYSIZE(input), ImGuiInputTextFlags_EnterReturnsTrue)) {
+        registerString += toLowerCase(input);
+        LOG_DEBUG("Request to add the register: " << input);
+    }
+
+    if (!registerString.empty()) {
+        auto regs = parseRegisters(registerString);
+        for (auto& reg : regs) {
+            auto regInfo = getRegister(reg);
+            if (regInfo.first) {
+                auto regValue= std::to_string(regInfo.second);
+                        LOG_DEBUG("Adding the register " << reg);
+                reg = toUpperCase(reg);
+
+                if (regInfoMap.count(reg) == 0){
+                    continue;
+                }
+
+//              remove the register if it already exists
+                if (registerValueMap.count(reg) != 0){
+                    registerValueMap.erase(reg);
+                    continue;
+                }
+
+                if (regValue == "0"){
+                    regValue = "0x00";
+                }
+                registerValueMap[reg] = regValue;
+            } else {
+                LOG_ERROR("Unable to get the register: " << reg);
+            }
+        }
+    }
+}
 
 void registerWindow() {
     if (codeHasRun){
@@ -146,7 +216,18 @@ void registerWindow() {
             float frameHeight = ImGui::GetFrameHeight();
             float spacing = (frameHeight - textHeight) / 2.0f;
             ImGui::SetCursorPosY(ImGui::GetCursorPosY() + spacing);
-            ImGui::Text("%s", regValMapInfo->first.c_str());
+            ImGui::PushID(index);  // Use a unique ID for each row
+            if (ImGui::Selectable(regValMapInfo->first.c_str(), false)) {
+                hoveredReg = regValMapInfo->first;
+            }
+
+            if (ImGui::IsItemHovered()){
+                hoveredReg = regValMapInfo->first;
+            }
+
+            registerContextMenu();
+            ImGui::PopID();
+
 
             ImGui::TableSetColumnIndex(1);
             static char regValueFirst[64] = {};
@@ -190,7 +271,16 @@ void registerWindow() {
             if (regValMapInfo == registerValueMap.end()) break;
 
             ImGui::TableSetColumnIndex(2);
-            ImGui::Text("%s", regValMapInfo->first.c_str());
+            ImGui::PushID(index + 3 * 4);  // Use a unique ID for each ro
+            if (ImGui::Selectable(regValMapInfo->first.c_str(), false)) {
+                hoveredReg = regValMapInfo->first;
+            }
+
+            if (ImGui::IsItemHovered()){
+                hoveredReg = regValMapInfo->first;
+            }
+            registerContextMenu();
+            ImGui::PopID();
 
             ImGui::TableSetColumnIndex(3);
             static char value2[64] = {};
@@ -242,51 +332,7 @@ void registerWindow() {
         ImGui::EndTable();
     }
 
-    const float footer_height_to_reserve = ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
-
-    ImGui::BeginChild("ScrollingRegion", ImVec2(0, -footer_height_to_reserve), false, ImGuiWindowFlags_None);
-    ImGui::EndChild();
-
-    std::string registerString;
-    char input[500] = {};
-
-    ImGui::PushID(&input);
-    ImGui::Text("Toggle registers: ");
-    ImGui::SameLine();
-
-    if (ImGui::InputText("##registerInput", input, IM_ARRAYSIZE(input), ImGuiInputTextFlags_EnterReturnsTrue)) {
-        registerString += toLowerCase(input);
-        LOG_DEBUG("Request to add the register: " << input);
-    }
-
-    if (!registerString.empty()) {
-        auto regs = parseRegisters(registerString);
-        for (auto& reg : regs) {
-            auto regInfo = getRegister(reg);
-            if (regInfo.first) {
-                auto regValue= std::to_string(regInfo.second);
-                LOG_DEBUG("Adding the register " << reg);
-                reg = toUpperCase(reg);
-
-                if (x86RegInfoMap.count(reg) == 0){
-                    continue;
-                }
-
-//              remove the register if it already exists
-                if (registerValueMap.count(reg) != 0){
-                    registerValueMap.erase(reg);
-                    continue;
-                }
-
-                if (regValue == "0"){
-                    regValue = "0x00";
-                }
-                registerValueMap[reg] = regValue;
-            } else {
-                LOG_ERROR("Unable to get the register: " << reg);
-            }
-        }
-    }
+    registerCommandsUI();
 
     ImGui::PopID();
     ImGui::PopFont();
