@@ -1,5 +1,7 @@
 main:
     mov rbx, 0x400
+    mov rax, 0x4001000000000000
+    movq xmm0, rax
     add rbx, rax
     mov rdi, rbx
     push rdi

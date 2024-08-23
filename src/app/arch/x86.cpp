@@ -313,7 +313,7 @@ bool x86IsRegisterValid(const std::string& reg, uc_mode mode){
                     return true;
                 }
                 if (x86RegInfoMap[reg].first > 64){
-                    return false;
+                    return true;
                 }
             }
 

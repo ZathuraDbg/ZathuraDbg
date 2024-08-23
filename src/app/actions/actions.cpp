@@ -18,7 +18,7 @@ void stepOverAction(){
     int lineNo;
 
     uc_context_restore(uc, context);
-    ip = getRegister(getArchIPStr(codeInformation.mode)).second;
+    ip = getRegister(getArchIPStr(codeInformation.mode)).registerValueUn.eightByteVal;
     std::string str = addressLineNoMap[std::to_string(ip)];
 
     if (!str.empty()){
@@ -50,7 +50,7 @@ void stepInAction(){
 bool debugPaused = false;
 void debugPauseAction(){
     auto ip = getRegisterValue(getArchIPStr(codeInformation.mode), false);
-    std::string str = addressLineNoMap[std::to_string(ip)];
+    std::string str = addressLineNoMap[std::to_string(ip.eightByteVal)];
     auto lineNumber = std::atoi(str.c_str());
     editor->HighlightDebugCurrentLine(lineNumber - 1);
     debugPaused = true;
@@ -81,7 +81,7 @@ void debugRunSelectionAction(){
     std::stringstream selectedAsmText(editor->GetSelectedText());
     if (!selectedAsmText.str().empty()) {
         std::string bytes = getBytes(selectedAsmText);
-        totalInstructions;
+
         if (!bytes.empty()) {
             debugRun = true;
             runTempCode(bytes, countValidInstructions(selectedAsmText));

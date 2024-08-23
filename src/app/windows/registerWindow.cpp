@@ -14,26 +14,39 @@ void initDefaultRegs(){
 
 void updateRegs(bool useTempContext){
     std::stringstream hex;
-    std::pair<bool, uint64_t> val;
+    registerValueInfoT val;
 
     for (const auto& [name, value]: registerValueMap) {
         if (!isRegisterValid(toUpperCase(name), codeInformation.mode)){
             continue;
         }
-        val = useTempContext ? getRegister(toLowerCase(name), true) : getRegister(toLowerCase(name));
+
+        if (useTempContext){
+            val = getRegister(toLowerCase(name), true);
+        }
+        else{
+            val = getRegister(toLowerCase(name));
+        }
+
         auto const [isRegValid, registerValue] = val;
 
-        hex << "0x";
         if (isRegValid){
-            if (registerValue == 0){
+            if (registerValue.doubleVal == 0){
+                hex << "0x";
                 hex << std::hex << "00";
             }
             else{
-                hex << std::hex << registerValue;
+                if (regInfoMap[toUpperCase(name)].first <= 64){
+                    hex << "0x";
+                    hex << std::hex << registerValue.eightByteVal;
+                }
+                else if (regInfoMap[toUpperCase(name)].first == 128){
+                    hex << std::to_string(registerValue.doubleVal);
+                }
             }
         }
         else {
-            hex << "00";
+            hex << "0x00";
         }
 
         registerValueMap[name] = hex.str();
@@ -152,12 +165,18 @@ void registerCommandsUI(){
 
     if (!registerString.empty()) {
         auto regs = parseRegisters(registerString);
+        std::string regValue;
         for (auto& reg : regs) {
             auto regInfo = getRegister(reg);
-            if (regInfo.first) {
-                auto regValue= std::to_string(regInfo.second);
-                        LOG_DEBUG("Adding the register " << reg);
-                reg = toUpperCase(reg);
+            reg = toUpperCase(reg);
+            if (regInfo.out) {
+                if (regInfoMap[reg].first <= 64){
+                    regValue= std::to_string(regInfo.registerValueUn.eightByteVal);
+                }
+                else if (regInfoMap[reg].first == 128){
+                    regValue = std::to_string(regInfo.registerValueUn.doubleVal);
+                }
+                LOG_DEBUG("Adding the register " << reg);
 
                 if (regInfoMap.count(reg) == 0){
                     continue;
@@ -172,6 +191,7 @@ void registerCommandsUI(){
                 if (regValue == "0"){
                     regValue = "0x00";
                 }
+
                 registerValueMap[reg] = regValue;
             } else {
                 LOG_ERROR("Unable to get the register: " << reg);
