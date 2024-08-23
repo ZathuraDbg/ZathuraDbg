@@ -16,6 +16,22 @@
 #include "errorHandler.hpp"
 #include <mutex>
 #include <array>
+
+union registerValueT{
+    uint8_t charVal;
+    uint16_t twoByteVal;
+    uint32_t fourByteVal;
+    uint64_t eightByteVal;
+    float floatVal;
+    double doubleVal;
+};
+
+typedef struct{
+    bool out;
+    registerValueT registerValueUn;
+} registerValueInfoT;
+
+
 extern std::mutex execMutex;
 extern std::mutex breakpointMutex;
 extern bool skipBreakpoints;
@@ -27,7 +43,7 @@ extern bool isCodeRunning;
 extern bool createStack(void* unicornEngine);
 extern bool runTempCode(const std::string& codeIn, uint64_t instructionCount);
 extern bool debugModeEnabled;
-std::pair<bool, uint64_t> getRegister(const std::string& name, bool useTempContext = false);
+registerValueInfoT getRegister(const std::string& name, bool useTempContext = false);
 extern uc_context *tempContext;
 extern bool ucInit(void* unicornEngine);
 extern uc_engine *uc;
@@ -49,7 +65,7 @@ extern bool continueOverBreakpoint;
 extern bool stepIn;
 extern bool stepOver;
 extern bool stepContinue;
-extern uint64_t getRegisterValue(const std::string& regName, bool useTempContext);
+extern registerValueT getRegisterValue(const std::string& regName, bool useTempContext);
 extern uint64_t expectedIP;
 extern int stepOverBPLineNo;
 extern uint64_t codeCurrentLen;

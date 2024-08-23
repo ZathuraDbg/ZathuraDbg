@@ -61,7 +61,19 @@ std::string parseVals(std::string val){
                     foundReg = false;
                     foundValidReg = false;
                     regNames.push_back(regName);
-                    auto registerValue = (!codeHasRun) ? tempRegisterValueMap[regName] : (std::to_string(getRegisterValue(regName, (tempContext != nullptr) ? true : false)));
+                    std::string registerValue;
+                    if (!codeHasRun){
+                        registerValue = tempRegisterValueMap[regName];
+                    }
+                    else{
+                        if (regInfoMap[regName].first <= 64){
+                            registerValue = std::to_string(getRegisterValue(regName, (tempContext != nullptr) ? true : false).eightByteVal);
+                        }
+                        else if (regInfoMap[regName].first == 128){
+                            registerValue = std::to_string(getRegisterValue(regName, (tempContext != nullptr) ? true : false).floatVal);
+                        }
+                    }
+//                    registerValue = (!codeHasRun) ? tempRegisterValueMap[regName] : (std::to_string(getRegisterValue(regName, (tempContext != nullptr) ? true : false)));
                     if (registerValue.starts_with("0x")){
                          result += std::to_string(hexStrToInt(registerValue));
                     }

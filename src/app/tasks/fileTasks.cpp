@@ -81,7 +81,12 @@ void fileSaveUCContextAsJson(const std::string& jsonFilename){
 
     for (auto& reg: x86RegInfoMap){
         if (isRegisterValid(reg.first, codeInformation.mode) && (reg.first != "INVALID")){
-            contextJson[reg.first] = getRegister(reg.first).second;
+            if (reg.second.first <= 64){
+                contextJson[reg.first] = getRegister(reg.first).registerValueUn.eightByteVal;
+            }
+            else if (reg.second.first == 128){
+                contextJson[reg.first] = getRegister(reg.first).registerValueUn.doubleVal;
+            }
         }
     }
 

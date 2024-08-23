@@ -33,6 +33,11 @@ bool executionComplete = false;
 
 std::vector<int> breakpointLines = {};
 
+typedef struct{
+    uint64_t high;
+    uint64_t low;
+} floatRepr128;
+
 int getCurrentLine(){
     uint64_t instructionPointer = -1;
 
@@ -119,7 +124,103 @@ void showRegs(){
     printf("GS_BASE = 0x%x\n", gs_base);
 }
 
-uint64_t getRegisterValue(const std::string& regName, bool useTempContext){
+double parse_binary128(floatRepr128 value) {
+    int sign = (value.high >> 63) & 1;
+
+    // Extract exponent
+    int exponent = ((value.high >> 48) & 0x7FFF);
+    exponent -= 16383;  // Bias correction
+
+    // Extract significand (112 bits)
+    uint64_t significand_high = value.high & 0x0000FFFFFFFFFFFF;  // 48 bits
+    uint64_t significand_low = value.low;  // 64 bits
+
+    // Combine significand into a double (for precision)
+    long double significand = (long double)significand_high / powl(2.0L, 48) + (long double)significand_low / powl(2.0L, 112);
+
+    // Check if the number is normalized
+    if (exponent != -16383) {
+        significand += 1.0L;  // Add the implicit leading 1 for normalized numbers
+    }
+
+    // Handle special cases
+    if (exponent == -16383 && significand == 0.0L) {
+        return sign == 0 ? 0.0 : -0.0;  // Zero
+    }
+    if (exponent == 16384) {
+        if (significand == 1.0L) {
+            return sign == 0 ? INFINITY : -INFINITY;  // Infinity
+        } else {
+            return NAN;  // NaN
+        }
+    }
+
+    // Compute the final floating-point value
+    long double result = powl(-1.0L, sign) * powl(2.0L, exponent) * significand;
+    printf("%f", (double)result);
+    return (double)result;
+}
+
+double convert128BitToDouble(uint64_t low_bits, uint64_t high_bits) {
+    const int BIAS_128 = 16383;
+    const int MANTISSA_BITS_128 = 112;
+    const int EXPONENT_BITS_128 = 15;
+
+    // Constants for 64-bit double
+    const int BIAS_64 = 1023;
+    const int MANTISSA_BITS_64 = 52;
+    const int EXPONENT_BITS_64 = 11;
+
+    // Extract sign, exponent, and mantissa
+    bool sign = (high_bits >> 63) & 1;
+    int exponent = (high_bits >> 48) & ((1ULL << EXPONENT_BITS_128) - 1);
+    uint64_t mantissa_high = high_bits & ((1ULL << 48) - 1);
+    uint64_t mantissa_low = low_bits;
+
+    // Handle special cases
+    if (exponent == 0 && mantissa_high == 0 && mantissa_low == 0) {
+        return sign ? -0.0 : 0.0;
+    }
+    if (exponent == ((1 << EXPONENT_BITS_128) - 1)) {
+        if (mantissa_high == 0 && mantissa_low == 0) {
+            return sign ? -std::numeric_limits<double>::infinity() : std::numeric_limits<double>::infinity();
+        }
+        return std::numeric_limits<double>::quiet_NaN();
+    }
+
+    // Adjust exponent
+    if (exponent == 0) {
+        exponent = 1 - BIAS_128; // Subnormal number
+    } else {
+        exponent -= BIAS_128;
+    }
+    exponent += BIAS_64;
+
+    // Check for overflow or underflow
+    if (exponent >= ((1 << EXPONENT_BITS_64) - 1)) {
+        return sign ? -std::numeric_limits<double>::infinity() : std::numeric_limits<double>::infinity();
+    }
+    if (exponent <= 0) {
+        // Underflow to subnormal or zero
+        return sign ? -0.0 : 0.0;
+    }
+
+    // Construct mantissa for double
+    uint64_t mantissa_64 = (mantissa_high << 4) | (mantissa_low >> 60);
+    mantissa_64 >>= (MANTISSA_BITS_128 - MANTISSA_BITS_64);
+
+    // Construct the double
+    uint64_t result_bits = (static_cast<uint64_t>(sign) << 63) |
+                           (static_cast<uint64_t>(exponent) << MANTISSA_BITS_64) |
+                           mantissa_64;
+
+    double result;
+    std::memcpy(&result, &result_bits, sizeof(double));
+
+    return result;
+}
+
+registerValueT getRegisterValue(const std::string& regName, bool useTempContext){
     auto entry = regInfoMap[toUpperCase(regName)];
     auto [size, constant] = entry;
     uint64_t value{};
@@ -127,30 +228,43 @@ uint64_t getRegisterValue(const std::string& regName, bool useTempContext){
     if (size == 8) {
         uint8_t valTemp8;
         useTempContext ? uc_context_reg_read(tempContext, constant, &valTemp8) : uc_reg_read(uc, constant, &valTemp8);
-        value = valTemp8; // force zero extension
+//        value = valTemp8; // force zero extension
+        return {.charVal = valTemp8};
     }
     else if (size == 16) {
         uint16_t valTemp16;
         useTempContext ? uc_context_reg_read(tempContext, constant, &valTemp16) : uc_reg_read(uc, constant, &valTemp16);
-        value = valTemp16; // force zero extension
+//        value = valTemp16; // force zero extension
+        return {.twoByteVal = valTemp16};
     }
     else if (size == 32) {
         uint32_t valTemp32;
         useTempContext ? uc_context_reg_read(tempContext, constant, &valTemp32) : uc_reg_read(uc, constant, &valTemp32);
-        value = valTemp32; // force zero extension
+        return {.fourByteVal = valTemp32};
     }
     else if (size == 64) {
         uint64_t valTemp64;
         useTempContext ? uc_context_reg_read(tempContext, constant, &valTemp64) : uc_reg_read(uc, constant, &valTemp64);
-        value = valTemp64; // force zero extension
+        return {.eightByteVal = valTemp64};
+    }
+    else if (size == 128){
+        uint8_t xmm_value[16];
+        useTempContext ? uc_context_reg_read(tempContext, constant, &xmm_value) : uc_reg_read(uc, constant, &xmm_value);
+
+        uint64_t upperHalf, lowerHalf;
+        std::memcpy(&upperHalf, xmm_value, 8);
+        std::memcpy(&lowerHalf, xmm_value + 8, 8);
+        printf("\n%lf\n", convert128BitToDouble(lowerHalf, 0));
+        printf("\n%lf\n", convert128BitToDouble(0, upperHalf));
+        return {.doubleVal = (convert128BitToDouble(lowerHalf, upperHalf))};
     }
 
     // 80, 128 and 512 bit unimplemented
-    return value;
+    return {.charVal = 0x41};
 }
 
-std::pair<bool, uint64_t> getRegister(const std::string& name, bool useTempContext){
-    std::pair<bool, uint64_t> res = {false, 0};
+registerValueInfoT getRegister(const std::string& name, bool useTempContext){
+    registerValueInfoT res = {false, 0};
 
     if (useTempContext){
         return {true, getRegisterValue(name, true)};
@@ -162,7 +276,14 @@ std::pair<bool, uint64_t> getRegister(const std::string& name, bool useTempConte
     }
 
     auto value = getRegisterValue(name, false);
-    res = {true, value};
+    if (regInfoMap[name].first <= 64){
+        res = {true, value};
+    }
+    else if (regInfoMap[name].first == 128){
+        res = {true, value};
+    }
+
+//    res = {true, value};
     return res;
 }
 
@@ -295,7 +416,7 @@ bool stepCode(size_t instructionCount){
     uint64_t ip;
 
     uc_context_restore(uc, context);
-    ip = getRegisterValue(getArchIPStr(codeInformation.mode), false);
+    ip = getRegisterValue(getArchIPStr(codeInformation.mode), false).eightByteVal;
 
     execMutex.lock();
     isCodeRunning = true;
@@ -316,7 +437,7 @@ bool stepCode(size_t instructionCount){
         int lineNum;
 
         uc_context_save(uc, context);
-        ip = getRegisterValue(getArchIPStr(codeInformation.mode), false);
+        ip = getRegisterValue(getArchIPStr(codeInformation.mode), false).eightByteVal;
         if (ip != expectedIP){
             expectedIP = ip;
         }
@@ -417,7 +538,7 @@ void hook(uc_engine *uc, uint64_t address, uint32_t size, void *user_data){
     }
 
     if (debugModeEnabled && !skipBreakpoints){
-        ip = getRegisterValue(getArchIPStr(codeInformation.mode), false);
+        ip = getRegisterValue(getArchIPStr(codeInformation.mode), false).eightByteVal;
         if (ip != expectedIP && (ip > expectedIP)){
             LOG_DEBUG("Jump detected!");
             updateRegs();
