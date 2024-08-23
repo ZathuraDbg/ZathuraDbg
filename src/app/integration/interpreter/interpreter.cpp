@@ -30,13 +30,9 @@ bool stepIn = false;
 bool stepOver = false;
 bool stepContinue = false;
 bool executionComplete = false;
+bool use32BitLanes = false;
 
 std::vector<int> breakpointLines = {};
-
-typedef struct{
-    uint64_t high;
-    uint64_t low;
-} floatRepr128;
 
 int getCurrentLine(){
     uint64_t instructionPointer = -1;
@@ -124,43 +120,44 @@ void showRegs(){
     printf("GS_BASE = 0x%x\n", gs_base);
 }
 
-double parse_binary128(floatRepr128 value) {
-    int sign = (value.high >> 63) & 1;
+std::pair<float, float> convert64BitToTwoFloats(uint64_t bits) {
+    const int BIAS_32 = 127;
+    const int MANTISSA_BITS_32 = 23;
+    const int EXPONENT_BITS_32 = 8;
 
-    // Extract exponent
-    int exponent = ((value.high >> 48) & 0x7FFF);
-    exponent -= 16383;  // Bias correction
+    auto convertToFloat = [&](uint32_t bits32) -> float {
+        // Extract sign, exponent, and mantissa
+        bool sign = (bits32 >> 31) & 1;
+        int exponent = (bits32 >> MANTISSA_BITS_32) & ((1U << EXPONENT_BITS_32) - 1);
+        uint32_t mantissa = bits32 & ((1U << MANTISSA_BITS_32) - 1);
 
-    // Extract significand (112 bits)
-    uint64_t significand_high = value.high & 0x0000FFFFFFFFFFFF;  // 48 bits
-    uint64_t significand_low = value.low;  // 64 bits
-
-    // Combine significand into a double (for precision)
-    long double significand = (long double)significand_high / powl(2.0L, 48) + (long double)significand_low / powl(2.0L, 112);
-
-    // Check if the number is normalized
-    if (exponent != -16383) {
-        significand += 1.0L;  // Add the implicit leading 1 for normalized numbers
-    }
-
-    // Handle special cases
-    if (exponent == -16383 && significand == 0.0L) {
-        return sign == 0 ? 0.0 : -0.0;  // Zero
-    }
-    if (exponent == 16384) {
-        if (significand == 1.0L) {
-            return sign == 0 ? INFINITY : -INFINITY;  // Infinity
-        } else {
-            return NAN;  // NaN
+        // Handle special cases
+        if (exponent == 0 && mantissa == 0) {
+            return sign ? -0.0f : 0.0f;
         }
-    }
+        if (exponent == ((1 << EXPONENT_BITS_32) - 1)) {
+            if (mantissa == 0) {
+                return sign ? -std::numeric_limits<float>::infinity() : std::numeric_limits<float>::infinity();
+            }
+            return std::numeric_limits<float>::quiet_NaN();
+        }
 
-    // Compute the final floating-point value
-    long double result = powl(-1.0L, sign) * powl(2.0L, exponent) * significand;
-    printf("%f", (double)result);
-    return (double)result;
+        // Construct the float
+        float result;
+        std::memcpy(&result, &bits32, sizeof(float));
+        return result;
+    };
+
+    // Split the 64-bit integer into two 32-bit parts
+    uint32_t lower_bits = bits & 0xFFFFFFFF;
+    uint32_t upper_bits = (bits >> 32) & 0xFFFFFFFF;
+
+    // Convert each 32-bit part to a float
+    float floatUpto31Bits = convertToFloat(lower_bits);
+    float floatUpto63Bits = convertToFloat(upper_bits);
+
+    return std::make_pair(floatUpto31Bits, floatUpto63Bits);
 }
-
 double convert128BitToDouble(uint64_t low_bits, uint64_t high_bits) {
     const int BIAS_128 = 16383;
     const int MANTISSA_BITS_128 = 112;
@@ -228,13 +225,11 @@ registerValueT getRegisterValue(const std::string& regName, bool useTempContext)
     if (size == 8) {
         uint8_t valTemp8;
         useTempContext ? uc_context_reg_read(tempContext, constant, &valTemp8) : uc_reg_read(uc, constant, &valTemp8);
-//        value = valTemp8; // force zero extension
         return {.charVal = valTemp8};
     }
     else if (size == 16) {
         uint16_t valTemp16;
         useTempContext ? uc_context_reg_read(tempContext, constant, &valTemp16) : uc_reg_read(uc, constant, &valTemp16);
-//        value = valTemp16; // force zero extension
         return {.twoByteVal = valTemp16};
     }
     else if (size == 32) {
@@ -256,11 +251,27 @@ registerValueT getRegisterValue(const std::string& regName, bool useTempContext)
         std::memcpy(&lowerHalf, xmm_value + 8, 8);
         printf("\n%lf\n", convert128BitToDouble(lowerHalf, 0));
         printf("\n%lf\n", convert128BitToDouble(0, upperHalf));
-        return {.doubleVal = (convert128BitToDouble(lowerHalf, upperHalf))};
+        registerValueT regValue = {.doubleVal = (convert128BitToDouble(lowerHalf, upperHalf))};
+        regValue.info.is128bit = true;
+        if (use32BitLanes){
+            regValue.info.arrays.floatArray[0] = convert64BitToTwoFloats(lowerHalf).first;
+            regValue.info.arrays.floatArray[1] = convert64BitToTwoFloats(lowerHalf).second;
+            regValue.info.arrays.floatArray[2] = convert64BitToTwoFloats(upperHalf).first;
+            regValue.info.arrays.floatArray[3] = convert64BitToTwoFloats(upperHalf).second;
+            for (int i = 4; i < 8; i++){
+                regValue.info.arrays.floatArray[i] = 0;
+            }
+        }
+        else {
+            regValue.info.arrays.doubleArray[0] = convert128BitToDouble(lowerHalf, 0);
+            regValue.info.arrays.doubleArray[1] = convert128BitToDouble(0, upperHalf);
+            regValue.info.arrays.doubleArray[2] = regValue.info.arrays.doubleArray[3] = 0;
+        }
+        return regValue;
     }
 
     // 80, 128 and 512 bit unimplemented
-    return {.charVal = 0x41};
+    return {.charVal = 00};
 }
 
 registerValueInfoT getRegister(const std::string& name, bool useTempContext){
@@ -276,14 +287,7 @@ registerValueInfoT getRegister(const std::string& name, bool useTempContext){
     }
 
     auto value = getRegisterValue(name, false);
-    if (regInfoMap[name].first <= 64){
-        res = {true, value};
-    }
-    else if (regInfoMap[name].first == 128){
-        res = {true, value};
-    }
-
-//    res = {true, value};
+    res = {true, value};
     return res;
 }
 
