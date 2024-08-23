@@ -17,13 +17,21 @@
 #include <mutex>
 #include <array>
 
-union registerValueT{
+struct registerValueT{
     uint8_t charVal;
     uint16_t twoByteVal;
     uint32_t fourByteVal;
     uint64_t eightByteVal;
     float floatVal;
     double doubleVal;
+    struct information{
+        bool is128bit = false;
+        bool is256bit = false;
+        union {
+            double doubleArray[4]{};
+            float floatArray[8];
+        } arrays;
+    } info;
 };
 
 typedef struct{
@@ -65,6 +73,7 @@ extern bool continueOverBreakpoint;
 extern bool stepIn;
 extern bool stepOver;
 extern bool stepContinue;
+extern bool use32BitLanes;
 extern registerValueT getRegisterValue(const std::string& regName, bool useTempContext);
 extern uint64_t expectedIP;
 extern int stepOverBPLineNo;

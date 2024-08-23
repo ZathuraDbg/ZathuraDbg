@@ -31,7 +31,7 @@ void updateRegs(bool useTempContext){
         auto const [isRegValid, registerValue] = val;
 
         if (isRegValid){
-            if (registerValue.doubleVal == 0){
+            if (registerValue.doubleVal == 0 && registerValue.eightByteVal == 0){
                 hex << "0x";
                 hex << std::hex << "00";
             }
@@ -41,7 +41,20 @@ void updateRegs(bool useTempContext){
                     hex << std::hex << registerValue.eightByteVal;
                 }
                 else if (regInfoMap[toUpperCase(name)].first == 128){
-                    hex << std::to_string(registerValue.doubleVal);
+                    if (registerValue.info.is128bit){
+                        if (!use32BitLanes){
+                            hex << std::to_string(registerValue.info.arrays.doubleArray[0]);
+                            registerValueMap[name] = hex.str();
+                            hex.str("");
+                            hex.clear();
+                            hex << std::to_string(registerValue.info.arrays.doubleArray[1]);
+                            registerValueMap[name + "[63:]"] = hex.str();
+                            hex.str("");
+                            hex.clear();
+                            continue;
+                        }
+                    }
+
                 }
             }
         }

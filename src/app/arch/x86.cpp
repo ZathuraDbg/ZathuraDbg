@@ -279,40 +279,46 @@ bool x86IsRegisterValid(const std::string& reg, uc_mode mode){
     if (!x86RegInfoMap.contains(reg)){
         return false;
     }
+    std::string registerName = reg;
 
     switch (mode){
         case UC_MODE_16:
-            if (x86RegInfoMap[reg].first == 16){
+            if (x86RegInfoMap[registerName].first == 16){
                 return true;
             }
 
-            if (x86RegInfoMap[reg].first > 16){
+            if (x86RegInfoMap[registerName].first > 16){
                 return false;
             }
 
             break;
         case UC_MODE_32:
-            if (!reg.contains("ST") || (!reg.contains("MM"))){
-                if (x86RegInfoMap[reg].first == 32){
+            if (!registerName.contains("ST") || (!registerName.contains("MM"))){
+                if (x86RegInfoMap[registerName].first == 32){
                     return true;
                 }
-                if (x86RegInfoMap[reg].first > 32){
+                if (x86RegInfoMap[registerName].first > 32){
                     return false;
                 }
             }
             else {
-                if (x86RegInfoMap.contains(reg)){
+                if (x86RegInfoMap.contains(registerName)){
                     return true;
                 }
             }
             break;
         case UC_MODE_64:
-            if (!reg.contains("ST") || (!reg.contains("MM") || (!reg.contains("XMM")) ||
-                (!reg.contains("YMM")) || (!reg.contains("ZMM")))){
-                if (x86RegInfoMap[reg].first == 64){
+            if (!registerName.contains("ST") || (!registerName.contains("MM") || (!registerName.contains("XMM")) ||
+                (!registerName.contains("YMM")) || (!registerName.contains("ZMM")))){
+
+                if (registerName.contains("[") && registerName.contains(":") && registerName.contains("]")){
+                    registerName = registerName.substr(0, registerName.find_first_of('['));
+                }
+
+                if (x86RegInfoMap[registerName].first == 64){
                     return true;
                 }
-                if (x86RegInfoMap[reg].first > 64){
+                if (x86RegInfoMap[registerName].first == 128){
                     return true;
                 }
             }
