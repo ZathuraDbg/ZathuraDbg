@@ -276,10 +276,13 @@ std::pair<std::string, std::string> x86SBPStr(uc_mode mode){
 }
 
 bool x86IsRegisterValid(const std::string& reg, uc_mode mode){
-    if (!x86RegInfoMap.contains(reg)){
+    std::string registerName = reg;
+    if (registerName.contains("[") && registerName.contains(":") && registerName.contains("]")){
+        registerName = registerName.substr(0, registerName.find_first_of('['));
+    }
+    if (!x86RegInfoMap.contains(registerName)){
         return false;
     }
-    std::string registerName = reg;
 
     switch (mode){
         case UC_MODE_16:
@@ -311,9 +314,6 @@ bool x86IsRegisterValid(const std::string& reg, uc_mode mode){
             if (!registerName.contains("ST") || (!registerName.contains("MM") || (!registerName.contains("XMM")) ||
                 (!registerName.contains("YMM")) || (!registerName.contains("ZMM")))){
 
-                if (registerName.contains("[") && registerName.contains(":") && registerName.contains("]")){
-                    registerName = registerName.substr(0, registerName.find_first_of('['));
-                }
 
                 if (x86RegInfoMap[registerName].first == 64){
                     return true;
