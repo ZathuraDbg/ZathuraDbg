@@ -249,8 +249,7 @@ registerValueT getRegisterValue(const std::string& regName, bool useTempContext)
         uint64_t upperHalf, lowerHalf;
         std::memcpy(&upperHalf, xmm_value, 8);
         std::memcpy(&lowerHalf, xmm_value + 8, 8);
-        printf("\n%lf\n", convert128BitToDouble(lowerHalf, 0));
-        printf("\n%lf\n", convert128BitToDouble(0, upperHalf));
+
         registerValueT regValue = {.doubleVal = (convert128BitToDouble(lowerHalf, upperHalf))};
         regValue.info.is128bit = true;
         if (use32BitLanes){
@@ -276,9 +275,14 @@ registerValueT getRegisterValue(const std::string& regName, bool useTempContext)
 
 registerValueInfoT getRegister(const std::string& name, bool useTempContext){
     registerValueInfoT res = {false, 0};
+    std::string regName = name;
+//    bool useSecondValue = true;
+    if (name.contains('[') && name.contains(']') && name.contains(':')){
+        regName = name.substr(0, name.find_first_of('['));
+    }
 
     if (useTempContext){
-        return {true, getRegisterValue(name, true)};
+        return {true, getRegisterValue(regName, true)};
     }
 
 
@@ -286,7 +290,7 @@ registerValueInfoT getRegister(const std::string& name, bool useTempContext){
         return {true, 0x00};
     }
 
-    auto value = getRegisterValue(name, false);
+    auto value = getRegisterValue(regName, false);
     res = {true, value};
     return res;
 }

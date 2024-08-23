@@ -15,11 +15,12 @@ void initDefaultRegs(){
 void updateRegs(bool useTempContext){
     std::stringstream hex;
     registerValueInfoT val;
-
-    for (const auto& [name, value]: registerValueMap) {
+    bool useSecondVal = false;
+    for (auto [name, value]: registerValueMap) {
         if (!isRegisterValid(toUpperCase(name), codeInformation.mode)){
             continue;
         }
+
 
         if (useTempContext){
             val = getRegister(toLowerCase(name), true);
@@ -32,10 +33,18 @@ void updateRegs(bool useTempContext){
 
         if (isRegValid){
             if (registerValue.doubleVal == 0 && registerValue.eightByteVal == 0){
-                hex << "0x";
-                hex << std::hex << "00";
+                if (registerValue.info.is128bit){
+                    hex << "0.00";
+                }
+                else{
+                    hex << "0x00";
+                }
             }
             else{
+                if (name.contains('[') && name.contains(']') && name.contains(':')){
+                    name =  name.substr(0, name.find_first_of('['));
+                    useSecondVal = true;
+                }
                 if (regInfoMap[toUpperCase(name)].first <= 64){
                     hex << "0x";
                     hex << std::hex << registerValue.eightByteVal;
@@ -43,12 +52,20 @@ void updateRegs(bool useTempContext){
                 else if (regInfoMap[toUpperCase(name)].first == 128){
                     if (registerValue.info.is128bit){
                         if (!use32BitLanes){
+                            if (useSecondVal){
+                                hex << std::to_string(registerValue.info.arrays.doubleArray[1]);
+                                registerValueMap[name + "[63:128]"] = hex.str();
+                                hex.str("");
+                                hex.clear();
+                                useSecondVal = false;
+                                continue;
+                            }
                             hex << std::to_string(registerValue.info.arrays.doubleArray[0]);
                             registerValueMap[name] = hex.str();
                             hex.str("");
                             hex.clear();
                             hex << std::to_string(registerValue.info.arrays.doubleArray[1]);
-                            registerValueMap[name + "[63:]"] = hex.str();
+                            registerValueMap[name + "[63:128]"] = hex.str();
                             hex.str("");
                             hex.clear();
                             continue;
@@ -240,6 +257,7 @@ void registerWindow() {
         int index = 0;
         for (auto regValMapInfo = registerValueMap.begin(); regValMapInfo != registerValueMap.end(); ++index) {
             if (!isRegisterValid(toUpperCase(regValMapInfo->first), codeInformation.mode)){
+                regValMapInfo++;
                 continue;
             }
 

@@ -31933,3 +31933,2240 @@ anewblock:
 2024-08-23T19:38:50     Debug: Code executed by 1step!
 2024-08-23T19:38:50     Debug: Highlight from block 3 - stepCode : line: 5
 2024-08-23T19:38:50     Debug: Code ran once!
+2024-08-23T20:00:28     Debug: Zathura: Loaded config file from /home/rc/Zathura-UI/src/config.zlyt
+2024-08-23T20:00:28     Debug: Creating stack
+2024-08-23T20:00:28     Debug: Initializing unicorn engine
+2024-08-23T20:00:28     Debug: Zathura: Getting bytes from the file: /home/rc/Zathura-UI/src/test.asm
+2024-08-23T20:00:28     Debug: Zathura: Assembling:
+main:
+    mov rbx, 0x400
+    mov rax, 0x4001000000000000
+    movq xmm0, rax
+    add rbx, rax
+    mov rdi, rbx
+    push rdi
+    inc rdi
+    call subtract_hundred
+    cmp r11, 60000
+    jne nextblock
+    push rax
+    push rbx
+    
+subtract_hundred:
+    sub rdi, 0x100
+    mov rax, rdi
+    mov rbx, 0x12
+    ret
+
+nextblock:
+	mov rax, rbx
+	jmp nextblockagain
+
+nextblockagain:
+	mov rbx, rcx
+	jmp nextblocktwice
+
+nextblocktwice:
+	mov rdx, rcx
+	jmp anewblock
+
+anewblock:
+	mov r8, r9
+	inc r11
+	jmp main
+
+2024-08-23T20:00:28     Debug: Zathura: Keystone object initialised.
+2024-08-23T20:00:28     Debug: Zathura: Assembled: 89 bytes
+2024-08-23T20:00:28     Debug: Zathura: Total instructions to execute: 25
+2024-08-23T20:00:28     Debug: Zathura: Got bytes, now hexlifying.
+2024-08-23T20:00:34     Debug: Zathura: Request to add the register: xmm0
+2024-08-23T20:00:36     Debug: Zathura: Adding the register XMM0
+2024-08-23T20:00:40     Debug: Resetting state!
+2024-08-23T20:00:40     Debug: Zathura: Getting bytes from the file: /home/rc/Zathura-UI/src/test.asm
+2024-08-23T20:00:40     Debug: Zathura: Assembling:
+main:
+    mov rbx, 0x400
+    mov rax, 0x4001000000000000
+    movq xmm0, rax
+    add rbx, rax
+    mov rdi, rbx
+    push rdi
+    inc rdi
+    call subtract_hundred
+    cmp r11, 60000
+    jne nextblock
+    push rax
+    push rbx
+    
+subtract_hundred:
+    sub rdi, 0x100
+    mov rax, rdi
+    mov rbx, 0x12
+    ret
+
+nextblock:
+	mov rax, rbx
+	jmp nextblockagain
+
+nextblockagain:
+	mov rbx, rcx
+	jmp nextblocktwice
+
+nextblocktwice:
+	mov rdx, rcx
+	jmp anewblock
+
+anewblock:
+	mov r8, r9
+	inc r11
+	jmp main
+
+2024-08-23T20:00:40     Debug: Zathura: Keystone object initialised.
+2024-08-23T20:00:40     Debug: Zathura: Assembled: 89 bytes
+2024-08-23T20:00:40     Debug: Zathura: Total instructions to execute: 25
+2024-08-23T20:00:40     Debug: Zathura: Got bytes, now hexlifying.
+2024-08-23T20:00:40     Debug: Creating stack
+2024-08-23T20:00:40     Debug: Initializing unicorn engine
+2024-08-23T20:00:40     Debug: Zathura: Running code from: /home/rc/Zathura-UI/src/test.asm
+2024-08-23T20:00:40     Debug: Creating stack
+2024-08-23T20:00:40     Debug: Initializing unicorn engine
+2024-08-23T20:00:40     Debug: Zathura: Getting bytes from the file: /home/rc/Zathura-UI/src/test.asm
+2024-08-23T20:00:40     Debug: Zathura: Assembling:
+main:
+    mov rbx, 0x400
+    mov rax, 0x4001000000000000
+    movq xmm0, rax
+    add rbx, rax
+    mov rdi, rbx
+    push rdi
+    inc rdi
+    call subtract_hundred
+    cmp r11, 60000
+    jne nextblock
+    push rax
+    push rbx
+    
+subtract_hundred:
+    sub rdi, 0x100
+    mov rax, rdi
+    mov rbx, 0x12
+    ret
+
+nextblock:
+	mov rax, rbx
+	jmp nextblockagain
+
+nextblockagain:
+	mov rbx, rcx
+	jmp nextblocktwice
+
+nextblocktwice:
+	mov rdx, rcx
+	jmp anewblock
+
+anewblock:
+	mov r8, r9
+	inc r11
+	jmp main
+
+2024-08-23T20:00:40     Debug: Zathura: Keystone object initialised.
+2024-08-23T20:00:40     Debug: Zathura: Assembled: 89 bytes
+2024-08-23T20:00:40     Debug: Zathura: Total instructions to execute: 0
+2024-08-23T20:00:40     Debug: Zathura: Got bytes, now hexlifying.
+2024-08-23T20:00:40     Debug: Running code...
+2024-08-23T20:00:40     Debug: Code buffer allocated!
+2024-08-23T20:00:40     Debug: Highlight from runCode
+2024-08-23T20:00:40     Debug: Ran code successfully!
+2024-08-23T20:00:41     Debug: Stepping into code!
+2024-08-23T20:00:41     Debug: Code executed by 1step!
+2024-08-23T20:00:41     Debug: Highlight from block 3 - stepCode : line: 3
+2024-08-23T20:00:41     Debug: Code ran once!
+2024-08-23T20:00:41     Debug: Stepping into code!
+2024-08-23T20:00:41     Debug: Code executed by 1step!
+2024-08-23T20:00:41     Debug: Highlight from block 3 - stepCode : line: 4
+2024-08-23T20:00:41     Debug: Code ran once!
+2024-08-23T20:00:42     Debug: Stepping into code!
+2024-08-23T20:00:42     Debug: Code executed by 1step!
+2024-08-23T20:00:42     Debug: Highlight from block 3 - stepCode : line: 5
+2024-08-23T20:00:42     Debug: Code ran once!
+2024-08-23T20:07:26     Debug: Zathura: Loaded config file from /home/rc/Zathura-UI/src/config.zlyt
+2024-08-23T20:07:26     Debug: Creating stack
+2024-08-23T20:07:26     Debug: Initializing unicorn engine
+2024-08-23T20:07:26     Debug: Zathura: Getting bytes from the file: /home/rc/Zathura-UI/src/test.asm
+2024-08-23T20:07:26     Debug: Zathura: Assembling:
+main:
+    mov rbx, 0x400
+    mov rax, 0x4001000000000000
+    movq xmm0, rax
+    add rbx, rax
+    mov rdi, rbx
+    push rdi
+    inc rdi
+    call subtract_hundred
+    cmp r11, 60000
+    jne nextblock
+    push rax
+    push rbx
+    
+subtract_hundred:
+    sub rdi, 0x100
+    mov rax, rdi
+    mov rbx, 0x12
+    ret
+
+nextblock:
+	mov rax, rbx
+	jmp nextblockagain
+
+nextblockagain:
+	mov rbx, rcx
+	jmp nextblocktwice
+
+nextblocktwice:
+	mov rdx, rcx
+	jmp anewblock
+
+anewblock:
+	mov r8, r9
+	inc r11
+	jmp main
+
+2024-08-23T20:07:26     Debug: Zathura: Keystone object initialised.
+2024-08-23T20:07:26     Debug: Zathura: Assembled: 89 bytes
+2024-08-23T20:07:26     Debug: Zathura: Total instructions to execute: 25
+2024-08-23T20:07:26     Debug: Zathura: Got bytes, now hexlifying.
+2024-08-23T20:09:49     Debug: Resetting state!
+2024-08-23T20:09:49     Debug: Zathura: Getting bytes from the file: /home/rc/Zathura-UI/src/test.asm
+2024-08-23T20:09:49     Debug: Zathura: Assembling:
+main:
+    mov rbx, 0x400
+    mov rax, 0x4001000000000000
+    movq xmm0, rax
+    add rbx, rax
+    mov rdi, rbx
+    push rdi
+    inc rdi
+    call subtract_hundred
+    cmp r11, 60000
+    jne nextblock
+    push rax
+    push rbx
+    
+subtract_hundred:
+    sub rdi, 0x100
+    mov rax, rdi
+    mov rbx, 0x12
+    ret
+
+nextblock:
+	mov rax, rbx
+	jmp nextblockagain
+
+nextblockagain:
+	mov rbx, rcx
+	jmp nextblocktwice
+
+nextblocktwice:
+	mov rdx, rcx
+	jmp anewblock
+
+anewblock:
+	mov r8, r9
+	inc r11
+	jmp main
+
+2024-08-23T20:09:49     Debug: Zathura: Keystone object initialised.
+2024-08-23T20:09:49     Debug: Zathura: Assembled: 89 bytes
+2024-08-23T20:09:49     Debug: Zathura: Total instructions to execute: 25
+2024-08-23T20:09:49     Debug: Zathura: Got bytes, now hexlifying.
+2024-08-23T20:09:49     Debug: Creating stack
+2024-08-23T20:09:49     Debug: Initializing unicorn engine
+2024-08-23T20:09:49     Debug: Zathura: Running code from: /home/rc/Zathura-UI/src/test.asm
+2024-08-23T20:09:49     Debug: Creating stack
+2024-08-23T20:09:49     Debug: Initializing unicorn engine
+2024-08-23T20:09:49     Debug: Zathura: Getting bytes from the file: /home/rc/Zathura-UI/src/test.asm
+2024-08-23T20:09:49     Debug: Zathura: Assembling:
+main:
+    mov rbx, 0x400
+    mov rax, 0x4001000000000000
+    movq xmm0, rax
+    add rbx, rax
+    mov rdi, rbx
+    push rdi
+    inc rdi
+    call subtract_hundred
+    cmp r11, 60000
+    jne nextblock
+    push rax
+    push rbx
+    
+subtract_hundred:
+    sub rdi, 0x100
+    mov rax, rdi
+    mov rbx, 0x12
+    ret
+
+nextblock:
+	mov rax, rbx
+	jmp nextblockagain
+
+nextblockagain:
+	mov rbx, rcx
+	jmp nextblocktwice
+
+nextblocktwice:
+	mov rdx, rcx
+	jmp anewblock
+
+anewblock:
+	mov r8, r9
+	inc r11
+	jmp main
+
+2024-08-23T20:09:49     Debug: Zathura: Keystone object initialised.
+2024-08-23T20:09:49     Debug: Zathura: Assembled: 89 bytes
+2024-08-23T20:09:49     Debug: Zathura: Total instructions to execute: 0
+2024-08-23T20:09:49     Debug: Zathura: Got bytes, now hexlifying.
+2024-08-23T20:09:49     Debug: Running code...
+2024-08-23T20:09:49     Debug: Code buffer allocated!
+2024-08-23T20:09:49     Debug: Highlight from runCode
+2024-08-23T20:09:49     Debug: Ran code successfully!
+2024-08-23T20:10:23     Debug: Zathura: Request to add the register: xmm0
+2024-08-23T20:10:25     Debug: Zathura: Adding the register XMM0
+2024-08-23T20:10:29     Debug: Stepping into code!
+2024-08-23T20:10:29     Debug: Code executed by 1step!
+2024-08-23T20:10:29     Debug: Highlight from block 3 - stepCode : line: 3
+2024-08-23T20:10:29     Debug: Code ran once!
+2024-08-23T20:10:31     Debug: Stepping into code!
+2024-08-23T20:10:31     Debug: Code executed by 1step!
+2024-08-23T20:10:31     Debug: Highlight from block 3 - stepCode : line: 4
+2024-08-23T20:10:31     Debug: Code ran once!
+2024-08-23T20:11:36     Debug: Stepping into code!
+2024-08-23T20:11:36     Debug: Code executed by 1step!
+2024-08-23T20:11:36     Debug: Highlight from block 3 - stepCode : line: 5
+2024-08-23T20:11:36     Debug: Code ran once!
+2024-08-23T20:14:33     Debug: Zathura: Loaded config file from /home/rc/Zathura-UI/src/config.zlyt
+2024-08-23T20:14:33     Debug: Creating stack
+2024-08-23T20:14:33     Debug: Initializing unicorn engine
+2024-08-23T20:14:33     Debug: Zathura: Getting bytes from the file: /home/rc/Zathura-UI/src/test.asm
+2024-08-23T20:14:33     Debug: Zathura: Assembling:
+main:
+    mov rbx, 0x400
+    mov rax, 0x4001000000000000
+    movq xmm0, rax
+    add rbx, rax
+    mov rdi, rbx
+    push rdi
+    inc rdi
+    call subtract_hundred
+    cmp r11, 60000
+    jne nextblock
+    push rax
+    push rbx
+    
+subtract_hundred:
+    sub rdi, 0x100
+    mov rax, rdi
+    mov rbx, 0x12
+    ret
+
+nextblock:
+	mov rax, rbx
+	jmp nextblockagain
+
+nextblockagain:
+	mov rbx, rcx
+	jmp nextblocktwice
+
+nextblocktwice:
+	mov rdx, rcx
+	jmp anewblock
+
+anewblock:
+	mov r8, r9
+	inc r11
+	jmp main
+
+2024-08-23T20:14:33     Debug: Zathura: Keystone object initialised.
+2024-08-23T20:14:33     Debug: Zathura: Assembled: 89 bytes
+2024-08-23T20:14:33     Debug: Zathura: Total instructions to execute: 25
+2024-08-23T20:14:33     Debug: Zathura: Got bytes, now hexlifying.
+2024-08-23T20:17:35     Debug: Zathura: Request to add the register: xmm0
+2024-08-23T20:17:35     Debug: Zathura: Adding the register XMM0
+2024-08-23T20:17:40     Debug: Resetting state!
+2024-08-23T20:17:40     Debug: Zathura: Getting bytes from the file: /home/rc/Zathura-UI/src/test.asm
+2024-08-23T20:17:40     Debug: Zathura: Assembling:
+main:
+    mov rbx, 0x400
+    mov rax, 0x4001000000000000
+    movq xmm0, rax
+    add rbx, rax
+    mov rdi, rbx
+    push rdi
+    inc rdi
+    call subtract_hundred
+    cmp r11, 60000
+    jne nextblock
+    push rax
+    push rbx
+    
+subtract_hundred:
+    sub rdi, 0x100
+    mov rax, rdi
+    mov rbx, 0x12
+    ret
+
+nextblock:
+	mov rax, rbx
+	jmp nextblockagain
+
+nextblockagain:
+	mov rbx, rcx
+	jmp nextblocktwice
+
+nextblocktwice:
+	mov rdx, rcx
+	jmp anewblock
+
+anewblock:
+	mov r8, r9
+	inc r11
+	jmp main
+
+2024-08-23T20:17:40     Debug: Zathura: Keystone object initialised.
+2024-08-23T20:17:40     Debug: Zathura: Assembled: 89 bytes
+2024-08-23T20:17:40     Debug: Zathura: Total instructions to execute: 25
+2024-08-23T20:17:40     Debug: Zathura: Got bytes, now hexlifying.
+2024-08-23T20:17:40     Debug: Creating stack
+2024-08-23T20:17:40     Debug: Initializing unicorn engine
+2024-08-23T20:17:40     Debug: Zathura: Running code from: /home/rc/Zathura-UI/src/test.asm
+2024-08-23T20:17:40     Debug: Creating stack
+2024-08-23T20:17:40     Debug: Initializing unicorn engine
+2024-08-23T20:17:40     Debug: Zathura: Getting bytes from the file: /home/rc/Zathura-UI/src/test.asm
+2024-08-23T20:17:40     Debug: Zathura: Assembling:
+main:
+    mov rbx, 0x400
+    mov rax, 0x4001000000000000
+    movq xmm0, rax
+    add rbx, rax
+    mov rdi, rbx
+    push rdi
+    inc rdi
+    call subtract_hundred
+    cmp r11, 60000
+    jne nextblock
+    push rax
+    push rbx
+    
+subtract_hundred:
+    sub rdi, 0x100
+    mov rax, rdi
+    mov rbx, 0x12
+    ret
+
+nextblock:
+	mov rax, rbx
+	jmp nextblockagain
+
+nextblockagain:
+	mov rbx, rcx
+	jmp nextblocktwice
+
+nextblocktwice:
+	mov rdx, rcx
+	jmp anewblock
+
+anewblock:
+	mov r8, r9
+	inc r11
+	jmp main
+
+2024-08-23T20:17:40     Debug: Zathura: Keystone object initialised.
+2024-08-23T20:17:40     Debug: Zathura: Assembled: 89 bytes
+2024-08-23T20:17:40     Debug: Zathura: Total instructions to execute: 0
+2024-08-23T20:17:40     Debug: Zathura: Got bytes, now hexlifying.
+2024-08-23T20:17:40     Debug: Running code...
+2024-08-23T20:17:40     Debug: Code buffer allocated!
+2024-08-23T20:17:40     Debug: Highlight from runCode
+2024-08-23T20:17:40     Debug: Ran code successfully!
+2024-08-23T20:17:41     Debug: Stepping into code!
+2024-08-23T20:17:41     Debug: Code executed by 1step!
+2024-08-23T20:17:41     Debug: Highlight from block 3 - stepCode : line: 3
+2024-08-23T20:17:41     Debug: Code ran once!
+2024-08-23T20:17:42     Debug: Stepping into code!
+2024-08-23T20:17:42     Debug: Code executed by 1step!
+2024-08-23T20:17:42     Debug: Highlight from block 3 - stepCode : line: 4
+2024-08-23T20:17:42     Debug: Code ran once!
+2024-08-23T20:17:43     Debug: Stepping into code!
+2024-08-23T20:17:43     Debug: Code executed by 1step!
+2024-08-23T20:17:43     Debug: Highlight from block 3 - stepCode : line: 5
+2024-08-23T20:17:43     Debug: Code ran once!
+2024-08-23T20:17:45     Debug: Stepping into code!
+2024-08-23T20:17:45     Debug: Code executed by 1step!
+2024-08-23T20:17:45     Debug: Highlight from block 3 - stepCode : line: 6
+2024-08-23T20:17:45     Debug: Code ran once!
+2024-08-23T20:17:52     Debug: Resetting state!
+2024-08-23T20:17:52     Debug: Zathura: Getting bytes from the file: /home/rc/Zathura-UI/src/test.asm
+2024-08-23T20:17:52     Debug: Zathura: Assembling:
+main:
+    mov rbx, 0x400
+    mov rax, 0x4001000000000000
+    movq xmm0, rax
+    add rbx, rax
+    mov rdi, rbx
+    push rdi
+    inc rdi
+    call subtract_hundred
+    cmp r11, 60000
+    jne nextblock
+    push rax
+    push rbx
+    
+subtract_hundred:
+    sub rdi, 0x100
+    mov rax, rdi
+    mov rbx, 0x12
+    ret
+
+nextblock:
+	mov rax, rbx
+	jmp nextblockagain
+
+nextblockagain:
+	mov rbx, rcx
+	jmp nextblocktwice
+
+nextblocktwice:
+	mov rdx, rcx
+	jmp anewblock
+
+anewblock:
+	mov r8, r9
+	inc r11
+	jmp main
+
+2024-08-23T20:17:52     Debug: Zathura: Keystone object initialised.
+2024-08-23T20:17:52     Debug: Zathura: Assembled: 89 bytes
+2024-08-23T20:17:52     Debug: Zathura: Total instructions to execute: 25
+2024-08-23T20:17:52     Debug: Zathura: Got bytes, now hexlifying.
+2024-08-23T20:17:52     Debug: Creating stack
+2024-08-23T20:17:52     Debug: Initializing unicorn engine
+2024-08-23T20:17:55     Debug: Zathura: Request to add the register: xmm0
+2024-08-23T20:17:55     Debug: Zathura: Adding the register XMM0
+2024-08-23T20:17:58     Debug: Resetting state!
+2024-08-23T20:17:58     Debug: Zathura: Getting bytes from the file: /home/rc/Zathura-UI/src/test.asm
+2024-08-23T20:17:58     Debug: Zathura: Assembling:
+main:
+    mov rbx, 0x400
+    mov rax, 0x4001000000000000
+    movq xmm0, rax
+    add rbx, rax
+    mov rdi, rbx
+    push rdi
+    inc rdi
+    call subtract_hundred
+    cmp r11, 60000
+    jne nextblock
+    push rax
+    push rbx
+    
+subtract_hundred:
+    sub rdi, 0x100
+    mov rax, rdi
+    mov rbx, 0x12
+    ret
+
+nextblock:
+	mov rax, rbx
+	jmp nextblockagain
+
+nextblockagain:
+	mov rbx, rcx
+	jmp nextblocktwice
+
+nextblocktwice:
+	mov rdx, rcx
+	jmp anewblock
+
+anewblock:
+	mov r8, r9
+	inc r11
+	jmp main
+
+2024-08-23T20:17:58     Debug: Zathura: Keystone object initialised.
+2024-08-23T20:17:58     Debug: Zathura: Assembled: 89 bytes
+2024-08-23T20:17:58     Debug: Zathura: Total instructions to execute: 25
+2024-08-23T20:17:58     Debug: Zathura: Got bytes, now hexlifying.
+2024-08-23T20:17:58     Debug: Creating stack
+2024-08-23T20:17:58     Debug: Initializing unicorn engine
+2024-08-23T20:17:58     Debug: Zathura: Running code from: /home/rc/Zathura-UI/src/test.asm
+2024-08-23T20:17:58     Debug: Creating stack
+2024-08-23T20:17:58     Debug: Initializing unicorn engine
+2024-08-23T20:17:58     Debug: Zathura: Getting bytes from the file: /home/rc/Zathura-UI/src/test.asm
+2024-08-23T20:17:58     Debug: Zathura: Assembling:
+main:
+    mov rbx, 0x400
+    mov rax, 0x4001000000000000
+    movq xmm0, rax
+    add rbx, rax
+    mov rdi, rbx
+    push rdi
+    inc rdi
+    call subtract_hundred
+    cmp r11, 60000
+    jne nextblock
+    push rax
+    push rbx
+    
+subtract_hundred:
+    sub rdi, 0x100
+    mov rax, rdi
+    mov rbx, 0x12
+    ret
+
+nextblock:
+	mov rax, rbx
+	jmp nextblockagain
+
+nextblockagain:
+	mov rbx, rcx
+	jmp nextblocktwice
+
+nextblocktwice:
+	mov rdx, rcx
+	jmp anewblock
+
+anewblock:
+	mov r8, r9
+	inc r11
+	jmp main
+
+2024-08-23T20:17:58     Debug: Zathura: Keystone object initialised.
+2024-08-23T20:17:58     Debug: Zathura: Assembled: 89 bytes
+2024-08-23T20:17:58     Debug: Zathura: Total instructions to execute: 0
+2024-08-23T20:17:58     Debug: Zathura: Got bytes, now hexlifying.
+2024-08-23T20:17:58     Debug: Running code...
+2024-08-23T20:17:58     Debug: Highlight from runCode
+2024-08-23T20:17:58     Debug: Ran code successfully!
+2024-08-23T20:17:59     Debug: Stepping into code!
+2024-08-23T20:17:59     Debug: Code executed by 1step!
+2024-08-23T20:17:59     Debug: Highlight from block 3 - stepCode : line: 3
+2024-08-23T20:17:59     Debug: Code ran once!
+2024-08-23T20:17:59     Debug: Stepping into code!
+2024-08-23T20:17:59     Debug: Code executed by 1step!
+2024-08-23T20:17:59     Debug: Highlight from block 3 - stepCode : line: 4
+2024-08-23T20:17:59     Debug: Code ran once!
+2024-08-23T20:18:00     Debug: Stepping into code!
+2024-08-23T20:18:00     Debug: Code executed by 1step!
+2024-08-23T20:18:00     Debug: Highlight from block 3 - stepCode : line: 5
+2024-08-23T20:18:00     Debug: Code ran once!
+2024-08-23T20:18:01     Debug: Stepping into code!
+2024-08-23T20:18:01     Debug: Code executed by 1step!
+2024-08-23T20:18:01     Debug: Highlight from block 3 - stepCode : line: 6
+2024-08-23T20:18:01     Debug: Code ran once!
+2024-08-23T20:18:30     Debug: Zathura: Loaded config file from /home/rc/Zathura-UI/src/config.zlyt
+2024-08-23T20:18:30     Debug: Creating stack
+2024-08-23T20:18:30     Debug: Initializing unicorn engine
+2024-08-23T20:18:30     Debug: Zathura: Getting bytes from the file: /home/rc/Zathura-UI/src/test.asm
+2024-08-23T20:18:30     Debug: Zathura: Assembling:
+main:
+    mov rbx, 0x400
+    mov rax, 0x4001000000000000
+    movq xmm0, rax
+    add rbx, rax
+    mov rdi, rbx
+    push rdi
+    inc rdi
+    call subtract_hundred
+    cmp r11, 60000
+    jne nextblock
+    push rax
+    push rbx
+    
+subtract_hundred:
+    sub rdi, 0x100
+    mov rax, rdi
+    mov rbx, 0x12
+    ret
+
+nextblock:
+	mov rax, rbx
+	jmp nextblockagain
+
+nextblockagain:
+	mov rbx, rcx
+	jmp nextblocktwice
+
+nextblocktwice:
+	mov rdx, rcx
+	jmp anewblock
+
+anewblock:
+	mov r8, r9
+	inc r11
+	jmp main
+
+2024-08-23T20:18:30     Debug: Zathura: Keystone object initialised.
+2024-08-23T20:18:30     Debug: Zathura: Assembled: 89 bytes
+2024-08-23T20:18:30     Debug: Zathura: Total instructions to execute: 25
+2024-08-23T20:18:30     Debug: Zathura: Got bytes, now hexlifying.
+2024-08-23T20:18:39     Debug: Resetting state!
+2024-08-23T20:18:39     Debug: Zathura: Getting bytes from the file: /home/rc/Zathura-UI/src/test.asm
+2024-08-23T20:18:39     Debug: Zathura: Assembling:
+main:
+    mov rbx, 0x400
+    mov rax, 0x4001000000000000
+    movq xmm0, rax
+    add rbx, rax
+    mov rdi, rbx
+    push rdi
+    inc rdi
+    call subtract_hundred
+    cmp r11, 60000
+    jne nextblock
+    push rax
+    push rbx
+    
+subtract_hundred:
+    sub rdi, 0x100
+    mov rax, rdi
+    mov rbx, 0x12
+    ret
+
+nextblock:
+	mov rax, rbx
+	jmp nextblockagain
+
+nextblockagain:
+	mov rbx, rcx
+	jmp nextblocktwice
+
+nextblocktwice:
+	mov rdx, rcx
+	jmp anewblock
+
+anewblock:
+	mov r8, r9
+	inc r11
+	jmp main
+
+2024-08-23T20:18:39     Debug: Zathura: Keystone object initialised.
+2024-08-23T20:18:39     Debug: Zathura: Assembled: 89 bytes
+2024-08-23T20:18:39     Debug: Zathura: Total instructions to execute: 25
+2024-08-23T20:18:39     Debug: Zathura: Got bytes, now hexlifying.
+2024-08-23T20:18:39     Debug: Creating stack
+2024-08-23T20:18:39     Debug: Initializing unicorn engine
+2024-08-23T20:18:39     Debug: Zathura: Running code from: /home/rc/Zathura-UI/src/test.asm
+2024-08-23T20:18:39     Debug: Creating stack
+2024-08-23T20:18:39     Debug: Initializing unicorn engine
+2024-08-23T20:18:39     Debug: Zathura: Getting bytes from the file: /home/rc/Zathura-UI/src/test.asm
+2024-08-23T20:18:39     Debug: Zathura: Assembling:
+main:
+    mov rbx, 0x400
+    mov rax, 0x4001000000000000
+    movq xmm0, rax
+    add rbx, rax
+    mov rdi, rbx
+    push rdi
+    inc rdi
+    call subtract_hundred
+    cmp r11, 60000
+    jne nextblock
+    push rax
+    push rbx
+    
+subtract_hundred:
+    sub rdi, 0x100
+    mov rax, rdi
+    mov rbx, 0x12
+    ret
+
+nextblock:
+	mov rax, rbx
+	jmp nextblockagain
+
+nextblockagain:
+	mov rbx, rcx
+	jmp nextblocktwice
+
+nextblocktwice:
+	mov rdx, rcx
+	jmp anewblock
+
+anewblock:
+	mov r8, r9
+	inc r11
+	jmp main
+
+2024-08-23T20:18:39     Debug: Zathura: Keystone object initialised.
+2024-08-23T20:18:39     Debug: Zathura: Assembled: 89 bytes
+2024-08-23T20:18:39     Debug: Zathura: Total instructions to execute: 0
+2024-08-23T20:18:39     Debug: Zathura: Got bytes, now hexlifying.
+2024-08-23T20:18:39     Debug: Running code...
+2024-08-23T20:18:39     Debug: Code buffer allocated!
+2024-08-23T20:18:39     Debug: Highlight from runCode
+2024-08-23T20:18:39     Debug: Ran code successfully!
+2024-08-23T20:18:53     Debug: Zathura: Request to add the register: xmm0
+2024-08-23T20:19:01     Debug: Zathura: Adding the register XMM0
+2024-08-23T20:21:54     Debug: Zathura: Loaded config file from /home/rc/Zathura-UI/src/config.zlyt
+2024-08-23T20:21:54     Debug: Creating stack
+2024-08-23T20:21:54     Debug: Initializing unicorn engine
+2024-08-23T20:21:54     Debug: Zathura: Getting bytes from the file: /home/rc/Zathura-UI/src/test.asm
+2024-08-23T20:21:54     Debug: Zathura: Assembling:
+main:
+    mov rbx, 0x400
+    mov rax, 0x4001000000000000
+    movq xmm0, rax
+    add rbx, rax
+    mov rdi, rbx
+    push rdi
+    inc rdi
+    call subtract_hundred
+    cmp r11, 60000
+    jne nextblock
+    push rax
+    push rbx
+    
+subtract_hundred:
+    sub rdi, 0x100
+    mov rax, rdi
+    mov rbx, 0x12
+    ret
+
+nextblock:
+	mov rax, rbx
+	jmp nextblockagain
+
+nextblockagain:
+	mov rbx, rcx
+	jmp nextblocktwice
+
+nextblocktwice:
+	mov rdx, rcx
+	jmp anewblock
+
+anewblock:
+	mov r8, r9
+	inc r11
+	jmp main
+
+2024-08-23T20:21:54     Debug: Zathura: Keystone object initialised.
+2024-08-23T20:21:54     Debug: Zathura: Assembled: 89 bytes
+2024-08-23T20:21:54     Debug: Zathura: Total instructions to execute: 25
+2024-08-23T20:21:54     Debug: Zathura: Got bytes, now hexlifying.
+2024-08-23T20:22:03     Debug: Resetting state!
+2024-08-23T20:22:03     Debug: Zathura: Getting bytes from the file: /home/rc/Zathura-UI/src/test.asm
+2024-08-23T20:22:03     Debug: Zathura: Assembling:
+main:
+    mov rbx, 0x400
+    mov rax, 0x4001000000000000
+    movq xmm0, rax
+    add rbx, rax
+    mov rdi, rbx
+    push rdi
+    inc rdi
+    call subtract_hundred
+    cmp r11, 60000
+    jne nextblock
+    push rax
+    push rbx
+    
+subtract_hundred:
+    sub rdi, 0x100
+    mov rax, rdi
+    mov rbx, 0x12
+    ret
+
+nextblock:
+	mov rax, rbx
+	jmp nextblockagain
+
+nextblockagain:
+	mov rbx, rcx
+	jmp nextblocktwice
+
+nextblocktwice:
+	mov rdx, rcx
+	jmp anewblock
+
+anewblock:
+	mov r8, r9
+	inc r11
+	jmp main
+
+2024-08-23T20:22:03     Debug: Zathura: Keystone object initialised.
+2024-08-23T20:22:03     Debug: Zathura: Assembled: 89 bytes
+2024-08-23T20:22:03     Debug: Zathura: Total instructions to execute: 25
+2024-08-23T20:22:03     Debug: Zathura: Got bytes, now hexlifying.
+2024-08-23T20:22:03     Debug: Creating stack
+2024-08-23T20:22:03     Debug: Initializing unicorn engine
+2024-08-23T20:22:03     Debug: Zathura: Running code from: /home/rc/Zathura-UI/src/test.asm
+2024-08-23T20:22:03     Debug: Creating stack
+2024-08-23T20:22:03     Debug: Initializing unicorn engine
+2024-08-23T20:22:03     Debug: Zathura: Getting bytes from the file: /home/rc/Zathura-UI/src/test.asm
+2024-08-23T20:22:03     Debug: Zathura: Assembling:
+main:
+    mov rbx, 0x400
+    mov rax, 0x4001000000000000
+    movq xmm0, rax
+    add rbx, rax
+    mov rdi, rbx
+    push rdi
+    inc rdi
+    call subtract_hundred
+    cmp r11, 60000
+    jne nextblock
+    push rax
+    push rbx
+    
+subtract_hundred:
+    sub rdi, 0x100
+    mov rax, rdi
+    mov rbx, 0x12
+    ret
+
+nextblock:
+	mov rax, rbx
+	jmp nextblockagain
+
+nextblockagain:
+	mov rbx, rcx
+	jmp nextblocktwice
+
+nextblocktwice:
+	mov rdx, rcx
+	jmp anewblock
+
+anewblock:
+	mov r8, r9
+	inc r11
+	jmp main
+
+2024-08-23T20:22:03     Debug: Zathura: Keystone object initialised.
+2024-08-23T20:22:03     Debug: Zathura: Assembled: 89 bytes
+2024-08-23T20:22:03     Debug: Zathura: Total instructions to execute: 0
+2024-08-23T20:22:03     Debug: Zathura: Got bytes, now hexlifying.
+2024-08-23T20:22:03     Debug: Running code...
+2024-08-23T20:22:03     Debug: Code buffer allocated!
+2024-08-23T20:22:03     Debug: Highlight from runCode
+2024-08-23T20:22:03     Debug: Ran code successfully!
+2024-08-23T20:22:07     Debug: Zathura: Request to add the register: xmm0
+2024-08-23T20:27:11     Debug: Zathura: Adding the register XMM0
+2024-08-23T21:39:03     Debug: Stepping into code!
+2024-08-23T21:39:03     Debug: Code executed by 1step!
+2024-08-23T21:39:03     Debug: Highlight from block 3 - stepCode : line: 3
+2024-08-23T21:39:03     Debug: Code ran once!
+2024-08-23T21:39:04     Debug: Stepping into code!
+2024-08-23T21:39:04     Debug: Code executed by 1step!
+2024-08-23T21:39:04     Debug: Highlight from block 3 - stepCode : line: 4
+2024-08-23T21:39:04     Debug: Code ran once!
+2024-08-23T21:39:05     Debug: Stepping into code!
+2024-08-23T21:39:05     Debug: Code executed by 1step!
+2024-08-23T21:39:05     Debug: Highlight from block 3 - stepCode : line: 5
+2024-08-23T21:39:05     Debug: Code ran once!
+2024-08-23T21:58:25     Debug: Zathura: Loaded config file from /home/rc/Zathura-UI/src/config.zlyt
+2024-08-23T21:58:25     Debug: Creating stack
+2024-08-23T21:58:25     Debug: Initializing unicorn engine
+2024-08-23T21:58:25     Debug: Zathura: Getting bytes from the file: /home/rc/Zathura-UI/src/test.asm
+2024-08-23T21:58:25     Debug: Zathura: Assembling:
+main:
+    mov rbx, 0x400
+    mov rax, 0x4001000000000000
+    movq xmm0, rax
+    add rbx, rax
+    mov rdi, rbx
+    push rdi
+    inc rdi
+    call subtract_hundred
+    cmp r11, 60000
+    jne nextblock
+    push rax
+    push rbx
+    
+subtract_hundred:
+    sub rdi, 0x100
+    mov rax, rdi
+    mov rbx, 0x12
+    ret
+
+nextblock:
+	mov rax, rbx
+	jmp nextblockagain
+
+nextblockagain:
+	mov rbx, rcx
+	jmp nextblocktwice
+
+nextblocktwice:
+	mov rdx, rcx
+	jmp anewblock
+
+anewblock:
+	mov r8, r9
+	inc r11
+	jmp main
+
+2024-08-23T21:58:25     Debug: Zathura: Keystone object initialised.
+2024-08-23T21:58:25     Debug: Zathura: Assembled: 89 bytes
+2024-08-23T21:58:25     Debug: Zathura: Total instructions to execute: 25
+2024-08-23T21:58:25     Debug: Zathura: Got bytes, now hexlifying.
+2024-08-23T21:58:44     Debug: Zathura: Request to add the register: xmm0
+2024-08-23T21:58:44     Debug: Zathura: Adding the register XMM0
+2024-08-23T21:58:47     Debug: Resetting state!
+2024-08-23T21:58:47     Debug: Zathura: Getting bytes from the file: /home/rc/Zathura-UI/src/test.asm
+2024-08-23T21:58:47     Debug: Zathura: Assembling:
+main:
+    mov rbx, 0x400
+    mov rax, 0x4001000000000000
+    movq xmm0, rax
+    add rbx, rax
+    mov rdi, rbx
+    push rdi
+    inc rdi
+    call subtract_hundred
+    cmp r11, 60000
+    jne nextblock
+    push rax
+    push rbx
+    
+subtract_hundred:
+    sub rdi, 0x100
+    mov rax, rdi
+    mov rbx, 0x12
+    ret
+
+nextblock:
+	mov rax, rbx
+	jmp nextblockagain
+
+nextblockagain:
+	mov rbx, rcx
+	jmp nextblocktwice
+
+nextblocktwice:
+	mov rdx, rcx
+	jmp anewblock
+
+anewblock:
+	mov r8, r9
+	inc r11
+	jmp main
+
+2024-08-23T21:58:47     Debug: Zathura: Keystone object initialised.
+2024-08-23T21:58:47     Debug: Zathura: Assembled: 89 bytes
+2024-08-23T21:58:47     Debug: Zathura: Total instructions to execute: 25
+2024-08-23T21:58:47     Debug: Zathura: Got bytes, now hexlifying.
+2024-08-23T21:58:47     Debug: Creating stack
+2024-08-23T21:58:47     Debug: Initializing unicorn engine
+2024-08-23T21:58:47     Debug: Zathura: Running code from: /home/rc/Zathura-UI/src/test.asm
+2024-08-23T21:58:47     Debug: Creating stack
+2024-08-23T21:58:47     Debug: Initializing unicorn engine
+2024-08-23T21:58:47     Debug: Zathura: Getting bytes from the file: /home/rc/Zathura-UI/src/test.asm
+2024-08-23T21:58:47     Debug: Zathura: Assembling:
+main:
+    mov rbx, 0x400
+    mov rax, 0x4001000000000000
+    movq xmm0, rax
+    add rbx, rax
+    mov rdi, rbx
+    push rdi
+    inc rdi
+    call subtract_hundred
+    cmp r11, 60000
+    jne nextblock
+    push rax
+    push rbx
+    
+subtract_hundred:
+    sub rdi, 0x100
+    mov rax, rdi
+    mov rbx, 0x12
+    ret
+
+nextblock:
+	mov rax, rbx
+	jmp nextblockagain
+
+nextblockagain:
+	mov rbx, rcx
+	jmp nextblocktwice
+
+nextblocktwice:
+	mov rdx, rcx
+	jmp anewblock
+
+anewblock:
+	mov r8, r9
+	inc r11
+	jmp main
+
+2024-08-23T21:58:47     Debug: Zathura: Keystone object initialised.
+2024-08-23T21:58:47     Debug: Zathura: Assembled: 89 bytes
+2024-08-23T21:58:47     Debug: Zathura: Total instructions to execute: 0
+2024-08-23T21:58:47     Debug: Zathura: Got bytes, now hexlifying.
+2024-08-23T21:58:47     Debug: Running code...
+2024-08-23T21:58:47     Debug: Code buffer allocated!
+2024-08-23T21:58:47     Debug: Highlight from runCode
+2024-08-23T21:58:47     Debug: Ran code successfully!
+2024-08-23T21:58:49     Debug: Stepping into code!
+2024-08-23T21:58:49     Debug: Code executed by 1step!
+2024-08-23T21:58:49     Debug: Highlight from block 3 - stepCode : line: 3
+2024-08-23T21:58:49     Debug: Code ran once!
+2024-08-23T21:58:49     Debug: Stepping into code!
+2024-08-23T21:58:49     Debug: Code executed by 1step!
+2024-08-23T21:58:49     Debug: Highlight from block 3 - stepCode : line: 4
+2024-08-23T21:58:49     Debug: Code ran once!
+2024-08-23T21:58:50     Debug: Stepping into code!
+2024-08-23T21:58:50     Debug: Code executed by 1step!
+2024-08-23T21:58:50     Debug: Highlight from block 3 - stepCode : line: 5
+2024-08-23T21:58:50     Debug: Code ran once!
+2024-08-23T21:58:52     Debug: Stepping into code!
+2024-08-23T21:58:52     Debug: Code executed by 1step!
+2024-08-23T21:58:52     Debug: Highlight from block 3 - stepCode : line: 6
+2024-08-23T21:58:52     Debug: Code ran once!
+2024-08-23T22:41:45     Debug: Zathura: Loaded config file from /home/rc/Zathura-UI/src/config.zlyt
+2024-08-23T22:41:45     Debug: Creating stack
+2024-08-23T22:41:45     Debug: Initializing unicorn engine
+2024-08-23T22:41:45     Debug: Zathura: Getting bytes from the file: /home/rc/Zathura-UI/src/test.asm
+2024-08-23T22:41:45     Debug: Zathura: Assembling:
+main:
+    mov rbx, 0x400
+    mov rax, 0x4001000000000000
+    movq xmm0, rax
+    add rbx, rax
+    mov rdi, rbx
+    push rdi
+    inc rdi
+    call subtract_hundred
+    cmp r11, 60000
+    jne nextblock
+    push rax
+    push rbx
+    
+subtract_hundred:
+    sub rdi, 0x100
+    mov rax, rdi
+    mov rbx, 0x12
+    ret
+
+nextblock:
+	mov rax, rbx
+	jmp nextblockagain
+
+nextblockagain:
+	mov rbx, rcx
+	jmp nextblocktwice
+
+nextblocktwice:
+	mov rdx, rcx
+	jmp anewblock
+
+anewblock:
+	mov r8, r9
+	inc r11
+	jmp main
+
+2024-08-23T22:41:45     Debug: Zathura: Keystone object initialised.
+2024-08-23T22:41:45     Debug: Zathura: Assembled: 89 bytes
+2024-08-23T22:41:45     Debug: Zathura: Total instructions to execute: 25
+2024-08-23T22:41:45     Debug: Zathura: Got bytes, now hexlifying.
+2024-08-23T22:41:47     Debug: Resetting state!
+2024-08-23T22:41:47     Debug: Zathura: Getting bytes from the file: /home/rc/Zathura-UI/src/test.asm
+2024-08-23T22:41:47     Debug: Zathura: Assembling:
+main:
+    mov rbx, 0x400
+    mov rax, 0x4001000000000000
+    movq xmm0, rax
+    add rbx, rax
+    mov rdi, rbx
+    push rdi
+    inc rdi
+    call subtract_hundred
+    cmp r11, 60000
+    jne nextblock
+    push rax
+    push rbx
+    
+subtract_hundred:
+    sub rdi, 0x100
+    mov rax, rdi
+    mov rbx, 0x12
+    ret
+
+nextblock:
+	mov rax, rbx
+	jmp nextblockagain
+
+nextblockagain:
+	mov rbx, rcx
+	jmp nextblocktwice
+
+nextblocktwice:
+	mov rdx, rcx
+	jmp anewblock
+
+anewblock:
+	mov r8, r9
+	inc r11
+	jmp main
+
+2024-08-23T22:41:47     Debug: Zathura: Keystone object initialised.
+2024-08-23T22:41:47     Debug: Zathura: Assembled: 89 bytes
+2024-08-23T22:41:47     Debug: Zathura: Total instructions to execute: 25
+2024-08-23T22:41:47     Debug: Zathura: Got bytes, now hexlifying.
+2024-08-23T22:41:47     Debug: Creating stack
+2024-08-23T22:41:47     Debug: Initializing unicorn engine
+2024-08-23T22:41:47     Debug: Zathura: Running code from: /home/rc/Zathura-UI/src/test.asm
+2024-08-23T22:41:47     Debug: Creating stack
+2024-08-23T22:41:47     Debug: Initializing unicorn engine
+2024-08-23T22:41:47     Debug: Zathura: Getting bytes from the file: /home/rc/Zathura-UI/src/test.asm
+2024-08-23T22:41:47     Debug: Zathura: Assembling:
+main:
+    mov rbx, 0x400
+    mov rax, 0x4001000000000000
+    movq xmm0, rax
+    add rbx, rax
+    mov rdi, rbx
+    push rdi
+    inc rdi
+    call subtract_hundred
+    cmp r11, 60000
+    jne nextblock
+    push rax
+    push rbx
+    
+subtract_hundred:
+    sub rdi, 0x100
+    mov rax, rdi
+    mov rbx, 0x12
+    ret
+
+nextblock:
+	mov rax, rbx
+	jmp nextblockagain
+
+nextblockagain:
+	mov rbx, rcx
+	jmp nextblocktwice
+
+nextblocktwice:
+	mov rdx, rcx
+	jmp anewblock
+
+anewblock:
+	mov r8, r9
+	inc r11
+	jmp main
+
+2024-08-23T22:41:47     Debug: Zathura: Keystone object initialised.
+2024-08-23T22:41:47     Debug: Zathura: Assembled: 89 bytes
+2024-08-23T22:41:47     Debug: Zathura: Total instructions to execute: 0
+2024-08-23T22:41:47     Debug: Zathura: Got bytes, now hexlifying.
+2024-08-23T22:41:47     Debug: Running code...
+2024-08-23T22:41:47     Debug: Code buffer allocated!
+2024-08-23T22:41:47     Debug: Highlight from runCode
+2024-08-23T22:41:47     Debug: Ran code successfully!
+2024-08-23T22:41:47     Debug: Stepping into code!
+2024-08-23T22:41:47     Debug: Code executed by 1step!
+2024-08-23T22:41:47     Debug: Highlight from block 3 - stepCode : line: 3
+2024-08-23T22:41:47     Debug: Code ran once!
+2024-08-23T22:41:48     Debug: Stepping into code!
+2024-08-23T22:41:48     Debug: Code executed by 1step!
+2024-08-23T22:41:48     Debug: Highlight from block 3 - stepCode : line: 4
+2024-08-23T22:41:48     Debug: Code ran once!
+2024-08-23T22:41:49     Debug: Stepping into code!
+2024-08-23T22:41:49     Debug: Code executed by 1step!
+2024-08-23T22:41:49     Debug: Highlight from block 3 - stepCode : line: 5
+2024-08-23T22:41:49     Debug: Code ran once!
+2024-08-23T22:41:54     Debug: Zathura: Request to add the register: xmm0
+2024-08-23T22:42:11     Debug: Zathura: Adding the register XMM0
+2024-08-23T22:43:19     Debug: Stepping into code!
+2024-08-23T22:43:19     Debug: Code executed by 1step!
+2024-08-23T22:43:19     Debug: Highlight from block 3 - stepCode : line: 6
+2024-08-23T22:43:19     Debug: Code ran once!
+2024-08-23T22:45:12     Debug: Zathura: Loaded config file from /home/rc/Zathura-UI/src/config.zlyt
+2024-08-23T22:45:12     Debug: Creating stack
+2024-08-23T22:45:12     Debug: Initializing unicorn engine
+2024-08-23T22:45:12     Debug: Zathura: Getting bytes from the file: /home/rc/Zathura-UI/src/test.asm
+2024-08-23T22:45:12     Debug: Zathura: Assembling:
+main:
+    mov rbx, 0x400
+    mov rax, 0x4001000000000000
+    movq xmm0, rax
+    add rbx, rax
+    mov rdi, rbx
+    push rdi
+    inc rdi
+    call subtract_hundred
+    cmp r11, 60000
+    jne nextblock
+    push rax
+    push rbx
+    
+subtract_hundred:
+    sub rdi, 0x100
+    mov rax, rdi
+    mov rbx, 0x12
+    ret
+
+nextblock:
+	mov rax, rbx
+	jmp nextblockagain
+
+nextblockagain:
+	mov rbx, rcx
+	jmp nextblocktwice
+
+nextblocktwice:
+	mov rdx, rcx
+	jmp anewblock
+
+anewblock:
+	mov r8, r9
+	inc r11
+	jmp main
+
+2024-08-23T22:45:12     Debug: Zathura: Keystone object initialised.
+2024-08-23T22:45:12     Debug: Zathura: Assembled: 89 bytes
+2024-08-23T22:45:12     Debug: Zathura: Total instructions to execute: 25
+2024-08-23T22:45:12     Debug: Zathura: Got bytes, now hexlifying.
+2024-08-23T22:45:24     Debug: Zathura: Request to add the register: xmm0
+2024-08-23T22:45:26     Debug: Zathura: Adding the register XMM0
+2024-08-23T22:45:30     Debug: Resetting state!
+2024-08-23T22:45:30     Debug: Zathura: Getting bytes from the file: /home/rc/Zathura-UI/src/test.asm
+2024-08-23T22:45:30     Debug: Zathura: Assembling:
+main:
+    mov rbx, 0x400
+    mov rax, 0x4001000000000000
+    movq xmm0, rax
+    add rbx, rax
+    mov rdi, rbx
+    push rdi
+    inc rdi
+    call subtract_hundred
+    cmp r11, 60000
+    jne nextblock
+    push rax
+    push rbx
+    
+subtract_hundred:
+    sub rdi, 0x100
+    mov rax, rdi
+    mov rbx, 0x12
+    ret
+
+nextblock:
+	mov rax, rbx
+	jmp nextblockagain
+
+nextblockagain:
+	mov rbx, rcx
+	jmp nextblocktwice
+
+nextblocktwice:
+	mov rdx, rcx
+	jmp anewblock
+
+anewblock:
+	mov r8, r9
+	inc r11
+	jmp main
+
+2024-08-23T22:45:30     Debug: Zathura: Keystone object initialised.
+2024-08-23T22:45:30     Debug: Zathura: Assembled: 89 bytes
+2024-08-23T22:45:30     Debug: Zathura: Total instructions to execute: 25
+2024-08-23T22:45:30     Debug: Zathura: Got bytes, now hexlifying.
+2024-08-23T22:45:30     Debug: Creating stack
+2024-08-23T22:45:30     Debug: Initializing unicorn engine
+2024-08-23T22:45:30     Debug: Zathura: Running code from: /home/rc/Zathura-UI/src/test.asm
+2024-08-23T22:45:30     Debug: Creating stack
+2024-08-23T22:45:30     Debug: Initializing unicorn engine
+2024-08-23T22:45:30     Debug: Zathura: Getting bytes from the file: /home/rc/Zathura-UI/src/test.asm
+2024-08-23T22:45:30     Debug: Zathura: Assembling:
+main:
+    mov rbx, 0x400
+    mov rax, 0x4001000000000000
+    movq xmm0, rax
+    add rbx, rax
+    mov rdi, rbx
+    push rdi
+    inc rdi
+    call subtract_hundred
+    cmp r11, 60000
+    jne nextblock
+    push rax
+    push rbx
+    
+subtract_hundred:
+    sub rdi, 0x100
+    mov rax, rdi
+    mov rbx, 0x12
+    ret
+
+nextblock:
+	mov rax, rbx
+	jmp nextblockagain
+
+nextblockagain:
+	mov rbx, rcx
+	jmp nextblocktwice
+
+nextblocktwice:
+	mov rdx, rcx
+	jmp anewblock
+
+anewblock:
+	mov r8, r9
+	inc r11
+	jmp main
+
+2024-08-23T22:45:30     Debug: Zathura: Keystone object initialised.
+2024-08-23T22:45:30     Debug: Zathura: Assembled: 89 bytes
+2024-08-23T22:45:30     Debug: Zathura: Total instructions to execute: 0
+2024-08-23T22:45:30     Debug: Zathura: Got bytes, now hexlifying.
+2024-08-23T22:45:30     Debug: Running code...
+2024-08-23T22:45:30     Debug: Code buffer allocated!
+2024-08-23T22:45:30     Debug: Highlight from runCode
+2024-08-23T22:45:30     Debug: Ran code successfully!
+2024-08-23T22:45:31     Debug: Stepping into code!
+2024-08-23T22:45:31     Debug: Code executed by 1step!
+2024-08-23T22:45:31     Debug: Highlight from block 3 - stepCode : line: 3
+2024-08-23T22:45:31     Debug: Code ran once!
+2024-08-23T22:45:31     Debug: Stepping into code!
+2024-08-23T22:45:31     Debug: Code executed by 1step!
+2024-08-23T22:45:31     Debug: Highlight from block 3 - stepCode : line: 4
+2024-08-23T22:45:31     Debug: Code ran once!
+2024-08-23T22:45:32     Debug: Stepping into code!
+2024-08-23T22:45:32     Debug: Code executed by 1step!
+2024-08-23T22:45:32     Debug: Highlight from block 3 - stepCode : line: 5
+2024-08-23T22:45:32     Debug: Code ran once!
+2024-08-23T22:52:09     Debug: Zathura: Loaded config file from /home/rc/Zathura-UI/src/config.zlyt
+2024-08-23T22:52:09     Debug: Creating stack
+2024-08-23T22:52:09     Debug: Initializing unicorn engine
+2024-08-23T22:52:09     Debug: Zathura: Getting bytes from the file: /home/rc/Zathura-UI/src/test.asm
+2024-08-23T22:52:09     Debug: Zathura: Assembling:
+main:
+    mov rbx, 0x400
+    mov rax, 0x4001000000000000
+    movq xmm0, rax
+    add rbx, rax
+    mov rdi, rbx
+    push rdi
+    inc rdi
+    call subtract_hundred
+    cmp r11, 60000
+    jne nextblock
+    push rax
+    push rbx
+    
+subtract_hundred:
+    sub rdi, 0x100
+    mov rax, rdi
+    mov rbx, 0x12
+    ret
+
+nextblock:
+	mov rax, rbx
+	jmp nextblockagain
+
+nextblockagain:
+	mov rbx, rcx
+	jmp nextblocktwice
+
+nextblocktwice:
+	mov rdx, rcx
+	jmp anewblock
+
+anewblock:
+	mov r8, r9
+	inc r11
+	jmp main
+
+2024-08-23T22:52:09     Debug: Zathura: Keystone object initialised.
+2024-08-23T22:52:09     Debug: Zathura: Assembled: 89 bytes
+2024-08-23T22:52:09     Debug: Zathura: Total instructions to execute: 25
+2024-08-23T22:52:09     Debug: Zathura: Got bytes, now hexlifying.
+2024-08-23T22:52:10     Debug: Resetting state!
+2024-08-23T22:52:10     Debug: Zathura: Getting bytes from the file: /home/rc/Zathura-UI/src/test.asm
+2024-08-23T22:52:10     Debug: Zathura: Assembling:
+main:
+    mov rbx, 0x400
+    mov rax, 0x4001000000000000
+    movq xmm0, rax
+    add rbx, rax
+    mov rdi, rbx
+    push rdi
+    inc rdi
+    call subtract_hundred
+    cmp r11, 60000
+    jne nextblock
+    push rax
+    push rbx
+    
+subtract_hundred:
+    sub rdi, 0x100
+    mov rax, rdi
+    mov rbx, 0x12
+    ret
+
+nextblock:
+	mov rax, rbx
+	jmp nextblockagain
+
+nextblockagain:
+	mov rbx, rcx
+	jmp nextblocktwice
+
+nextblocktwice:
+	mov rdx, rcx
+	jmp anewblock
+
+anewblock:
+	mov r8, r9
+	inc r11
+	jmp main
+
+2024-08-23T22:52:10     Debug: Zathura: Keystone object initialised.
+2024-08-23T22:52:10     Debug: Zathura: Assembled: 89 bytes
+2024-08-23T22:52:10     Debug: Zathura: Total instructions to execute: 25
+2024-08-23T22:52:10     Debug: Zathura: Got bytes, now hexlifying.
+2024-08-23T22:52:10     Debug: Creating stack
+2024-08-23T22:52:10     Debug: Initializing unicorn engine
+2024-08-23T22:52:10     Debug: Zathura: Running code from: /home/rc/Zathura-UI/src/test.asm
+2024-08-23T22:52:10     Debug: Creating stack
+2024-08-23T22:52:10     Debug: Initializing unicorn engine
+2024-08-23T22:52:10     Debug: Zathura: Getting bytes from the file: /home/rc/Zathura-UI/src/test.asm
+2024-08-23T22:52:10     Debug: Zathura: Assembling:
+main:
+    mov rbx, 0x400
+    mov rax, 0x4001000000000000
+    movq xmm0, rax
+    add rbx, rax
+    mov rdi, rbx
+    push rdi
+    inc rdi
+    call subtract_hundred
+    cmp r11, 60000
+    jne nextblock
+    push rax
+    push rbx
+    
+subtract_hundred:
+    sub rdi, 0x100
+    mov rax, rdi
+    mov rbx, 0x12
+    ret
+
+nextblock:
+	mov rax, rbx
+	jmp nextblockagain
+
+nextblockagain:
+	mov rbx, rcx
+	jmp nextblocktwice
+
+nextblocktwice:
+	mov rdx, rcx
+	jmp anewblock
+
+anewblock:
+	mov r8, r9
+	inc r11
+	jmp main
+
+2024-08-23T22:52:10     Debug: Zathura: Keystone object initialised.
+2024-08-23T22:52:10     Debug: Zathura: Assembled: 89 bytes
+2024-08-23T22:52:10     Debug: Zathura: Total instructions to execute: 0
+2024-08-23T22:52:10     Debug: Zathura: Got bytes, now hexlifying.
+2024-08-23T22:52:10     Debug: Running code...
+2024-08-23T22:52:10     Debug: Code buffer allocated!
+2024-08-23T22:52:10     Debug: Highlight from runCode
+2024-08-23T22:52:10     Debug: Ran code successfully!
+2024-08-23T22:52:15     Debug: Zathura: Request to add the register: xmm0
+2024-08-23T22:52:15     Debug: Zathura: Adding the register XMM0
+2024-08-23T22:52:15     Debug: Stepping into code!
+2024-08-23T22:52:15     Debug: Code executed by 1step!
+2024-08-23T22:52:15     Debug: Highlight from block 3 - stepCode : line: 3
+2024-08-23T22:52:15     Debug: Code ran once!
+2024-08-23T22:52:15     Debug: Stepping into code!
+2024-08-23T22:52:15     Debug: Code executed by 1step!
+2024-08-23T22:52:15     Debug: Highlight from block 3 - stepCode : line: 4
+2024-08-23T22:52:15     Debug: Code ran once!
+2024-08-23T22:52:16     Debug: Stepping into code!
+2024-08-23T22:52:16     Debug: Code executed by 1step!
+2024-08-23T22:52:16     Debug: Highlight from block 3 - stepCode : line: 5
+2024-08-23T22:52:16     Debug: Code ran once!
+2024-08-23T22:52:18     Debug: Stepping into code!
+2024-08-23T22:52:18     Debug: Code executed by 1step!
+2024-08-23T22:52:18     Debug: Highlight from block 3 - stepCode : line: 6
+2024-08-23T22:52:18     Debug: Code ran once!
+2024-08-23T22:52:29     Debug: Zathura: Loaded config file from /home/rc/Zathura-UI/src/config.zlyt
+2024-08-23T22:52:29     Debug: Creating stack
+2024-08-23T22:52:29     Debug: Initializing unicorn engine
+2024-08-23T22:52:29     Debug: Zathura: Getting bytes from the file: /home/rc/Zathura-UI/src/test.asm
+2024-08-23T22:52:29     Debug: Zathura: Assembling:
+main:
+    mov rbx, 0x400
+    mov rax, 0x4001000000000000
+    movq xmm0, rax
+    add rbx, rax
+    mov rdi, rbx
+    push rdi
+    inc rdi
+    call subtract_hundred
+    cmp r11, 60000
+    jne nextblock
+    push rax
+    push rbx
+    
+subtract_hundred:
+    sub rdi, 0x100
+    mov rax, rdi
+    mov rbx, 0x12
+    ret
+
+nextblock:
+	mov rax, rbx
+	jmp nextblockagain
+
+nextblockagain:
+	mov rbx, rcx
+	jmp nextblocktwice
+
+nextblocktwice:
+	mov rdx, rcx
+	jmp anewblock
+
+anewblock:
+	mov r8, r9
+	inc r11
+	jmp main
+
+2024-08-23T22:52:29     Debug: Zathura: Keystone object initialised.
+2024-08-23T22:52:29     Debug: Zathura: Assembled: 89 bytes
+2024-08-23T22:52:29     Debug: Zathura: Total instructions to execute: 25
+2024-08-23T22:52:29     Debug: Zathura: Got bytes, now hexlifying.
+2024-08-23T22:52:30     Debug: Resetting state!
+2024-08-23T22:52:30     Debug: Zathura: Getting bytes from the file: /home/rc/Zathura-UI/src/test.asm
+2024-08-23T22:52:30     Debug: Zathura: Assembling:
+main:
+    mov rbx, 0x400
+    mov rax, 0x4001000000000000
+    movq xmm0, rax
+    add rbx, rax
+    mov rdi, rbx
+    push rdi
+    inc rdi
+    call subtract_hundred
+    cmp r11, 60000
+    jne nextblock
+    push rax
+    push rbx
+    
+subtract_hundred:
+    sub rdi, 0x100
+    mov rax, rdi
+    mov rbx, 0x12
+    ret
+
+nextblock:
+	mov rax, rbx
+	jmp nextblockagain
+
+nextblockagain:
+	mov rbx, rcx
+	jmp nextblocktwice
+
+nextblocktwice:
+	mov rdx, rcx
+	jmp anewblock
+
+anewblock:
+	mov r8, r9
+	inc r11
+	jmp main
+
+2024-08-23T22:52:30     Debug: Zathura: Keystone object initialised.
+2024-08-23T22:52:30     Debug: Zathura: Assembled: 89 bytes
+2024-08-23T22:52:30     Debug: Zathura: Total instructions to execute: 25
+2024-08-23T22:52:30     Debug: Zathura: Got bytes, now hexlifying.
+2024-08-23T22:52:30     Debug: Creating stack
+2024-08-23T22:52:30     Debug: Initializing unicorn engine
+2024-08-23T22:52:30     Debug: Zathura: Running code from: /home/rc/Zathura-UI/src/test.asm
+2024-08-23T22:52:30     Debug: Creating stack
+2024-08-23T22:52:30     Debug: Initializing unicorn engine
+2024-08-23T22:52:30     Debug: Zathura: Getting bytes from the file: /home/rc/Zathura-UI/src/test.asm
+2024-08-23T22:52:30     Debug: Zathura: Assembling:
+main:
+    mov rbx, 0x400
+    mov rax, 0x4001000000000000
+    movq xmm0, rax
+    add rbx, rax
+    mov rdi, rbx
+    push rdi
+    inc rdi
+    call subtract_hundred
+    cmp r11, 60000
+    jne nextblock
+    push rax
+    push rbx
+    
+subtract_hundred:
+    sub rdi, 0x100
+    mov rax, rdi
+    mov rbx, 0x12
+    ret
+
+nextblock:
+	mov rax, rbx
+	jmp nextblockagain
+
+nextblockagain:
+	mov rbx, rcx
+	jmp nextblocktwice
+
+nextblocktwice:
+	mov rdx, rcx
+	jmp anewblock
+
+anewblock:
+	mov r8, r9
+	inc r11
+	jmp main
+
+2024-08-23T22:52:30     Debug: Zathura: Keystone object initialised.
+2024-08-23T22:52:30     Debug: Zathura: Assembled: 89 bytes
+2024-08-23T22:52:30     Debug: Zathura: Total instructions to execute: 0
+2024-08-23T22:52:30     Debug: Zathura: Got bytes, now hexlifying.
+2024-08-23T22:52:30     Debug: Running code...
+2024-08-23T22:52:30     Debug: Code buffer allocated!
+2024-08-23T22:52:30     Debug: Highlight from runCode
+2024-08-23T22:52:34     Debug: Ran code successfully!
+2024-08-23T22:52:38     Debug: Zathura: Request to add the register: xmm0
+2024-08-23T22:52:41     Debug: Zathura: Adding the register XMM0
+2024-08-23T22:53:28     Debug: Stepping into code!
+2024-08-23T22:53:28     Debug: Code executed by 1step!
+2024-08-23T22:53:28     Debug: Highlight from block 3 - stepCode : line: 3
+2024-08-23T22:53:28     Debug: Code ran once!
+2024-08-23T22:53:29     Debug: Stepping into code!
+2024-08-23T22:53:29     Debug: Code executed by 1step!
+2024-08-23T22:53:29     Debug: Highlight from block 3 - stepCode : line: 4
+2024-08-23T22:53:29     Debug: Code ran once!
+2024-08-23T22:53:29     Debug: Stepping into code!
+2024-08-23T22:53:29     Debug: Code executed by 1step!
+2024-08-23T22:53:29     Debug: Highlight from block 3 - stepCode : line: 5
+2024-08-23T22:53:29     Debug: Code ran once!
+2024-08-23T22:58:25     Debug: Zathura: Loaded config file from /home/rc/Zathura-UI/src/config.zlyt
+2024-08-23T22:58:25     Debug: Creating stack
+2024-08-23T22:58:25     Debug: Initializing unicorn engine
+2024-08-23T22:58:25     Debug: Zathura: Getting bytes from the file: /home/rc/Zathura-UI/src/test.asm
+2024-08-23T22:58:25     Debug: Zathura: Assembling:
+main:
+    mov rbx, 0x400
+    mov rax, 0x4001000000000000
+    movq xmm0, rax
+    add rbx, rax
+    mov rdi, rbx
+    push rdi
+    inc rdi
+    call subtract_hundred
+    cmp r11, 60000
+    jne nextblock
+    push rax
+    push rbx
+    
+subtract_hundred:
+    sub rdi, 0x100
+    mov rax, rdi
+    mov rbx, 0x12
+    ret
+
+nextblock:
+	mov rax, rbx
+	jmp nextblockagain
+
+nextblockagain:
+	mov rbx, rcx
+	jmp nextblocktwice
+
+nextblocktwice:
+	mov rdx, rcx
+	jmp anewblock
+
+anewblock:
+	mov r8, r9
+	inc r11
+	jmp main
+
+2024-08-23T22:58:25     Debug: Zathura: Keystone object initialised.
+2024-08-23T22:58:25     Debug: Zathura: Assembled: 89 bytes
+2024-08-23T22:58:25     Debug: Zathura: Total instructions to execute: 25
+2024-08-23T22:58:25     Debug: Zathura: Got bytes, now hexlifying.
+2024-08-23T23:08:18     Debug: Zathura: Loaded config file from /home/rc/Zathura-UI/src/config.zlyt
+2024-08-23T23:08:18     Debug: Creating stack
+2024-08-23T23:08:18     Debug: Initializing unicorn engine
+2024-08-23T23:08:18     Debug: Zathura: Getting bytes from the file: /home/rc/Zathura-UI/src/test.asm
+2024-08-23T23:08:18     Debug: Zathura: Assembling:
+main:
+    mov rbx, 0x400
+    mov rax, 0x4001000000000000
+    movq xmm0, rax
+    add rbx, rax
+    mov rdi, rbx
+    push rdi
+    inc rdi
+    call subtract_hundred
+    cmp r11, 60000
+    jne nextblock
+    push rax
+    push rbx
+    
+subtract_hundred:
+    sub rdi, 0x100
+    mov rax, rdi
+    mov rbx, 0x12
+    ret
+
+nextblock:
+	mov rax, rbx
+	jmp nextblockagain
+
+nextblockagain:
+	mov rbx, rcx
+	jmp nextblocktwice
+
+nextblocktwice:
+	mov rdx, rcx
+	jmp anewblock
+
+anewblock:
+	mov r8, r9
+	inc r11
+	jmp main
+
+2024-08-23T23:08:18     Debug: Zathura: Keystone object initialised.
+2024-08-23T23:08:18     Debug: Zathura: Assembled: 89 bytes
+2024-08-23T23:08:18     Debug: Zathura: Total instructions to execute: 25
+2024-08-23T23:08:18     Debug: Zathura: Got bytes, now hexlifying.
+2024-08-23T23:08:20     Debug: Resetting state!
+2024-08-23T23:08:20     Debug: Zathura: Getting bytes from the file: /home/rc/Zathura-UI/src/test.asm
+2024-08-23T23:08:20     Debug: Zathura: Assembling:
+main:
+    mov rbx, 0x400
+    mov rax, 0x4001000000000000
+    movq xmm0, rax
+    add rbx, rax
+    mov rdi, rbx
+    push rdi
+    inc rdi
+    call subtract_hundred
+    cmp r11, 60000
+    jne nextblock
+    push rax
+    push rbx
+    
+subtract_hundred:
+    sub rdi, 0x100
+    mov rax, rdi
+    mov rbx, 0x12
+    ret
+
+nextblock:
+	mov rax, rbx
+	jmp nextblockagain
+
+nextblockagain:
+	mov rbx, rcx
+	jmp nextblocktwice
+
+nextblocktwice:
+	mov rdx, rcx
+	jmp anewblock
+
+anewblock:
+	mov r8, r9
+	inc r11
+	jmp main
+
+2024-08-23T23:08:20     Debug: Zathura: Keystone object initialised.
+2024-08-23T23:08:20     Debug: Zathura: Assembled: 89 bytes
+2024-08-23T23:08:20     Debug: Zathura: Total instructions to execute: 25
+2024-08-23T23:08:20     Debug: Zathura: Got bytes, now hexlifying.
+2024-08-23T23:08:20     Debug: Creating stack
+2024-08-23T23:08:20     Debug: Initializing unicorn engine
+2024-08-23T23:08:20     Debug: Zathura: Running code from: /home/rc/Zathura-UI/src/test.asm
+2024-08-23T23:08:20     Debug: Creating stack
+2024-08-23T23:08:20     Debug: Initializing unicorn engine
+2024-08-23T23:08:20     Debug: Zathura: Getting bytes from the file: /home/rc/Zathura-UI/src/test.asm
+2024-08-23T23:08:20     Debug: Zathura: Assembling:
+main:
+    mov rbx, 0x400
+    mov rax, 0x4001000000000000
+    movq xmm0, rax
+    add rbx, rax
+    mov rdi, rbx
+    push rdi
+    inc rdi
+    call subtract_hundred
+    cmp r11, 60000
+    jne nextblock
+    push rax
+    push rbx
+    
+subtract_hundred:
+    sub rdi, 0x100
+    mov rax, rdi
+    mov rbx, 0x12
+    ret
+
+nextblock:
+	mov rax, rbx
+	jmp nextblockagain
+
+nextblockagain:
+	mov rbx, rcx
+	jmp nextblocktwice
+
+nextblocktwice:
+	mov rdx, rcx
+	jmp anewblock
+
+anewblock:
+	mov r8, r9
+	inc r11
+	jmp main
+
+2024-08-23T23:08:20     Debug: Zathura: Keystone object initialised.
+2024-08-23T23:08:20     Debug: Zathura: Assembled: 89 bytes
+2024-08-23T23:08:20     Debug: Zathura: Total instructions to execute: 0
+2024-08-23T23:08:20     Debug: Zathura: Got bytes, now hexlifying.
+2024-08-23T23:08:20     Debug: Running code...
+2024-08-23T23:08:20     Debug: Code buffer allocated!
+2024-08-23T23:08:20     Debug: Highlight from runCode
+2024-08-23T23:08:20     Debug: Ran code successfully!
+2024-08-23T23:08:25     Debug: Zathura: Request to add the register: xmm0
+2024-08-23T23:08:25     Debug: Zathura: Adding the register XMM0
+2024-08-23T23:08:28     Debug: Stepping into code!
+2024-08-23T23:08:28     Debug: Code executed by 1step!
+2024-08-23T23:08:28     Debug: Highlight from block 3 - stepCode : line: 3
+2024-08-23T23:08:28     Debug: Code ran once!
+2024-08-23T23:08:28     Debug: Stepping into code!
+2024-08-23T23:08:28     Debug: Code executed by 1step!
+2024-08-23T23:08:28     Debug: Highlight from block 3 - stepCode : line: 4
+2024-08-23T23:08:28     Debug: Code ran once!
+2024-08-23T23:08:30     Debug: Stepping into code!
+2024-08-23T23:08:30     Debug: Code executed by 1step!
+2024-08-23T23:08:30     Debug: Highlight from block 3 - stepCode : line: 5
+2024-08-23T23:08:30     Debug: Code ran once!
+2024-08-23T23:09:49     Debug: Zathura: Loaded config file from /home/rc/Zathura-UI/src/config.zlyt
+2024-08-23T23:09:49     Debug: Creating stack
+2024-08-23T23:09:49     Debug: Initializing unicorn engine
+2024-08-23T23:09:49     Debug: Zathura: Getting bytes from the file: /home/rc/Zathura-UI/src/test.asm
+2024-08-23T23:09:49     Debug: Zathura: Assembling:
+main:
+    mov rbx, 0x400
+    mov rax, 0x4001000000000000
+    movq xmm0, rax
+    add rbx, rax
+    mov rdi, rbx
+    push rdi
+    inc rdi
+    call subtract_hundred
+    cmp r11, 60000
+    jne nextblock
+    push rax
+    push rbx
+    
+subtract_hundred:
+    sub rdi, 0x100
+    mov rax, rdi
+    mov rbx, 0x12
+    ret
+
+nextblock:
+	mov rax, rbx
+	jmp nextblockagain
+
+nextblockagain:
+	mov rbx, rcx
+	jmp nextblocktwice
+
+nextblocktwice:
+	mov rdx, rcx
+	jmp anewblock
+
+anewblock:
+	mov r8, r9
+	inc r11
+	jmp main
+
+2024-08-23T23:09:49     Debug: Zathura: Keystone object initialised.
+2024-08-23T23:09:49     Debug: Zathura: Assembled: 89 bytes
+2024-08-23T23:09:49     Debug: Zathura: Total instructions to execute: 25
+2024-08-23T23:09:49     Debug: Zathura: Got bytes, now hexlifying.
+2024-08-23T23:09:52     Debug: Resetting state!
+2024-08-23T23:09:52     Debug: Zathura: Getting bytes from the file: /home/rc/Zathura-UI/src/test.asm
+2024-08-23T23:09:52     Debug: Zathura: Assembling:
+main:
+    mov rbx, 0x400
+    mov rax, 0x4001000000000000
+    movq xmm0, rax
+    add rbx, rax
+    mov rdi, rbx
+    push rdi
+    inc rdi
+    call subtract_hundred
+    cmp r11, 60000
+    jne nextblock
+    push rax
+    push rbx
+    
+subtract_hundred:
+    sub rdi, 0x100
+    mov rax, rdi
+    mov rbx, 0x12
+    ret
+
+nextblock:
+	mov rax, rbx
+	jmp nextblockagain
+
+nextblockagain:
+	mov rbx, rcx
+	jmp nextblocktwice
+
+nextblocktwice:
+	mov rdx, rcx
+	jmp anewblock
+
+anewblock:
+	mov r8, r9
+	inc r11
+	jmp main
+
+2024-08-23T23:09:52     Debug: Zathura: Keystone object initialised.
+2024-08-23T23:09:52     Debug: Zathura: Assembled: 89 bytes
+2024-08-23T23:09:52     Debug: Zathura: Total instructions to execute: 25
+2024-08-23T23:09:52     Debug: Zathura: Got bytes, now hexlifying.
+2024-08-23T23:09:52     Debug: Creating stack
+2024-08-23T23:09:52     Debug: Initializing unicorn engine
+2024-08-23T23:09:52     Debug: Zathura: Running code from: /home/rc/Zathura-UI/src/test.asm
+2024-08-23T23:09:52     Debug: Creating stack
+2024-08-23T23:09:52     Debug: Initializing unicorn engine
+2024-08-23T23:09:52     Debug: Zathura: Getting bytes from the file: /home/rc/Zathura-UI/src/test.asm
+2024-08-23T23:09:52     Debug: Zathura: Assembling:
+main:
+    mov rbx, 0x400
+    mov rax, 0x4001000000000000
+    movq xmm0, rax
+    add rbx, rax
+    mov rdi, rbx
+    push rdi
+    inc rdi
+    call subtract_hundred
+    cmp r11, 60000
+    jne nextblock
+    push rax
+    push rbx
+    
+subtract_hundred:
+    sub rdi, 0x100
+    mov rax, rdi
+    mov rbx, 0x12
+    ret
+
+nextblock:
+	mov rax, rbx
+	jmp nextblockagain
+
+nextblockagain:
+	mov rbx, rcx
+	jmp nextblocktwice
+
+nextblocktwice:
+	mov rdx, rcx
+	jmp anewblock
+
+anewblock:
+	mov r8, r9
+	inc r11
+	jmp main
+
+2024-08-23T23:09:52     Debug: Zathura: Keystone object initialised.
+2024-08-23T23:09:52     Debug: Zathura: Assembled: 89 bytes
+2024-08-23T23:09:52     Debug: Zathura: Total instructions to execute: 0
+2024-08-23T23:09:52     Debug: Zathura: Got bytes, now hexlifying.
+2024-08-23T23:09:52     Debug: Running code...
+2024-08-23T23:09:52     Debug: Code buffer allocated!
+2024-08-23T23:09:52     Debug: Highlight from runCode
+2024-08-23T23:09:52     Debug: Ran code successfully!
+2024-08-23T23:09:56     Debug: Zathura: Request to add the register: xmm0
+2024-08-23T23:09:56     Debug: Zathura: Adding the register XMM0
+2024-08-23T23:09:58     Debug: Stepping into code!
+2024-08-23T23:09:58     Debug: Code executed by 1step!
+2024-08-23T23:09:58     Debug: Highlight from block 3 - stepCode : line: 3
+2024-08-23T23:09:58     Debug: Code ran once!
+2024-08-23T23:09:59     Debug: Stepping into code!
+2024-08-23T23:09:59     Debug: Code executed by 1step!
+2024-08-23T23:09:59     Debug: Highlight from block 3 - stepCode : line: 4
+2024-08-23T23:09:59     Debug: Code ran once!
+2024-08-23T23:09:59     Debug: Stepping into code!
+2024-08-23T23:09:59     Debug: Code executed by 1step!
+2024-08-23T23:09:59     Debug: Highlight from block 3 - stepCode : line: 5
+2024-08-23T23:09:59     Debug: Code ran once!
+2024-08-23T23:11:14     Debug: Zathura: Loaded config file from /home/rc/Zathura-UI/src/config.zlyt
+2024-08-23T23:11:14     Debug: Creating stack
+2024-08-23T23:11:14     Debug: Initializing unicorn engine
+2024-08-23T23:11:14     Debug: Zathura: Getting bytes from the file: /home/rc/Zathura-UI/src/test.asm
+2024-08-23T23:11:14     Debug: Zathura: Assembling:
+main:
+    mov rbx, 0x400
+    mov rax, 0x4001000000000000
+    movq xmm0, rax
+    add rbx, rax
+    mov rdi, rbx
+    push rdi
+    inc rdi
+    call subtract_hundred
+    cmp r11, 60000
+    jne nextblock
+    push rax
+    push rbx
+    
+subtract_hundred:
+    sub rdi, 0x100
+    mov rax, rdi
+    mov rbx, 0x12
+    ret
+
+nextblock:
+	mov rax, rbx
+	jmp nextblockagain
+
+nextblockagain:
+	mov rbx, rcx
+	jmp nextblocktwice
+
+nextblocktwice:
+	mov rdx, rcx
+	jmp anewblock
+
+anewblock:
+	mov r8, r9
+	inc r11
+	jmp main
+
+2024-08-23T23:11:14     Debug: Zathura: Keystone object initialised.
+2024-08-23T23:11:14     Debug: Zathura: Assembled: 89 bytes
+2024-08-23T23:11:14     Debug: Zathura: Total instructions to execute: 25
+2024-08-23T23:11:14     Debug: Zathura: Got bytes, now hexlifying.
+2024-08-23T23:11:16     Debug: Resetting state!
+2024-08-23T23:11:16     Debug: Zathura: Getting bytes from the file: /home/rc/Zathura-UI/src/test.asm
+2024-08-23T23:11:16     Debug: Zathura: Assembling:
+main:
+    mov rbx, 0x400
+    mov rax, 0x4001000000000000
+    movq xmm0, rax
+    add rbx, rax
+    mov rdi, rbx
+    push rdi
+    inc rdi
+    call subtract_hundred
+    cmp r11, 60000
+    jne nextblock
+    push rax
+    push rbx
+    
+subtract_hundred:
+    sub rdi, 0x100
+    mov rax, rdi
+    mov rbx, 0x12
+    ret
+
+nextblock:
+	mov rax, rbx
+	jmp nextblockagain
+
+nextblockagain:
+	mov rbx, rcx
+	jmp nextblocktwice
+
+nextblocktwice:
+	mov rdx, rcx
+	jmp anewblock
+
+anewblock:
+	mov r8, r9
+	inc r11
+	jmp main
+
+2024-08-23T23:11:16     Debug: Zathura: Keystone object initialised.
+2024-08-23T23:11:16     Debug: Zathura: Assembled: 89 bytes
+2024-08-23T23:11:16     Debug: Zathura: Total instructions to execute: 25
+2024-08-23T23:11:16     Debug: Zathura: Got bytes, now hexlifying.
+2024-08-23T23:11:16     Debug: Creating stack
+2024-08-23T23:11:16     Debug: Initializing unicorn engine
+2024-08-23T23:11:16     Debug: Zathura: Running code from: /home/rc/Zathura-UI/src/test.asm
+2024-08-23T23:11:16     Debug: Creating stack
+2024-08-23T23:11:16     Debug: Initializing unicorn engine
+2024-08-23T23:11:16     Debug: Zathura: Getting bytes from the file: /home/rc/Zathura-UI/src/test.asm
+2024-08-23T23:11:16     Debug: Zathura: Assembling:
+main:
+    mov rbx, 0x400
+    mov rax, 0x4001000000000000
+    movq xmm0, rax
+    add rbx, rax
+    mov rdi, rbx
+    push rdi
+    inc rdi
+    call subtract_hundred
+    cmp r11, 60000
+    jne nextblock
+    push rax
+    push rbx
+    
+subtract_hundred:
+    sub rdi, 0x100
+    mov rax, rdi
+    mov rbx, 0x12
+    ret
+
+nextblock:
+	mov rax, rbx
+	jmp nextblockagain
+
+nextblockagain:
+	mov rbx, rcx
+	jmp nextblocktwice
+
+nextblocktwice:
+	mov rdx, rcx
+	jmp anewblock
+
+anewblock:
+	mov r8, r9
+	inc r11
+	jmp main
+
+2024-08-23T23:11:16     Debug: Zathura: Keystone object initialised.
+2024-08-23T23:11:16     Debug: Zathura: Assembled: 89 bytes
+2024-08-23T23:11:16     Debug: Zathura: Total instructions to execute: 0
+2024-08-23T23:11:16     Debug: Zathura: Got bytes, now hexlifying.
+2024-08-23T23:11:16     Debug: Running code...
+2024-08-23T23:11:16     Debug: Code buffer allocated!
+2024-08-23T23:11:16     Debug: Highlight from runCode
+2024-08-23T23:11:16     Debug: Ran code successfully!
+2024-08-23T23:11:23     Debug: Zathura: Request to add the register: xmm0
+2024-08-23T23:11:23     Debug: Zathura: Adding the register XMM0
+2024-08-23T23:11:25     Debug: Stepping into code!
+2024-08-23T23:11:25     Debug: Code executed by 1step!
+2024-08-23T23:11:25     Debug: Highlight from block 3 - stepCode : line: 3
+2024-08-23T23:11:25     Debug: Code ran once!
+2024-08-23T23:11:25     Debug: Stepping into code!
+2024-08-23T23:11:25     Debug: Code executed by 1step!
+2024-08-23T23:11:25     Debug: Highlight from block 3 - stepCode : line: 4
+2024-08-23T23:11:25     Debug: Code ran once!
+2024-08-23T23:11:26     Debug: Stepping into code!
+2024-08-23T23:11:26     Debug: Code executed by 1step!
+2024-08-23T23:11:26     Debug: Highlight from block 3 - stepCode : line: 5
+2024-08-23T23:11:26     Debug: Code ran once!
