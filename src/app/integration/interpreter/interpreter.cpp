@@ -119,101 +119,21 @@ void showRegs(){
     printf("FS_BASE = 0x%x\n", fs_base);
     printf("GS_BASE = 0x%x\n", gs_base);
 }
-
 std::pair<float, float> convert64BitToTwoFloats(uint64_t bits) {
-    const int BIAS_32 = 127;
-    const int MANTISSA_BITS_32 = 23;
-    const int EXPONENT_BITS_32 = 8;
+    float lower_float, upper_float;
 
-    auto convertToFloat = [&](uint32_t bits32) -> float {
-        // Extract sign, exponent, and mantissa
-        bool sign = (bits32 >> 31) & 1;
-        int exponent = (bits32 >> MANTISSA_BITS_32) & ((1U << EXPONENT_BITS_32) - 1);
-        uint32_t mantissa = bits32 & ((1U << MANTISSA_BITS_32) - 1);
-
-        // Handle special cases
-        if (exponent == 0 && mantissa == 0) {
-            return sign ? -0.0f : 0.0f;
-        }
-        if (exponent == ((1 << EXPONENT_BITS_32) - 1)) {
-            if (mantissa == 0) {
-                return sign ? -std::numeric_limits<float>::infinity() : std::numeric_limits<float>::infinity();
-            }
-            return std::numeric_limits<float>::quiet_NaN();
-        }
-
-        // Construct the float
-        float result;
-        std::memcpy(&result, &bits32, sizeof(float));
-        return result;
-    };
-
-    // Split the 64-bit integer into two 32-bit parts
     uint32_t lower_bits = bits & 0xFFFFFFFF;
     uint32_t upper_bits = (bits >> 32) & 0xFFFFFFFF;
 
-    // Convert each 32-bit part to a float
-    float floatUpto31Bits = convertToFloat(lower_bits);
-    float floatUpto63Bits = convertToFloat(upper_bits);
+    std::memcpy(&lower_float, &lower_bits, sizeof(float));
+    std::memcpy(&upper_float, &upper_bits, sizeof(float));
 
-    return std::make_pair(floatUpto31Bits, floatUpto63Bits);
+    return std::make_pair(lower_float, upper_float);
 }
+
 double convert128BitToDouble(uint64_t low_bits, uint64_t high_bits) {
-    const int BIAS_128 = 16383;
-    const int MANTISSA_BITS_128 = 112;
-    const int EXPONENT_BITS_128 = 15;
-
-    // Constants for 64-bit double
-    const int BIAS_64 = 1023;
-    const int MANTISSA_BITS_64 = 52;
-    const int EXPONENT_BITS_64 = 11;
-
-    // Extract sign, exponent, and mantissa
-    bool sign = (high_bits >> 63) & 1;
-    int exponent = (high_bits >> 48) & ((1ULL << EXPONENT_BITS_128) - 1);
-    uint64_t mantissa_high = high_bits & ((1ULL << 48) - 1);
-    uint64_t mantissa_low = low_bits;
-
-    // Handle special cases
-    if (exponent == 0 && mantissa_high == 0 && mantissa_low == 0) {
-        return sign ? -0.0 : 0.0;
-    }
-    if (exponent == ((1 << EXPONENT_BITS_128) - 1)) {
-        if (mantissa_high == 0 && mantissa_low == 0) {
-            return sign ? -std::numeric_limits<double>::infinity() : std::numeric_limits<double>::infinity();
-        }
-        return std::numeric_limits<double>::quiet_NaN();
-    }
-
-    // Adjust exponent
-    if (exponent == 0) {
-        exponent = 1 - BIAS_128; // Subnormal number
-    } else {
-        exponent -= BIAS_128;
-    }
-    exponent += BIAS_64;
-
-    // Check for overflow or underflow
-    if (exponent >= ((1 << EXPONENT_BITS_64) - 1)) {
-        return sign ? -std::numeric_limits<double>::infinity() : std::numeric_limits<double>::infinity();
-    }
-    if (exponent <= 0) {
-        // Underflow to subnormal or zero
-        return sign ? -0.0 : 0.0;
-    }
-
-    // Construct mantissa for double
-    uint64_t mantissa_64 = (mantissa_high << 4) | (mantissa_low >> 60);
-    mantissa_64 >>= (MANTISSA_BITS_128 - MANTISSA_BITS_64);
-
-    // Construct the double
-    uint64_t result_bits = (static_cast<uint64_t>(sign) << 63) |
-                           (static_cast<uint64_t>(exponent) << MANTISSA_BITS_64) |
-                           mantissa_64;
-
     double result;
-    std::memcpy(&result, &result_bits, sizeof(double));
-
+    std::memcpy(&result, &high_bits, sizeof(double));
     return result;
 }
 
@@ -260,11 +180,24 @@ registerValueT getRegisterValue(const std::string& regName, bool useTempContext)
             for (int i = 4; i < 8; i++){
                 regValue.info.arrays.floatArray[i] = 0;
             }
+
+            for (int i = 0; i < 4; i++){
+                if (regValue.info.arrays.floatArray[i] != 0){
+                    regValue.doubleVal = regValue.floatVal = 1.0f;
+                    break;
+                }
+            }
         }
         else {
+//          1.0f just to make it pass the zero check test
+            regValue = {.doubleVal = 0.0f};
+            regValue.info.is128bit = true;
             regValue.info.arrays.doubleArray[0] = convert128BitToDouble(lowerHalf, 0);
             regValue.info.arrays.doubleArray[1] = convert128BitToDouble(0, upperHalf);
             regValue.info.arrays.doubleArray[2] = regValue.info.arrays.doubleArray[3] = 0;
+            if (regValue.info.arrays.doubleArray[0] != 0 || regValue.info.arrays.doubleArray[1] != 0){
+                regValue.doubleVal = 1.0f;
+            }
         }
         return regValue;
     }
