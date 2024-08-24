@@ -32,7 +32,7 @@ void updateRegs(bool useTempContext){
         auto const [isRegValid, registerValue] = val;
 
         if (isRegValid){
-            if (registerValue.doubleVal == 0 && registerValue.eightByteVal == 0){
+            if (registerValue.doubleVal == 0 && registerValue.eightByteVal == 0 && registerValue.floatVal == 0){
                 if (registerValue.info.is128bit){
                     hex << "0.00";
                 }
@@ -43,7 +43,7 @@ void updateRegs(bool useTempContext){
             else{
                 if (name.contains('[') && name.contains(']') && name.contains(':')){
                     name =  name.substr(0, name.find_first_of('['));
-                    useSecondVal = true;
+                    useSecondVal = name.contains("[0") ? false : true;
                 }
                 if (regInfoMap[toUpperCase(name)].first <= 64){
                     hex << "0x";
@@ -54,18 +54,28 @@ void updateRegs(bool useTempContext){
                         if (!use32BitLanes){
                             if (useSecondVal){
                                 hex << std::to_string(registerValue.info.arrays.doubleArray[1]);
-                                registerValueMap[name + "[63:128]"] = hex.str();
+                                registerValueMap[name + "[64:127]"] = hex.str();
                                 hex.str("");
                                 hex.clear();
                                 useSecondVal = false;
                                 continue;
                             }
                             hex << std::to_string(registerValue.info.arrays.doubleArray[0]);
-                            registerValueMap[name] = hex.str();
+                            registerValueMap[name + "[0:63]"] = hex.str();
                             hex.str("");
                             hex.clear();
                             hex << std::to_string(registerValue.info.arrays.doubleArray[1]);
-                            registerValueMap[name + "[63:128]"] = hex.str();
+                            registerValueMap[name + "[64:127]"] = hex.str();
+                            hex.str("");
+                            hex.clear();
+                            continue;
+                        }
+                        else{
+                            registerValueMap[name + "[0:31]"]   = std::to_string(registerValue.info.arrays.floatArray[0]);
+                            registerValueMap[name + "[32:63]"]  = std::to_string(registerValue.info.arrays.floatArray[1]);
+                            registerValueMap[name + "[64:95]"]  = std::to_string(registerValue.info.arrays.floatArray[2]);
+                            registerValueMap[name + "[96:127]"] = std::to_string(registerValue.info.arrays.floatArray[3]);
+                            useSecondVal = false;
                             hex.str("");
                             hex.clear();
                             continue;
@@ -164,6 +174,10 @@ void registerContextMenu(){
         if (ImGui::MenuItem("Copy value")) {
             ImGui::SetClipboardText(hoveredReg.c_str());
         }
+        ImGui::Separator();
+        if (ImGui::MenuItem("Toggle lanes")) {
+            use32BitLanes = !use32BitLanes;
+        }
         ImGui::EndPopup();
     }
     ImGui::PopFont();
@@ -196,6 +210,8 @@ void registerCommandsUI(){
     if (!registerString.empty()) {
         auto regs = parseRegisters(registerString);
         std::string regValue;
+        std::vector<std::string> regValues;
+        bool isRegister128Bits = false;
         for (auto& reg : regs) {
             auto regInfo = getRegister(reg);
             reg = toUpperCase(reg);
@@ -204,7 +220,12 @@ void registerCommandsUI(){
                     regValue= std::to_string(regInfo.registerValueUn.eightByteVal);
                 }
                 else if (regInfoMap[reg].first == 128){
-                    regValue = std::to_string(regInfo.registerValueUn.doubleVal);
+                    for (int i = 0; i < (use32BitLanes ? 4 : 2); i++){
+                        regValues.push_back(std::to_string(use32BitLanes ? regInfo.registerValueUn.info.arrays.floatArray[i] : regInfo.registerValueUn.info.arrays.doubleArray[i]));
+                    }
+
+                    regValue = regValues[0];
+                    isRegister128Bits = true;
                 }
                 LOG_DEBUG("Adding the register " << reg);
 
@@ -222,7 +243,21 @@ void registerCommandsUI(){
                     regValue = "0x00";
                 }
 
-                registerValueMap[reg] = regValue;
+                if (isRegister128Bits){
+                    if (!use32BitLanes){
+                        registerValueMap[reg + "[0:63]"] = regValues[0];
+                        registerValueMap[reg + "[64:127]"] = regValues[1];
+                    }
+                    else{
+                        registerValueMap[reg + "[0:31]"] = regValue[0];
+                        registerValueMap[reg + "[32:63]"] = regValue[1];
+                        registerValueMap[reg + "[64:95]"] = regValue[2];
+                        registerValueMap[reg + "[96:127]"] = regValue[3];
+                    }
+                }
+                else{
+                    registerValueMap[reg] = regValue;
+                }
             } else {
                 LOG_ERROR("Unable to get the register: " << reg);
             }
