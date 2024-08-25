@@ -5,12 +5,37 @@ bool stepClickedOnce = false;
 tsl::ordered_map<std::string, std::string> registerValueMap{};
 std::unordered_map<std::string, std::string> tempRegisterValueMap =  {};
 std::string hoveredReg;
+std::string reg32BitFirstElemStr = "[0:31]";
+std::string reg64BitFirstElemStr = "[0:63]";
 
 void initDefaultRegs(){
     for (auto& reg: defaultShownRegs){
         registerValueMap[reg] = "0x00";
     }
 }
+
+void removeRegisterFromView(const std::string& reg){
+    if (use32BitLanes){
+        auto regIDX =  registerValueMap.find(reg + "[0:31]");
+        if (regIDX != registerValueMap.end()){
+            registerValueMap.erase(regIDX+3);
+            registerValueMap.erase(regIDX+2);
+            registerValueMap.erase(regIDX+1);
+            registerValueMap.erase(regIDX);
+            return;
+        }
+    }
+    else{
+        auto regIDX =  registerValueMap.find(reg + "[0:63]");
+
+        if (regIDX != registerValueMap.end()){
+            registerValueMap.erase(regIDX+1);
+            registerValueMap.erase(regIDX);
+            return;
+        }
+    }
+}
+
 
 void updateRegs(bool useTempContext){
     std::stringstream hex;
@@ -163,8 +188,15 @@ void registerContextMenu(){
     if (ImGui::BeginPopupContextItem("RegisterContextMenu")) {
         contextShown = true;
         if (ImGui::MenuItem("Hide register")) {
-            auto id = registerValueMap.find(hoveredReg);
-            registerValueMap.erase(id);
+            if (regInfoMap[hoveredReg].first == 128){
+                removeRegisterFromView(hoveredReg);
+            }
+            else{
+                auto id = registerValueMap.find(hoveredReg);
+                if (id != registerValueMap.end()){
+                    registerValueMap.erase(id);
+                }
+            }
         }
         ImGui::Separator();
         if (ImGui::MenuItem("Copy name")) {
@@ -189,6 +221,7 @@ uint64_t hexStrToInt(const std::string& val){
     return ret;
 };
 
+
 void registerCommandsUI(){
     const float footer_height_to_reserve = ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
 
@@ -212,6 +245,8 @@ void registerCommandsUI(){
         std::string regValue;
         std::vector<std::string> regValues;
         bool isRegister128Bits = false;
+        bool isLaneRegister = false;
+
         for (auto& reg : regs) {
             auto regInfo = getRegister(reg);
             reg = toUpperCase(reg);
@@ -234,7 +269,11 @@ void registerCommandsUI(){
                 }
 
 //              remove the register if it already exists
-                if (registerValueMap.count(reg) != 0){
+                if (registerValueMap.count(reg) != 0 || registerValueMap.count(reg + "[0:31]") || registerValueMap.count(reg + "[0:63]") ){
+                    if (isRegister128Bits){
+                        removeRegisterFromView(reg);
+                        continue;
+                    }
                     registerValueMap.erase(reg);
                     continue;
                 }
@@ -353,9 +392,12 @@ void registerWindow() {
             }
             ImGui::PopID();
 
+            if (std::next(regValMapInfo) == registerValueMap.end()) break;
+            if (registerValueMap.find(regValMapInfo->first) == registerValueMap.end()) {
+                break;
+            }
             ++regValMapInfo;
             if (regValMapInfo == registerValueMap.end()) break;
-
             ImGui::TableSetColumnIndex(2);
             ImGui::PushID(index + 3 * 4);  // Use a unique ID for each ro
             if (ImGui::Selectable(regValMapInfo->first.c_str(), false)) {
