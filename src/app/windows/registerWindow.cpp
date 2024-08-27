@@ -8,29 +8,32 @@ std::string hoveredReg;
 std::string reg32BitFirstElemStr = "[0:31]";
 std::string reg64BitFirstElemStr = "[0:63]";
 
+const std::vector<std::string> reg32BitLaneStrs = {"[0:31]", "[32:63]", "[64:95]", "[96:127]", "[128:159]", "[160:191]", "[192:223]", "[224:255]"};
+const std::vector<std::string> reg64BitLaneStrs = {"[0:63]", "[64:127]", "[128:191]", "[192:255]"};
+
 void initDefaultRegs(){
     for (auto& reg: defaultShownRegs){
         registerValueMap[reg] = "0x00";
     }
 }
 
-void removeRegisterFromView(const std::string& reg){
+void removeRegisterFromView(const std::string& reg, bool is128Bits = true){
     if (use32BitLanes){
-        auto regIDX =  registerValueMap.find(reg + "[0:31]");
+        auto regIDX =  registerValueMap.find(reg + (reg32BitLaneStrs[0]));
         if (regIDX != registerValueMap.end()){
-            registerValueMap.erase(regIDX+3);
-            registerValueMap.erase(regIDX+2);
-            registerValueMap.erase(regIDX+1);
-            registerValueMap.erase(regIDX);
+            for (int i = (is128Bits ? 3 : 7); i >= 0; i--){
+                registerValueMap.erase(regIDX+i);
+            }
             return;
         }
     }
     else{
-        auto regIDX =  registerValueMap.find(reg + "[0:63]");
+        auto regIDX =  registerValueMap.find(reg + reg64BitLaneStrs[0]);
 
         if (regIDX != registerValueMap.end()){
-            registerValueMap.erase(regIDX+1);
-            registerValueMap.erase(regIDX);
+            for (int i = (is128Bits ? 1 : 3); i > -1; i--){
+                registerValueMap.erase(regIDX+i);
+            }
             return;
         }
     }
@@ -58,7 +61,7 @@ void updateRegs(bool useTempContext){
 
         if (isRegValid){
             if (registerValue.doubleVal == 0 && registerValue.eightByteVal == 0 && registerValue.floatVal == 0){
-                if (registerValue.info.is128bit){
+                if (registerValue.info.is128bit || registerValue.info.is256bit){
                     hex << "0.00";
                 }
                 else{
@@ -68,38 +71,46 @@ void updateRegs(bool useTempContext){
             else{
                 if (name.contains('[') && name.contains(']') && name.contains(':')){
                     name =  name.substr(0, name.find_first_of('['));
-                    useSecondVal = name.contains("[0") ? false : true;
                 }
                 if (regInfoMap[toUpperCase(name)].first <= 64){
                     hex << "0x";
                     hex << std::hex << registerValue.eightByteVal;
                 }
-                else if (regInfoMap[toUpperCase(name)].first == 128){
+                else if (regInfoMap[toUpperCase(name)].first == 128 || regInfoMap[toUpperCase(name)].first == 256){
                     if (registerValue.info.is128bit){
                         if (!use32BitLanes){
-                            if (useSecondVal){
-                                hex << std::to_string(registerValue.info.arrays.doubleArray[1]);
-                                registerValueMap[name + "[64:127]"] = hex.str();
-                                hex.str("");
-                                hex.clear();
-                                useSecondVal = false;
-                                continue;
-                            }
                             hex << std::to_string(registerValue.info.arrays.doubleArray[0]);
-                            registerValueMap[name + "[0:63]"] = hex.str();
+                            registerValueMap[name + reg64BitLaneStrs[0]] = hex.str();
                             hex.str("");
                             hex.clear();
                             hex << std::to_string(registerValue.info.arrays.doubleArray[1]);
-                            registerValueMap[name + "[64:127]"] = hex.str();
+                            registerValueMap[name + reg64BitLaneStrs[1]] = hex.str();
                             hex.str("");
                             hex.clear();
                             continue;
                         }
                         else{
-                            registerValueMap[name + "[0:31]"]   = std::to_string(registerValue.info.arrays.floatArray[0]);
-                            registerValueMap[name + "[32:63]"]  = std::to_string(registerValue.info.arrays.floatArray[1]);
-                            registerValueMap[name + "[64:95]"]  = std::to_string(registerValue.info.arrays.floatArray[2]);
-                            registerValueMap[name + "[96:127]"] = std::to_string(registerValue.info.arrays.floatArray[3]);
+                            for (int i = 0; i < 4; i++){
+                                registerValueMap[name + reg32BitLaneStrs[i]] = std::to_string(registerValue.info.arrays.floatArray[i]);
+                            }
+                            hex.str("");
+                            hex.clear();
+                            continue;
+                        }
+                    }
+                    else if (registerValue.info.is256bit){
+                        if (!use32BitLanes){
+                            for (int i = 0; i < 4; i++){
+                                registerValueMap[name + reg64BitLaneStrs[i]] = std::to_string(registerValue.info.arrays.doubleArray[i]);
+                            }
+                            hex.str("");
+                            hex.clear();
+                            continue;
+                        }
+                        else{
+                            for (int i = 0; i < 8; i++){
+                                registerValueMap[name + reg32BitLaneStrs[i]] = std::to_string(registerValue.info.arrays.floatArray[i]);
+                            }
                             useSecondVal = false;
                             hex.str("");
                             hex.clear();
@@ -191,6 +202,9 @@ void registerContextMenu(){
             if (regInfoMap[hoveredReg].first == 128){
                 removeRegisterFromView(hoveredReg);
             }
+            else if (regInfoMap[hoveredReg].first == 512){
+                removeRegisterFromView(hoveredReg, false);
+            }
             else{
                 auto id = registerValueMap.find(hoveredReg);
                 if (id != registerValueMap.end()){
@@ -245,6 +259,7 @@ void registerCommandsUI(){
         std::string regValue;
         std::vector<std::string> regValues;
         bool isRegister128Bits = false;
+        bool isRegister256Bits = false;
         bool isLaneRegister = false;
 
         for (auto& reg : regs) {
@@ -254,7 +269,7 @@ void registerCommandsUI(){
                 if (regInfoMap[reg].first <= 64){
                     regValue= std::to_string(regInfo.registerValueUn.eightByteVal);
                 }
-                else if (regInfoMap[reg].first == 128){
+                else if (regInfoMap[reg].first == 128 ){
                     for (int i = 0; i < (use32BitLanes ? 4 : 2); i++){
                         regValues.push_back(std::to_string(use32BitLanes ? regInfo.registerValueUn.info.arrays.floatArray[i] : regInfo.registerValueUn.info.arrays.doubleArray[i]));
                     }
@@ -262,6 +277,23 @@ void registerCommandsUI(){
                     regValue = regValues[0];
                     isRegister128Bits = true;
                 }
+                else if (regInfoMap[reg].first == 256){
+                    if (use32BitLanes){
+                        for (float i : regInfo.registerValueUn.info.arrays.floatArray){
+                            regValues.push_back(std::to_string(i));
+                        }
+                    }
+                    else{
+                        for (double i : regInfo.registerValueUn.info.arrays.doubleArray){
+                            regValues.push_back(std::to_string(i));
+                        }
+                    }
+
+                    regValue = regValues[0];
+                    isRegister128Bits = false;
+                    isRegister256Bits = true;
+                }
+
                 LOG_DEBUG("Adding the register " << reg);
 
                 if (regInfoMap.count(reg) == 0){
@@ -270,8 +302,8 @@ void registerCommandsUI(){
 
 //              remove the register if it already exists
                 if (registerValueMap.count(reg) != 0 || registerValueMap.count(reg + "[0:31]") || registerValueMap.count(reg + "[0:63]") ){
-                    if (isRegister128Bits){
-                        removeRegisterFromView(reg);
+                    if (isRegister128Bits || isRegister256Bits){
+                        removeRegisterFromView(reg, isRegister128Bits);
                         continue;
                     }
                     registerValueMap.erase(reg);
@@ -292,6 +324,18 @@ void registerCommandsUI(){
                         registerValueMap[reg + "[32:63]"] = regValue[1];
                         registerValueMap[reg + "[64:95]"] = regValue[2];
                         registerValueMap[reg + "[96:127]"] = regValue[3];
+                    }
+                }
+                else if (isRegister256Bits){
+                    if (!use32BitLanes){
+                        for (int i = 0; i < 4; i++){
+                            registerValueMap[reg + reg64BitLaneStrs[i]] = regValues[i];
+                        }
+                    }
+                    else{
+                        for (int i = 0; i < 8; i++){
+                            registerValueMap[reg + reg32BitLaneStrs[i]] = regValues[i];
+                        }
                     }
                 }
                 else{
@@ -453,6 +497,10 @@ void registerWindow() {
             }
         }
             ImGui::PopID();
+            if (std::next(regValMapInfo) == registerValueMap.end()) break;
+            if (registerValueMap.find(regValMapInfo->first) == registerValueMap.end()) {
+                break;
+            }
             ++regValMapInfo;
             if (regValMapInfo == registerValueMap.end()) break;
         }
