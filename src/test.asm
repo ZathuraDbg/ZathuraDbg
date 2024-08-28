@@ -1,10 +1,9 @@
 main:
     mov rbx, 0x400
     mov rax, 0x4010000000000000
-    movq xmm0, rax
-	pxor xmm1, xmm1
-	punpcklqdq xmm0, xmm1
-  add rsp, 8
+	push rax
+	fild qword [rsp]
+    add rsp, 8
     add rbx, rax
     mov rdi, rbx
     push rdi
