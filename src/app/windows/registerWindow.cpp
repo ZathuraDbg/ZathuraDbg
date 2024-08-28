@@ -3,7 +3,7 @@
 bool codeHasRun = false;
 bool stepClickedOnce = false;
 tsl::ordered_map<std::string, std::string> registerValueMap{};
-std::unordered_map<std::string, std::string> tempRegisterValueMap =  {};
+std::unordered_map<std::string, std::string> tempRegisterValueMap = {};
 std::string hoveredReg;
 std::string reg32BitFirstElemStr = "[0:31]";
 std::string reg64BitFirstElemStr = "[0:63]";
@@ -235,7 +235,6 @@ uint64_t hexStrToInt(const std::string& val){
     return ret;
 };
 
-
 void registerCommandsUI(){
     const float footer_height_to_reserve = ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
 
@@ -251,7 +250,7 @@ void registerCommandsUI(){
 
     if (ImGui::InputText("##registerInput", input, IM_ARRAYSIZE(input), ImGuiInputTextFlags_EnterReturnsTrue)) {
         registerString += toLowerCase(input);
-        LOG_DEBUG("Request to add the register: " << input);
+        LOG_DEBUG("Request to toggle the register: " << input);
     }
 
     if (!registerString.empty()) {
@@ -260,7 +259,6 @@ void registerCommandsUI(){
         std::vector<std::string> regValues;
         bool isRegister128Bits = false;
         bool isRegister256Bits = false;
-        bool isLaneRegister = false;
 
         for (auto& reg : regs) {
             auto regInfo = getRegister(reg);
@@ -292,6 +290,10 @@ void registerCommandsUI(){
                     regValue = regValues[0];
                     isRegister128Bits = false;
                     isRegister256Bits = true;
+                }
+                else if (regInfoMap[reg].first == 80){
+                    LOG_ERROR("ST* registers are not supported yet!");
+                    continue;
                 }
 
                 LOG_DEBUG("Adding the register " << reg);
@@ -346,6 +348,15 @@ void registerCommandsUI(){
             }
         }
     }
+}
+
+uint16_t getRegisterActualSize(std::string str){
+    if (!(str.contains('[') && str.contains(']') && str.contains(':'))){
+        return regInfoMap[str].first;
+    }
+
+    str = str.substr(0, str.find_first_of('['));
+    return regInfoMap[str].first;
 }
 
 void registerWindow() {
@@ -405,11 +416,15 @@ void registerWindow() {
 
             ImGui::PushID(index * 2);
             ImGui::SetNextItemWidth(-FLT_MIN);
-            if (ImGui::InputText(("##regValueFirst" + std::to_string(index)).c_str(), regValueFirst, IM_ARRAYSIZE(regValueFirst), ImGuiInputTextFlags_CharsNoBlank | ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackCharFilter, checkHexCharsCallback )) {
+            bool isBigReg = getRegisterActualSize(regValMapInfo->first) <= 64;
+            ImGuiTextFlags flags = isBigReg ? ImGuiInputTextFlags_CallbackCharFilter : ImGuiInputTextFlags_None;
+            int (*callback)(ImGuiInputTextCallbackData* data) = isBigReg ? checkHexCharsCallback : nullptr;
+            if (ImGui::InputText(("##regValueFirst" + std::to_string(index)).c_str(), regValueFirst, IM_ARRAYSIZE(regValueFirst), ImGuiInputTextFlags_CharsNoBlank | ImGuiInputTextFlags_EnterReturnsTrue
+            | flags, callback)) {
                 if ((strlen(regValueFirst) != 0)) {
                     uint64_t temp = hexStrToInt(regValueFirst);
 
-                    if (strncmp(regValueFirst, "0x", 2) != 0) {
+                    if (strncmp(regValueFirst, "0x", 2) != 0 && isBigReg) {
                         registerValueMap[regValMapInfo->first] = "0x";
                         registerValueMap[regValMapInfo->first].append(regValueFirst);
 
@@ -419,6 +434,29 @@ void registerWindow() {
 
                     if (codeHasRun)
                     {
+                        if (isBigReg){
+                            void* mem = malloc(getRegisterActualSize(regValMapInfo->first));
+                            uc_reg_read(uc, regNameToConstant(regValMapInfo->first), &mem);
+                            std::string laneStr = regValMapInfo->first.substr(regValMapInfo->first.find_first_of('[')+1, regValMapInfo->first.find_first_of(':'));
+                            int laneNum = std::atoi(laneStr.c_str());
+                            std::string value = std::string(regValueFirst);
+                            if (value.contains('.')){
+                                int regSize = getRegisterActualSize(regValMapInfo->first);
+                                if (regSize == 128){
+                                    float val;
+                                    auto result = std::from_chars(value.data(), value.data() + value.size(), val);
+
+                                    if (result.ec == std::errc::invalid_argument || result.ec == std::errc::result_out_of_range){
+                                        val = 0;
+                                    }
+//                                    pointer arith
+//                                    memcpy((()mem + 32))
+                                }
+                                else if (regSize == 256){
+
+                                }
+                            }
+                        }
                         uc_reg_write(uc, regNameToConstant(regValMapInfo->first), &temp);
                         uc_context_save(uc, context);
                     }
