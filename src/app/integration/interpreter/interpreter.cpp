@@ -192,8 +192,8 @@ registerValueT getRegisterValue(const std::string& regName, bool useTempContext)
 //          1.0f just to make it pass the zero check test
             regValue = {.doubleVal = 0.0f};
             regValue.info.is128bit = true;
-            regValue.info.arrays.doubleArray[0] = convert128BitToDouble(lowerHalf, 0);
-            regValue.info.arrays.doubleArray[1] = convert128BitToDouble(0, upperHalf);
+            regValue.info.arrays.doubleArray[0] = convert128BitToDouble(0, upperHalf);
+            regValue.info.arrays.doubleArray[1] = convert128BitToDouble(0, lowerHalf);
             regValue.info.arrays.doubleArray[2] = regValue.info.arrays.doubleArray[3] = 0;
             if (regValue.info.arrays.doubleArray[0] != 0 || regValue.info.arrays.doubleArray[1] != 0){
                 regValue.doubleVal = 1.0f;

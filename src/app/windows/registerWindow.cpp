@@ -416,7 +416,7 @@ void registerWindow() {
 
             ImGui::PushID(index * 2);
             ImGui::SetNextItemWidth(-FLT_MIN);
-            bool isBigReg = getRegisterActualSize(regValMapInfo->first) <= 64;
+            bool isBigReg = getRegisterActualSize(regValMapInfo->first) > 64;
             ImGuiTextFlags flags = isBigReg ? ImGuiInputTextFlags_CallbackCharFilter : ImGuiInputTextFlags_None;
             int (*callback)(ImGuiInputTextCallbackData* data) = isBigReg ? checkHexCharsCallback : nullptr;
             if (ImGui::InputText(("##regValueFirst" + std::to_string(index)).c_str(), regValueFirst, IM_ARRAYSIZE(regValueFirst), ImGuiInputTextFlags_CharsNoBlank | ImGuiInputTextFlags_EnterReturnsTrue
@@ -424,7 +424,7 @@ void registerWindow() {
                 if ((strlen(regValueFirst) != 0)) {
                     uint64_t temp = hexStrToInt(regValueFirst);
 
-                    if (strncmp(regValueFirst, "0x", 2) != 0 && isBigReg) {
+                    if (strncmp(regValueFirst, "0x", 2) != 0 && !isBigReg) {
                         registerValueMap[regValMapInfo->first] = "0x";
                         registerValueMap[regValMapInfo->first].append(regValueFirst);
 
@@ -435,30 +435,68 @@ void registerWindow() {
                     if (codeHasRun)
                     {
                         if (isBigReg){
-                            void* mem = malloc(getRegisterActualSize(regValMapInfo->first));
-                            uc_reg_read(uc, regNameToConstant(regValMapInfo->first), &mem);
-                            std::string laneStr = regValMapInfo->first.substr(regValMapInfo->first.find_first_of('[')+1, regValMapInfo->first.find_first_of(':'));
+//                            void* mem = malloc(getRegisterActualSize(regValMapInfo->first));
+//                            uc_reg_read(uc, regNameToConstant(regValMapInfo->first), &mem);
+                            std::string realRegName = regValMapInfo->first.substr(0, regValMapInfo->first.find_first_of('['));
+                            std::string laneStr = regValMapInfo->first.substr(regValMapInfo->first.find_first_of('[')+1);
                             int laneNum = std::atoi(laneStr.c_str());
                             std::string value = std::string(regValueFirst);
+                            int laneIndex = 0;
+                            uint8_t arrSize = 0;
                             if (value.contains('.')){
                                 int regSize = getRegisterActualSize(regValMapInfo->first);
-                                if (regSize == 128){
-                                    float val;
-                                    auto result = std::from_chars(value.data(), value.data() + value.size(), val);
+                                if (regSize == 128 || regSize == 256){
 
-                                    if (result.ec == std::errc::invalid_argument || result.ec == std::errc::result_out_of_range){
-                                        val = 0;
+                                    if (!use32BitLanes){
+                                        auto valT = getRegisterValue(realRegName, false);
+                                        std::cout << valT.info.arrays.doubleArray[0] << std::endl;
+                                        std::cout << valT.info.arrays.doubleArray[1] << std::endl;
+
+                                        arrSize = (regSize == 128 ? 2 : 4);
+                                        double mem[arrSize];
+                                        uc_reg_read(uc, regNameToConstant(regValMapInfo->first), &mem);
+
+                                        double val;
+                                        auto result = std::from_chars(value.data(), value.data() + value.size(), val);
+
+                                        if (result.ec == std::errc::invalid_argument || result.ec == std::errc::result_out_of_range){
+                                            val = 0;
+                                        }
+
+                                        if (laneNum != 0){
+                                            laneIndex = laneNum / 64;
+                                        }
+
+                                        mem[laneIndex] = val;
+                                        uc_err err = uc_reg_write(uc, regNameToConstant(realRegName), mem);
+                                        uc_context_save(uc, context);
+
                                     }
-//                                    pointer arith
-//                                    memcpy((()mem + 32))
-                                }
-                                else if (regSize == 256){
+                                    else if (use32BitLanes){
+                                        arrSize = (regSize == 128 ? 4 : 8);
+                                        uint32_t mem[arrSize];
+                                        uc_reg_read(uc, regNameToConstant(regValMapInfo->first), &mem);
 
+                                        float val;
+                                        auto result = std::from_chars(value.data(), value.data() + value.size(), val);
+
+                                        if (result.ec == std::errc::invalid_argument || result.ec == std::errc::result_out_of_range){
+                                            val = 0;
+                                        }
+                                        if (laneNum != 0){
+                                            laneIndex = laneNum / 32;
+                                        }
+
+                                        memcpy(mem + laneIndex, &val, sizeof(val));
+                                        uc_reg_write(uc, regNameToConstant(realRegName), mem);
+                                    }
                                 }
                             }
                         }
-                        uc_reg_write(uc, regNameToConstant(regValMapInfo->first), &temp);
-                        uc_context_save(uc, context);
+                        else{
+                            uc_reg_write(uc, regNameToConstant(regValMapInfo->first), &temp);
+                            uc_context_save(uc, context);
+                        }
                     }
                     else{
                         if (regValMapInfo->first == getArchIPStr(codeInformation.mode)){
