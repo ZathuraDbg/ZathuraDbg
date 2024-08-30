@@ -435,8 +435,6 @@ void registerWindow() {
                     if (codeHasRun)
                     {
                         if (isBigReg){
-//                            void* mem = malloc(getRegisterActualSize(regValMapInfo->first));
-//                            uc_reg_read(uc, regNameToConstant(regValMapInfo->first), &mem);
                             std::string realRegName = regValMapInfo->first.substr(0, regValMapInfo->first.find_first_of('['));
                             std::string laneStr = regValMapInfo->first.substr(regValMapInfo->first.find_first_of('[')+1);
                             int laneNum = std::atoi(laneStr.c_str());
@@ -446,19 +444,13 @@ void registerWindow() {
                             if (value.contains('.')){
                                 int regSize = getRegisterActualSize(regValMapInfo->first);
                                 if (regSize == 128 || regSize == 256){
-
                                     if (!use32BitLanes){
-                                        auto valT = getRegisterValue(realRegName, false);
-                                        std::cout << valT.info.arrays.doubleArray[0] << std::endl;
-                                        std::cout << valT.info.arrays.doubleArray[1] << std::endl;
-
                                         arrSize = (regSize == 128 ? 2 : 4);
-                                        double mem[arrSize];
-                                        uc_reg_read(uc, regNameToConstant(regValMapInfo->first), &mem);
+                                        double arr[arrSize];
+                                        uc_reg_read(uc, regNameToConstant(realRegName), arr);
 
                                         double val;
                                         auto result = std::from_chars(value.data(), value.data() + value.size(), val);
-
                                         if (result.ec == std::errc::invalid_argument || result.ec == std::errc::result_out_of_range){
                                             val = 0;
                                         }
@@ -467,15 +459,15 @@ void registerWindow() {
                                             laneIndex = laneNum / 64;
                                         }
 
-                                        mem[laneIndex] = val;
-                                        uc_err err = uc_reg_write(uc, regNameToConstant(realRegName), mem);
-                                        uc_context_save(uc, context);
+                                        arr[laneIndex] = val;
 
+                                        uc_err err = uc_reg_write(uc, regNameToConstant(realRegName), arr);
+                                        uc_context_save(uc, context);
                                     }
                                     else if (use32BitLanes){
                                         arrSize = (regSize == 128 ? 4 : 8);
-                                        uint32_t mem[arrSize];
-                                        uc_reg_read(uc, regNameToConstant(regValMapInfo->first), &mem);
+                                        float arr[arrSize];
+                                        uc_reg_read(uc, regNameToConstant(realRegName), &arr);
 
                                         float val;
                                         auto result = std::from_chars(value.data(), value.data() + value.size(), val);
@@ -483,12 +475,14 @@ void registerWindow() {
                                         if (result.ec == std::errc::invalid_argument || result.ec == std::errc::result_out_of_range){
                                             val = 0;
                                         }
+
                                         if (laneNum != 0){
                                             laneIndex = laneNum / 32;
                                         }
+                                        arr[laneIndex] = val;
 
-                                        memcpy(mem + laneIndex, &val, sizeof(val));
-                                        uc_reg_write(uc, regNameToConstant(realRegName), mem);
+                                        uc_err err = uc_reg_write(uc, regNameToConstant(realRegName), arr);
+                                        uc_context_save(uc, context);
                                     }
                                 }
                             }
