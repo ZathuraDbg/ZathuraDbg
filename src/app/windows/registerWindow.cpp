@@ -359,6 +359,91 @@ uint16_t getRegisterActualSize(std::string str){
     return regInfoMap[str].first;
 }
 
+void parseRegisterValueInput(tsl::ordered_map<std::string, std::string>::iterator regValMapInfo, const char *regValueFirst, bool isBigReg){
+    if ((strlen(regValueFirst) != 0)) {
+        uint64_t temp = hexStrToInt(regValueFirst);
+
+        if (strncmp(regValueFirst, "0x", 2) != 0 && !isBigReg) {
+            registerValueMap[regValMapInfo->first] = "0x";
+            registerValueMap[regValMapInfo->first].append(regValueFirst);
+
+        } else {
+            registerValueMap[regValMapInfo->first] = regValueFirst;
+        }
+
+        if (codeHasRun)
+        {
+            if (isBigReg){
+                std::string realRegName = regValMapInfo->first.substr(0, regValMapInfo->first.find_first_of('['));
+                std::string laneStr = regValMapInfo->first.substr(regValMapInfo->first.find_first_of('[')+1);
+                int laneNum = std::atoi(laneStr.c_str());
+                std::string value = std::string(regValueFirst);
+                int laneIndex = 0;
+                uint8_t arrSize = 0;
+                if (value.contains('.')){
+                    int regSize = getRegisterActualSize(regValMapInfo->first);
+                    if (regSize == 128 || regSize == 256){
+                        if (!use32BitLanes){
+                            arrSize = (regSize == 128 ? 2 : 4);
+                            double arr[arrSize];
+                            uc_reg_read(uc, regNameToConstant(realRegName), arr);
+
+                            double val;
+                            auto result = std::from_chars(value.data(), value.data() + value.size(), val);
+                            if (result.ec == std::errc::invalid_argument || result.ec == std::errc::result_out_of_range){
+                                val = 0;
+                            }
+
+                            if (laneNum != 0){
+                                laneIndex = laneNum / 64;
+                            }
+
+                            arr[laneIndex] = val;
+
+                            uc_err err = uc_reg_write(uc, regNameToConstant(realRegName), arr);
+                            uc_context_save(uc, context);
+                        }
+                        else if (use32BitLanes){
+                            arrSize = (regSize == 128 ? 4 : 8);
+                            float arr[arrSize];
+                            uc_reg_read(uc, regNameToConstant(realRegName), &arr);
+
+                            float val;
+                            auto result = std::from_chars(value.data(), value.data() + value.size(), val);
+
+                            if (result.ec == std::errc::invalid_argument || result.ec == std::errc::result_out_of_range){
+                                val = 0;
+                            }
+
+                            if (laneNum != 0){
+                                laneIndex = laneNum / 32;
+                            }
+                            arr[laneIndex] = val;
+
+                            uc_err err = uc_reg_write(uc, regNameToConstant(realRegName), arr);
+                            uc_context_save(uc, context);
+                        }
+                    }
+                }
+            }
+            else{
+                uc_reg_write(uc, regNameToConstant(regValMapInfo->first), &temp);
+                uc_context_save(uc, context);
+            }
+        }
+        else{
+            if (regValMapInfo->first == getArchIPStr(codeInformation.mode)){
+                ENTRY_POINT_ADDRESS = strtoul(regValueFirst, nullptr, 16);
+            }
+            else if (regValMapInfo->first == getArchSBPStr(codeInformation.mode).first || (regValMapInfo->first == getArchSBPStr(codeInformation.mode).second)){
+                STACK_ADDRESS = strtoul(regValueFirst, nullptr, 16);
+            }
+
+            tempRegisterValueMap[regValMapInfo->first] = regValueFirst;
+        }
+    }
+}
+
 void registerWindow() {
     if (codeHasRun){
         if (tempContext!= nullptr){
@@ -421,88 +506,7 @@ void registerWindow() {
             int (*callback)(ImGuiInputTextCallbackData* data) = isBigReg ? checkHexCharsCallback : nullptr;
             if (ImGui::InputText(("##regValueFirst" + std::to_string(index)).c_str(), regValueFirst, IM_ARRAYSIZE(regValueFirst), ImGuiInputTextFlags_CharsNoBlank | ImGuiInputTextFlags_EnterReturnsTrue
             | flags, callback)) {
-                if ((strlen(regValueFirst) != 0)) {
-                    uint64_t temp = hexStrToInt(regValueFirst);
-
-                    if (strncmp(regValueFirst, "0x", 2) != 0 && !isBigReg) {
-                        registerValueMap[regValMapInfo->first] = "0x";
-                        registerValueMap[regValMapInfo->first].append(regValueFirst);
-
-                    } else {
-                        registerValueMap[regValMapInfo->first] = regValueFirst;
-                    }
-
-                    if (codeHasRun)
-                    {
-                        if (isBigReg){
-                            std::string realRegName = regValMapInfo->first.substr(0, regValMapInfo->first.find_first_of('['));
-                            std::string laneStr = regValMapInfo->first.substr(regValMapInfo->first.find_first_of('[')+1);
-                            int laneNum = std::atoi(laneStr.c_str());
-                            std::string value = std::string(regValueFirst);
-                            int laneIndex = 0;
-                            uint8_t arrSize = 0;
-                            if (value.contains('.')){
-                                int regSize = getRegisterActualSize(regValMapInfo->first);
-                                if (regSize == 128 || regSize == 256){
-                                    if (!use32BitLanes){
-                                        arrSize = (regSize == 128 ? 2 : 4);
-                                        double arr[arrSize];
-                                        uc_reg_read(uc, regNameToConstant(realRegName), arr);
-
-                                        double val;
-                                        auto result = std::from_chars(value.data(), value.data() + value.size(), val);
-                                        if (result.ec == std::errc::invalid_argument || result.ec == std::errc::result_out_of_range){
-                                            val = 0;
-                                        }
-
-                                        if (laneNum != 0){
-                                            laneIndex = laneNum / 64;
-                                        }
-
-                                        arr[laneIndex] = val;
-
-                                        uc_err err = uc_reg_write(uc, regNameToConstant(realRegName), arr);
-                                        uc_context_save(uc, context);
-                                    }
-                                    else if (use32BitLanes){
-                                        arrSize = (regSize == 128 ? 4 : 8);
-                                        float arr[arrSize];
-                                        uc_reg_read(uc, regNameToConstant(realRegName), &arr);
-
-                                        float val;
-                                        auto result = std::from_chars(value.data(), value.data() + value.size(), val);
-
-                                        if (result.ec == std::errc::invalid_argument || result.ec == std::errc::result_out_of_range){
-                                            val = 0;
-                                        }
-
-                                        if (laneNum != 0){
-                                            laneIndex = laneNum / 32;
-                                        }
-                                        arr[laneIndex] = val;
-
-                                        uc_err err = uc_reg_write(uc, regNameToConstant(realRegName), arr);
-                                        uc_context_save(uc, context);
-                                    }
-                                }
-                            }
-                        }
-                        else{
-                            uc_reg_write(uc, regNameToConstant(regValMapInfo->first), &temp);
-                            uc_context_save(uc, context);
-                        }
-                    }
-                    else{
-                        if (regValMapInfo->first == getArchIPStr(codeInformation.mode)){
-                            ENTRY_POINT_ADDRESS = strtoul(regValueFirst, nullptr, 16);
-                        }
-                        else if (regValMapInfo->first == getArchSBPStr(codeInformation.mode).first || (regValMapInfo->first == getArchSBPStr(codeInformation.mode).second)){
-                            STACK_ADDRESS = strtoul(regValueFirst, nullptr, 16);
-                        }
-
-                        tempRegisterValueMap[regValMapInfo->first] = regValueFirst;
-                    }
-                }
+                parseRegisterValueInput(regValMapInfo, regValueFirst, isBigReg);
             }
             ImGui::PopID();
 
@@ -531,41 +535,10 @@ void registerWindow() {
 
             ImGui::PushID(index * 2 + 1);
             ImGui::SetNextItemWidth(-FLT_MIN);
+            isBigReg = getRegisterActualSize(regValMapInfo->first) > 64;
             if (ImGui::InputText(("##value2" + std::to_string(index)).c_str(), value2, IM_ARRAYSIZE(value2), ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CharsUppercase | ImGuiInputTextFlags_CharsNoBlank | ImGuiInputTextFlags_EnterReturnsTrue)) {
-                if ((strlen(value2) != 0)) {
-
-                if (strncmp(value2, "0x", 2) != 0) {
-                    registerValueMap[regValMapInfo->first] = "0x";
-                    registerValueMap[regValMapInfo->first].append(value2);
-                } else {
-                    registerValueMap[regValMapInfo->first] = value2;
-                }
-
-                uint64_t temp;
-                temp = hexStrToInt(value2);
-
-                if (codeHasRun)
-                {
-                    uc_reg_write(uc, regNameToConstant(regValMapInfo->first), &temp);
-                    uc_context_save(uc, context);
-                }
-                else{
-                    if (regValMapInfo->first == getArchIPStr(codeInformation.mode)){
-                        ENTRY_POINT_ADDRESS = strtoul(regValueFirst, nullptr, 10);
-                    }
-                    else{
-                        if (regValMapInfo->first == getArchIPStr(codeInformation.mode)){
-                            ENTRY_POINT_ADDRESS = strtoul(regValueFirst, nullptr, 16);
-                        }
-                        else if (regValMapInfo->first == getArchSBPStr(codeInformation.mode).first || (regValMapInfo->first == getArchSBPStr(codeInformation.mode).second)){
-                            STACK_ADDRESS = strtoul(regValueFirst, nullptr, 16);
-                        }
-
-                        tempRegisterValueMap[regValMapInfo->first] = regValueFirst;
-                    }
-                }
+                parseRegisterValueInput(regValMapInfo, value2, isBigReg);
             }
-        }
             ImGui::PopID();
             if (std::next(regValMapInfo) == registerValueMap.end()) break;
             if (registerValueMap.find(regValMapInfo->first) == registerValueMap.end()) {
