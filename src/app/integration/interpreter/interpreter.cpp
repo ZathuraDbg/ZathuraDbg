@@ -119,11 +119,12 @@ void showRegs(){
     printf("FS_BASE = 0x%x\n", fs_base);
     printf("GS_BASE = 0x%x\n", gs_base);
 }
+
 std::pair<float, float> convert64BitToTwoFloats(uint64_t bits) {
     float lower_float, upper_float;
 
-    uint32_t lower_bits = bits & 0xFFFFFFFF;
-    uint32_t upper_bits = (bits >> 32) & 0xFFFFFFFF;
+    uint32_t lower_bits = static_cast<uint32_t>(bits & 0xFFFFFFFF);
+    uint32_t upper_bits = static_cast<uint32_t>((bits >> 32) & 0xFFFFFFFF);
 
     std::memcpy(&lower_float, &lower_bits, sizeof(float));
     std::memcpy(&upper_float, &upper_bits, sizeof(float));
@@ -202,27 +203,38 @@ registerValueT getRegisterValue(const std::string& regName, bool useTempContext)
         return regValue;
     }
     else if (size == 256){
-        uint8_t xmm_value[32];
-        useTempContext ? uc_context_reg_read(tempContext, constant, &xmm_value) : uc_reg_read(uc, constant, &xmm_value);
+        uint8_t arrSize = use32BitLanes ? 8 : 4;
+        registerValueT regValue{};
 
-        uint64_t upperHalf, lowerHalf;
-        uint64_t upperHalf1, lowerHalf1;
-        std::memcpy(&upperHalf, xmm_value, 8);
-        std::memcpy(&lowerHalf, xmm_value + 8, 8);
-        std::memcpy(&upperHalf1, xmm_value + 16, 8);
-        std::memcpy(&lowerHalf1, xmm_value + 24, 8);
+        if (!use32BitLanes){
+            double valueArray[arrSize];
+            useTempContext ? uc_context_reg_read(tempContext, constant, &valueArray) : uc_reg_read(uc, constant, valueArray);
+            regValue = {.doubleVal = (valueArray[0])};
+            regValue.info.is256bit = true;
 
-        registerValueT regValue = {.doubleVal = (convert128BitToDouble(lowerHalf, upperHalf))};
-        regValue.info.is256bit = true;
-        if (use32BitLanes){
-            regValue.info.arrays.floatArray[0] = convert64BitToTwoFloats(lowerHalf).first;
-            regValue.info.arrays.floatArray[1] = convert64BitToTwoFloats(lowerHalf).second;
-            regValue.info.arrays.floatArray[2] = convert64BitToTwoFloats(upperHalf).first;
-            regValue.info.arrays.floatArray[3] = convert64BitToTwoFloats(upperHalf).second;
-            regValue.info.arrays.floatArray[4] = convert64BitToTwoFloats(lowerHalf1).first;
-            regValue.info.arrays.floatArray[5] = convert64BitToTwoFloats(lowerHalf1).second;
-            regValue.info.arrays.floatArray[6] = convert64BitToTwoFloats(upperHalf1).first;
-            regValue.info.arrays.floatArray[7] = convert64BitToTwoFloats(upperHalf1).second;
+            regValue = {.doubleVal = 0.0f};
+            regValue.info.is256bit = true;
+
+            for (int i = 0; i < 4; i++){
+                regValue.info.arrays.doubleArray[i] = valueArray[i];
+            }
+
+            for (double i : valueArray){
+                if (i != 0){
+                    regValue.doubleVal = 1.0f;
+                    break;
+                }
+            }
+        }
+        else if (use32BitLanes){
+            float valueArray[arrSize];
+            useTempContext ? uc_context_reg_read(tempContext, constant, &valueArray) : uc_reg_read(uc, constant, valueArray);
+            regValue = {.doubleVal = (valueArray[0])};
+            regValue.info.is256bit = true;
+
+            for (int i = 0; i < 8; i++){
+                regValue.info.arrays.floatArray[i] = valueArray[i];
+            }
 
             for (float i : regValue.info.arrays.floatArray){
                 if (i != 0){
@@ -231,21 +243,7 @@ registerValueT getRegisterValue(const std::string& regName, bool useTempContext)
                 }
             }
         }
-        else {
-//          1.0f just to make it pass the zero check test
-            regValue = {.doubleVal = 0.0f};
-            regValue.info.is256bit = true;
-            regValue.info.arrays.doubleArray[0] = convert128BitToDouble(lowerHalf, 0);
-            regValue.info.arrays.doubleArray[1] = convert128BitToDouble(0, upperHalf);
-            regValue.info.arrays.doubleArray[2] = convert128BitToDouble(lowerHalf1, 0);
-            regValue.info.arrays.doubleArray[3] = convert128BitToDouble(0, upperHalf1);
-            for (double i : regValue.info.arrays.doubleArray){
-                if (i != 0){
-                    regValue.doubleVal = 1.0f;
-                    break;
-                }
-            }
-        }
+
         return regValue;
     }
 
