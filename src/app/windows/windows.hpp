@@ -8,7 +8,9 @@
 #include "../../../vendor/imgui/misc/cpp/imgui_stdlib.h"
 #include "../arch/arch.hpp"
 #include <list>
+#include <regex>
 #include "../../vendor/tinyexpr/tinyexpr.h"
+#include "../actions/actions.hpp"
 
 struct newMemEditWindowsInfo{
     MemoryEditor memEditor;

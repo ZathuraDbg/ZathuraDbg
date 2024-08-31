@@ -1,5 +1,4 @@
 #include "windows.hpp"
-
 std::vector<std::string> commands = {};
 
 std::string convToDec(const std::string& str){
@@ -13,7 +12,6 @@ std::string convToDec(const std::string& str){
             continue;
         }
 
-//      "0x 10f0+"
         if (foundHexStr){
             char* endptr = nullptr;
             auto convVal = strtoul(str.substr(i).c_str(), &endptr, 16);
@@ -48,100 +46,185 @@ std::string parseVals(std::string val){
     auto len = val.length();
 
     size_t i = 0;
-    if (val.contains('$')){
-        val = toUpperCase(val);
-        val += " ";
-        for (auto& c: val){
-            if (isRegisterValid(regName, codeInformation.mode) && (!foundValidReg)){
-                foundValidReg = true;
-            }
+    val = toUpperCase(val);
+    val += " ";
+    for (auto& c: val){
+        if (isRegisterValid(regName, codeInformation.mode) && (!foundValidReg)){
+            foundValidReg = true;
+        }
 
-            if (foundValidReg){
-                if (c == ' ' || c == '$' || c == '+' || c =='-' || c == '/' || c == '*' || (i == len)){
-                    foundReg = false;
-                    foundValidReg = false;
-                    regNames.push_back(regName);
-                    std::string registerValue;
-                    if (!codeHasRun){
-                        registerValue = tempRegisterValueMap[regName];
-                    }
-                    else{
-                        if (regInfoMap[regName].first <= 64){
-                            registerValue = std::to_string(getRegisterValue(regName, (tempContext != nullptr) ? true : false).eightByteVal);
-                        }
-                        else if (regInfoMap[regName].first == 128){
-                            registerValue = std::to_string(getRegisterValue(regName, (tempContext != nullptr) ? true : false).floatVal);
-                        }
-                    }
-//                    registerValue = (!codeHasRun) ? tempRegisterValueMap[regName] : (std::to_string(getRegisterValue(regName, (tempContext != nullptr) ? true : false)));
-                    if (registerValue.starts_with("0x")){
-                         result += std::to_string(hexStrToInt(registerValue));
-                    }
-                    else{
-                        result += registerValue;
-                    }
-
-                    if (result.empty()){
-                        result += "0";
-                    }
-
-                    if (c!=' '){
-                        result += c;
-                    }
-
-                    regName.clear();
-                    i++;
-                    continue;
+        if (foundValidReg){
+            if (c == ' ' || c == '$' || c == '+' || c =='-' || c == '/' || c == '*' || (i == len)){
+                foundReg = false;
+                foundValidReg = false;
+                regNames.push_back(regName);
+                std::string registerValue;
+                if (!codeHasRun){
+                    registerValue = tempRegisterValueMap[regName];
                 }
                 else{
-                    regName.clear();
+                    if (regInfoMap[regName].first <= 64){
+                        registerValue = std::to_string(getRegisterValue(regName, (tempContext != nullptr) ? true : false).eightByteVal);
+                    }
+                    else if (regInfoMap[regName].first == 128){
+                        registerValue = std::to_string(getRegisterValue(regName, (tempContext != nullptr) ? true : false).floatVal);
+                    }
                 }
-            }
 
-            if (c == '$'){
-                foundReg = true;
+                if (registerValue.starts_with("0x")){
+                     result += std::to_string(hexStrToInt(registerValue));
+                }
+                else{
+                    result += registerValue;
+                }
+
+                if (result.empty()){
+                    result += "0";
+                }
+
+                if (c!=' '){
+                    result += c;
+                }
+
+                regName.clear();
                 i++;
                 continue;
             }
-
-            if (foundReg){
-                regName += c;
+            else{
+                regName.clear();
             }
-
-            if (c != ' ' && (!foundReg)){
-                result += c;
-            }
-
-            i++;
         }
-    }
-    else{
-        return val;
+
+        if (c == '$'){
+            foundReg = true;
+            i++;
+            continue;
+        }
+
+        if (foundReg){
+            regName += c;
+        }
+
+        if (c != ' ' && (!foundReg)){
+            result += c;
+        }
+
+        i++;
     }
 
     return std::to_string(doubleToUint64(te_interp(convToDec(result).data(), nullptr)));
 }
 
+void splitStringExpressions(std::string stringToSplit,std::vector<std::string>& stringVec){
+    std::string strToPush{};
+    stringToSplit+=' ';
+    for (int j = 0; j < stringToSplit.length(); j++){
+        char i = stringToSplit[j];
+
+        if (i == '+' || i == '-' || i == '*' || i == '/'){
+            if (!strToPush.empty()){
+                stringVec.emplace_back(strToPush);
+                strToPush.clear();
+                strToPush = "";
+            }
+            stringVec.emplace_back(std::string(1, i));
+            continue;
+        }
+
+        if (i == ' '){
+            if (!strToPush.empty()){
+                stringVec.emplace_back(strToPush);
+                strToPush.clear();
+                strToPush = "";
+            }
+            continue;
+        }
+
+        strToPush += i;
+    }
+}
+
+void parseCommands(const std::string& commandIn){
+    std::string command = toLowerCase(commandIn);
+    const std::regex labelPattern("^[a-zA-Z_][a-zA-Z0-9_]*$");
+
+    if (command[0] == 'b' || (command.starts_with("break")) || command.starts_with("breakpoint")
+    || command.starts_with("bp"))
+    {
+        int lineNo;
+        std::vector<std::string> arguments;
+        std::string argument;
+
+        auto idx = command.find_first_of(' ');
+        if (idx != std::string::npos){
+            argument = command.substr(idx);
+            splitStringExpressions(argument, arguments);
+
+            if (arguments[0].starts_with("0x") || arguments[0].starts_with('$')){
+                std::cout << arguments[0] << ": hex" << std::endl;
+            }
+            else if (std::regex_match(arguments[0], labelPattern)){
+                std::cout << arguments[0] << ": label" << std::endl;
+            }
+            else if (std::all_of(arguments[0].begin(), arguments[0].end(), ::isdigit)){
+                lineNo = std::atoi(parseVals(argument).c_str());
+                debugAddBreakpoint(lineNo - 1);
+            }
+
+        }
+    }
+}
+
 void consoleWindow()
 {
     ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[SatoshiMedium18]);
-    for (auto &t: commands){
-        ImGui::Text("%s", t.c_str());
-    }
 
     const float footer_height_to_reserve = ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
+
+    // Begin the main scrollable region
     ImGui::BeginChild("ScrollingRegion", ImVec2(0, -footer_height_to_reserve), ImGuiChildFlags_None, ImGuiWindowFlags_HorizontalScrollbar);
 
-    ImGui::EndChild();
-    static char input[500]{};
-
-    ImGui::PushID(&input);
-     if (ImGui::InputText("Command", input, IM_ARRAYSIZE(input), ImGuiInputTextFlags_EnterReturnsTrue)){
-        commands.emplace_back((std::string(input) + ": " + (parseVals(input))));
-        input[0] = '\0';
+    // Display previous commands
+    for (auto &t : commands) {
+        ImGui::TextUnformatted(t.c_str());
     }
 
+    // Keep auto-scrolling if we're already at the bottom
+    if (ImGui::GetScrollY() >= ImGui::GetScrollMaxY())
+        ImGui::SetScrollHereY(1.0f);
+
+    ImGui::EndChild();
+
+    // Separator
+    ImGui::Separator();
+
+    // Fixed input area at the bottom
+    ImGui::BeginChild("FixedInputRegion", ImVec2(0, footer_height_to_reserve), ImGuiChildFlags_None, ImGuiWindowFlags_NoScrollbar);
+
+    static char input[500]{};
+    static bool reclaim_focus = false;
+
+    ImGui::PushItemWidth(-1);  // Make the input box take the full width
+    if (ImGui::InputText("##Command", input, IM_ARRAYSIZE(input),
+                         ImGuiInputTextFlags_EnterReturnsTrue))
+    {
+        commands.emplace_back((std::string(input) + ": " + (parseVals(input))));
+        parseCommands(input);
+        input[0] = '\0';
+        reclaim_focus = true;
+    }
+
+    // Auto-focus on window apparition
+    ImGui::SetItemDefaultFocus();
+    if (reclaim_focus)
+    {
+        ImGui::SetKeyboardFocusHere(-1); // Auto focus previous widget
+        reclaim_focus = false;
+    }
+
+    ImGui::PopItemWidth();
+    ImGui::EndChild();
+
     ImGui::PopFont();
-    ImGui::PopID();
     ImGui::End();
 }

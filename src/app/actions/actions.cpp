@@ -77,6 +77,19 @@ void debugToggleBreakpoint(){
     }
 }
 
+bool debugAddBreakpoint(int lineNum){
+    auto idx = (std::find(breakpointLines.begin(), breakpointLines.end(), lineNum + 1));
+    if (idx != breakpointLines.end()){
+        return false;
+    }
+    else{
+        breakpointLines.push_back(lineNum + 1);
+        editor->HighlightBreakpoints(lineNum);
+    }
+
+    return true;
+}
+
 void debugRunSelectionAction(){
     std::stringstream selectedAsmText(editor->GetSelectedText());
     if (!selectedAsmText.str().empty()) {
