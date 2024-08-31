@@ -88,14 +88,28 @@ bool debugAddBreakpoint(int lineNum){
         return false;
     }
     else{
-        for (auto &pair: labelLineNoMapInternal){
-            if (pair.second == (lineNum+1)){
-                lineNum += 1;
-            }
-        }
+//        for (auto &pair: labelLineNoMapInternal){
+//            if (pair.second == (lineNum+1)){
+//                lineNum += 1;
+//            }
+//        }
 
         breakpointLines.push_back(lineNum + 1);
         editor->HighlightBreakpoints(lineNum);
+    }
+
+    return true;
+}
+
+bool debugRemoveBreakpoint(int lineNum){
+    auto idx = (std::find(breakpointLines.begin(), breakpointLines.end(), lineNum + 1));
+
+    if (idx == breakpointLines.end()){
+        return false;
+    }
+    else{
+        breakpointLines.erase(idx);
+        editor->RemoveHighlight(lineNum);
     }
 
     return true;
