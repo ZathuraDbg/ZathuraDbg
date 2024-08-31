@@ -72,6 +72,11 @@ void debugToggleBreakpoint(){
         editor->RemoveHighlight(line);
     }
     else{
+        for (auto &pair: labelLineNoMapInternal){
+            if (pair.second == (line+1)){
+                line += 1;
+            }
+        }
         breakpointLines.push_back(line + 1);
         editor->HighlightBreakpoints(line);
     }
@@ -83,6 +88,12 @@ bool debugAddBreakpoint(int lineNum){
         return false;
     }
     else{
+        for (auto &pair: labelLineNoMapInternal){
+            if (pair.second == (lineNum+1)){
+                lineNum += 1;
+            }
+        }
+
         breakpointLines.push_back(lineNum + 1);
         editor->HighlightBreakpoints(lineNum);
     }

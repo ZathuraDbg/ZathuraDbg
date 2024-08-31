@@ -3,7 +3,6 @@ main:
     mov rax, 0x4010000000000000
     movq xmm0, rax
 	punpcklqdq xmm0, xmm0
-    add rsp, 8
     add rbx, rax
     mov rdi, rbx
     push rdi

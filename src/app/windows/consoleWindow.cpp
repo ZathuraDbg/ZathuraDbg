@@ -161,10 +161,14 @@ void parseCommands(const std::string& commandIn){
             splitStringExpressions(argument, arguments);
 
             if (arguments[0].starts_with("0x") || arguments[0].starts_with('$')){
-                std::cout << arguments[0] << ": hex" << std::endl;
+                lineNo = std::atoi(parseVals(argument).c_str());
+                debugAddBreakpoint(lineNo - 1);
             }
             else if (std::regex_match(arguments[0], labelPattern)){
-                std::cout << arguments[0] << ": label" << std::endl;
+                if (labelLineNoMapInternal.count(arguments[0]) != 0){
+                    lineNo = labelLineNoMapInternal[arguments[0]];
+                    debugAddBreakpoint(lineNo);
+                }
             }
             else if (std::all_of(arguments[0].begin(), arguments[0].end(), ::isdigit)){
                 lineNo = std::atoi(parseVals(argument).c_str());
