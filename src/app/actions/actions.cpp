@@ -88,12 +88,6 @@ bool debugAddBreakpoint(int lineNum){
         return false;
     }
     else{
-//        for (auto &pair: labelLineNoMapInternal){
-//            if (pair.second == (lineNum+1)){
-//                lineNum += 1;
-//            }
-//        }
-
         breakpointLines.push_back(lineNum + 1);
         editor->HighlightBreakpoints(lineNum);
     }
