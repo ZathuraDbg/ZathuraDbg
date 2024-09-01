@@ -59,7 +59,7 @@ int main(int, char**)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 #endif
 
-    window = glfwCreateWindow(1280, 720, "Zathura!", nullptr, nullptr);
+    window = glfwCreateWindow(1920, 1080, "Zathura!", nullptr, nullptr);
     glfwSetWindowSizeLimits(window, 980, 435, GLFW_DONT_CARE, GLFW_DONT_CARE);
 
     if (window == nullptr)
