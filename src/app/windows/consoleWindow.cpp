@@ -246,20 +246,23 @@ void parseCommands(const std::string& commandIn){
         }
         else if (arguments[0] == "r" || arguments[0] == "re" || arguments[0] == "registers"){
             std::string s = "Register\t\t\t\t\t\tHex";
-            output.emplace_back(s);
 
             if (arguments.size() > 1){
                 if (isRegisterValid(toUpperCase(arguments[1]), codeInformation.mode)){
                     std::string regName = toUpperCase(arguments[1]);
+
                     if (registerValueMap.contains(regName)){
+                        output.emplace_back(s);
                         output.emplace_back(regName + getSpace(12, regName, 4) + registerValueMap[regName]);
                     }
                     else{
                         if (!getRegisterValue(regName, false).info.is256bit && (!getRegisterValue(regName, false).info.is128bit)){
+                            output.emplace_back(s);
                             output.emplace_back(regName + getSpace(12, regName, 4) + std::to_string(getRegisterValue(regName, false).eightByteVal));
                         }
                         else{
                            if (getRegisterValue(regName, false).info.is128bit){
+                               output.emplace_back(s);
                                if (use32BitLanes){
                                    int firstLaneNum = 0;
                                    std::string outStr;
@@ -276,12 +279,26 @@ void parseCommands(const std::string& commandIn){
                                    }
                                }
                                else{
+                                   int firstLaneNum = 0;
+                                   std::string outStr;
+
                                    for (int i = 0; i < 2; i++){
-//                                       output.emplace_back(regName + std::to_string() + getSpace(12, regName) + std::to_string(getRegisterValue(regName, false).info.arrays.doubleArray[i]));
-                                   }
+                                          outStr += regName + "[";
+                                           outStr += std::to_string(firstLaneNum);
+                                           outStr += ":";
+                                           firstLaneNum = (64 + 64 * i);
+                                           outStr += std::to_string(firstLaneNum - 1);
+                                           outStr += "]";
+                                           output.emplace_back(outStr + getSpace(20, outStr, 12) + std::to_string(getRegisterValue(regName, false).info.arrays.doubleArray[i]));
+                                           outStr.clear();
+                                           outStr = "";
+                                       }
                                }
                            }
                            else{
+                               s = "Register\t\t\t\t\t\t Hex";
+
+                               output.emplace_back(s);
                                if (use32BitLanes){
                                    int firstLaneNum = 0;
                                    std::string outStr;
@@ -289,17 +306,27 @@ void parseCommands(const std::string& commandIn){
                                        outStr += regName + "[";
                                        outStr += std::to_string(firstLaneNum);
                                        outStr += ":";
-                                       firstLaneNum = (32 * i);
+                                       firstLaneNum = (32 + 32 * i);
                                        outStr += std::to_string(firstLaneNum - 1);
                                        outStr += "]";
-                                       output.emplace_back(outStr + getSpace(20, outStr, 4) + std::to_string(getRegisterValue(regName, false).info.arrays.floatArray[i]));
+                                       output.emplace_back(outStr + getSpace(20, outStr, 13) + std::to_string(getRegisterValue(regName, false).info.arrays.floatArray[i]));
                                        outStr.clear();
                                        outStr = "";
                                    }
                                }
                                else{
+                                   int firstLaneNum = 0;
+                                   std::string outStr;
                                    for (int i = 0; i < 4; i++){
-//                                       output.emplace_back(regName + std::to_string() + getSpace(12, regName) + std::to_string(getRegisterValue(regName, false).info.arrays.doubleArray[i]));
+                                       outStr += regName + "[";
+                                       outStr += std::to_string(firstLaneNum);
+                                       outStr += ":";
+                                       firstLaneNum = (64 + 64 * i);
+                                       outStr += std::to_string(firstLaneNum - 1);
+                                       outStr += "]";
+                                       output.emplace_back(outStr + getSpace(20, outStr, 13) + std::to_string(getRegisterValue(regName, false).info.arrays.doubleArray[i]));
+                                       outStr.clear();
+                                       outStr = "";
                                    }
                                }
                            }
@@ -309,8 +336,28 @@ void parseCommands(const std::string& commandIn){
                 }
             }
 
+            s = "Register\t\t\tHex";
+            output.emplace_back(s);
             for (auto& i: registerValueMap){
                 output.emplace_back(i.first + getSpace(12, i.first, 4) + i.second);
+            }
+        }
+        else if (arguments[0] == "l" || arguments[0].starts_with("labels")){
+            auto s = "Num\t Name\t\t\t\tLine\t\tAddress";
+            output.push_back(s);
+            std::string outStr;
+            int j = 1;
+            for (auto& i: labelLineNoMapInternal){
+                outStr = std::to_string(j);
+                outStr += getSpace(7, i.first, 4);
+                outStr += i.first;
+                outStr += getSpace(4, (i.first), 16);
+                outStr += std::to_string(i.second);
+                outStr += getSpace(4, std::to_string(i.second), 7);
+                outStr += getAddressFromLineNo(i.second+1);
+                output.push_back(outStr);
+                j++;
+                outStr.clear();
             }
         }
     }
