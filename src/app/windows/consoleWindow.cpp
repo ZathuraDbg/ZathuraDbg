@@ -361,6 +361,72 @@ void parseCommands(const std::string& commandIn){
             }
         }
     }
+    else if ((command[0] == 's' && command[1]!='t') || command.starts_with("step")){
+        if (arguments.empty()){
+            arguments = {" "};
+        }
+
+        if (command.starts_with("step")){
+            if (!arguments.empty()){
+                if (arguments[0] == "i" || arguments[0] =="in"){
+                    debugStepIn = true;
+                    return;
+                }
+            }
+        }
+
+        if (command.length() < 2 || arguments[0] == "i" || arguments[0] == "in"){
+            if (command[1] == 'i'){
+                debugStepIn = true;
+                return;
+            }
+        }
+        else {
+            debugStepIn = true;
+        }
+    }
+    else if (command[0] == 'n' || command.starts_with("next")){
+        if (arguments.empty()){
+            arguments = {" "};
+        }
+
+        if (command.starts_with("next")){
+            if (!arguments.empty()){
+                if (arguments[0] == "i" || arguments[0] =="instruction" || arguments[0] == "in"){
+                    debugStepOver = true;
+                    return;
+                }
+            }
+        }
+
+        if (command.length() < 2 || arguments[0] == "i" || arguments[0] == "in" || arguments[0] == "instruction"){
+            if (command[1] == 'i'){
+                debugStepOver = true;
+                return;
+            }
+        }
+        else {
+            debugStepOver = true;
+        }
+    }
+    else if (command[0] == 'r' || command.starts_with("run")){
+        debugRun = true;
+    }
+    else if (command == "start"){
+        enableDebugMode = true;
+    }
+    else if (command == "restart" || command == "re"){
+        debugRestart = true;
+    }
+    else if (command == "pause"){
+        debugPause = true;
+    }
+    else if (command == "continue"){
+        debugContinue = true;
+    }
+    else if (command == "stop"){
+        debugStop = true;
+    }
 }
 
 void consoleWindow()
