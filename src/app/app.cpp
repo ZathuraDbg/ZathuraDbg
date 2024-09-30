@@ -129,7 +129,7 @@ void mainWindow() {
 
     bool k = true;
     SetupImGuiStyle();
-    ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
+    ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport());
 
     appMenuBar();
     setupViewPort();

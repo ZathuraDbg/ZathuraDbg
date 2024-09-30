@@ -1,6 +1,6 @@
 [Window][DockSpaceViewport_11111111]
-Pos=0,22
-Size=1920,1034
+Pos=0,19
+Size=1920,1024
 Collapsed=0
 
 [Window][Debug##Default]
@@ -10,52 +10,57 @@ Collapsed=0
 
 [Window][Code]
 Pos=0,22
-Size=714,1034
+Size=683,1058
 Collapsed=0
 DockId=0x00000001,0
 
 [Window][Register Values]
-Pos=1456,22
-Size=464,592
+Pos=1454,22
+Size=466,637
 Collapsed=0
 DockId=0x00000002,0
 
 [Window][Console]
-Pos=716,22
-Size=738,592
-Collapsed=0
-DockId=0x00000006,0
-
-[Window][Memory Editor]
-Pos=716,616
-Size=737,440
+Pos=685,22
+Size=767,637
 Collapsed=0
 DockId=0x00000008,0
 
-[Window][Stack]
-Pos=1455,616
-Size=465,440
+[Window][Memory Editor]
+Pos=685,661
+Size=764,419
 Collapsed=0
-DockId=0x00000007,0
+DockId=0x00000004,0
+
+[Window][Stack]
+Pos=1451,661
+Size=469,419
+Collapsed=0
+DockId=0x00000005,0
+
+[Window][WindowOverViewport_11111111]
+Pos=0,22
+Size=1920,1058
+Collapsed=0
 
 [Table][0xB4C7751B,2]
 Column 0  Weight=3.4118
 Column 1  Weight=20.5882
 
 [Table][0x6D3D7979,4]
-Column 0  Weight=1.1484
-Column 1  Weight=0.7105
-Column 2  Weight=1.1387
-Column 3  Weight=1.0024
+Column 0  Weight=1.0000
+Column 1  Weight=1.0000
+Column 2  Weight=1.0000
+Column 3  Weight=1.0000
 
 [Docking][Data]
-DockSpace       ID=0x8B93E3BD Window=0xA787BDB4 Pos=0,22 Size=1920,1034 Split=X
-  DockNode      ID=0x00000001 Parent=0x8B93E3BD SizeRef=714,1024 Selected=0xD5FB4B5E
-  DockNode      ID=0x00000005 Parent=0x8B93E3BD SizeRef=1204,1024 Split=Y Selected=0x49278EEE
-    DockNode    ID=0x00000003 Parent=0x00000005 SizeRef=1246,592 Split=X Selected=0x49278EEE
-      DockNode  ID=0x00000006 Parent=0x00000003 SizeRef=738,584 CentralNode=1 Selected=0x49278EEE
-      DockNode  ID=0x00000002 Parent=0x00000003 SizeRef=464,584 Selected=0x7596994F
-    DockNode    ID=0x00000004 Parent=0x00000005 SizeRef=1246,440 Split=X Selected=0x380C1307
-      DockNode  ID=0x00000008 Parent=0x00000004 SizeRef=737,438 Selected=0x380C1307
-      DockNode  ID=0x00000007 Parent=0x00000004 SizeRef=465,438 Selected=0x600D52CA
+DockSpace       ID=0x7C6B3D9B Window=0xA87D555D Pos=0,22 Size=1920,1058 Split=X
+  DockNode      ID=0x00000001 Parent=0x7C6B3D9B SizeRef=683,1058 Selected=0xD5FB4B5E
+  DockNode      ID=0x00000006 Parent=0x7C6B3D9B SizeRef=1235,1058 Split=Y
+    DockNode    ID=0x00000003 Parent=0x00000006 SizeRef=1920,637 Split=X Selected=0x49278EEE
+      DockNode  ID=0x00000008 Parent=0x00000003 SizeRef=767,526 Selected=0x49278EEE
+      DockNode  ID=0x00000002 Parent=0x00000003 SizeRef=466,526 Selected=0x7596994F
+    DockNode    ID=0x00000007 Parent=0x00000006 SizeRef=1920,419 Split=X Selected=0x380C1307
+      DockNode  ID=0x00000004 Parent=0x00000007 SizeRef=764,530 CentralNode=1 Selected=0x380C1307
+      DockNode  ID=0x00000005 Parent=0x00000007 SizeRef=469,530 Selected=0x600D52CA
 
