@@ -4,7 +4,5 @@ src/.gdb_history
 src/build
 src/cmake-build-debug
 src/cmake-build-release
-src/test.asm
 src/Zathura
 src/.Zathura.zlog
-src/test.asm
