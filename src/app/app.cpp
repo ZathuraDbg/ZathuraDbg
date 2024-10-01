@@ -34,7 +34,8 @@ void setupViewPort() {
 
 
 void LoadIniFile() {
-    std::string filename = "/home/rc/Zathura-UI/src/config.zlyt";
+    std::string filename = std::filesystem::current_path();
+    filename += "/config.zlyt";
     std::filesystem::path dir(filename);
     ImGui::LoadIniSettingsFromDisk(dir.string().c_str());
     LOG_DEBUG("Loaded config file from " << dir.string());

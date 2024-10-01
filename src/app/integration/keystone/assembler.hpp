@@ -14,7 +14,7 @@
 #include "../utils/hex/hex.hpp"
 
 // #define ASM_FILE_NAME "tmpasm.asm"
-#define ASM_FILE_NAME "/home/rc/Zathura-UI/src/test.asm"
+#define ASM_FILE_NAME selectedFile.c_str()
 
 typedef enum{
     ASM_TARGET_X86 = 32,
