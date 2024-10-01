@@ -30,7 +30,8 @@ namespace Utils{
 
         std::filesystem::path layoutPath;
 
-        std::string pathString = "/home/rc/Zathura-UI/src/";
+        std::string pathString = std::filesystem::current_path();
+        pathString += "/";
         pathString += fileName; ImGui::SaveIniSettingsToDisk(pathString.c_str()); LayoutManager::reload();
     }
 
@@ -40,7 +41,8 @@ namespace Utils{
 
     void LayoutManager::process() {
         if (!s_layoutPathToLoad.empty()) {
-            std::string pathString = "/home/rc/Zathura-UI/src/";
+            std::string pathString = std::filesystem::current_path();
+            pathString += "/";
             ImGui::LoadIniSettingsFromDisk(pathString.c_str());
 
             s_layoutPathToLoad.clear() ;
@@ -55,7 +57,7 @@ namespace Utils{
     void LayoutManager::reload() {
         s_layouts.clear();
 
-        for (const auto &directory : {"/home/rc/Zathura-UI/src/"})
+        for (const auto &directory : {std::filesystem::current_path() + "/"})
             for (const auto &entry : std::filesystem::directory_iterator(directory)) {
                 const auto &path = entry.path();
 
