@@ -72,7 +72,7 @@ int main(int, char**)
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
-    io.IniFilename = (std::filesystem::current_path().string() + "/config.zlyt").c_str();
+    const char* currentPath = std::filesystem::current_path().string().c_str();
 	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
     LoadIniFile();
