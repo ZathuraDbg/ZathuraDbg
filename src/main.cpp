@@ -108,7 +108,7 @@ int main(int, char**)
 
     while (!glfwWindowShouldClose(window))
     {
-        glfwPollEvents();
+        glfwWaitEvents();
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
