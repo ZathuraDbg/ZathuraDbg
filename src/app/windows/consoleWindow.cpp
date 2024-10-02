@@ -336,7 +336,7 @@ void parseCommands(const std::string& commandIn){
                 }
             }
 
-            s = "Register\t\t\tHex";
+            s = "Register\t\tHex";
             output.emplace_back(s);
             for (auto& i: registerValueMap){
                 output.emplace_back(i.first + getSpace(12, i.first, 4) + i.second);
@@ -344,7 +344,7 @@ void parseCommands(const std::string& commandIn){
         }
         else if (arguments[0] == "l" || arguments[0].starts_with("labels")){
             auto s = "Num\t Name\t\t\t\tLine\t\tAddress";
-            output.push_back(s);
+            output.emplace_back(s);
             std::string outStr;
             int j = 1;
             for (auto& i: labelLineNoMapInternal){

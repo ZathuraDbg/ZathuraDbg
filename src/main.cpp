@@ -14,6 +14,7 @@
 #include <fstream>
 #include <chrono>
 #include <thread>
+#include <filesystem>
 
 GLFWwindow* window = nullptr;
 #if defined(_MSC_VER) && (_MSC_VER >= 1900) && !defined(IMGUI_DISABLE_WIN32_FUNCTIONS)
@@ -71,7 +72,7 @@ int main(int, char**)
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
-    io.IniFilename = "/home/rc/Zathura-UI/src/config.zlyt";
+    io.IniFilename = (std::filesystem::current_path().string() + "/config.zlyt").c_str();
 	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
     LoadIniFile();
