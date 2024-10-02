@@ -145,9 +145,9 @@ void splitStringExpressions(std::string stringToSplit,std::vector<std::string>& 
 }
 
 std::string getAddressFromLineNo(int lineNo){
-    for (auto &pair: addressLineNoMap){
-        if (pair.second == std::to_string(lineNo)){
-            auto s (std::strtoul(pair.first.c_str(), nullptr, 10));
+    for (auto &[fst, snd]: addressLineNoMap){
+        if (snd == std::to_string(lineNo)){
+            const auto s (std::strtoul(fst.c_str(), nullptr, 10));
             std::stringstream result;
             result << "0x" << std::setfill('0') << std::hex << s;
             return " at " + result.str();
@@ -190,7 +190,7 @@ void parseCommands(const std::string& commandIn){
     }
 
     splitStringExpressions(argument, arguments);
-    auto getSpace = [](int base, const std::string& str, int subNum){
+    auto getSpace = [](const int base, const std::string& str, const int subNum){
         int len = subNum - (str.length());
 
         if (len < 0){
@@ -203,11 +203,11 @@ void parseCommands(const std::string& commandIn){
     if (command[0] == 'b' || (command.starts_with("break")) || command.starts_with("breakpoint")
     || command.starts_with("bp") || command[0]=='d' || command.starts_with("db") || command.starts_with("delete"))
     {
-        int lineNo = 0;
         bool removeBP = command[0]=='d' || command.starts_with("db") || command.starts_with("delete");
         std::string outStr{};
 
         if (!arguments.empty()){
+            int lineNo = 0;
             lineNo = parseBreakpointArgs(arguments, argument, outStr);
 
             if (removeBP){
@@ -249,9 +249,7 @@ void parseCommands(const std::string& commandIn){
 
             if (arguments.size() > 1){
                 if (isRegisterValid(toUpperCase(arguments[1]), codeInformation.mode)){
-                    std::string regName = toUpperCase(arguments[1]);
-
-                    if (registerValueMap.contains(regName)){
+                    if (std::string regName = toUpperCase(arguments[1]); registerValueMap.contains(regName)){
                         output.emplace_back(s);
                         output.emplace_back(regName + getSpace(12, regName, 4) + registerValueMap[regName]);
                     }
@@ -338,8 +336,8 @@ void parseCommands(const std::string& commandIn){
 
             s = "Register\t\tHex";
             output.emplace_back(s);
-            for (auto& i: registerValueMap){
-                output.emplace_back(i.first + getSpace(12, i.first, 4) + i.second);
+            for (const auto&[registerName, value]: registerValueMap){
+                output.emplace_back(registerName + getSpace(12, registerName, 4) + value);
             }
         }
         else if (arguments[0] == "l" || arguments[0].starts_with("labels")){
