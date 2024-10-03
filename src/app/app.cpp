@@ -41,9 +41,6 @@ void LoadIniFile() {
     std::string filename = executablePath.c_str();
     filename += "/config.zlyt";
     std::filesystem::path dir(filename);
-    if (!std::filesystem::exists(filename)) {
-        
-    }
     ImGui::LoadIniSettingsFromDisk(dir.string().c_str());
     LOG_DEBUG("Loaded config file from " << dir.string());
 }
