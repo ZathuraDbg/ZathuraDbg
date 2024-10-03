@@ -13,3 +13,6 @@
 [submodule "vendor/code"]
 	path = vendor/code
 	url = http://git.code.sf.net/p/tinyfiledialogs/code
+[submodule "vendor/whereami"]
+	path = vendor/whereami
+	url = https://github.com/gpakosz/whereami

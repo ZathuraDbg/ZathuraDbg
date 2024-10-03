@@ -32,6 +32,7 @@ set(SOURCES
         ${CMAKE_SOURCE_DIR}/app/integration/interpreter/interpreter.cpp
         ${CMAKE_SOURCE_DIR}/app/integration/keystone/assembler.cpp
         ${CMAKE_SOURCE_DIR}/app/arch/x86.cpp
+        ${CMAKE_SOURCE_DIR}/../vendor/whereami/src/whereami.c
         app/app.cpp
         ../vendor/code/tinyfiledialogs.c
         app/tasks/fileTasks.cpp
@@ -62,6 +63,7 @@ include_directories(
         ${CMAKE_SOURCE_DIR}/../vendor/unicorn/include
         ${CMAKE_SOURCE_DIR}/../vendor/keystone/include
         ${CMAKE_SOURCE_DIR}/../vendor/capstone/include
+        ${CMAKE_SOURCE_DIR}/../vendor/whereami/src
 )
 
 # Compiler options

@@ -6,6 +6,7 @@
 #include <cstdio>
 #include "../vendor/ImGuiColorTextEdit/TextEditor.h"
 #include "app/app.hpp"
+#include "../vendor/whereami/src/whereami.h"
 #define GL_SILENCE_DEPRECATION
 #if defined(IMGUI_IMPL_OPENGL_ES2)
 #include <GLES2/gl2.h>
@@ -34,8 +35,10 @@ void destroyWindow(){
     glfwDestroyWindow(window);
     glfwTerminate();
 }
+
 float frameRate = 120;
-int main(int, char**)
+
+int main(int argc, const char** argv)
 {
     glfwSetErrorCallback(glfw_error_callback);
     if (!glfwInit())
@@ -66,13 +69,32 @@ int main(int, char**)
     if (window == nullptr)
         return 1;
 
+    glfwHideWindow(window);
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1); // Enable vsync
+
+    {
+        char* path = NULL;
+        int length, dirnameLength;
+        
+        length = wai_getExecutablePath(NULL, 0, &dirnameLength);
+        if (length > 0) {
+            path = (char*)malloc(length + 1);
+            if (path == nullptr) {
+                tinyfd_messageBox("Whereami", "Failed to get executable path!", "ok", "error", 0);
+                return 1;
+            }
+            wai_getExecutablePath(path, length, &dirnameLength);
+            path[dirnameLength] = '\0';
+            executablePath = std::string(path);
+            free(path);
+        }
+    }
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
-    const char* currentPath = std::filesystem::current_path().string().c_str();
+    const char* currentPath = executablePath.c_str();
 	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
     LoadIniFile();
@@ -84,12 +106,10 @@ int main(int, char**)
         style.WindowRounding = 2.0f;
         style.Colors[ImGuiCol_WindowBg].w = 1.0f;
     }
-
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glsl_version);
 
     ImVec4 clear_color = hexToImVec4("101010");
-
     SetupImGuiStyle();
     setupEditor();
 //    ImGui::PopFont();
@@ -106,7 +126,9 @@ int main(int, char**)
         LOG_ERROR("Failed to create stack!");
         exit(-1);
     }
-
+    
+    glfwShowWindow(window);
+    
     while (!glfwWindowShouldClose(window))
     {
         glfwWaitEvents();
