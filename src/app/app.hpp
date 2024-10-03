@@ -3,7 +3,6 @@
 #define IMGUI_DEFINE_MATH_OPERATORS
 #define LOG_MODULE_NAME "Zathura"
 
-extern bool isRunning;
 #include <cstdio>
 #include <string>
 #include <fstream>
@@ -35,14 +34,18 @@ using json = nlohmann::json;
 
 //extern ImU32 bgColorFn(const ImU8* data, size_t off);
 //extern void interactFn(const ImU8* data, size_t off);
-extern bool showRequiredButton(const std::string& buttonName, bool state = false);
-extern std::string parseVals(std::string val);
-extern float frameRate;
-extern void setupViewPort();
+bool showRequiredButton(const std::string& buttonName, bool state = false);
+std::string parseVals(std::string val);
+void setupViewPort();
 void appMenuBar();
-extern void manageShortcuts();
-extern void LoadIniFile();
-extern bool setupButtons();
-extern void mainWindow();
-extern void setupEditor();
+void manageShortcuts();
+void LoadIniFile();
+bool setupButtons();
+void mainWindow();
+void setupEditor();
+
+extern float frameRate;
+extern std::string executablePath;
+extern bool isRunning;
+
 #endif //ZATHURA_UI_APP_HPP

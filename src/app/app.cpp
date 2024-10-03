@@ -6,8 +6,15 @@ bool isRunning = true;
 bool lineNumbersShown = true;
 bool runSelectedCode = false;
 bool goToDefinition = false;
+std::string executablePath;
 
 void setupEditor() {
+    std::ifstream t = std::ifstream(selectedFile);
+    if (!t.good()) {
+        selectedFile = openFileDialog();
+        t = std::ifstream(selectedFile);
+    }
+
     editor = new TextEditor();
     editor->SetLanguageDefinition(TextEditor::LanguageDefinitionId::Asmx86_64);
     editor->SetPalette(TextEditor::PaletteId::Catppuccin);
@@ -16,11 +23,8 @@ void setupEditor() {
     editor->SetTabSize(4);
 
     {
-        std::ifstream t("test.asm");
-        if (t.good()) {
-            std::string str((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());
-            editor->SetText(str);
-        }
+        std::string str((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());
+        editor->SetText(str);
     }
 }
 
@@ -34,9 +38,12 @@ void setupViewPort() {
 
 
 void LoadIniFile() {
-    std::string filename = std::filesystem::current_path();
+    std::string filename = executablePath.c_str();
     filename += "/config.zlyt";
     std::filesystem::path dir(filename);
+    if (!std::filesystem::exists(filename)) {
+        
+    }
     ImGui::LoadIniSettingsFromDisk(dir.string().c_str());
     LOG_DEBUG("Loaded config file from " << dir.string());
 }
