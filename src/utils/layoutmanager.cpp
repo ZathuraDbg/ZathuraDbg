@@ -1,4 +1,5 @@
 #include <optional>
+#include "../app/app.hpp"
 #include "layoutmanager.h"
 
 namespace Utils{
@@ -30,7 +31,7 @@ namespace Utils{
 
         std::filesystem::path layoutPath;
 
-        std::string pathString = std::filesystem::current_path();
+        std::string pathString = executablePath;
         pathString += "/";
         pathString += fileName; ImGui::SaveIniSettingsToDisk(pathString.c_str()); LayoutManager::reload();
     }
@@ -41,7 +42,7 @@ namespace Utils{
 
     void LayoutManager::process() {
         if (!s_layoutPathToLoad.empty()) {
-            std::string pathString = std::filesystem::current_path();
+            std::string pathString = executablePath;
             pathString += "/";
             ImGui::LoadIniSettingsFromDisk(pathString.c_str());
 
@@ -57,7 +58,7 @@ namespace Utils{
     void LayoutManager::reload() {
         s_layouts.clear();
 
-        for (const auto &directory : {std::filesystem::current_path() + "/"})
+        for (const auto &directory : {executablePath + "/"})
             for (const auto &entry : std::filesystem::directory_iterator(directory)) {
                 const auto &path = entry.path();
 

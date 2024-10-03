@@ -1,3 +1,16 @@
+src/.vscode/*
+src/!.vscode/settings.json
+src/!.vscode/tasks.json
+src/!.vscode/launch.json
+src/!.vscode/extensions.json
+src/!.vscode/*.code-snippets
+
+# Local History for Visual Studio Code
+.history/
+
+# Built Visual Studio Code Extensions
+*.vsix
+
 .idea/
 src/*.o
 src/.gdb_history
@@ -5,4 +18,5 @@ src/build
 src/cmake-build-debug
 src/cmake-build-release
 src/Zathura
-src/.Zathura.zlog
+src/*.zlog
+
