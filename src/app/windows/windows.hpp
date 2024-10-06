@@ -72,4 +72,5 @@ extern void hexWriteFunc(ImU8* data, size_t off, ImU8 d);
 extern MemoryEditor stackEditor;
 extern int checkHexCharsCallback(ImGuiInputTextCallbackData* data);
 extern const char* items[];
+extern MemoryEditor::fillRangeInfoT fillMemoryWithBytePopup();
 #endif
