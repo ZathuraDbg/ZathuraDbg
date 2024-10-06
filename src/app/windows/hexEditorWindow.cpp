@@ -116,7 +116,7 @@ std::pair<size_t, size_t> infoPopup(const std::string& title = "", const std::st
     return windowInfo;
 }
 
-MemoryEditor::fillRangeInfoT popupTwo() {
+MemoryEditor::fillRangeInfoT fillMemoryWithBytePopup() {
     ImGui::OpenPopup("InputPopup");
     MemoryEditor::fillRangeInfoT fillRangeInfo{};
 //    std::pair<size_t, size_t> fillRangeInfo;
@@ -358,9 +358,8 @@ bool setBaseAddr(){
 
 
 bool fillMemoryRange(){
-    auto [address, size, character] = popupTwo();
+    auto [address, size, character] = fillMemoryWithBytePopup();
     if (address && size && character){
-//        fillMemoryRange(address, size, character);
         return true;
     }
     else if (address && (!size) || (!address && size)){
@@ -371,7 +370,7 @@ bool fillMemoryRange(){
 }
 
 void hexEditorWindow(){
-    auto io = ImGui::GetIO();
+    const auto io = ImGui::GetIO();
     char data[0x3000];
     ImGui::PushFont(io.Fonts->Fonts[3]);
     memset(data, 0, 0x3000);
@@ -384,11 +383,11 @@ void hexEditorWindow(){
     memoryEditorWindow.OptShowSetBaseAddrOption = true;
     memoryEditorWindow.OptFillMemoryRange = true;
     memoryEditorWindow.SetBaseAddress = setBaseAddr;
-    memoryEditorWindow.FillMemoryRange = popupTwo;
+    memoryEditorWindow.FillMemoryRange = fillMemoryWithBytePopup;
     memoryEditorWindow.DrawWindow("Memory Editor", (void*)data, 0x3000, MEMORY_EDITOR_BASE);
-    int i = 0;
 
-    if (!newMemEditWindows.empty()){
+    if (!newMemEditWindows.empty()) {
+        int i = 0;
         for (auto& info: newMemEditWindows){
             char newMemData[info.size];
             memset(newMemData, 0, info.size);

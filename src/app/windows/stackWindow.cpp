@@ -28,7 +28,7 @@ void stackWriteFunc(ImU8* data, size_t off, ImU8 d) {
 uint64_t stackErrorAddr = 0;
 
 bool showPopupError = false;
-void popup(){
+void stackErrorPopup(){
     auto text = "Stack in unmapped memory region!";
 
     ImVec2 windowPos = ImGui::GetWindowPos();
@@ -84,6 +84,8 @@ void stackEditorWindow() {
     memset(data, 0, sizeof(data));
     memset(temp, 0, sizeof(temp));
 
+
+
     auto err = uc_mem_read(uc, STACK_ADDRESS, temp, STACK_SIZE);
     if ((err == UC_ERR_READ_UNMAPPED) && (stackErrorAddr != STACK_ADDRESS && (STACK_ADDRESS != 0))) {
         LOG_ERROR("Failed to read memory. Address: " << std::hex << STACK_ADDRESS);
@@ -95,10 +97,16 @@ void stackEditorWindow() {
 
     if (showPopupError){
         ImGui::OpenPopup("InputPopup");
-        popup();
+        stackErrorPopup();
     }
 
     copyBigEndian(data, temp, STACK_SIZE);
+
+    stackEditor.HighlightColor = ImColor(59, 60, 79);
+    stackEditor.OptShowAddWindowButton = false;
+    stackEditor.OptShowSetBaseAddrOption = true;
+    stackEditor.OptFillMemoryRange = true;
+    stackEditor.FillMemoryRange = fillMemoryWithBytePopup;
 
     stackEditor.DrawWindow("Stack", (void*)((uintptr_t)data), STACK_SIZE, STACK_ADDRESS);
     ImGui::PopFont();

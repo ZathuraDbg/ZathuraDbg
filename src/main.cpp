@@ -112,14 +112,12 @@ int main(int argc, const char** argv)
     ImVec4 clear_color = hexToImVec4("101010");
     SetupImGuiStyle();
     setupEditor();
-//    ImGui::PopFont();
+
     memoryEditorWindow.WriteFn = &hexWriteFunc;
     stackEditor.OptShowAscii = false;
     stackEditor.Cols = 8;
     stackEditor.WriteFn = &stackWriteFunc;
     MEMORY_EDITOR_BASE = ENTRY_POINT_ADDRESS;
-//    stackEditor.BgColorFn = &bgColorFn;
-//    stackEditor.InteractFn = &interactFn;
 
     if (!createStack(&uc)){
         tinyfd_messageBox("Keystone Engine error!", "Unable to initialize the stack. If the issue persists please create a GitHub issue and report your logs.", "ok", "error", 0);
