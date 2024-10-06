@@ -156,40 +156,50 @@ std::vector<std::string> parseRegisters(std::string registerString){
     return registers;
 }
 
-int checkHexCharsCallback(ImGuiInputTextCallbackData* data) {
-    if (data->BufTextLen < 2){
-        return 0;
-    }
-
-    std::string input(data->Buf, data->BufTextLen);
-    std::string filteredString;
-
-    int i = 0;
-
-    if (toLowerCase(input).starts_with("0x")){
-        filteredString += "0x";
-        i = 2;
-    }
-    else{
-        input = "0x" + input;
-        filteredString += "0x";
-        i = 2;
-    }
-
-    for (i; i < input.length(); i++){
-        if ((input[i] >= '0' && input[i] <= '9') || (input[i] >= 'A' && input[i] <= 'F') || (input[i] >= 'a' && input[i] <= 'f')) {
-            filteredString += input[i];
+int checkHexCharsCallback(ImGuiInputTextCallbackData* data)
+{
+    if (data->EventFlag == ImGuiInputTextFlags_CallbackCharFilter)
+    {
+        if (data->EventChar < 256)
+        {
+            char c = (char)data->EventChar;
+            if ((c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f'))
+            {
+                return 0; // Allow the character
+            }
         }
-        else{
-            filteredString += ' ';
+        return 1;
+    }
+
+    if (data->EventFlag == ImGuiInputTextFlags_CallbackAlways)
+    {
+        std::string input(data->Buf, data->BufTextLen);
+
+        if (input.length() >= 2 && input.substr(0, 2) != "0x")
+        {
+            data->DeleteChars(0, 2);
+            data->InsertChars(0, "0x");
+            return 1;
+        }
+
+        if (input == "0x")
+        {
+            return 0;
+        }
+
+        for (int i = 2; i < input.length(); i++)
+        {
+            input[i] = std::tolower(input[i]);
+        }
+
+        if (input != std::string(data->Buf, data->BufTextLen))
+        {
+            data->DeleteChars(0, data->BufTextLen);
+            data->InsertChars(0, input.c_str());
+            return 1;
         }
     }
 
-    filteredString.erase(std::remove(filteredString.begin(), filteredString.end(), ' '), filteredString.end());
-    data->DeleteChars(0, data->BufTextLen);
-    data->InsertChars(0, filteredString.c_str());
-    data->BufTextLen = filteredString.length();
-    data->CursorPos = data->SelectionStart = data->SelectionEnd = filteredString.length();
     return 0;
 }
 
