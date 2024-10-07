@@ -12,21 +12,21 @@ static void* copyBigEndian(void* _dst, const void* _src, size_t s)
     return _dst;
 }
 
-void stackWriteFunc(ImU8* data, size_t off, ImU8 d) {
-    LOG_DEBUG("Stack Edit request!");
-    auto err = uc_mem_write(uc, STACK_ADDRESS + STACK_SIZE - off - 1, &d, 1);
+void stackWriteFunc(ImU8* data, const size_t offset, const ImU8 delta) {
+    LOG_INFO("Stack is being written to...");
+    auto err = uc_mem_write(uc, STACK_ADDRESS + STACK_SIZE - offset - 1, &delta, 1);
 
     if (err) {
-        LOG_ERROR("Failed to write to memory. Address: " << std::hex << STACK_ADDRESS + off);
+        LOG_ERROR("Failed to write to memory. Address: " << std::hex << STACK_ADDRESS + offset);
         tinyfd_messageBox("ERROR!", "Failed to write to the memory address!!", "ok", "error", 0);
     }
 
-    char hex[24];
-    snprintf(hex, sizeof(hex), "Data change: %x", d);
+    char hex[90];
+    snprintf(hex, sizeof(hex), "Data change after stack operation: %x", delta);
     LOG_DEBUG(hex);
 }
-uint64_t stackErrorAddr = 0;
 
+uint64_t stackErrorAddr = 0;
 bool showPopupError = false;
 void stackErrorPopup(){
     auto text = "Stack in unmapped memory region!";
@@ -84,9 +84,7 @@ void stackEditorWindow() {
     memset(data, 0, sizeof(data));
     memset(temp, 0, sizeof(temp));
 
-
-
-    auto err = uc_mem_read(uc, STACK_ADDRESS, temp, STACK_SIZE);
+    const auto err = uc_mem_read(uc, STACK_ADDRESS, temp, STACK_SIZE);
     if ((err == UC_ERR_READ_UNMAPPED) && (stackErrorAddr != STACK_ADDRESS && (STACK_ADDRESS != 0))) {
         LOG_ERROR("Failed to read memory. Address: " << std::hex << STACK_ADDRESS);
         stackErrorAddr = STACK_ADDRESS;
@@ -108,6 +106,6 @@ void stackEditorWindow() {
     stackEditor.OptFillMemoryRange = true;
     stackEditor.FillMemoryRange = fillMemoryWithBytePopup;
 
-    stackEditor.DrawWindow("Stack", (void*)((uintptr_t)data), STACK_SIZE, STACK_ADDRESS);
+    stackEditor.DrawWindow("Stack", reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(data)), STACK_SIZE, STACK_ADDRESS);
     ImGui::PopFont();
 }

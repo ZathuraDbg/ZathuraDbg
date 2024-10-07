@@ -74,14 +74,14 @@ int main(int argc, const char** argv)
     glfwSwapInterval(1); // Enable vsync
 
     {
-        char* path = NULL;
-        int length, dirnameLength;
-        
-        length = wai_getExecutablePath(NULL, 0, &dirnameLength);
+        int dirnameLength;
+
+        int length = wai_getExecutablePath(nullptr, 0, &dirnameLength);
         if (length > 0) {
-            path = (char*)malloc(length + 1);
+            char* path = nullptr;
+            path = static_cast<char *>(malloc(length + 1));
             if (path == nullptr) {
-                tinyfd_messageBox("Whereami", "Failed to get executable path!", "ok", "error", 0);
+                tinyfd_messageBox("Whereami error!", "Failed to get executable path!", "ok", "error", 0);
                 return 1;
             }
             wai_getExecutablePath(path, length, &dirnameLength);
@@ -97,36 +97,38 @@ int main(int argc, const char** argv)
     const char* currentPath = executablePath.c_str();
 	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
-    LoadIniFile();
+    loadIniFile();
     io = setupIO();
-    // When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
+
     ImGuiStyle& style = ImGui::GetStyle();
     if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
     {
         style.WindowRounding = 2.0f;
         style.Colors[ImGuiCol_WindowBg].w = 1.0f;
     }
+
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glsl_version);
 
-    ImVec4 clear_color = hexToImVec4("101010");
-    SetupImGuiStyle();
+    ImVec4 clearColor = hexToImVec4("101010");
+    setupAppStyle();
     setupEditor();
 
+    MEMORY_EDITOR_BASE = ENTRY_POINT_ADDRESS;
+
     memoryEditorWindow.WriteFn = &hexWriteFunc;
+    stackEditor.WriteFn = &stackWriteFunc;
     stackEditor.OptShowAscii = false;
     stackEditor.Cols = 8;
-    stackEditor.WriteFn = &stackWriteFunc;
-    MEMORY_EDITOR_BASE = ENTRY_POINT_ADDRESS;
 
     if (!createStack(&uc)){
         tinyfd_messageBox("Keystone Engine error!", "Unable to initialize the stack. If the issue persists please create a GitHub issue and report your logs.", "ok", "error", 0);
         LOG_ERROR("Failed to create stack!");
         exit(-1);
     }
-    
+
     glfwShowWindow(window);
-    
+
     while (!glfwWindowShouldClose(window))
     {
         glfwWaitEvents();
@@ -141,28 +143,29 @@ int main(int argc, const char** argv)
         mainWindow();
 
         if (!isRunning){
+            LOG_ERROR("Quitting!");
             glfwSetWindowShouldClose(window, 1);
         }
 
-        int display_w, display_h;
-        glfwGetFramebufferSize(window, &display_w, &display_h);
-        glViewport(0, 0, display_w, display_h);
-        glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
+        int displayW, displayH;
+        glfwGetFramebufferSize(window, &displayW, &displayH);
+        glViewport(0, 0, displayW, displayH);
+        glClearColor(clearColor.x * clearColor.w, clearColor.y * clearColor.w, clearColor.z * clearColor.w, clearColor.w);
         glClear(GL_COLOR_BUFFER_BIT);
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
        if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
        {
-           GLFWwindow* backup_current_context = glfwGetCurrentContext();
+           GLFWwindow* backupCurrentContext = glfwGetCurrentContext();
            ImGui::UpdatePlatformWindows();
            ImGui::RenderPlatformWindowsDefault();
-           glfwMakeContextCurrent(backup_current_context);
+           glfwMakeContextCurrent(backupCurrentContext);
        }
 
        glfwSwapBuffers(window);
     }
-    uc_close(uc);
 
+    uc_close(uc);
     destroyWindow();
     return 0;
 }

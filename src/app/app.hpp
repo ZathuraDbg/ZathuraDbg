@@ -34,16 +34,16 @@ using json = nlohmann::json;
 
 //extern ImU32 bgColorFn(const ImU8* data, size_t off);
 //extern void interactFn(const ImU8* data, size_t off);
-bool showRequiredButton(const std::string& buttonName, bool state = false);
 std::string parseVals(std::string val);
 void setupViewPort();
 void appMenuBar();
 void manageShortcuts();
-void LoadIniFile();
+void loadIniFile();
 bool setupButtons();
 void mainWindow();
 void setupEditor();
-
+extern  std::string getDataToCopy(std::stringstream &selectedAsmText, const bool asArray);
+extern bool lineNumbersShown;
 extern float frameRate;
 extern std::string executablePath;
 extern bool isRunning;

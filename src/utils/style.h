@@ -15,7 +15,7 @@ static ImVec4 hexToImVec4(const char* hex)
     return {r, g, b, 1};
 }
 
-static void SetupImGuiStyle()
+static void setupAppStyle()
 {
     // Moonlight style by Madam-Herta from ImThemes
     ImGuiStyle& style = ImGui::GetStyle();

@@ -15,15 +15,21 @@ std::filesystem::path getTemporaryPath(){
     return tempDir;
 }
 
-void fileOpenTask(const std::string& fileName){
+bool fileOpenTask(const std::string& fileName){
     if (!fileName.empty()){
         LOG_DEBUG("Opening the file " << fileName);
         if (!readFileIntoEditor(fileName)){
             LOG_ERROR("Read operation failed on the file: " << fileName);
+            return false;
         }
+
         selectedFile = fileName;
         editor->HighlightBreakpoints(-1);
+        LOG_INFO("The provided file " << fileName << " opened successfully.");
+        return true;
     }
+
+    return true;
 }
 
 void fileSaveAsTask(const std::string &fileName){
@@ -45,7 +51,7 @@ void fileSaveTask(const std::string &fileName){
         selectedFile = fileName;
     }
 }
-void fileRunTask(uint64_t instructionCount){
+bool fileRunTask(uint64_t instructionCount){
     if (!selectedFile.empty()){
         LOG_DEBUG("Running code from: " << selectedFile);
 
@@ -60,32 +66,46 @@ void fileRunTask(uint64_t instructionCount){
                 if (!bytes.empty()){
                      runCode(bytes, instructionCount);
                  }
+                else {
+                    LOG_ERROR("Unable to run the code. Either no code is present or invalid architecture is selected.");
+                    return false;
+                }
             }
             else if (instructionCount == -1){
                 startDebugging();
                 debugContinueAction(true);
-                return;
+                return true;
             }
         }
         else{
+            tinyfd_messageBox("Stack creation failed!", "The app was unable to create the stack to run the code.\nPlease try restarting it or report this issue on github!",
+                "ok", "error", 0);
+
             LOG_ERROR("Unable to create stack!, quitting!");
+            return false;
         }
     }
     else{
         LOG_ERROR("No file selected to run!");
-        tinyfd_messageBox("No file selected!", "Please open a file to run the code!", "ok", "error", 0); }
+        tinyfd_messageBox("No file selected!", "Please open a file to run the code!", "ok", "error", 0);
+        return false;
+    }
+
+    return true;
 }
 
 void fileSaveUCContextAsJson(const std::string& jsonFilename){
+    LOG_INFO("Saving context as a file...");
+    LOG_DEBUG("File name is " << jsonFilename);
     json contextJson;
 
-    for (auto& reg: x86RegInfoMap){
-        if (isRegisterValid(reg.first, codeInformation.mode) && (reg.first != "INVALID")){
-            if (reg.second.first <= 64){
-                contextJson[reg.first] = getRegister(reg.first).registerValueUn.eightByteVal;
+    for (auto&[registerName, regInfo]: regInfoMap){
+        if (isRegisterValid(registerName, codeInformation.mode) && (registerName != "INVALID")){
+            if (regInfo.first <= 64){
+                contextJson[registerName] = getRegister(registerName).registerValueUn.eightByteVal;
             }
-            else if (reg.second.first == 128){
-                contextJson[reg.first] = getRegister(reg.first).registerValueUn.doubleVal;
+            else if (regInfo.first == 128){
+                contextJson[registerName] = getRegister(registerName).registerValueUn.doubleVal;
             }
         }
     }
@@ -93,17 +113,24 @@ void fileSaveUCContextAsJson(const std::string& jsonFilename){
     std::ofstream jsonFile(jsonFilename, std::ios::out);
     jsonFile << contextJson.dump() << std::endl;
     jsonFile.close();
+    LOG_INFO("Saved context successfully!");
 }
 
 void fileLoadUCContextFromJson(const std::string& jsonFilename){
+    LOG_DEBUG("Loading context from file " << jsonFilename);
     if (jsonFilename.empty()){
+        LOG_ERROR("Unable to load context because the file is empty!");
+        tinyfd_messageBox("Context loading failed!", "Context loading has failed because the file you provided is empty",
+            "ok", "error", 0);
         return;
     }
 
     std::ifstream jsonFile(jsonFilename);
 
     if (jsonFile.bad() || jsonFile.fail() || !jsonFile.is_open()){
-        LOG_ERROR("Unable to open the file: " << jsonFilename << " for saving the context!");
+         tinyfd_messageBox("Context loading failed!", "Context loading has failed because the file you provided has invalid json format!",
+            "ok", "error", 0);
+        LOG_ERROR("Unable to open the file: " << jsonFilename << " for loading the context!");
         return;
     }
 
@@ -119,7 +146,7 @@ void fileLoadUCContextFromJson(const std::string& jsonFilename){
     jsonStream << jsonFile.rdbuf();
     auto j2 = json::parse(jsonStream.str());
 
-    for (json::iterator it = j2.begin(); it != j2.end(); ++it){
+    for (auto it = j2.begin(); it != j2.end(); ++it){
         auto value = it.value().dump();
 
         if (value.empty() || value == "\"-\"" || value == "'-'"){
@@ -134,4 +161,6 @@ void fileLoadUCContextFromJson(const std::string& jsonFilename){
         uc_context_reg_write(context, regNameToConstant(it.key()), value.c_str());
         uc_context_save(uc, context);
     }
+
+    LOG_DEBUG("Context loaded successfully from " << jsonFilename);
 }

@@ -45,6 +45,7 @@ void changeEmulationSettings(){
     ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[SatoshiBold18]);
     ImGui::PushStyleVar(ImGuiStyleVar_PopupBorderSize, 5.0f);
     auto windowTextPos = ImGui::CalcTextSize(headerText);
+
     // {width, height}
     ImVec2 popup_size = ImVec2(240, 175);
     ImGui::SetNextWindowSize(popup_size);
@@ -212,7 +213,6 @@ void appMenuBar()
             ImGui::MenuItem("Step Over", "CTRL+K", &debugStepOver, debugModeEnabled ? true : false);
             ImGui::MenuItem("Continue", debugModeEnabled ? "F5" : nullptr, &debugContinue, debugModeEnabled ? true : false);
             ImGui::MenuItem("Restart debugging", "CTRL+F5", &debugRestart, debugModeEnabled ? true : false);
-//            ImGui::MenuItem("Run", "CTRL+R", &debugRun, debugModeEnabled ? true : false);
             ImGui::Separator();
             ImGui::EndMenu();
         }

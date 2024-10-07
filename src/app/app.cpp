@@ -7,12 +7,15 @@ bool lineNumbersShown = true;
 bool runSelectedCode = false;
 bool goToDefinition = false;
 std::string executablePath;
+#include "codeContextMenu.hpp"
 
 void setupEditor() {
-    std::ifstream t = std::ifstream(selectedFile);
-    if (!t.good()) {
+    LOG_INFO("Setting up the editor...");
+    auto selectedFileStream = std::ifstream(selectedFile);
+
+    if (!selectedFileStream.good()) {
         selectedFile = openFileDialog();
-        t = std::ifstream(selectedFile);
+        selectedFileStream = std::ifstream(selectedFile);
     }
 
     editor = new TextEditor();
@@ -23,30 +26,33 @@ void setupEditor() {
     editor->SetTabSize(4);
 
     {
-        std::string str((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());
+        std::string str((std::istreambuf_iterator<char>(selectedFileStream)), std::istreambuf_iterator<char>());
         editor->SetText(str);
     }
+
+    LOG_INFO("Editor setup complete!");
 }
 
 void setupViewPort() {
-//    set the position of the window just next to the menu bar (top left) using docking
-    ImGuiViewport *viewport = ImGui::GetMainViewport();
+    // set the position of the window just next to the menu bar (top left) using docking
+    const ImGuiViewport *viewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(ImVec2(viewport->Pos.x, viewport->Pos.y + ImGui::GetFrameHeight()));
     ImGui::SetNextWindowSize(ImVec2(500, 600));
     ImGui::SetNextWindowViewport(viewport->ID);
 }
 
 
-void LoadIniFile() {
+void loadIniFile() {
     std::string filename = executablePath;
     filename += "/config.zlyt";
-    std::filesystem::path dir(filename);
+    const std::filesystem::path dir(filename);
     ImGui::LoadIniSettingsFromDisk(dir.string().c_str());
     LOG_DEBUG("Loaded config file from " << dir.string());
 }
 
-std::string getDataToCopy(std::stringstream &selectedAsmText, bool asArray) {
-    std::string bytes = getBytes(selectedAsmText);
+std::string getDataToCopy(std::stringstream &selectedAsmText, const bool asArray) {
+    LOG_INFO("Getting data to copy...");
+    const std::string bytes = getBytes(selectedAsmText);
     std::string dataToCopy;
     std::stringstream hexStream;
     hexStream << std::hex << std::uppercase << std::setfill('0');
@@ -70,76 +76,27 @@ std::string getDataToCopy(std::stringstream &selectedAsmText, bool asArray) {
         }
     }
 
+    LOG_INFO("Data acquired. Returning...");
     return dataToCopy;
 }
 
 void pushFont(){
-    ImGuiIO &io = ImGui::GetIO();
+    const ImGuiIO &io = ImGui::GetIO();
     ImGui::PushFont(io.Fonts->Fonts[SatoshiBold18]);
 }
 
-//ImU32 bgColorFn(const ImU8* data, size_t off){
-//    if (off % 2 == 0){
-//        return ImColor(0xff, 0xab, 0x12);
-//    }
-//
-//    return ImColor(0xaa, 0xcb, 0x12);
-//}
-//
-//void interactFn(const ImU8* data, size_t off){
-//    printf("%ld\n", off);
-//    std::cout << std::endl;
-//}
-
-bool showRequiredButton(const std::string& buttonName, bool state){
-    ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[6]);
-    if (buttonName == "Preview"){
-        if (ImGui::Button(!state ? (ICON_CI_TRIANGLE_UP) : (ICON_CI_TRIANGLE_DOWN))){
-            ImGui::PopFont();
-            return true;
-        }
-        ImGui::PopFont();
-        return false;
-    }
-    else if (buttonName == "Case"){
-        if (ImGui::Button(ICON_CI_TEXT_SIZE)){
-            ImGui::PopFont();
-            return true;
-        }
-        ImGui::PopFont();
-        return false;
-    }
-    else if (buttonName == "Ascii"){
-        if (ImGui::Button(ICON_CI_SYMBOL_KEY)){
-            ImGui::PopFont();
-            return true;
-        }
-        ImGui::PopFont();
-        return false;
-    }
-    else if (buttonName == "Options"){
-        if (ImGui::Button(ICON_CI_ELLIPSIS)){
-            ImGui::PopFont();
-            return true;
-        }
-        ImGui::PopFont();
-        return false;
-    }
-    ImGui::PopFont();
-    return false;
-}
-
 void mainWindow() {
-    ImGuiIO &io = ImGui::GetIO();
+    const ImGuiIO &io = ImGui::GetIO();
+    bool keepWindow = true;
 
-    bool k = true;
-    SetupImGuiStyle();
+    setupAppStyle();
     ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport());
 
     appMenuBar();
     setupViewPort();
 
-    ImGui::Begin("Code", &k, ImGuiWindowFlags_NoCollapse);
+    ImGui::Begin("Code", &keepWindow, ImGuiWindowFlags_NoCollapse);
+
     setupButtons();
 
     if (!editor->FontInit){
@@ -153,130 +110,21 @@ void mainWindow() {
     ImGui::PushFont(io.Fonts->Fonts[JetBrainsMono24]);
     editor->Render("Editor");
     ImGui::PopFont();
-    ImGui::GetStyle().Colors[ImGuiCol_PopupBg] = ImColor(0x1e, 0x20, 0x30);
+    contextMenu();
 
-    ImGui::GetStyle().Colors[ImGuiCol_HeaderHovered] = ImColor(0x18, 0x19, 0x26);
-    ImGui::PushFont(io.Fonts->Fonts[RubikRegular16]);
-    if (ImGui::BeginPopupContextItem("TextEditorContextMenu")) {
-        if (ImGui::MenuItem("Copy", "Ctrl + C", false))
-        {
-            editor->Copy();
-            LOG_DEBUG("Copied text to clipboard");
-        }
-
-        ImGui::Separator();
-
-        if (ImGui::MenuItem("Cut", "Ctrl + X", false))
-        {
-            editor->Cut();
-            LOG_DEBUG("Cut text to clipboard");
-        }
-
-        ImGui::Separator();
-
-        if (ImGui::MenuItem("Paste", "Ctrl + V", false))
-        {
-            editor->Paste();
-            LOG_DEBUG("Pasted text from clipboard");
-        }
-
-        ImGui::Separator();
-
-        if (ImGui::MenuItem("Undo", "Ctrl + Z", false))
-        {
-            if (editor->CanUndo()) {
-                editor->Undo();
-                LOG_DEBUG("Performed undo!");
-            }
-        }
-
-        ImGui::Separator();
-
-        if (ImGui::MenuItem("Redo", "Ctrl + Y", false))
-        {
-            if (editor->CanRedo()) {
-                editor->Redo();
-                LOG_DEBUG("Performed redo!");
-            }
-        }
-
-        ImGui::Separator();
-
-        if (ImGui::MenuItem("Toggle breakpoint", "F9", false)) {
-            toggleBreakpoint = true;
-        }
-
-
-        ImGui::Separator();
-
-        if (!lineNumbersShown) {
-            if (ImGui::MenuItem("Show line numbers", nullptr, false)) {
-                editor->SetShowLineNumbersEnabled(true);
-                lineNumbersShown = true;
-            }
-        } else {
-            if (ImGui::MenuItem("Hide line numbers", nullptr,
-                                false))
-            {
-                editor->SetShowLineNumbersEnabled(false);
-                lineNumbersShown = false;
-            }
-        }
-
-        ImGui::Separator();
-
-        if (ImGui::BeginMenu("Copy as")) {
-            std::stringstream selectedAsmText(editor->GetSelectedText());
-            if (ImGui::MenuItem("C array")){
-                if (!selectedAsmText.str().empty()) {
-                    ImGui::SetClipboardText(getDataToCopy(selectedAsmText, true).c_str());
-                }
-            }
-
-            if (ImGui::MenuItem("Hex")){
-                std::stringstream selectedAsmText(editor->GetSelectedText());
-                if (!selectedAsmText.str().empty()) {
-                    ImGui::SetClipboardText(getDataToCopy(selectedAsmText, false).c_str());
-                }
-            }
-            ImGui::EndMenu();
-        }
-
-        ImGui::Separator();
-
-        if (ImGui::MenuItem("Run until here", "F6", false)) {
-            runUntilHere = true;
-        }
-
-        ImGui::Separator();
-        if (!debugModeEnabled){
-            if (ImGui::MenuItem("Run selected code", "F3", false)){
-                runSelectedCode = true;
-            }
-        }
-
-        if (ImGui::MenuItem("Go to definition", "F4")){
-            goToDefinition = true;
-        }
-
-        ImGui::EndPopup();
-    }
-    ImGui::PopFont();
-    ImGui::End();
-
-    ImGui::Begin("Register Values", &k, ImGuiWindowFlags_NoCollapse);
+    ImGui::Begin("Register Values", &keepWindow, ImGuiWindowFlags_NoCollapse);
     registerWindow();
 
-    ImGui::Begin("Console", &k, ImGuiWindowFlags_NoCollapse);
+    ImGui::Begin("Console", &keepWindow, ImGuiWindowFlags_NoCollapse);
     consoleWindow();
 
     ImGui::End();
     hexEditorWindow();
 
-    ImGui::Begin("Stack", &k, ImGuiWindowFlags_NoCollapse);
+    ImGui::Begin("Stack", &keepWindow, ImGuiWindowFlags_NoCollapse);
     stackEditorWindow();
-
     ImGui::End();
+
     manageShortcuts();
     runActions();
     //    Utils::LayoutManager::save(CONFIG_NAME);
