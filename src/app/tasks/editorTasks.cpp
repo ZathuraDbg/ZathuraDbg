@@ -5,42 +5,42 @@
 TextEditor *editor = nullptr;
 
 bool writeEditorToFile(const std::string &filePath) {
-            LOG_DEBUG("Writing to file " << filePath);
-    std::ofstream out(filePath, std::ios::out | std::ios::trunc);
+    LOG_DEBUG("Writing to file " << filePath);
+    std::ofstream fileToWrite(filePath, std::ios::out | std::ios::trunc);
 
-    if (out.good()) {
-        out << editor->GetText();
-        out.close();
-                LOG_DEBUG("Done!");
+    if (fileToWrite.good()) {
+        fileToWrite << editor->GetText();
+        fileToWrite.close();
+        LOG_DEBUG("Write to file completed successfully!");
         return true;
     }
 
     tinyfd_messageBox("File write error!", ("Unable to write to the file " + filePath + "!\nPlease check if the "
-                                                                                        "file is not open in another program and/or you have the permissions to read it.").c_str(),
+                      "file is not open in another program and/or you have the permissions to read it.").c_str(),
                       "ok", "error", 0);
     return false;
 }
 
 bool readFileIntoEditor(const std::string &filePath) {
-            LOG_DEBUG("Read into editor");
-    std::ifstream t(filePath);
+    LOG_DEBUG("Reading the file " << filePath);
+    std::ifstream fileToRead(filePath);
 
-    if (t.good()) {
-        std::string str((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());
-        editor->SetText(str);
-        t.close();
+    if (fileToRead.good()) {
+        std::string fileContent((std::istreambuf_iterator<char>(fileToRead)), std::istreambuf_iterator<char>());
+        editor->SetText(fileContent);
+        fileToRead.close();
+        LOG_DEBUG("Read from the file successfully!");
         return true;
     }
+
     tinyfd_messageBox("File read error!", ("Unable to read from the file " + filePath + "!\nPlease check if the "
-                                                                                        "file is not open in another program and/or you have the permissions to read it.").c_str(),
+                       "file is not open in another program and/or you have the permissions to read it.").c_str(),
                       "ok", "error", 0);
 
     return false;
 }
 
 int labelCompletionCallback(ImGuiInputTextCallbackData *data) {
-    std::vector<std::string> matches;
-
     if (labels.empty()) {
         getBytes(selectedFile);
         initInsSizeInfoMap();
@@ -48,19 +48,20 @@ int labelCompletionCallback(ImGuiInputTextCallbackData *data) {
 
     if (data->EventFlag == ImGuiInputTextFlags_CallbackCompletion) {
         if (data->EventKey == ImGuiKey_Tab) {
-            std::string input(data->Buf, data->BufTextLen);
+            std::vector<std::string> matches;
+            const std::string input(data->Buf, data->BufTextLen);
 
             auto it = labels.end();
             for (auto &i: labels) {
                 if (i.contains(input) && (input != i)) {
-                    it = std::find(labels.begin(), labels.end(), i);
+                    it = std::ranges::find(labels, i);
                     matches.push_back(*it);
                 }
             }
 
             std::string out = input;
             if (!matches.empty()) {
-                out = *std::min_element(matches.begin(), matches.end(), [](const std::string &a, const std::string &b) {
+                out = *std::ranges::min_element(matches, [](const std::string &a, const std::string &b) {
                     return (a.size() < b.size());
                 });
             }
@@ -83,6 +84,7 @@ void createLabelLineMapCallback(std::map<std::string, int> &labelVector) {
 }
 
 std::pair<int, int> parseStrIntoCoordinates(std::string &popupInput) {
+    LOG_DEBUG("Parsing " << popupInput << "as coordinates...");
     if (labelLineNoMapInternal.empty()) {
         getBytes(selectedFile);
         initInsSizeInfoMap();
@@ -108,7 +110,7 @@ std::pair<int, int> parseStrIntoCoordinates(std::string &popupInput) {
         popupInput = std::to_string(hexStrToInt(popupInput));
     }
 
-    for (auto &c: popupInput) {
+    for (const auto &c: popupInput) {
         if (c == ':' && lineNo == -1) {
             if (!convStr.empty()) {
                 try {
@@ -168,5 +170,6 @@ std::pair<int, int> parseStrIntoCoordinates(std::string &popupInput) {
         colNo = 0;
     }
 
+    LOG_DEBUG("Parsed into x = " << lineNo - 1 << ", y = " << colNo);
     return {lineNo - 1, colNo};
 }

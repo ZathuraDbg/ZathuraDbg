@@ -56,93 +56,31 @@ int getCurrentLine(){
     return -1;
 }
 
-void showRegs(){
-//    LOG_DEBUG("Showing registers");
-    int rax, rbx, rcx, rdx, rsi, rdi, rbp, rsp, r8, r9, r10, r11, r12, r13, r14, r15, rip,
-        ah, al, ax, bh, bl, bx, ch, cl, cx, dh, dl, dx, si, di, bp, sp, r8d, r9d, r10d, r11d, r12d,
-        r13d, r14d, r15d, r8w, r9w, r10w, r11w, r12w, r13w, r14w, r15w, r8b, r9b, r10b, r11b, r12b, r13b, r14b,
-        r15b, ds, es, fs, gs, ss, eflags, fs_base, gs_base, flags, idtr, ldtr, tr, mm0, mm1, mm2, mm3, mm4, mm5, mm6,
-        mm7, xmm0, xmm1, xmm2, xmm3, xmm4, xmm5, xmm6, xmm7, ymm0, ymm1, ymm2, ymm3, ymm4, ymm5, ymm6, ymm7, zmm0,
-        zmm1, zmm2, zmm3, zmm4,zmm5, zmm6, zmm7, cr0, cr1, cr2, cr3, cr4, cr8,
-        dr0, dr1, dr2, dr3, dr4, dr5, dr6, dr7, dil, edi, sil, esi, bpl, ebp, spl, esp, cs;
-
-    uc_reg_read(uc, UC_X86_REG_RAX, &rax);
-    uc_reg_read(uc, UC_X86_REG_RBX, &rbx);
-    uc_reg_read(uc, UC_X86_REG_RCX, &rcx);
-    uc_reg_read(uc, UC_X86_REG_RDX, &rdx);
-    uc_reg_read(uc, UC_X86_REG_RSI, &rsi);
-    uc_reg_read(uc, UC_X86_REG_RDI, &rdi);
-    uc_reg_read(uc, UC_X86_REG_RBP, &rbp);
-    uc_reg_read(uc, UC_X86_REG_RSP, &rsp);
-    uc_reg_read(uc, UC_X86_REG_R8, &r8);
-    uc_reg_read(uc, UC_X86_REG_R9, &r9);
-    uc_reg_read(uc, UC_X86_REG_R10, &r10);
-    uc_reg_read(uc, UC_X86_REG_R11, &r11);
-    uc_reg_read(uc, UC_X86_REG_R12, &r12);
-    uc_reg_read(uc, UC_X86_REG_R13, &r13);
-    uc_reg_read(uc, UC_X86_REG_R14, &r14);
-    uc_reg_read(uc, UC_X86_REG_R15, &r15);
-    uc_reg_read(uc, UC_X86_REG_RIP, &rip);
-    uc_reg_read(uc, UC_X86_REG_EFLAGS, &eflags);
-    uc_reg_read(uc, UC_X86_REG_CS, &cs);
-    uc_reg_read(uc, UC_X86_REG_DS, &ds);
-    uc_reg_read(uc, UC_X86_REG_SS, &ss);
-    uc_reg_read(uc, UC_X86_REG_ES, &es);
-    uc_reg_read(uc, UC_X86_REG_FS, &fs);
-    uc_reg_read(uc, UC_X86_REG_GS, &gs);
-    uc_reg_read(uc, UC_X86_REG_FS_BASE, &fs_base);
-    uc_reg_read(uc, UC_X86_REG_GS_BASE, &gs_base);
-
-    printf("RAX = 0x%x\t\t", rax);
-    printf("RBX = 0x%x\n", rbx);
-    printf("RCX = 0x%x\t\t", rcx);
-    printf("RDX = 0x%x\n", rdx);
-    printf("RSI = 0x%x\t\t", rsi);
-    printf("RDI = 0x%x\n", rdi);
-    printf("RBP = 0x%x\t\t", rbp);
-    printf("RSP = 0x%x\n", rsp);
-    printf("R8 = 0x%x\t\t", r8);
-    printf("R9 = 0x%x\n", r9);
-    printf("R10 = 0x%x\t\t", r10);
-    printf("R11 = 0x%x\n", r11);
-    printf("R12 = 0x%x\t\t", r12);
-    printf("R13 = 0x%x\n", r13);
-    printf("R14 = 0x%x\t\t", r14);
-    printf("R15 = 0x%x\n", r15);
-    printf("RIP = 0x%x\t\t", rip);
-    printf("EFLAGS = 0x%x\n", eflags);
-    printf("CS = 0x%x\t\t", cs);
-    printf("SS = 0x%x\n", ss);
-    printf("DS = 0x%x\t\t", ds);
-    printf("FS = 0x%x\n", fs);
-    printf("GS = 0x%x\t\t", ds);
-    printf("FS_BASE = 0x%x\n", fs_base);
-    printf("GS_BASE = 0x%x\n", gs_base);
-}
-
-std::pair<float, float> convert64BitToTwoFloats(uint64_t bits) {
+std::pair<float, float> convert64BitToTwoFloats(const uint64_t bits) {
     float lower_float, upper_float;
 
-    uint32_t lower_bits = static_cast<uint32_t>(bits & 0xFFFFFFFF);
-    uint32_t upper_bits = static_cast<uint32_t>((bits >> 32) & 0xFFFFFFFF);
+    const auto lowerBits = static_cast<uint32_t>(bits & 0xFFFFFFFF);
+    const auto upperBits = static_cast<uint32_t>((bits >> 32) & 0xFFFFFFFF);
 
-    std::memcpy(&lower_float, &lower_bits, sizeof(float));
-    std::memcpy(&upper_float, &upper_bits, sizeof(float));
+    std::memcpy(&lower_float, &lowerBits, sizeof(float));
+    std::memcpy(&upper_float, &upperBits, sizeof(float));
 
     return std::make_pair(lower_float, upper_float);
 }
 
-double convert128BitToDouble(uint64_t low_bits, uint64_t high_bits) {
+double convert128BitToDouble(uint64_t low_bits, const uint64_t high_bits) {
     double result;
     std::memcpy(&result, &high_bits, sizeof(double));
     return result;
 }
 
 registerValueT getRegisterValue(const std::string& regName, bool useTempContext){
-    auto entry = regInfoMap[toUpperCase(regName)];
-    auto [size, constant] = entry;
-    uint64_t value{};
+    LOG_INFO("Getting the value for the register: " << regName << (useTempContext ? " with temporary context ": " without temporary context"));
 
+    auto registerInfo = regInfoMap[toUpperCase(regName)];
+    auto [size, constant] = registerInfo;
+
+    LOG_INFO("Size of the register is " << size);
     if (size == 8) {
         uint8_t valTemp8;
         useTempContext ? uc_context_reg_read(tempContext, constant, &valTemp8) : uc_reg_read(uc, constant, &valTemp8);
@@ -164,16 +102,17 @@ registerValueT getRegisterValue(const std::string& regName, bool useTempContext)
         return {.eightByteVal = valTemp64};
     }
     else if (size == 128){
-        uint8_t xmm_value[16];
-        useTempContext ? uc_context_reg_read(tempContext, constant, &xmm_value) : uc_reg_read(uc, constant, &xmm_value);
+        uint8_t xmmValue[16];
+        useTempContext ? uc_context_reg_read(tempContext, constant, &xmmValue) : uc_reg_read(uc, constant, &xmmValue);
 
         uint64_t upperHalf, lowerHalf;
-        std::memcpy(&upperHalf, xmm_value, 8);
-        std::memcpy(&lowerHalf, xmm_value + 8, 8);
+        std::memcpy(&upperHalf, xmmValue, 8);
+        std::memcpy(&lowerHalf, xmmValue + 8, 8);
 
         registerValueT regValue = {.doubleVal = (convert128BitToDouble(lowerHalf, upperHalf))};
         regValue.info.is128bit = true;
         if (use32BitLanes){
+            LOG_INFO("Using 32 bit lanes...");
             regValue.info.arrays.floatArray[0] = convert64BitToTwoFloats(lowerHalf).first;
             regValue.info.arrays.floatArray[1] = convert64BitToTwoFloats(lowerHalf).second;
             regValue.info.arrays.floatArray[2] = convert64BitToTwoFloats(upperHalf).first;
@@ -191,6 +130,7 @@ registerValueT getRegisterValue(const std::string& regName, bool useTempContext)
         }
         else {
 //          1.0f just to make it pass the zero check test
+            LOG_INFO("Using 64 bit lanes...");
             regValue = {.doubleVal = 0.0f};
             regValue.info.is128bit = true;
             regValue.info.arrays.doubleArray[0] = convert128BitToDouble(0, upperHalf);
@@ -207,6 +147,7 @@ registerValueT getRegisterValue(const std::string& regName, bool useTempContext)
         registerValueT regValue{};
 
         if (!use32BitLanes){
+            LOG_INFO("Using 64 bit lanes...");
             double valueArray[arrSize];
             useTempContext ? uc_context_reg_read(tempContext, constant, &valueArray) : uc_reg_read(uc, constant, valueArray);
             regValue = {.doubleVal = (valueArray[0])};
@@ -226,7 +167,8 @@ registerValueT getRegisterValue(const std::string& regName, bool useTempContext)
                 }
             }
         }
-        else if (use32BitLanes){
+        else{
+            LOG_INFO("Using 32 bit lanes...");
             float valueArray[arrSize];
             useTempContext ? uc_context_reg_read(tempContext, constant, &valueArray) : uc_reg_read(uc, constant, valueArray);
             regValue = {.doubleVal = (valueArray[0])};
@@ -247,14 +189,14 @@ registerValueT getRegisterValue(const std::string& regName, bool useTempContext)
         return regValue;
     }
 
-    // 80, 128 and 512 bit unimplemented
+    // 80 bit registers are unimplemented
     return {.charVal = 00};
 }
 
-registerValueInfoT getRegister(const std::string& name, bool useTempContext){
+registerValueInfoT getRegister(const std::string& name, const bool useTempContext){
     registerValueInfoT res = {false, 0};
     std::string regName = name;
-//    bool useSecondValue = true;
+
     if (name.contains('[') && name.contains(']') && name.contains(':')){
         regName = name.substr(0, name.find_first_of('['));
     }
@@ -268,31 +210,32 @@ registerValueInfoT getRegister(const std::string& name, bool useTempContext){
         return {true, 0x00};
     }
 
-    auto value = getRegisterValue(regName, false);
+    const auto value = getRegisterValue(regName, false);
     res = {true, value};
     return res;
 }
 
 bool ucInit(void* unicornEngine){
-    LOG_DEBUG("Initializing unicorn engine");
+    LOG_INFO("Initializing unicorn engine...");
     if (regInfoMap.empty()){
         initArch();
     }
 
-    auto err = uc_open(codeInformation.archUC, codeInformation.mode, (uc_engine**)unicornEngine);
-    if (err) {
+    if (auto err = uc_open(codeInformation.archUC, codeInformation.mode, (uc_engine**)unicornEngine)) {
         LOG_ERROR("Failed to initialise Unicorn Engine!");
         tinyfd_messageBox("ERROR!", "Could not initialize Unicorn Engine. Please check if the environment is correctly setup.", "ok", "error", 0);
         return false;
     }
 
+    LOG_INFO("Inition complete...");
     return true;
 }
 
 bool createStack(void* unicornEngine){
-    LOG_DEBUG("Creating stack");
+    LOG_INFO("Creating stack...");
 
     if (!ucInit(unicornEngine)){
+        LOG_ERROR("Unicorn engine initilisation failed... Quitting!");
         return false;
     }
 
@@ -321,11 +264,12 @@ bool createStack(void* unicornEngine){
         return false;
     }
 
+    LOG_INFO("Stack created successfully!");
     return true;
 }
 
 bool resetState(){
-    LOG_DEBUG("Resetting state!");
+    LOG_INFO("Resetting state...");
     codeHasRun = false;
     stepClickedOnce = false;
     continueOverBreakpoint = false;
@@ -384,51 +328,50 @@ bool resetState(){
     }
 
     if (!createStack(&uc)){
-//        LOG_DEBUG("Unable to create stack!");
+        LOG_ERROR("Unable to create stack!");
         return false;
     }
 
+    LOG_DEBUG("State reset completed!");
     return true;
 }
 
 bool isCodeRunning = false;
 bool skipBreakpoints = false;
-bool stepCode(size_t instructionCount){
-   LOG_DEBUG("Stepping into code!");
+bool stepCode(const size_t instructionCount){
+   LOG_DEBUG("Stepping into code...");
     if (isCodeRunning || executionComplete){
         return true;
     }
 
-    uint64_t ip;
-
     uc_context_restore(uc, context);
-    ip = getRegisterValue(getArchIPStr(codeInformation.mode), false).eightByteVal;
+    uint64_t ip = getRegisterValue(getArchIPStr(codeInformation.mode), false).eightByteVal;
 
     execMutex.lock();
     isCodeRunning = true;
-    auto err = uc_emu_start(uc, ip, ENTRY_POINT_ADDRESS + CODE_BUF_SIZE, 0, instructionCount);
+    const auto err = uc_emu_start(uc, ip, ENTRY_POINT_ADDRESS + CODE_BUF_SIZE, 0, instructionCount);
     if (err) {
         printf("Failed on uc_emu_start() with error returned %u: %s\n",
                err, uc_strerror(err));
     }
+
     isCodeRunning = false;
     execMutex.unlock();
-    LOG_DEBUG("Code executed by " << instructionCount << ((instructionCount) ? "step" : "steps") << "!");
+    LOG_DEBUG("Code executed by " << instructionCount << ((instructionCount) ? "step" : "steps") << ".");
 
     if (executionComplete){
+        LOG_DEBUG("Execution complete...");
         return true;
     }
 
     {
-        int lineNum;
-
         uc_context_save(uc, context);
         ip = getRegisterValue(getArchIPStr(codeInformation.mode), false).eightByteVal;
         if (ip != expectedIP){
             expectedIP = ip;
         }
 
-        std::string str =  addressLineNoMap[std::to_string(ip)];
+        const std::string str =  addressLineNoMap[std::to_string(ip)];
         if (!str.empty() && (!executionComplete)){
             lineNo = std::atoi(str.c_str());
             LOG_DEBUG("Highlight from block 3 - stepCode : line: " << lineNo);
@@ -445,8 +388,7 @@ bool stepCode(size_t instructionCount){
         skipBreakpoints = false;
     }
 
-   LOG_DEBUG("Code ran once!");
-    return true;
+   return true;
 }
 
 int tempBPLineNum = -1;
@@ -458,35 +400,37 @@ bool eraseTempBP = false;
  *  it saves the line number of the last valid instruction.
  *  We can assume that in general, the last instruction of the first label
  *  is the last instruction of the code because the code executes from top to bottom.
- */
+*/
+
 bool pauseNext = false;
 int runUntilLine = 0;
 
 void hook(uc_engine *uc, uint64_t address, uint32_t size, void *user_data){
-//    LOG_DEBUG("Hook called!");
     if ((!debugModeEnabled && !debugRun) || (executionComplete) || (pauseNext)){
         LOG_DEBUG("Execution halted.");
         uc_emu_stop(uc);
         uc_context_save(uc, context);
+
         if (executionComplete){
             editor->HighlightDebugCurrentLine(lastInstructionLineNo - 1);
         }
+
         if (pauseNext){
             LOG_DEBUG("Pause next detected!");
             pauseNext = false;
-//            debugPaused = false;
         }
-        int lineNumber;
+
         uint64_t ip;
-        std::string str = addressLineNoMap[std::to_string(address)];
+        const std::string str = addressLineNoMap[std::to_string(address)];
+
         if (!str.empty()){
-            lineNumber = std::atoi(str.c_str());
+            int lineNumber = std::atoi(str.c_str());
         }
+
         return;
     }
 
     int lineNumber;
-    uint64_t ip;
     std::string str = addressLineNoMap[std::to_string(address)];
     if (!str.empty()){
         lineNumber = std::atoi(str.c_str());
@@ -519,20 +463,19 @@ void hook(uc_engine *uc, uint64_t address, uint32_t size, void *user_data){
     }
 
     if (lineNumber == lastInstructionLineNo){
-        LOG_DEBUG("At last instruction line number!");
         executionComplete = true;
     }
 
     if (debugModeEnabled && !skipBreakpoints){
-        ip = getRegisterValue(getArchIPStr(codeInformation.mode), false).eightByteVal;
+        uint64_t ip = getRegisterValue(getArchIPStr(codeInformation.mode), false).eightByteVal;
         if (ip != expectedIP && (ip > expectedIP)){
-            LOG_DEBUG("Jump detected!");
+            LOG_INFO("Jump detected!");
             updateRegs();
             if (stepIn){
                 LOG_DEBUG("Step in detected!");
-                std::string bp = addressLineNoMap[std::to_string(ip)];
-                tempBPLineNum = std::atoi(bp.c_str());
-                if (!bp.empty()){
+                const std::string breakPointLinNo = addressLineNoMap[std::to_string(ip)];
+                tempBPLineNum = std::atoi(breakPointLinNo.c_str());
+                if (!breakPointLinNo.empty()){
                     breakpointMutex.lock();
                     breakpointLines.push_back(tempBPLineNum);
                     breakpointMutex.unlock();
@@ -543,7 +486,7 @@ void hook(uc_engine *uc, uint64_t address, uint32_t size, void *user_data){
 
         editor->HighlightDebugCurrentLine(lineNumber - 1);
 
-        if (std::find(breakpointLines.begin(), breakpointLines.end(), lineNumber) != breakpointLines.end() && (!skipBreakpoints)){
+        if (std::ranges::find(breakpointLines, lineNumber) != breakpointLines.end() && (!skipBreakpoints)){
             editor->HighlightDebugCurrentLine(lineNumber - 1);
             LOG_DEBUG("Highlight from hook - breakpoint found at lineNo " << lineNumber);
             if (!continueOverBreakpoint){
@@ -579,6 +522,7 @@ void hook(uc_engine *uc, uint64_t address, uint32_t size, void *user_data){
 }
 
 bool initRegistersToDefinedVals(){
+    LOG_INFO("Initialising registers to defined values...");
     uint64_t intVal;
 
     for(auto&[name, value]: tempRegisterValueMap){
@@ -594,18 +538,16 @@ bool initRegistersToDefinedVals(){
 
 bool runCode(const std::string& code_in, uint64_t instructionCount)
 {
-    LOG_DEBUG("Running code...");
-    uc_err err;
-    uint8_t* code;
+    LOG_INFO("Running code...");
 
     initRegistersToDefinedVals();
     if (codeBuf == nullptr){
-        codeBuf = (uint8_t*)malloc(CODE_BUF_SIZE);
+        codeBuf = static_cast<uint8_t *>(malloc(CODE_BUF_SIZE));
         memset(codeBuf, 0, CODE_BUF_SIZE);
         LOG_DEBUG("Code buffer allocated!");
     }
 
-    code = (uint8_t*)(code_in.c_str());
+    const auto *code = (uint8_t *)(code_in.c_str());
     memcpy(codeBuf, code, code_in.length());
 
     uc_mem_map(uc, ENTRY_POINT_ADDRESS, MEMORY_ALLOCATION_SIZE, UC_PROT_READ | UC_PROT_WRITE | UC_PROT_EXEC);
@@ -623,7 +565,7 @@ bool runCode(const std::string& code_in, uint64_t instructionCount)
     uc_hook trace;
     uc_hook_add(uc, &trace, UC_HOOK_CODE, (void*)hook, nullptr, 1, 0);
     if (instructionCount != 1 || (stepClickedOnce)){
-        err = uc_emu_start(uc, ENTRY_POINT_ADDRESS, ENTRY_POINT_ADDRESS + CODE_BUF_SIZE, 0, instructionCount);
+        const uc_err err = uc_emu_start(uc, ENTRY_POINT_ADDRESS, ENTRY_POINT_ADDRESS + CODE_BUF_SIZE, 0, instructionCount);
         if (runningTempCode){
             uc_context_save(uc, context);
             updateRegs();
@@ -657,23 +599,26 @@ bool runCode(const std::string& code_in, uint64_t instructionCount)
     }
 
     updateRegs();
-    LOG_DEBUG("Ran code successfully!");
+    LOG_INFO("Ran code successfully!");
     codeHasRun = true;
     return true;
 }
 
 bool runTempCode(const std::string& codeIn, uint64_t instructionCount){
+    LOG_INFO("Running " << instructionCount << " temporary instructions...");
+
     resetState();
     runningTempCode = true;
     runCode(codeIn, instructionCount);
 
     tempUC = uc;
-    auto size = uc_context_size(uc);
+    const auto size = uc_context_size(uc);
     tempContext = static_cast<uc_context *>(malloc(size));
     memcpy(tempContext, context, size);
 
     uint64_t ip;
     uc_context_reg_read(tempContext, regNameToConstant(getArchIPStr(codeInformation.mode)), &ip);
     updateRegs(true);
+
     return true;
 }

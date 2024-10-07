@@ -8,10 +8,10 @@
 #include <filesystem>
 
 extern std::filesystem::path getTemporaryPath();
-void fileOpenTask(const std::string& fileName);
+bool fileOpenTask(const std::string& fileName);
 void fileSaveAsTask(const std::string &fileName);
 void fileSaveTask(const std::string &fileName);
-extern void fileRunTask(uint64_t instructionCount = 0);
+extern bool fileRunTask(uint64_t instructionCount = 0);
 extern void fileSaveUCContextAsJson(const std::string& jsonFilename);
 extern void fileLoadUCContextFromJson(const std::string& jsonFilename);
 #endif // !fileTasks

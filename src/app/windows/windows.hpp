@@ -67,10 +67,11 @@ extern uint64_t hexStrToInt(const std::string& val);
 extern void stackEditorWindow();
 extern std::vector<std::string> parseRegisters(std::string registerString);
 extern MemoryEditor memoryEditorWindow;
-extern void stackWriteFunc(ImU8* data, size_t off, ImU8 d);
+extern void stackWriteFunc(ImU8* data, size_t offset, ImU8 delta);
 extern void hexWriteFunc(ImU8* data, size_t off, ImU8 d);
 extern MemoryEditor stackEditor;
 extern int checkHexCharsCallback(ImGuiInputTextCallbackData* data);
 extern const char* items[];
+bool showRequiredButton(const std::string& buttonName, bool state = false);
 extern MemoryEditor::fillRangeInfoT fillMemoryWithBytePopup();
 #endif

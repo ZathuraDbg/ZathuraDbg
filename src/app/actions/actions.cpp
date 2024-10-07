@@ -2,73 +2,90 @@
 #include "actions.hpp"
 #include "../integration/interpreter/interpreter.hpp"
 void startDebugging(){
+    LOG_INFO("Starting debugging...");
+
     resetState();
+    if (!fileRunTask(1)) {
+        LOG_ERROR("Unable to start debugging.");
+        LOG_ERROR("fileRunTask failed!");
+        return;
+    }
+
+    LOG_INFO("Debugging started successfully.");
     debugModeEnabled = true;
-//    LOG_DEBUG("Context is empty!");
-    fileRunTask(1);
 }
 
 void restartDebugging(){
+    LOG_INFO("Restarting debugging...");
     resetState();
     fileRunTask(1);
+    LOG_INFO("Debugging restarted successfully.");
 }
 
 void stepOverAction(){
-    uint64_t ip;
-    int lineNo;
-
+    LOG_INFO("Stepping over...");
     uc_context_restore(uc, context);
-    ip = getRegister(getArchIPStr(codeInformation.mode)).registerValueUn.eightByteVal;
-    std::string str = addressLineNoMap[std::to_string(ip)];
+    const uint64_t instructionPointer = getRegister(getArchIPStr(codeInformation.mode)).registerValueUn.eightByteVal;
+    const std::string lineNoStr = addressLineNoMap[std::to_string(instructionPointer)];
 
-    if (!str.empty()){
-        lineNo = std::atoi(str.c_str());
+    if (!lineNoStr.empty()){
+        const int lineNo = std::atoi(lineNoStr.c_str());
+
         breakpointMutex.lock();
         breakpointLines.push_back(lineNo + 1);
         breakpointMutex.unlock();
         stepCode(0);
+
         if (stepOverBPLineNo == lineNo){
             breakpointMutex.lock();
             LOG_DEBUG("Removing step over breakpoint line number: " << stepOverBPLineNo);
-            breakpointLines.erase(std::find(breakpointLines.begin(), breakpointLines.end(), stepOverBPLineNo));
+            breakpointLines.erase(std::ranges::find(breakpointLines, stepOverBPLineNo));
             breakpointMutex.unlock();
             stepOverBPLineNo = -1;
         }
+
         stepOverBPLineNo = lineNo + 1;
-        LOG_DEBUG("Step over breakpoint line number: " << stepOverBPLineNo);
+        LOG_INFO("Step over breakpoint line number: " << stepOverBPLineNo << " done");
         continueOverBreakpoint = true;
     }
 }
 
 void stepInAction(){
+    LOG_INFO("Stepping in...");
     stepIn = true;
     stepCode(1);
     stepIn = false;
     pauseNext = false;
+    LOG_INFO("Stepping in done.");
 }
 
 bool debugPaused = false;
 void debugPauseAction(){
-    auto ip = getRegisterValue(getArchIPStr(codeInformation.mode), false);
-    std::string str = addressLineNoMap[std::to_string(ip.eightByteVal)];
-    auto lineNumber = std::atoi(str.c_str());
+    LOG_INFO("Pause action requested!");
+    auto instructionPointer = getRegisterValue(getArchIPStr(codeInformation.mode), false);
+    const std::string currentLineNo = addressLineNoMap[std::to_string(instructionPointer.eightByteVal)];
+    const auto lineNumber = std::atoi(currentLineNo.c_str());
     editor->HighlightDebugCurrentLine(lineNumber - 1);
     debugPaused = true;
     uc_context_save(uc, context);
     uc_emu_stop(uc);
+    LOG_INFO("Code paused successfully!");
 }
 
 void debugStopAction(){
     debugModeEnabled = false;
     resetState();
+    LOG_INFO("Debugging stopped successfully.");
 }
 
 void debugToggleBreakpoint(){
     int line, _;
     editor->GetCursorPosition(line, _);
-    auto idx = (std::find(breakpointLines.begin(), breakpointLines.end(), line + 1));
-    if (idx != breakpointLines.end()){
-        breakpointLines.erase(idx);
+
+    auto breakpointIterator= (std::ranges::find(breakpointLines, line + 1));
+    if (breakpointIterator != breakpointLines.end()){
+        LOG_DEBUG("Removing the breakpoint at line: " <<  line);
+        breakpointLines.erase(breakpointIterator);
         editor->RemoveHighlight(line);
     }
     else{
@@ -77,63 +94,82 @@ void debugToggleBreakpoint(){
                 line += 1;
             }
         }
+
+        LOG_DEBUG("Adding the breakpoint at line: " << line);
         breakpointLines.push_back(line + 1);
         editor->HighlightBreakpoints(line);
     }
 }
 
-bool debugAddBreakpoint(int lineNum){
-    auto idx = (std::find(breakpointLines.begin(), breakpointLines.end(), lineNum + 1));
-    if (idx != breakpointLines.end()){
+bool debugAddBreakpoint(const int lineNum){
+    LOG_DEBUG("Adding breakpoint on the line " << lineNum);
+
+    const auto breakpointLineNo = (std::ranges::find(breakpointLines, lineNum + 1));
+    if (breakpointLineNo != breakpointLines.end()){
+        LOG_DEBUG("Breakpoint already exists, skipping...");
         return false;
     }
     else{
         breakpointLines.push_back(lineNum + 1);
         editor->HighlightBreakpoints(lineNum);
+        LOG_DEBUG("Breakpoint added successfully!");
     }
 
     return true;
 }
 
-bool debugRemoveBreakpoint(int lineNum){
-    auto idx = (std::find(breakpointLines.begin(), breakpointLines.end(), lineNum + 1));
+bool debugRemoveBreakpoint(const int lineNum){
+    LOG_DEBUG("Removing the breakpoint at " << lineNum);
+    auto breakpointIter = (std::ranges::find(breakpointLines, lineNum + 1));
 
-    if (idx == breakpointLines.end()){
+    if (breakpointIter == breakpointLines.end()){
+        LOG_DEBUG("No breakpoint exists at line no. " << lineNum);
         return false;
     }
     else{
-        breakpointLines.erase(idx);
+        breakpointLines.erase(breakpointIter);
         editor->RemoveHighlight(lineNum);
+        LOG_DEBUG("Removed breakpoint at line no. " << lineNum);
     }
 
     return true;
 }
 
 void debugRunSelectionAction(){
+    LOG_INFO("Running selected code...");
     std::stringstream selectedAsmText(editor->GetSelectedText());
+
     if (!selectedAsmText.str().empty()) {
-        std::string bytes = getBytes(selectedAsmText);
+        const std::string bytes = getBytes(selectedAsmText);
 
         if (!bytes.empty()) {
             debugRun = true;
             runTempCode(bytes, countValidInstructions(selectedAsmText));
             debugRun = false;
+            LOG_INFO("Selection ran successfully!");
         }
+        else {
+            LOG_ERROR("Unable to run selected code because bytes were not returned.");
+        }
+    }
+    else {
+        LOG_INFO("Nothing was selected to run, skipping.");
     }
 }
 
-void debugContinueAction(bool skipBP){
-    if (std::find(breakpointLines.begin(), breakpointLines.end(), stepOverBPLineNo) != breakpointLines.end()){
-        breakpointLines.erase(std::find(breakpointLines.begin(), breakpointLines.end(), tempBPLineNum));
+void debugContinueAction(const bool skipBP){
+    LOG_DEBUG("Continuing debugging...");
+
+    if (std::ranges::find(breakpointLines, stepOverBPLineNo) != breakpointLines.end()){
+        breakpointLines.erase(std::ranges::find(breakpointLines, tempBPLineNum));
         stepOverBPLineNo = -1;
     }
+
     skipBreakpoints = skipBP;
     std::thread stepCodeThread(stepCode, 0);
     stepCodeThread.detach();
-//    stepCode(0);
 }
 
-bool show = false;
 void runActions(){
     if (enableDebugMode){
         startDebugging();
@@ -162,17 +198,24 @@ void runActions(){
             debugRun = false;
             return;
         }
+
         skipBreakpoints = true;
         resetState();
-        fileRunTask(-1);
+        if (!fileRunTask(-1)) {
+            debugRun = false;
+            skipBreakpoints = false;
+            return;
+        }
         debugRun = false;
     }
+
     if (debugContinue){
 //        debugContinueAction();
         std::thread continueActionThread(debugContinueAction, false);
         continueActionThread.detach();
         debugContinue = false;
     }
+
     if (debugStepOver){
 //        stepOverAction();
         if (isCodeRunning){
@@ -222,6 +265,7 @@ void runActions(){
         saveFileAs = false;
     }
     if (saveContextToFile){
+        LOG_INFO("Saving file to context requested!");
         if (context == nullptr || uc == nullptr){
             saveContextToFile = false;
             return;
@@ -231,20 +275,22 @@ void runActions(){
         saveContextToFile = false;
     }
     if (fileLoadContext){
+        LOG_INFO("Saving file to context requested!");
         fileLoadUCContextFromJson(openFileDialog());
         uint64_t ip;
-        int lineNumber;
 
         uc_reg_read(uc, regNameToConstant(getArchIPStr(codeInformation.mode)), &ip);
-        std::string str =  addressLineNoMap[std::to_string(ip)];
+        const std::string str =  addressLineNoMap[std::to_string(ip)];
         if (!str.empty()) {
-            lineNumber = std::atoi(str.c_str());
+            const int lineNumber = std::atoi(str.c_str());
             editor->HighlightDebugCurrentLine(lineNumber - 1);
         }
+
         fileLoadContext = false;
     }
 
     if (changeEmulationSettingsOpt){
+        LOG_INFO("Change in emulation settings requested!");
         changeEmulationSettings();
     }
 
@@ -259,6 +305,7 @@ void runActions(){
     }
 
     if (goToDefinition){
+        LOG_INFO("Going to label's definiton...");
         editor->SelectLabelDefinition(false);
         goToDefinition = false;
     }

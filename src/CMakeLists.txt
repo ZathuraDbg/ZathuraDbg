@@ -48,6 +48,8 @@ set(SOURCES
         app/actions/actions.cpp
         app/actions/actions.hpp
         ${CMAKE_SOURCE_DIR}/../vendor/tinyexpr/tinyexpr.h
+        app/codeContextMenu.cpp
+        app/codeContextMenu.hpp
 )
 
 # Include directories
