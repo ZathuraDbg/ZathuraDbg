@@ -414,6 +414,11 @@ void hexEditorWindow(){
     ImGui::PushFont(io.Fonts->Fonts[3]);
     memset(data, 0, 0x3000);
 
+    if (!uc) {
+        ImGui::PopFont();
+        return;
+    }
+
     uc_mem_read(uc, MEMORY_EDITOR_BASE, data, 0x3000);
     memoryEditorWindow.HighlightColor = ImColor(59, 60, 79);
     memoryEditorWindow.OptShowAddWindowButton = true;

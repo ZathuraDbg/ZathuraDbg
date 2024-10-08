@@ -321,7 +321,9 @@ bool resetState(){
     labelLineNoMapInternal.clear();
     labelLineNoMapInternal = {};
     labels = {};
-    getBytes(selectedFile);
+     if (getBytes(selectedFile).empty()) {
+        return false;
+    }
 
     for (auto& reg: registerValueMap){
         registerValueMap[reg.first] = "0x00";

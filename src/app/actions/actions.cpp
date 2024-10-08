@@ -200,15 +200,14 @@ void runActions(){
         }
 
         skipBreakpoints = true;
-        resetState();
-        if (!fileRunTask(-1)) {
-            debugRun = false;
-            skipBreakpoints = false;
-            return;
+        if ((resetState()) && (fileRunTask(-1))){
         }
+        else {
+            skipBreakpoints = false;
+        }
+
         debugRun = false;
     }
-
     if (debugContinue){
 //        debugContinueAction();
         std::thread continueActionThread(debugContinueAction, false);
