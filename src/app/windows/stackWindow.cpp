@@ -77,6 +77,11 @@ void stackErrorPopup(){
 void stackEditorWindow() {
     auto io = ImGui::GetIO();
     ImGui::PushFont(io.Fonts->Fonts[3]);
+  
+    if (!uc) {
+        ImGui::PopFont();
+        return;
+    }
 
     static char data[5 * 1024 * 1024];
     static char temp[5 * 1024 * 1024];
