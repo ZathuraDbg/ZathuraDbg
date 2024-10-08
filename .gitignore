@@ -17,6 +17,4 @@ src/.gdb_history
 src/build
 src/cmake-build-debug
 src/cmake-build-release
-src/Zathura
 src/*.zlog
-
