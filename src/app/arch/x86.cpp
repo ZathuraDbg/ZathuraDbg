@@ -1,6 +1,7 @@
 #include "x86.hpp"
 
-std::vector<std::string> x86DefaultShownRegs = {"RIP", "RSP", "RBP", "RAX", "RBX", "RCX", "RDX", "RSI", "RDI", "R8", "R9", "R10", "R11", "R12", "R13", "R14", "R15", "CS", "DS", "ES", "FS", "GS", "SS"};
+std::vector<std::string> x86DefaultShownRegs = {"RIP", "RSP", "RBP", "RAX", "RBX", "RCX", "RDX", "RSI", "RDI", "R8", "R9", "R10", "R11", "R12", "R13", "R14", "R15",
+    "CS", "DS", "ES", "FS", "GS", "SS"};
 std::vector<std::string> x86DefaultShownRegs16 = {"IP", "SP", "BP", "AX", "BX", "CX", "DX", "SI", "DI", "CS", "DS", "ES", "FS", "GS", "SS"};
 std::vector<std::string> x86DefaultShownRegs32 = {"EIP", "ESP", "EBP", "EAX", "EBX", "ECX", "EDX", "ESI", "EDI", "CS", "DS", "ES", "FS", "SS"};
 std::vector<std::string> x86DefaultShownRegs64 = {"RIP", "RSP", "RBP", "RAX", "RBX", "RCX", "RDX", "RSI", "RDI", "R8", "R9", "R10", "R11", "R12", "R13", "R14", "R15", "CS", "DS", "ES", "FS", "GS", "SS"};
@@ -280,6 +281,7 @@ bool x86IsRegisterValid(const std::string& reg, uc_mode mode){
     if (registerName.contains("[") && registerName.contains(":") && registerName.contains("]")){
         registerName = registerName.substr(0, registerName.find_first_of('['));
     }
+
     if (!x86RegInfoMap.contains(registerName)){
         return false;
     }
@@ -296,7 +298,14 @@ bool x86IsRegisterValid(const std::string& reg, uc_mode mode){
 
             break;
         case UC_MODE_32:
-            if (!registerName.contains("ST") || (!registerName.contains("MM"))){
+            if (!registerName.contains("ST") || (!registerName.contains("XMM"))){
+                if (registerName.starts_with("XMM") && registerName.length() > 3) {
+                    int suffix = atoi(registerName.substr(3).c_str());
+                    if (suffix > 7) {
+                        return false;
+                    }
+                }
+
                 if (x86RegInfoMap[registerName].first == 32){
                     return true;
                 }
@@ -314,6 +323,18 @@ bool x86IsRegisterValid(const std::string& reg, uc_mode mode){
             if (!registerName.contains("ST") || (!registerName.contains("MM") || (!registerName.contains("XMM")) ||
                 (!registerName.contains("YMM")) || (!registerName.contains("ZMM")))){
 
+                if ((registerName.starts_with("XMM") || registerName.starts_with("YMM")) && registerName.length() > 3) {
+                    int suffix = atoi(registerName.substr(3).c_str());
+                    if (suffix > 15) {
+                        return false;
+                    }
+                }
+                else if (registerName.starts_with("ZMM")) {
+                    int suffix = atoi(registerName.substr(3).c_str());
+                    if (suffix > 31) {
+                        return false;
+                    }
+                }
 
                 if (x86RegInfoMap[registerName].first == 64){
                     return true;
@@ -322,7 +343,7 @@ bool x86IsRegisterValid(const std::string& reg, uc_mode mode){
                     return true;
                 }
             }
-
+        default: ;
     }
     return true;
 }

@@ -271,6 +271,9 @@ void registerCommandsUI(){
         bool isRegister256Bits = false;
 
         for (auto& reg : regs) {
+            if (!regInfoMap.contains(reg)) {
+                return;
+            }
             auto regInfo = getRegister(reg);
             reg = toUpperCase(reg);
             if (regInfo.out) {
@@ -287,7 +290,7 @@ void registerCommandsUI(){
                 }
                 else if (regInfoMap[reg].first == 256){
                     if (use32BitLanes){
-                        for (float i : regInfo.registerValueUn.info.arrays.floatArray){
+                        for (const float i : regInfo.registerValueUn.info.arrays.floatArray){
                             regValues.push_back(std::to_string(i));
                         }
                     }
