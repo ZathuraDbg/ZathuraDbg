@@ -101,11 +101,22 @@ void fileSaveUCContextAsJson(const std::string& jsonFilename){
 
     for (auto&[registerName, regInfo]: regInfoMap){
         if (isRegisterValid(registerName, codeInformation.mode) && (registerName != "INVALID")){
+            registerValueT registerValue = getRegisterValue(registerName, false);
             if (regInfo.first <= 64){
                 contextJson[registerName] = getRegister(registerName).registerValueUn.eightByteVal;
             }
             else if (regInfo.first == 128){
-                contextJson[registerName] = getRegister(registerName).registerValueUn.doubleVal;
+                // disable saving contexts before code has ran
+                if (use32BitLanes) {
+                    for (int i = 1; i<5; i++) {
+                        contextJson[registerName+ "[" + std::to_string(32 * (i - 1)) + ":" + std::to_string((32 * i) - 1) + "]"] = registerValue.info.arrays.floatArray[i-1];
+                    }
+                }
+                else {
+                    for (int i = 1; i<3; i++) {
+                        contextJson[registerName+ "[" + std::to_string(64 * (i - 1)) + ":" + std::to_string((64  * i) - 1) + "]"] = registerValue.info.arrays.floatArray[i-1];
+                    }
+                }
             }
         }
     }
@@ -146,8 +157,8 @@ void fileLoadUCContextFromJson(const std::string& jsonFilename){
     jsonStream << jsonFile.rdbuf();
     auto j2 = json::parse(jsonStream.str());
 
-    for (auto it = j2.begin(); it != j2.end(); ++it){
-        auto value = it.value().dump();
+    for (auto jsonIter = j2.begin(); jsonIter != j2.end(); ++jsonIter){
+        auto value = jsonIter.value().dump();
 
         if (value.empty() || value == "\"-\"" || value == "'-'"){
         // {"reg": '-'} signals to use the current value of the register
@@ -157,8 +168,8 @@ void fileLoadUCContextFromJson(const std::string& jsonFilename){
 
         char *ptr;
         auto ret = strtoul(value.data(), &ptr, 10);
-        uc_reg_write(uc, regNameToConstant(it.key()), &ret);
-        uc_context_reg_write(context, regNameToConstant(it.key()), value.c_str());
+        uc_reg_write(uc, regNameToConstant(jsonIter.key()), &ret);
+        uc_context_reg_write(context, regNameToConstant(jsonIter.key()), value.c_str());
         uc_context_save(uc, context);
     }
 
