@@ -359,7 +359,7 @@ bool stepCode(const size_t instructionCount){
 
     isCodeRunning = false;
     execMutex.unlock();
-    LOG_DEBUG("Code executed by " << instructionCount << ((instructionCount) ? "step" : "steps") << ".");
+    LOG_DEBUG("Code executed by " << instructionCount << ((instructionCount>1) ? " step" : " steps") << ".");
 
     if (executionComplete){
         LOG_DEBUG("Execution complete...");
