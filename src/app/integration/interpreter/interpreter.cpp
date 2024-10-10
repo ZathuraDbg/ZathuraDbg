@@ -48,7 +48,7 @@ int getCurrentLine(){
         return -1;
     }
 
-    auto lineNumber= addressLineNoMap[std::to_string(instructionPointer)];
+    const auto lineNumber= addressLineNoMap[std::to_string(instructionPointer)];
     if (!lineNumber.empty()){
         return std::atoi(lineNumber.c_str());
     }

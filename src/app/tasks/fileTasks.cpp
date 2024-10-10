@@ -106,7 +106,7 @@ void fileSaveUCContextAsJson(const std::string& jsonFilename){
                 contextJson[registerName] = getRegister(registerName).registerValueUn.eightByteVal;
             }
             else if (regInfo.first == 128){
-                // disable saving contexts before code has ran
+                // disable saving contexts before code has run
                 if (use32BitLanes) {
                     for (int i = 1; i<5; i++) {
                         contextJson[registerName+ "[" + std::to_string(32 * (i - 1)) + ":" + std::to_string((32 * i) - 1) + "]"] = registerValue.info.arrays.floatArray[i-1];
@@ -114,6 +114,18 @@ void fileSaveUCContextAsJson(const std::string& jsonFilename){
                 }
                 else {
                     for (int i = 1; i<3; i++) {
+                        contextJson[registerName+ "[" + std::to_string(64 * (i - 1)) + ":" + std::to_string((64  * i) - 1) + "]"] = registerValue.info.arrays.floatArray[i-1];
+                    }
+                }
+            }
+            else if (regInfo.first == 256) {
+                if (use32BitLanes) {
+                    for (int i = 1; i<9; i++) {
+                        contextJson[registerName+ "[" + std::to_string(32 * (i - 1)) + ":" + std::to_string((32 * i) - 1) + "]"] = registerValue.info.arrays.floatArray[i-1];
+                    }
+                }
+                else {
+                    for (int i = 1; i<5; i++) {
                         contextJson[registerName+ "[" + std::to_string(64 * (i - 1)) + ":" + std::to_string((64  * i) - 1) + "]"] = registerValue.info.arrays.floatArray[i-1];
                     }
                 }
@@ -159,6 +171,7 @@ void fileLoadUCContextFromJson(const std::string& jsonFilename){
 
     for (auto jsonIter = j2.begin(); jsonIter != j2.end(); ++jsonIter){
         auto value = jsonIter.value().dump();
+        // auto s = jsonIter.key().c_str();
 
         if (value.empty() || value == "\"-\"" || value == "'-'"){
         // {"reg": '-'} signals to use the current value of the register
@@ -168,9 +181,13 @@ void fileLoadUCContextFromJson(const std::string& jsonFilename){
 
         char *ptr;
         auto ret = strtoul(value.data(), &ptr, 10);
+        if (getRegisterActualSize(jsonIter.key()) > 64) {
+            parseRegisterValueInput(jsonIter.key(), value.c_str(), true);
+            continue;
+        }
         uc_reg_write(uc, regNameToConstant(jsonIter.key()), &ret);
-        uc_context_reg_write(context, regNameToConstant(jsonIter.key()), value.c_str());
-        uc_context_save(uc, context);
+        // uc_context_reg_write(context, regNameToConstant(jsonIter.key()), value.c_str());
+        // uc_context_save(uc, context);
     }
 
     LOG_DEBUG("Context loaded successfully from " << jsonFilename);
