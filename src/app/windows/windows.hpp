@@ -73,5 +73,7 @@ extern MemoryEditor stackEditor;
 extern int checkHexCharsCallback(ImGuiInputTextCallbackData* data);
 extern const char* items[];
 bool showRequiredButton(const std::string& buttonName, bool state = false);
+extern uint16_t getRegisterActualSize(std::string str);
 extern MemoryEditor::fillRangeInfoT fillMemoryWithBytePopup();
+extern void parseRegisterValueInput(const std::string& regName, const char *regValueFirst, const bool isBigReg);
 #endif
