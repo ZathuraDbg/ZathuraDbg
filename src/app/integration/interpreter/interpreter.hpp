@@ -18,12 +18,12 @@
 #include <array>
 
 struct registerValueT{
-    uint8_t charVal;
-    uint16_t twoByteVal;
-    uint32_t fourByteVal;
-    uint64_t eightByteVal;
-    float floatVal;
-    double doubleVal;
+    uint8_t charVal{};
+    uint16_t twoByteVal{};
+    uint32_t fourByteVal{};
+    uint64_t eightByteVal{};
+    float floatVal{};
+    double doubleVal{};
     struct information{
         bool is128bit = false;
         bool is256bit = false;
@@ -35,7 +35,7 @@ struct registerValueT{
 };
 
 typedef struct{
-    bool out;
+    bool out{};
     registerValueT registerValueUn;
 } registerValueInfoT;
 

@@ -143,8 +143,6 @@ void fileLoadUCContextFromJson(const std::string& jsonFilename){
     LOG_DEBUG("Loading context from file " << jsonFilename);
     if (jsonFilename.empty()){
         LOG_ERROR("Unable to load context because the file is empty!");
-        tinyfd_messageBox("Context loading failed!", "Context loading has failed because the file you provided is empty",
-            "ok", "error", 0);
         return;
     }
 
@@ -171,7 +169,6 @@ void fileLoadUCContextFromJson(const std::string& jsonFilename){
 
     for (auto jsonIter = j2.begin(); jsonIter != j2.end(); ++jsonIter){
         auto value = jsonIter.value().dump();
-        // auto s = jsonIter.key().c_str();
 
         if (value.empty() || value == "\"-\"" || value == "'-'"){
         // {"reg": '-'} signals to use the current value of the register
@@ -186,8 +183,16 @@ void fileLoadUCContextFromJson(const std::string& jsonFilename){
             continue;
         }
         uc_reg_write(uc, regNameToConstant(jsonIter.key()), &ret);
-        // uc_context_reg_write(context, regNameToConstant(jsonIter.key()), value.c_str());
-        // uc_context_save(uc, context);
+    }
+
+    // only show default regs after loading
+    tsl::ordered_map<std::string, std::string>::iterator idx = registerValueMap.begin();
+    while (idx!=registerValueMap.end()) {
+        if (std::find(defaultShownRegs.begin(), defaultShownRegs.end(), idx->first) == defaultShownRegs.end()) {
+            registerValueMap.erase(idx);
+            idx = registerValueMap.begin();
+        }
+        ++idx;
     }
 
     LOG_DEBUG("Context loaded successfully from " << jsonFilename);
