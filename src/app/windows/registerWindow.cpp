@@ -17,7 +17,9 @@ void initDefaultRegs(){
     }
 }
 
-void removeRegisterFromView(const std::string& reg, bool is128Bits = true){
+void removeRegisterFromView(const std::string& reg, const bool is128Bits){
+    // if it's not 128 bits it's 256 bits
+
     if (use32BitLanes){
         auto regIDX =  registerValueMap.find(reg + (reg32BitLaneStrs[0]));
         if (regIDX != registerValueMap.end()){
