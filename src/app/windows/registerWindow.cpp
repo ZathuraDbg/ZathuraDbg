@@ -158,6 +158,24 @@ std::vector<std::string> parseRegisters(std::string registerString){
     return registers;
 }
 
+
+int decimalCallback(ImGuiInputTextCallbackData* data) {
+    if (data->EventFlag == ImGuiInputTextFlags_CallbackCharFilter)
+    {
+        if (data->EventChar < 256)
+        {
+            char c = (char)data->EventChar;
+            if (isdigit(c) || c == '.')
+            {
+                return 0; // Allow the character
+            }
+        }
+        return 1;
+    }
+
+    return 1;
+}
+
 int checkHexCharsCallback(ImGuiInputTextCallbackData* data)
 {
     if (data->EventFlag == ImGuiInputTextFlags_CallbackCharFilter)
@@ -518,9 +536,9 @@ void registerWindow() {
             ImGui::SetNextItemWidth(-FLT_MIN);
 
             bool isBigReg = getRegisterActualSize(regValMapInfo->first) > 64;
-            ImGuiTextFlags flags = isBigReg ? ImGuiInputTextFlags_CallbackCharFilter : ImGuiInputTextFlags_None;
+            const ImGuiTextFlags flags = ImGuiInputTextFlags_CallbackCharFilter;
 
-            int (*callback)(ImGuiInputTextCallbackData* data) = isBigReg ? checkHexCharsCallback : nullptr;
+            int (*callback)(ImGuiInputTextCallbackData* data) = isBigReg ? decimalCallback: checkHexCharsCallback;
             if (ImGui::InputText(("##regValueFirst" + std::to_string(index)).c_str(), regValueFirst, IM_ARRAYSIZE(regValueFirst), ImGuiInputTextFlags_CharsNoBlank | ImGuiInputTextFlags_EnterReturnsTrue
             | flags, callback)) {
                 parseRegisterValueInput(regValMapInfo->first, regValueFirst, isBigReg);
@@ -550,16 +568,17 @@ void registerWindow() {
             ImGui::PopID();
 
             ImGui::TableSetColumnIndex(3);
-            static char value2[64] = {};
-            strncpy(value2, regValMapInfo->second.c_str(), sizeof(value2) - 1);
-            value2[sizeof(value2) - 1] = '\0';
+            static char regValueSecond[64] = {};
+            strncpy(regValueSecond, regValMapInfo->second.c_str(), sizeof(regValueSecond) - 1);
+            regValueSecond[sizeof(regValueSecond) - 1] = '\0';
 
             ImGui::PushID(index * 2 + 1);
             ImGui::SetNextItemWidth(-FLT_MIN);
 
             isBigReg = getRegisterActualSize(regValMapInfo->first) > 64;
-            if (ImGui::InputText(("##value2" + std::to_string(index)).c_str(), value2, IM_ARRAYSIZE(value2), ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CharsUppercase | ImGuiInputTextFlags_CharsNoBlank | ImGuiInputTextFlags_EnterReturnsTrue)) {
-                parseRegisterValueInput(regValMapInfo->first, value2, isBigReg);
+            int (*callback2)(ImGuiInputTextCallbackData* data) = isBigReg ? decimalCallback: checkHexCharsCallback;
+            if (ImGui::InputText(("##value2" + std::to_string(index)).c_str(), regValueSecond, IM_ARRAYSIZE(regValueSecond), ImGuiInputTextFlags_CharsNoBlank | ImGuiInputTextFlags_EnterReturnsTrue | flags, callback2)) {
+                parseRegisterValueInput(regValMapInfo->first, regValueSecond, isBigReg);
             }
 
             ImGui::PopID();

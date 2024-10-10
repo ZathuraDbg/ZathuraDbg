@@ -51,7 +51,7 @@ void fileSaveTask(const std::string &fileName){
         selectedFile = fileName;
     }
 }
-bool fileRunTask(uint64_t instructionCount){
+bool fileRunTask(const uint64_t instructionCount){
     if (!selectedFile.empty()){
         LOG_DEBUG("Running code from: " << selectedFile);
 

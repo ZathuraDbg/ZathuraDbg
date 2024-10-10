@@ -20,24 +20,24 @@ std::pair<size_t, size_t> infoPopup(const std::string& title = "", const std::st
     ImGui::OpenPopup("InputPopup");
     std::pair<size_t, size_t> windowInfo;
 
-    ImVec2 parentPos = ImGui::GetWindowPos();
-    ImVec2 parentSize = ImGui::GetWindowSize();
+    const ImVec2 parentPos = ImGui::GetWindowPos();
+    const ImVec2 parentSize = ImGui::GetWindowSize();
     ImVec2 windowSize = ImGui::GetWindowSize();
 
-    ImVec2 popupSize = ImVec2(290, 160);
-    ImVec2 popupPos = parentPos + ImVec2((parentSize.x - popupSize.x) * 0.5f, (parentSize.y - popupSize.y) * 0.5f);
+    constexpr auto popupSize = ImVec2(290, 160);
+    const ImVec2 popupPos = parentPos + ImVec2((parentSize.x - popupSize.x) * 0.5f, (parentSize.y - popupSize.y) * 0.5f);
 
     const char *text = title.c_str();
-    auto windowTextPos = ImGui::CalcTextSize(text);
+    const auto windowTextPos = ImGui::CalcTextSize(text);
 
     ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[SatoshiBold18]);
     ImGui::PushStyleVar(ImGuiStyleVar_PopupBorderSize, 5.0f);
     ImGui::SetNextWindowPos(popupPos, ImGuiCond_Appearing);
     static char addrNewWin[120] = "";
     static char size[30] = "";
-    bool enterReceived = false;
 
     if (ImGui::BeginPopup("InputPopup", ImGuiWindowFlags_AlwaysAutoResize)) {
+        bool enterReceived = false;
         windowSize = ImGui::GetWindowSize();
         ImGui::SetCursorPosX((windowSize.x - windowTextPos.x) * 0.5f);
         ImGui::Text("%s", text);
