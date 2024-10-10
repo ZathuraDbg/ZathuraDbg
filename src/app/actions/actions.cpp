@@ -271,7 +271,7 @@ void runActions(){
         }
 
         fileSaveUCContextAsJson(saveAsFileDialog());
-        saveContextToFile = false;
+                    saveContextToFile = false;
     }
     if (fileLoadContext){
         LOG_INFO("Saving file to context requested!");

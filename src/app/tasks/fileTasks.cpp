@@ -99,6 +99,8 @@ void fileSaveUCContextAsJson(const std::string& jsonFilename){
     LOG_DEBUG("File name is " << jsonFilename);
     json contextJson;
 
+
+
     for (auto&[registerName, regInfo]: regInfoMap){
         if (isRegisterValid(registerName, codeInformation.mode) && (registerName != "INVALID")){
             registerValueT registerValue = getRegisterValue(registerName, false);
@@ -114,7 +116,7 @@ void fileSaveUCContextAsJson(const std::string& jsonFilename){
                 }
                 else {
                     for (int i = 1; i<3; i++) {
-                        contextJson[registerName+ "[" + std::to_string(64 * (i - 1)) + ":" + std::to_string((64  * i) - 1) + "]"] = registerValue.info.arrays.floatArray[i-1];
+                        contextJson[registerName+ "[" + std::to_string(64 * (i - 1)) + ":" + std::to_string((64  * i) - 1) + "]"] = registerValue.info.arrays.doubleArray[i-1];
                     }
                 }
             }
@@ -126,8 +128,8 @@ void fileSaveUCContextAsJson(const std::string& jsonFilename){
                 }
                 else {
                     for (int i = 1; i<5; i++) {
-                        contextJson[registerName+ "[" + std::to_string(64 * (i - 1)) + ":" + std::to_string((64  * i) - 1) + "]"] = registerValue.info.arrays.floatArray[i-1];
-                    }
+                        contextJson[registerName+ "[" + std::to_string(64 * (i - 1)) + ":" + std::to_string((64  * i) - 1) + "]"] = registerValue.info.arrays.doubleArray[i-1];
+                        }
                 }
             }
         }
