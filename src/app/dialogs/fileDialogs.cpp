@@ -1,5 +1,5 @@
 #include "dialogHeader.hpp"
-std::string selectedFile = std::filesystem::current_path().concat("/test.asm").make_preferred().string();
+std::string selectedFile = "./test.asm";
 
 std::string openFileDialog(){
     const char* chosenFile = tinyfd_openFileDialog("Select desired file", nullptr, 0, nullptr, "Assembly files", 0);

@@ -13,10 +13,6 @@ void setupEditor() {
     LOG_INFO("Setting up the editor...");
     auto selectedFileStream = std::ifstream(selectedFile);
 
-    if (!selectedFileStream.good()) {
-        selectedFile = openFileDialog();
-        selectedFileStream = std::ifstream(selectedFile);
-    }
 
     editor = new TextEditor();
     editor->SetLanguageDefinition(TextEditor::LanguageDefinitionId::Asmx86_64);
@@ -25,6 +21,11 @@ void setupEditor() {
     editor->SetReadOnlyEnabled(false);
     editor->SetTabSize(4);
 
+    if (!selectedFileStream.good()) {
+        selectedFile = "";
+        editor->SetText("; Press CTRL + O to open a file...");
+    }
+    else
     {
         std::string str((std::istreambuf_iterator<char>(selectedFileStream)), std::istreambuf_iterator<char>());
         editor->SetText(str);

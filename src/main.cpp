@@ -94,6 +94,7 @@ int main(int argc, const char** argv)
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
+    io.IniFilename = "config.zlyt";
     const char* currentPath = executablePath.c_str();
 	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
