@@ -247,13 +247,13 @@ void registerContextMenu(){
         ImGui::Separator();
         ImGui::PushID("CopyNameOpt");
         if (ImGui::MenuItem("Copy name")) {
-            ImGui::SetClipboardText(registerValueMap[hoveredReg].c_str());
+            ImGui::SetClipboardText(hoveredReg.c_str());
         }
         ImGui::PopID();
         ImGui::Separator();
         ImGui::PushID("CopyValueOpt");
         if (ImGui::MenuItem("Copy value")) {
-            ImGui::SetClipboardText(hoveredReg.c_str());
+            ImGui::SetClipboardText(registerValueMap[hoveredReg].c_str());
         }
         ImGui::PopID();
         ImGui::Separator();
