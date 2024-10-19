@@ -24,7 +24,9 @@ void removeRegisterFromView(const std::string& reg, const bool is128Bits){
         auto regIDX =  registerValueMap.find(reg + (reg32BitLaneStrs[0]));
         if (regIDX != registerValueMap.end()){
             for (int i = (is128Bits ? 3 : 7); i >= 0; i--){
-                registerValueMap.erase(regIDX+i);
+                if (registerValueMap.end() != regIDX + i) {
+                    registerValueMap.erase(regIDX+i);
+                }
             }
             return;
         }
