@@ -81,19 +81,25 @@ void updateRegs(bool useTempContext){
                 else if (regInfoMap[toUpperCase(name)].first == 128 || regInfoMap[toUpperCase(name)].first == 256){
                     if (registerValue.info.is128bit){
                         if (!use32BitLanes){
-                            hex << std::to_string(registerValue.info.arrays.doubleArray[0]);
-                            registerValueMap[name + reg64BitLaneStrs[0]] = hex.str();
-                            hex.str("");
-                            hex.clear();
-                            hex << std::to_string(registerValue.info.arrays.doubleArray[1]);
-                            registerValueMap[name + reg64BitLaneStrs[1]] = hex.str();
-                            hex.str("");
-                            hex.clear();
+                            if (registerValueMap.contains(name + reg64BitLaneStrs[0])) {
+                                hex << std::to_string(registerValue.info.arrays.doubleArray[0]);
+                                registerValueMap[name + reg64BitLaneStrs[0]] = hex.str();
+                                hex.str("");
+                                hex.clear();
+                            }
+                            if (registerValueMap.contains(name + reg64BitLaneStrs[1])) {
+                                hex << std::to_string(registerValue.info.arrays.doubleArray[1]);
+                                registerValueMap[name + reg64BitLaneStrs[1]] = hex.str();
+                                hex.str("");
+                                hex.clear();
+                            }
                             continue;
                         }
                         else{
                             for (int i = 0; i < 4; i++){
-                                registerValueMap[name + reg32BitLaneStrs[i]] = std::to_string(registerValue.info.arrays.floatArray[i]);
+                                if (registerValueMap.contains(name + reg32BitLaneStrs[i])) {
+                                    registerValueMap[name + reg32BitLaneStrs[i]] = std::to_string(registerValue.info.arrays.floatArray[i]);
+                                }
                             }
                             hex.str("");
                             hex.clear();
@@ -103,7 +109,9 @@ void updateRegs(bool useTempContext){
                     else if (registerValue.info.is256bit){
                         if (!use32BitLanes){
                             for (int i = 0; i < 4; i++){
-                                registerValueMap[name + reg64BitLaneStrs[i]] = std::to_string(registerValue.info.arrays.doubleArray[i]);
+                                if (registerValueMap.contains(name + reg64BitLaneStrs[i])) {
+                                    registerValueMap[name + reg64BitLaneStrs[i]] = std::to_string(registerValue.info.arrays.doubleArray[i]);
+                                }
                             }
                             hex.str("");
                             hex.clear();
@@ -111,7 +119,9 @@ void updateRegs(bool useTempContext){
                         }
                         else{
                             for (int i = 0; i < 8; i++){
-                                registerValueMap[name + reg32BitLaneStrs[i]] = std::to_string(registerValue.info.arrays.floatArray[i]);
+                                if (registerValueMap.contains(name + reg64BitLaneStrs[i])) {
+                                    registerValueMap[name + reg32BitLaneStrs[i]] = std::to_string(registerValue.info.arrays.floatArray[i]);
+                                }
                             }
                             useSecondVal = false;
                             hex.str("");
@@ -119,7 +129,6 @@ void updateRegs(bool useTempContext){
                             continue;
                         }
                     }
-
                 }
             }
         }
