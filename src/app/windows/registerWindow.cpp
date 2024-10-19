@@ -228,6 +228,7 @@ void registerContextMenu(){
     ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[RubikRegular16]);
     if (ImGui::BeginPopupContextItem("RegisterContextMenu")) {
         contextShown = true;
+        ImGui::PushID("HideRegOpt");
         if (ImGui::MenuItem("Hide register")) {
             if (regInfoMap[hoveredReg].first == 128){
                 removeRegisterFromView(hoveredReg);
@@ -242,18 +243,26 @@ void registerContextMenu(){
                 }
             }
         }
+        ImGui::PopID();
         ImGui::Separator();
+        ImGui::PushID("CopyNameOpt");
         if (ImGui::MenuItem("Copy name")) {
             ImGui::SetClipboardText(registerValueMap[hoveredReg].c_str());
         }
+        ImGui::PopID();
         ImGui::Separator();
+        ImGui::PushID("CopyValueOpt");
         if (ImGui::MenuItem("Copy value")) {
             ImGui::SetClipboardText(hoveredReg.c_str());
         }
+        ImGui::PopID();
         ImGui::Separator();
+        ImGui::PushID("ToggleLanesOpt");
         if (ImGui::MenuItem("Toggle lanes")) {
             use32BitLanes = !use32BitLanes;
         }
+        ImGui::PopID();
+        ImGui::Separator();
         ImGui::EndPopup();
     }
     ImGui::PopFont();
@@ -468,7 +477,6 @@ void parseRegisterValueInput(const std::string& regName, const char *regValueFir
             else if (regName == getArchSBPStr(codeInformation.mode).first || (regName == getArchSBPStr(codeInformation.mode).second)){
                 STACK_ADDRESS = strtoul(regValueFirst, nullptr, 16);
             }
-            // implement predefining registers here
             tempRegisterValueMap[regName] = regValueFirst;
         }
     }
@@ -523,7 +531,7 @@ void registerWindow() {
                 hoveredReg = regValMapInfo->first;
             }
 
-            registerContextMenu();
+            // registerContextMenu();
             ImGui::PopID();
 
             ImGui::TableSetColumnIndex(1);
@@ -538,6 +546,7 @@ void registerWindow() {
             bool isBigReg = getRegisterActualSize(regValMapInfo->first) > 64;
             const ImGuiTextFlags flags = ImGuiInputTextFlags_CallbackCharFilter;
 
+            registerContextMenu();
             int (*callback)(ImGuiInputTextCallbackData* data) = isBigReg ? decimalCallback: checkHexCharsCallback;
             if (ImGui::InputText(("##regValueFirst" + std::to_string(index)).c_str(), regValueFirst, IM_ARRAYSIZE(regValueFirst), ImGuiInputTextFlags_CharsNoBlank | ImGuiInputTextFlags_EnterReturnsTrue
             | flags, callback)) {
@@ -564,7 +573,6 @@ void registerWindow() {
                 hoveredReg = regValMapInfo->first;
             }
 
-            registerContextMenu();
             ImGui::PopID();
 
             ImGui::TableSetColumnIndex(3);
@@ -574,6 +582,7 @@ void registerWindow() {
 
             ImGui::PushID(index * 2 + 1);
             ImGui::SetNextItemWidth(-FLT_MIN);
+            registerContextMenu();
 
             isBigReg = getRegisterActualSize(regValMapInfo->first) > 64;
             int (*callback2)(ImGuiInputTextCallbackData* data) = isBigReg ? decimalCallback: checkHexCharsCallback;

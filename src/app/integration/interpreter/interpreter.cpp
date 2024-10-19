@@ -75,12 +75,9 @@ double convert128BitToDouble(uint64_t low_bits, const uint64_t high_bits) {
 }
 
 registerValueT getRegisterValue(const std::string& regName, bool useTempContext){
-    LOG_INFO("Getting the value for the register: " << regName << (useTempContext ? " with temporary context ": " without temporary context"));
-
     auto registerInfo = regInfoMap[toUpperCase(regName)];
     auto [size, constant] = registerInfo;
 
-    LOG_INFO("Size of the register is " << size);
     if (size == 8) {
         uint8_t valTemp8;
         useTempContext ? uc_context_reg_read(tempContext, constant, &valTemp8) : uc_reg_read(uc, constant, &valTemp8);
@@ -130,7 +127,6 @@ registerValueT getRegisterValue(const std::string& regName, bool useTempContext)
         }
         else {
 //          1.0f just to make it pass the zero check test
-            LOG_INFO("Using 64 bit lanes...");
             regValue = {.doubleVal = 0.0f};
             regValue.info.is128bit = true;
             regValue.info.arrays.doubleArray[0] = convert128BitToDouble(0, upperHalf);
@@ -147,7 +143,6 @@ registerValueT getRegisterValue(const std::string& regName, bool useTempContext)
         registerValueT regValue{};
 
         if (!use32BitLanes){
-            LOG_INFO("Using 64 bit lanes...");
             double valueArray[arrSize];
             useTempContext ? uc_context_reg_read(tempContext, constant, &valueArray) : uc_reg_read(uc, constant, valueArray);
             regValue = {.doubleVal = (valueArray[0])};
