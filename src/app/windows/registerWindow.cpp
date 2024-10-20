@@ -163,6 +163,29 @@ void updateRegs(bool useTempContext){
                             continue;
                         }
                     }
+                    else if (registerValue.info.is512bit) {
+                       if (!use32BitLanes){
+                            for (int i = 0; i < 8; i++){
+                                if (registerValueMap.contains(name + reg64BitLaneStrs[i])) {
+                                    registerValueMap[name + reg64BitLaneStrs[i]] = std::to_string(registerValue.info.arrays.doubleArray[i]);
+                                }
+                            }
+                            hex.str("");
+                            hex.clear();
+                            continue;
+                        }
+                        else{
+                            for (int i = 0; i < 16; i++){
+                                if (registerValueMap.contains(name + reg64BitLaneStrs[i])) {
+                                    registerValueMap[name + reg32BitLaneStrs[i]] = std::to_string(registerValue.info.arrays.floatArray[i]);
+                                }
+                            }
+                            useSecondVal = false;
+                            hex.str("");
+                            hex.clear();
+                            continue;
+                        }
+                    }
                 }
             }
         }
@@ -207,7 +230,7 @@ int decimalCallback(ImGuiInputTextCallbackData* data) {
     {
         if (data->EventChar < 256)
         {
-            char c = (char)data->EventChar;
+            char c = static_cast<char>(data->EventChar);
             if (isdigit(c) || c == '.')
             {
                 return 0; // Allow the character
@@ -225,7 +248,7 @@ int checkHexCharsCallback(ImGuiInputTextCallbackData* data)
     {
         if (data->EventChar < 256)
         {
-            char c = (char)data->EventChar;
+            char c = static_cast<char>(data->EventChar);
             if ((c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f'))
             {
                 return 0; // Allow the character
@@ -406,10 +429,6 @@ void registerCommandsUI() {
 
                 //              remove the register if it already exists
                 if (registerValueMap.count(reg) != 0){
-                    if (isRegister128Bits || isRegister256Bits){
-                        removeRegisterFromView(reg, isRegister128Bits);
-                        continue;
-                    }
                     registerValueMap.erase(reg);
                     continue;
                 }
@@ -444,6 +463,7 @@ void registerCommandsUI() {
                         }
                     }
 
+                    // code for saving register's value
                     if (regValue == "0"){
                         regValue = "0x00";
                     }
