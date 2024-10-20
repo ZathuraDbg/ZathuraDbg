@@ -76,5 +76,6 @@ bool showRequiredButton(const std::string& buttonName, bool state = false);
 extern uint16_t getRegisterActualSize(std::string str);
 extern MemoryEditor::fillRangeInfoT fillMemoryWithBytePopup();
 extern void parseRegisterValueInput(const std::string& regName, const char *regValueFirst, const bool isBigReg);
-extern  void removeRegisterFromView(const std::string& reg, bool is128Bits = true);
+extern void removeRegisterFromView(const std::string& reg, int regType = 1);
+extern std::string getRegisterActualName(const std::string& regName);
 #endif

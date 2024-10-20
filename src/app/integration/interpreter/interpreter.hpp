@@ -27,9 +27,10 @@ struct registerValueT{
     struct information{
         bool is128bit = false;
         bool is256bit = false;
+        bool is512bit = false;
         union {
-            double doubleArray[4]{};
-            float floatArray[8];
+            double doubleArray[8]{};
+            float floatArray[16];
         } arrays;
     } info;
 };
