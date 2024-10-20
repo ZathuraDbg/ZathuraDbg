@@ -188,9 +188,9 @@ void fileLoadUCContextFromJson(const std::string& jsonFilename){
     }
 
     // only show default regs after loading
-    tsl::ordered_map<std::string, std::string>::iterator idx = registerValueMap.begin();
+    auto idx = registerValueMap.begin();
     while (idx!=registerValueMap.end()) {
-        if (std::find(defaultShownRegs.begin(), defaultShownRegs.end(), idx->first) == defaultShownRegs.end()) {
+        if (std::ranges::find(defaultShownRegs, idx->first) == defaultShownRegs.end()) {
             registerValueMap.erase(idx);
             idx = registerValueMap.begin();
         }

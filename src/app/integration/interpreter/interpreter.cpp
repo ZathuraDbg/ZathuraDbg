@@ -109,7 +109,6 @@ registerValueT getRegisterValue(const std::string& regName, bool useTempContext)
         registerValueT regValue = {.doubleVal = (convert128BitToDouble(lowerHalf, upperHalf))};
         regValue.info.is128bit = true;
         if (use32BitLanes){
-            LOG_INFO("Using 32 bit lanes...");
             regValue.info.arrays.floatArray[0] = convert64BitToTwoFloats(lowerHalf).first;
             regValue.info.arrays.floatArray[1] = convert64BitToTwoFloats(lowerHalf).second;
             regValue.info.arrays.floatArray[2] = convert64BitToTwoFloats(upperHalf).first;
@@ -163,13 +162,53 @@ registerValueT getRegisterValue(const std::string& regName, bool useTempContext)
             }
         }
         else{
-            LOG_INFO("Using 32 bit lanes...");
             float valueArray[arrSize];
             useTempContext ? uc_context_reg_read(tempContext, constant, &valueArray) : uc_reg_read(uc, constant, valueArray);
             regValue = {.doubleVal = (valueArray[0])};
             regValue.info.is256bit = true;
 
             for (int i = 0; i < 8; i++){
+                regValue.info.arrays.floatArray[i] = valueArray[i];
+            }
+
+            for (float i : regValue.info.arrays.floatArray){
+                if (i != 0){
+                    regValue.doubleVal = regValue.floatVal = 1.0f;
+                    break;
+                }
+            }
+        }
+
+        return regValue;
+    }
+    else if (size == 512) {
+        uint8_t arrSize = use32BitLanes ? 16 : 8;
+        registerValueT regValue{};
+
+        if (!use32BitLanes){
+            double valueArray[arrSize];
+            useTempContext ? uc_context_reg_read(tempContext, constant, &valueArray) : uc_reg_read(uc, constant, valueArray);
+            regValue.info.is512bit = true;
+            regValue = {.doubleVal = 0.0f};
+
+            for (int i = 0; i < 8; i++){
+                regValue.info.arrays.doubleArray[i] = valueArray[i];
+            }
+
+            for (double i : valueArray){
+                if (i != 0){
+                    regValue.doubleVal = 1.0f;
+                    break;
+                }
+            }
+        }
+        else{
+            float valueArray[arrSize];
+            useTempContext ? uc_context_reg_read(tempContext, constant, &valueArray) : uc_reg_read(uc, constant, valueArray);
+            regValue = {.doubleVal = (valueArray[0])};
+            regValue.info.is512bit = true;
+
+            for (int i = 0; i < 16; i++){
                 regValue.info.arrays.floatArray[i] = valueArray[i];
             }
 
