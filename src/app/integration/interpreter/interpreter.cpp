@@ -147,7 +147,7 @@ registerValueT getRegisterValue(const std::string& regName, bool useTempContext)
             regValue = {.doubleVal = (valueArray[0])};
 
             regValue = {.doubleVal = 0.0f};
-            regValue.info.is512bit = true;
+            regValue.info.is256bit = true;
 
             for (int i = 0; i < 4; i++){
                 regValue.info.arrays.doubleArray[i] = valueArray[i];
@@ -164,7 +164,7 @@ registerValueT getRegisterValue(const std::string& regName, bool useTempContext)
             float valueArray[arrSize];
             useTempContext ? uc_context_reg_read(tempContext, constant, &valueArray) : uc_reg_read(uc, constant, valueArray);
             regValue = {.doubleVal = (valueArray[0])};
-            regValue.info.is512bit = true;
+            regValue.info.is256bit = true;
 
             for (int i = 0; i < 8; i++){
                 regValue.info.arrays.floatArray[i] = valueArray[i];
@@ -203,7 +203,7 @@ registerValueT getRegisterValue(const std::string& regName, bool useTempContext)
             return regValue;
         }
         else{
-            float valueArray[arrSize];
+            float valueArray[arrSize]{};
             useTempContext ? uc_context_reg_read(tempContext, constant, &valueArray) : uc_reg_read(uc, constant, valueArray);
             regValue = {.doubleVal = (valueArray[0])};
 
