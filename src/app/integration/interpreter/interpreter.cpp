@@ -145,10 +145,9 @@ registerValueT getRegisterValue(const std::string& regName, bool useTempContext)
             double valueArray[arrSize];
             useTempContext ? uc_context_reg_read(tempContext, constant, &valueArray) : uc_reg_read(uc, constant, valueArray);
             regValue = {.doubleVal = (valueArray[0])};
-            regValue.info.is256bit = true;
 
             regValue = {.doubleVal = 0.0f};
-            regValue.info.is256bit = true;
+            regValue.info.is512bit = true;
 
             for (int i = 0; i < 4; i++){
                 regValue.info.arrays.doubleArray[i] = valueArray[i];
@@ -165,7 +164,7 @@ registerValueT getRegisterValue(const std::string& regName, bool useTempContext)
             float valueArray[arrSize];
             useTempContext ? uc_context_reg_read(tempContext, constant, &valueArray) : uc_reg_read(uc, constant, valueArray);
             regValue = {.doubleVal = (valueArray[0])};
-            regValue.info.is256bit = true;
+            regValue.info.is512bit = true;
 
             for (int i = 0; i < 8; i++){
                 regValue.info.arrays.floatArray[i] = valueArray[i];
@@ -186,9 +185,8 @@ registerValueT getRegisterValue(const std::string& regName, bool useTempContext)
         registerValueT regValue{};
 
         if (!use32BitLanes){
-            double valueArray[arrSize];
+            double valueArray[arrSize]{};
             useTempContext ? uc_context_reg_read(tempContext, constant, &valueArray) : uc_reg_read(uc, constant, valueArray);
-            regValue.info.is512bit = true;
             regValue = {.doubleVal = 0.0f};
 
             for (int i = 0; i < 8; i++){
@@ -201,12 +199,13 @@ registerValueT getRegisterValue(const std::string& regName, bool useTempContext)
                     break;
                 }
             }
+            regValue.info.is512bit = true;
+            return regValue;
         }
         else{
             float valueArray[arrSize];
             useTempContext ? uc_context_reg_read(tempContext, constant, &valueArray) : uc_reg_read(uc, constant, valueArray);
             regValue = {.doubleVal = (valueArray[0])};
-            regValue.info.is512bit = true;
 
             for (int i = 0; i < 16; i++){
                 regValue.info.arrays.floatArray[i] = valueArray[i];
@@ -218,9 +217,11 @@ registerValueT getRegisterValue(const std::string& regName, bool useTempContext)
                     break;
                 }
             }
+
+            regValue.info.is512bit = true;
+            return regValue;
         }
 
-        return regValue;
     }
 
     // 80 bit registers are unimplemented

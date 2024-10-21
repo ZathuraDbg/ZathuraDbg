@@ -90,7 +90,7 @@ void updateRegs(bool useTempContext){
             val = getRegister(toLowerCase(name), true);
         }
         else{
-            val = getRegister(toLowerCase(name));
+           val = getRegister(toLowerCase(name));
         }
 
         auto const [isRegValid, registerValue] = val;
@@ -427,7 +427,7 @@ void registerCommandsUI() {
 
                 LOG_DEBUG("Adding the register " << reg);
 
-                //              remove the register if it already exists
+                // code for removing the register
                 if (registerValueMap.count(reg) != 0){
                     registerValueMap.erase(reg);
                     continue;
@@ -463,8 +463,8 @@ void registerCommandsUI() {
                         }
                     }
 
-                    // code for saving register's value
                     if (regValue == "0"){
+                    // code for saving register's value
                         regValue = "0x00";
                     }
 
