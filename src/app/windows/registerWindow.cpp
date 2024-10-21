@@ -289,8 +289,15 @@ int checkHexCharsCallback(ImGuiInputTextCallbackData* data)
     return 0;
 }
 
+enum contextMenuOption {
+    REGISTER_HIDDEN,
+    LANES_TOGGLED,
+    NORMAL_ACTION
+};
+
 bool contextShown = false;
-void registerContextMenu(){
+contextMenuOption registerContextMenu(){
+    contextMenuOption menuOption = NORMAL_ACTION;
     ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[RubikRegular16]);
     if (ImGui::BeginPopupContextItem("RegisterContextMenu")) {
         contextShown = true;
@@ -312,6 +319,7 @@ void registerContextMenu(){
                     registerValueMap.erase(id);
                 }
             }
+            menuOption = REGISTER_HIDDEN;
         }
         ImGui::PopID();
         ImGui::Separator();
@@ -330,12 +338,14 @@ void registerContextMenu(){
         ImGui::PushID("ToggleLanesOpt");
         if (ImGui::MenuItem("Toggle lanes")) {
             use32BitLanes = !use32BitLanes;
+            menuOption = LANES_TOGGLED;
         }
         ImGui::PopID();
         ImGui::Separator();
         ImGui::EndPopup();
     }
     ImGui::PopFont();
+    return menuOption;
 }
 
 uint64_t hexStrToInt(const std::string& val){
@@ -676,7 +686,9 @@ void registerWindow() {
             bool isBigReg = getRegisterActualSize(regValMapInfo->first) > 64;
             const ImGuiTextFlags flags = ImGuiInputTextFlags_CallbackCharFilter;
 
-            registerContextMenu();
+            if (registerContextMenu() == REGISTER_HIDDEN) {
+                regValMapInfo = registerValueMap.begin();
+            }
             int (*callback)(ImGuiInputTextCallbackData* data) = isBigReg ? decimalCallback: checkHexCharsCallback;
             if (ImGui::InputText(("##regValueFirst" + std::to_string(index)).c_str(), regValueFirst, IM_ARRAYSIZE(regValueFirst), ImGuiInputTextFlags_CharsNoBlank | ImGuiInputTextFlags_EnterReturnsTrue
             | flags, callback)) {
@@ -712,7 +724,9 @@ void registerWindow() {
 
             ImGui::PushID(index * 2 + 1);
             ImGui::SetNextItemWidth(-FLT_MIN);
-            registerContextMenu();
+            if (registerContextMenu() == REGISTER_HIDDEN) {
+                regValMapInfo = registerValueMap.begin();
+            }
 
             isBigReg = getRegisterActualSize(regValMapInfo->first) > 64;
             int (*callback2)(ImGuiInputTextCallbackData* data) = isBigReg ? decimalCallback: checkHexCharsCallback;
