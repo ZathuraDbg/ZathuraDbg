@@ -135,7 +135,7 @@ void initInsSizeInfoMap(){
             }
         }
 
-        if (auto idx = instructionStr.find_first_of(' '); idx != std::string::npos){
+        if (const auto idx = instructionStr.find_first_of(' '); idx != std::string::npos){
             instructionStr = instructionStr.substr(0, idx);
         }
 
@@ -147,7 +147,7 @@ void initInsSizeInfoMap(){
         instructionStr = toUpperCase(instructionStr);
 
 //       if it's valid instruction
-        if (std::find(x86Instructions.begin(), x86Instructions.end(), instructionStr) != x86Instructions.end()){
+        if (std::ranges::find(x86Instructions, instructionStr) != x86Instructions.end()){
             addressLineNoMap.insert({std::to_string(currentAddr), std::to_string(lineNo)});
             currentAddr += instructionSizes[count];
             count++;

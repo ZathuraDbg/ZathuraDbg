@@ -224,7 +224,6 @@ registerValueT getRegisterValue(const std::string& regName, bool useTempContext)
 
     }
 
-    // 80 bit registers are unimplemented
     return {.charVal = 00};
 }
 
