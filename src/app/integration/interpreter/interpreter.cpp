@@ -242,7 +242,18 @@ registerValueInfoT getRegister(const std::string& name, const bool useTempContex
 
 
     if (!codeHasRun){
-        return {true, 0x00};
+        registerValueInfoT ret = {true, 0x00};
+        if (getRegisterActualSize(toUpperCase(name)) == 128) {
+            ret.registerValueUn.info.is128bit = true;
+        }
+        else if (getRegisterActualSize(toUpperCase(name)) == 256){
+            ret.registerValueUn.info.is256bit = true;
+        }
+        else if (getRegisterActualSize(toUpperCase(name)) == 512) {
+            ret.registerValueUn.info.is512bit = true;
+        }
+
+        return ret;
     }
 
     const auto value = getRegisterValue(regName, false);
