@@ -38,7 +38,7 @@ void manageShortcuts(){
         fileLoadContext = true;
     }
     if (isShiftOnly && (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_F5)))){
-        if (isCodeRunning){
+        if (debugModeEnabled){
             debugStop = true;
         }
         return;
@@ -70,5 +70,11 @@ void manageShortcuts(){
     }
     if (IsKeyPressed(GetKeyIndex(ImGuiKey_F4))){
         goToDefinition = true;
+    }
+    if (IsKeyPressed(GetKeyIndex(ImGuiKey_F6))){
+        debugPause = true;
+    }
+    if (IsKeyPressed(GetKeyIndex(ImGuiKey_F10))){
+        debugRun = true;
     }
 }

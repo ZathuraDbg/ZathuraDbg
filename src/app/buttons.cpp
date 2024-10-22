@@ -13,12 +13,26 @@ bool setupButtons() {
         openFile = true;
     }
 
+    if (ImGui::IsItemHovered()) {
+        ImGui::BeginTooltip();
+        ImGui::Text("Open File (CTRL+O)");
+        ImGui::EndTooltip();
+    }
+
+
     ImGui::SameLine();
     ImGui::Separator();
     ImGui::SameLine();
 
     if (ImGui::Button(ICON_CI_SAVE, ImVec2(20, 20))) {
         fileSaveTask(selectedFile);
+    }
+
+
+    if (ImGui::IsItemHovered()) {
+        ImGui::BeginTooltip();
+        ImGui::Text("Save File (CTRL+S)");
+        ImGui::EndTooltip();
     }
 
     ImGui::SameLine();
@@ -29,6 +43,12 @@ bool setupButtons() {
         debugRun = true;
     }
 
+     if (ImGui::IsItemHovered()) {
+        ImGui::BeginTooltip();
+        ImGui::Text("Run (F10)");
+        ImGui::EndTooltip();
+    }
+
     ImGui::SameLine();
     ImGui::Separator();
     ImGui::SameLine();
@@ -37,10 +57,23 @@ bool setupButtons() {
         if (ImGui::Button(ICON_CI_DEBUG, ImVec2(20, 20))){
             enableDebugMode = true;
         }
+
+        if (ImGui::IsItemHovered()) {
+            ImGui::BeginTooltip();
+            ImGui::Text("Start Debugging (F5)");
+            ImGui::EndTooltip();
+        }
+
     }
     else{
         if (ImGui::Button(ICON_CI_DEBUG_RERUN, ImVec2(20, 20))){
             debugRestart = true;
+        }
+
+        if (ImGui::IsItemHovered()) {
+            ImGui::BeginTooltip();
+            ImGui::Text("Restart Debugging (CTRL+F5)");
+            ImGui::EndTooltip();
         }
 
         ImGui::SameLine();
@@ -51,12 +84,24 @@ bool setupButtons() {
             debugContinue = true;
         }
 
+        if (ImGui::IsItemHovered()) {
+            ImGui::BeginTooltip();
+            ImGui::Text("Debug Continue (F5)");
+            ImGui::EndTooltip();
+        }
+
         ImGui::SameLine();
         ImGui::Separator();
         ImGui::SameLine();
 
         if (ImGui::Button(ICON_CI_DEBUG_STEP_OVER, ImVec2(20, 20))){
             debugStepOver = true;
+        }
+
+        if (ImGui::IsItemHovered()) {
+            ImGui::BeginTooltip();
+            ImGui::Text("Step Over (CTRL+K)");
+            ImGui::EndTooltip();
         }
 
         ImGui::SameLine();
@@ -67,12 +112,24 @@ bool setupButtons() {
             debugStepIn = true;
         }
 
+        if (ImGui::IsItemHovered()) {
+            ImGui::BeginTooltip();
+            ImGui::Text("Step In (CTRL+J)");
+            ImGui::EndTooltip();
+        }
+
         ImGui::SameLine();
         ImGui::Separator();
         ImGui::SameLine();
 
         if (ImGui::Button(ICON_CI_DEBUG_PAUSE, ImVec2(20, 20))){
             debugPause = true;
+        }
+
+        if (ImGui::IsItemHovered()) {
+            ImGui::BeginTooltip();
+            ImGui::Text("Pause (F6)");
+            ImGui::EndTooltip();
         }
 
         ImGui::SameLine();
@@ -82,6 +139,13 @@ bool setupButtons() {
         if (ImGui::Button(ICON_CI_DEBUG_STOP, ImVec2(20, 20))){
             debugStop = true;
        }
+
+        if (ImGui::IsItemHovered()) {
+            ImGui::BeginTooltip();
+            ImGui::Text("Stop Debugging (Shift+F5)");
+            ImGui::EndTooltip();
+        }
+
     }
 
     ImGui::SameLine();
@@ -93,7 +157,11 @@ bool setupButtons() {
             resetState();
         }
     }
-
+    if (ImGui::IsItemHovered()) {
+        ImGui::BeginTooltip();
+        ImGui::Text("Restart Debugging (CTRL+F5)");
+        ImGui::EndTooltip();
+    }
     ImGui::SameLine();
     ImGui::Separator();
     ImGui::PopFont();
