@@ -291,8 +291,7 @@ struct MemoryEditor
     }
 
     // Memory Editor contents only
-    void DrawContents(void* mem_data_void, size_t mem_size, size_t base_display_addr = 0x0000)
-    {
+    void DrawContents(void* mem_data_void, size_t mem_size, size_t base_display_addr = 0x0000) {
         if (Cols < 1)
             Cols = 1;
 
@@ -396,18 +395,18 @@ struct MemoryEditor
                         draw_list->AddRectFilled(pos, ImVec2(pos.x + highlight_width, pos.y + s.LineHeight), HighlightColor);
                     }
                     else if (BgColorFn)
-                   {
-                      ImVec2 pos = ImGui::GetCursorScreenPos();
-                      float highlight_width = s.GlyphWidth * 2;
-                      bool is_next_byte_highlighted = (addr + 1 < mem_size) && ((BgColorFn(mem_data, addr + 1) & IM_COL32_A_MASK) != 0);
-                    if (is_next_byte_highlighted || (n + 1 == Cols))
                     {
-                        highlight_width = s.HexCellWidth;
-                        if (OptMidColsCount > 0 && n > 0 && (n + 1) < Cols && ((n + 1) % OptMidColsCount) == 0)
-                            highlight_width += s.SpacingBetweenMidCols;
+                        ImVec2 pos = ImGui::GetCursorScreenPos();
+                        float highlight_width = s.GlyphWidth * 2;
+                        bool is_next_byte_highlighted = (addr + 1 < mem_size) && ((BgColorFn(mem_data, addr + 1) & IM_COL32_A_MASK) != 0);
+                        if (is_next_byte_highlighted || (n + 1 == Cols))
+                        {
+                            highlight_width = s.HexCellWidth;
+                            if (OptMidColsCount > 0 && n > 0 && (n + 1) < Cols && ((n + 1) % OptMidColsCount) == 0)
+                                highlight_width += s.SpacingBetweenMidCols;
+                        }
+                        draw_list->AddRectFilled(pos, ImVec2(pos.x + highlight_width, pos.y + s.LineHeight), BgColorFn(mem_data, addr));
                     }
-                    draw_list->AddRectFilled(pos, ImVec2(pos.x + highlight_width, pos.y + s.LineHeight), BgColorFn(mem_data, addr));
-                }
 
                     if (DataEditingAddr == addr)
                     {
@@ -419,7 +418,7 @@ struct MemoryEditor
                             ImGui::SetKeyboardFocusHere(0);
                             sprintf(AddrInputBuf, format_data, s.AddrDigitsCount, base_display_addr + addr);
                             sprintf(DataInputBuf, format_byte, ReadFn ? ReadFn(mem_data, addr) : mem_data[addr]);
-                           ImGui::SetNextItemWidth(s.GlyphWidth * 2);       
+                            ImGui::SetNextItemWidth(s.GlyphWidth * 2);
                         }
                         struct UserData
                         {
@@ -525,7 +524,7 @@ struct MemoryEditor
                             }
 
 
-                      }
+                        }
                         if (ImGui::IsItemHovered()){
                             HoveredAddr = addr;
                         }
@@ -547,16 +546,16 @@ struct MemoryEditor
                     }
                     if (InteractFn && ImGui::IsItemHovered())
                     {
-                      if (!interact_invoked)
-                    {
-                        // Revert padding/spacing to let users draw popups/windows without interference
-                        ImGui::PopStyleVar(2);
-                        InteractFn(mem_data, mouseAddr);
-                        interact_invoked = true;
-                        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
-                        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
+                        if (!interact_invoked)
+                        {
+                            // Revert padding/spacing to let users draw popups/windows without interference
+                            ImGui::PopStyleVar(2);
+                            InteractFn(mem_data, mouseAddr);
+                            interact_invoked = true;
+                            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+                            ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
+                        }
                     }
-                }
                     ImGui::PopID();
                     for (int n = 0; n < Cols && addr < mem_size; n++, addr++)
                     {
@@ -566,7 +565,7 @@ struct MemoryEditor
                         }
                         else if (BgColorFn)
                         {
-                          draw_list->AddRectFilled(pos, ImVec2(pos.x + s.GlyphWidth, pos.y + s.LineHeight), BgColorFn(mem_data, addr));
+                            draw_list->AddRectFilled(pos, ImVec2(pos.x + s.GlyphWidth, pos.y + s.LineHeight), BgColorFn(mem_data, addr));
                         }
                         unsigned char c = ReadFn ? ReadFn(mem_data, addr) : mem_data[addr];
                         char display_c = (c < 32 || c >= 128) ? '.' : c;
@@ -627,9 +626,6 @@ struct MemoryEditor
             }
         }
 
-        if (KeepGoToPopup){
-            GoToPopup();
-        }
 
         if (KeepNewWindowInfoFn && NewWindowInfoFn){
             if (NewWindowInfoFn()){
@@ -643,6 +639,19 @@ struct MemoryEditor
             }
         }
 
+        if (KeepGoToPopup) {
+            GoToPopup();
+        }
+
+        /* Note: We don't have keyboard shortcuts for goto, fill memory with byte and select all
+         * because somehow the data between the two instances of the hex editor, which are
+         * that of the memory editor and that of the stack editor are getting mixed and that is causing
+         * them to not work at all.
+         * I expected this to be fixed later, but at the moment I have no idea what to do with this.
+         * I have tried using the same callback function with different IDs when they are called from
+         * stack and the memory editor, but it doesn't seem to work.
+        */
+
         if (ImGui::IsKeyDown(ImGuiKey_LeftCtrl) && ImGui::IsKeyPressed(ImGuiKey_Z)){
             UndoRedo();
         }
@@ -654,9 +663,7 @@ struct MemoryEditor
         if (ImGui::IsKeyDown(ImGuiKey_LeftCtrl) && ImGui::IsKeyDown(ImGuiKey_LeftShift) && ImGui::IsKeyDown(ImGuiKey_E)){
             KeepSetBaseAddrWindow = true;
         }
-        if (ImGui::IsKeyDown(ImGuiKey_LeftCtrl) && ImGui::IsKeyDown(ImGuiKey_LeftShift) && ImGui::IsKeyPressed(ImGuiKey_K)){
-            KeepFillMemoryWindow = true;
-        }
+
     }
 
     std::string GetDataToCopy(std::string bytes, bool asArray) {
@@ -875,7 +882,7 @@ struct MemoryEditor
 
             if (OptFillMemoryRange){
                 ImGui::Separator();
-                if (ImGui::MenuItem("Fill memory with byte", "CTRL + Shift + K", false)){
+                if (ImGui::MenuItem("Fill memory with byte",  nullptr)){
                     if (FillMemoryRange){
                         FillMemoryRange();
                         KeepFillMemoryWindow = true;

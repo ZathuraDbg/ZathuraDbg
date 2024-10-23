@@ -9,8 +9,8 @@ void hexWriteFunc(ImU8* data, size_t off, ImU8 d){
 
     if (err){
         LOG_ERROR("Failed to write to memory. Address: " << MEMORY_EDITOR_BASE + off);
-        char* hex = (char*)malloc(24);
-        sprintf((char*)hex, "Data change: %x", d);
+        const auto hex = static_cast<char *>(malloc(24));
+        sprintf(static_cast<char *>(hex), "Data change: %x", d);
         LOG_ERROR(hex);
         tinyfd_messageBox("ERROR!", "Failed to write to the memory address!!", "ok", "error", 0);
     }
@@ -117,7 +117,7 @@ std::pair<size_t, size_t> infoPopup(const std::string& title = "", const std::st
 }
 
 MemoryEditor::fillRangeInfoT fillMemoryWithBytePopup() {
-    ImGui::OpenPopup("InputPopup");
+    ImGui::OpenPopup("FillBytePopup");
     MemoryEditor::fillRangeInfoT fillRangeInfo{};
 //    std::pair<size_t, size_t> fillRangeInfo;
     ImVec2 parentPos = ImGui::GetWindowPos();
@@ -127,8 +127,8 @@ MemoryEditor::fillRangeInfoT fillMemoryWithBytePopup() {
     ImVec2 popupSize = ImVec2(290, 160);
     ImVec2 popupPos = parentPos + ImVec2((parentSize.x - popupSize.x) * 0.5f, (parentSize.y - popupSize.y) * 0.5f);
 
-    const char *text = "Fill memory with byte";
-    auto windowTextPos = ImGui::CalcTextSize(text);
+    const auto text = "Fill memory with byte";
+    const auto windowTextPos = ImGui::CalcTextSize(text);
 
     ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[SatoshiBold18]);
     ImGui::PushStyleVar(ImGuiStyleVar_PopupBorderSize, 5.0f);
@@ -136,9 +136,9 @@ MemoryEditor::fillRangeInfoT fillMemoryWithBytePopup() {
     static char addrNewWin[120] = "";
     static char size[30] = "";
     static char byteHex[40] = "";
-    bool enterReceived = false;
 
-    if (ImGui::BeginPopup("InputPopup", ImGuiWindowFlags_AlwaysAutoResize)) {
+    if (ImGui::BeginPopup("FillBytePopup", ImGuiWindowFlags_AlwaysAutoResize)) {
+        bool enterReceived = false;
         windowSize = ImGui::GetWindowSize();
         ImGui::SetCursorPosX((windowSize.x - windowTextPos.x) * 0.5f);
         ImGui::Text("%s", text);
@@ -174,7 +174,7 @@ MemoryEditor::fillRangeInfoT fillMemoryWithBytePopup() {
         ImGui::SameLine(0, 5);
         ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[JetBrainsMono20]);
         ImGui::PushItemWidth(180);
-        ImGui::InputTextWithHint("##byteHex", "As Hex", byteHex, IM_ARRAYSIZE(byteHex), ImGuiInputTextFlags_CharsNoBlank | ImGuiInputTextFlags_CallbackAlways, checkHexCharsCallback, nullptr);
+        ImGui::InputTextWithHint("##byteHex", "As Hex", byteHex, IM_ARRAYSIZE(byteHex),ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackCharFilter, checkHexCharsCallback, nullptr);
 
         if (ImGui::IsKeyPressed(ImGuiKey_Enter)){
             enterReceived = true;

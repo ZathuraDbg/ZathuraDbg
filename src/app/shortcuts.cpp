@@ -37,6 +37,10 @@ void manageShortcuts(){
     if (isCtrlShiftShortcut && (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_O)))){
         fileLoadContext = true;
     }
+    if (isCtrlOnly && IsKeyPressed(GetKeyIndex(ImGuiKey_GraveAccent))){
+        use32BitLanes = !use32BitLanes;
+        updateRegistersOnLaneChange();
+    }
     if (isShiftOnly && (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_F5)))){
         if (debugModeEnabled){
             debugStop = true;

@@ -75,7 +75,7 @@ void stackErrorPopup(){
 }
 
 void stackEditorWindow() {
-    auto io = ImGui::GetIO();
+    const auto io = ImGui::GetIO();
     ImGui::PushFont(io.Fonts->Fonts[3]);
   
     if (!uc) {
