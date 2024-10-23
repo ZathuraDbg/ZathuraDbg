@@ -209,19 +209,19 @@ uint64_t countValidInstructions(std::stringstream& asmStream){
 void updateInstructionSizes(const std::string& compiledAsm){
     LOG_INFO("Upading instruction sizes...");
     csh handle;
-    cs_insn *insn;
+    cs_insn *instruction;
 
     if (cs_open(codeInformation.archCS, codeInformation.modeCS, &handle) != CS_ERR_OK)
         return;
 
     const size_t count = cs_disasm(handle, reinterpret_cast<const uint8_t *>(compiledAsm.c_str()), compiledAsm.length(),
-                                   ENTRY_POINT_ADDRESS, 0, &insn);
+                                   ENTRY_POINT_ADDRESS, 0, &instruction);
     if (count > 0) {
         for (size_t j = 0; j < count; j++) {
-            instructionSizes.push_back(insn[j].size);
+            instructionSizes.push_back(instruction[j].size);
         }
 
-        cs_free(insn, count);
+        cs_free(instruction, count);
     } else {
         tinyfd_messageBox("Unable to run the given code!\n",  "Please check the logs and create an issue on GitHub if the issue persists", "ok", "error", 0);
     }

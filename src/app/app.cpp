@@ -106,6 +106,7 @@ void mainWindow() {
         editor->ParseStrIntoCoordinates = parseStrIntoCoordinates;
         editor->CompletionCallback = reinterpret_cast<ImGuiInputTextCallback (*)(
                 ImGuiInputTextCallbackData *)>(labelCompletionCallback);
+        editor->PasteCallback = pasteCallback;
     }
 
     ImGui::PushFont(io.Fonts->Fonts[JetBrainsMono24]);

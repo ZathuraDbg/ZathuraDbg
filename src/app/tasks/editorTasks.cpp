@@ -173,3 +173,62 @@ std::pair<int, int> parseStrIntoCoordinates(std::string &popupInput) {
     LOG_DEBUG("Parsed into x = " << lineNo - 1 << ", y = " << colNo);
     return {lineNo - 1, colNo};
 }
+
+std::vector<uint8_t> hexToBytes(const std::string &hex) {
+    std::vector<uint8_t> bytes;
+    for (size_t i = 0; i < hex.length(); i += 4) {
+        if (hex[i] == '\\' && hex[i + 1] == 'x') {
+            std::string byteString = hex.substr(i + 2, 2);
+            auto byte = static_cast<uint8_t>(strtol(byteString.c_str(), nullptr, 16));
+            bytes.push_back(byte);
+        }
+    }
+    return bytes;
+}
+
+void pasteCallback(std::string clipboardText) {
+    if (clipboardText.starts_with("\\x")) {
+        csh handle{};
+        cs_insn *instruction{};
+
+        if (cs_open(codeInformation.archCS, codeInformation.modeCS, &handle) != CS_ERR_OK) {
+            std::cerr << "Capstone failed to initialize!" << std::endl;
+            return;
+        }
+
+        const std::vector<uint8_t> bytes = hexToBytes(clipboardText);
+        const size_t count = cs_disasm(handle, bytes.data(), bytes.size(), ENTRY_POINT_ADDRESS, 0, &instruction);
+
+        if (count == 0) {
+            std::cerr << "Disassembly failed!" << std::endl;
+            cs_close(&handle);
+            return;
+        }
+
+        const int res = tinyfd_messageBox("Valid shellcode found!",
+            "It looks like you are trying to paste shellcode.\n"
+            "Do you want ZathuraDbg to automatically disassemble this shellcode?",
+            "yesno", "question", 0);
+
+        if (res) {
+            std::vector<std::string> instructions{};
+            for (size_t i = 0; i < count; i++) {
+                std::string instrStr = instruction[i].mnemonic;
+                instrStr += " ";
+                instrStr += instruction[i].op_str;
+                instructions.emplace_back(instrStr);
+            }
+
+            std::stringstream ss{};
+            for (const auto &instr : instructions) {
+                ss << "\t" << instr + "\n";
+            }
+
+            ImGui::SetClipboardText(ss.str().c_str());
+        }
+
+        // Always free resources
+        cs_free(instruction, count);
+        cs_close(&handle);
+    }
+}
