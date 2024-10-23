@@ -87,15 +87,24 @@ void changeEmulationSettings(){
             ksMode = x86KSModes[selectedMode];
             csMode = x86CSModes[selectedMode];
         }
-        else if (selectedArch == arch::ARM){
-            ImGui::SetNextItemWidth(ImGui::CalcTextSize(armModeStr[selectedMode]).x * 2 + 10);
-            ImGui::Combo("##Dropdown2", &selectedMode, armModeStr, IM_ARRAYSIZE(armModeStr));
-            ucArch = UC_ARCH_ARM;
-            ksArch = KS_ARCH_ARM;
-            csArch = CS_ARCH_ARM;
-            ucMode = armUCModes[selectedMode];
-            ksMode = armKSModes[selectedMode];
+        else {
+            tinyfd_messageBox("Unsupported Architecture!", "Only x86 Architecture is supported with ZathuraDbg at this point."
+                                                           "\nOther will be coming sooner.", "ok", "info", 0);
+            selectedArch = arch::x86;
+            ucMode = UC_MODE_64;
+            ksMode = KS_MODE_64;
+            csMode = CS_MODE_64;
         }
+        // will be implemented later
+        // else if (selectedArch == arch::ARM){
+        //     ImGui::SetNextItemWidth(ImGui::CalcTextSize(armModeStr[selectedMode]).x * 2 + 10);
+        //     ImGui::Combo("##Dropdown2", &selectedMode, armModeStr, IM_ARRAYSIZE(armModeStr));
+        //     ucArch = UC_ARCH_ARM;
+        //     ksArch = KS_ARCH_ARM;
+        //     csArch = CS_ARCH_ARM;
+        //     ucMode = armUCModes[selectedMode];
+        //     ksMode = armKSModes[selectedMode];
+        // }
 
         ImGui::Dummy({0, 1});
         ImGui::SameLine(0, 10);
