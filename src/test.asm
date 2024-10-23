@@ -1,12 +1,12 @@
 main:
-    mov rbx, 0x400
-    mov rax, 0x4010000000000000
-    movq xmm0, rax
+	mov rbx, 0x400
+	movabs rax, 0x4010000000000000
+	movq xmm0, rax
 	punpcklqdq xmm0, xmm0
-    add rbx, rax
-    mov rdi, rbx
-    push rdi
-    inc rdi
+	add rbx, rax
+	mov rdi, rbx
+	push rdi
+	inc rdi
     call subtract_hundred
     cmp r11, 60000
     jne nextblock
