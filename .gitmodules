@@ -1,5 +1,6 @@
 [submodule "imgui"]
-	path = vendor/imgui
+  path = vendor/imgui
+  branch = docking
 	url = https://github.com/ocornut/imgui
 [submodule "vendor/ordered-map"]
 	path = vendor/ordered-map
