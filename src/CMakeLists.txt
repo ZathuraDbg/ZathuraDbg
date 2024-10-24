@@ -68,6 +68,7 @@ include_directories(
         ${CMAKE_SOURCE_DIR}/../vendor/whereami/src
 )
 
+set(OpenGL_GL_PREFERENCE GLVND)
 # Compiler options
 add_compile_options(-g -Wformat -DLOG_TO_FILE=\".Zathura.zlog\")
 # Define the output directory for the binary
@@ -78,9 +79,20 @@ if (UNIX AND NOT APPLE)
     message("Linux")
     find_package(PkgConfig REQUIRED)
     pkg_check_modules(GLFW REQUIRED glfw3)
+    find_package(OpenGL REQUIRED)
+    find_package(glfw3 REQUIRED)
+
+   
+   include_directories(${OPENGL_INCLUDE_DIR})
+    link_libraries(${OPENGL_LIBRARIES} glfw)
     link_libraries(${GLFW_LIBRARIES})
+    link_directories(/usr/lib /usr/local/lib)
     add_compile_options(${GLFW_CFLAGS})
-    set(LIBS ${GLFW_LDFLAGS} -lstdc++ -lGL -ldl -lunicorn -L${CMAKE_SOURCE_DIR}/../vendor/keystone -l:libkeystone.a  -L${CMAKE_SOURCE_DIR}/../vendor/capstone -l:libcapstone.a -pthread -std=c++23)
+    
+  set(LIBS ${GLFW_LDFLAGS} -lGL -ldl -lstdc++ -lunicorn 
+    -L${CMAKE_SOURCE_DIR}/../vendor/keystone -l:libkeystone.a  
+    -L${CMAKE_SOURCE_DIR}/../vendor/capstone -l:libcapstone.a 
+    -pthread -std=c++23)
 elseif (APPLE)
     message("Mac OS X")
     find_library(GLFW_LIB glfw3)
