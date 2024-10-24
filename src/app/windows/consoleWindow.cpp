@@ -200,10 +200,10 @@ void parseCommands(const std::string& commandIn){
         return std::string(base + (len), ' ');
     };
 
-    if (command[0] == 'b' || (command.starts_with("break")) || command.starts_with("breakpoint")
-    || command.starts_with("bp") || command[0]=='d' || command.starts_with("db") || command.starts_with("delete"))
+    if (command.starts_with("breakpoint") || command.starts_with("b")
+        || command[0]=='d' || command.starts_with("delete"))
     {
-        bool removeBP = command[0]=='d' || command.starts_with("db") || command.starts_with("delete");
+        bool removeBP = command[0]=='d' || command.starts_with("delete");
         std::string outStr{};
 
         if (!arguments.empty()){
@@ -229,10 +229,10 @@ void parseCommands(const std::string& commandIn){
         }
     }
     else if (command[0] == 'i' || command.starts_with("info")){
-        if (arguments[0] == "b" || arguments[0] == "break" || arguments[0] == "breakpoints"){
+        if (arguments[0] == "b" || arguments[0] == "breakpoints"){
             if (breakpointLines.empty()){
                 output.emplace_back("No breakpoints found.");
-                output.emplace_back("Set a new one with the b/bp/breakpoint command!");
+                output.emplace_back("Set a new one with the b/breakpoint command!");
             }
             else{
                 std::string s = "Num\t\tLine\t\tAddress";
@@ -244,7 +244,7 @@ void parseCommands(const std::string& commandIn){
                 }
             }
         }
-        else if (arguments[0] == "r" || arguments[0] == "re" || arguments[0] == "registers"){
+        else if (arguments[0] == "r" || arguments[0] == "registers"){
             std::string s = "Register\t\t\t\t\t\tHex";
 
             if (arguments.size() > 1){
@@ -337,7 +337,7 @@ void parseCommands(const std::string& commandIn){
             s = "Register\t\tHex";
             output.emplace_back(s);
             for (const auto&[registerName, value]: registerValueMap){
-                output.emplace_back(registerName + getSpace(12, registerName, 4) + value);
+                output.emplace_back(registerName + getSpace(12, registerName, 4) += value);
             }
         }
         else if (arguments[0] == "l" || arguments[0].starts_with("labels")){
@@ -360,52 +360,10 @@ void parseCommands(const std::string& commandIn){
         }
     }
     else if ((command[0] == 's' && command[1]!='t') || command.starts_with("step")){
-        if (arguments.empty()){
-            arguments = {" "};
-        }
-
-        if (command.starts_with("step")){
-            if (!arguments.empty()){
-                if (arguments[0] == "i" || arguments[0] =="in"){
-                    debugStepIn = true;
-                    return;
-                }
-            }
-        }
-
-        if (command.length() < 2 || arguments[0] == "i" || arguments[0] == "in"){
-            if (command[1] == 'i'){
-                debugStepIn = true;
-                return;
-            }
-        }
-        else {
-            debugStepIn = true;
-        }
+        debugStepIn = true;
     }
     else if (command[0] == 'n' || command.starts_with("next")){
-        if (arguments.empty()){
-            arguments = {" "};
-        }
-
-        if (command.starts_with("next")){
-            if (!arguments.empty()){
-                if (arguments[0] == "i" || arguments[0] =="instruction" || arguments[0] == "in"){
-                    debugStepOver = true;
-                    return;
-                }
-            }
-        }
-
-        if (command.length() < 2 || arguments[0] == "i" || arguments[0] == "in" || arguments[0] == "instruction"){
-            if (command[1] == 'i'){
-                debugStepOver = true;
-                return;
-            }
-        }
-        else {
-            debugStepOver = true;
-        }
+        debugStepOver = true;
     }
     else if (command[0] == 'r' || command.starts_with("run")){
         debugRun = true;
@@ -426,11 +384,24 @@ void parseCommands(const std::string& commandIn){
         debugStop = true;
     }
     else if (command.starts_with("help")) {
-        std::cout << ""
-                     ""
-                     ""
-                     ""
-        << std::endl;
+        output.emplace_back( "List of commands:\n");
+        output.emplace_back("help:  Show this message.\n");
+        output.emplace_back("run, r:  Runs the assembly code.\n");
+        output.emplace_back("start:  Starts the debug mode.\n");
+        output.emplace_back("restart:  Restarts the debugging mode.\n");
+        output.emplace_back("pause:  Pauses the debug mode.\n");
+        output.emplace_back("continue:  Continue debugging.\n");
+        output.emplace_back("stop:  Stops the debug mode.\n");
+        output.emplace_back("next, n:  Performs step over one line.\n");
+        output.emplace_back("step, s:  Performs step in into next line.\n");
+        output.emplace_back("pause:  Pauses the debug mode.\n");
+        output.emplace_back("labels, l: List all the labels in the program.\n");
+        output.emplace_back("info, i: Shows information of the program state.\n");
+        output.emplace_back("\tregisters, r: Show values of all shown registers.\n");
+        output.emplace_back("\tregisters, r <regName>: Show the value of the register regName.\n");
+        output.emplace_back("\tbreakpoint, b: Show all the currently set breakpoints.\n");
+        output.emplace_back("breakpoint, b <n>: Set a breakpoint on the line n.\n");
+        output.emplace_back("delete, d <n>: Delete breakpoint on the line n.\n");
     }
 }
 
@@ -443,12 +414,23 @@ void consoleWindow()
 
     if (!isDefaultMessageShown) {
         output.emplace_back(">>> Type help to get the list of all the commands that you can use!");
-        output.emplace_back(">>> Commands are at very early stage so quality and accuracy is not guaranteed.");
+        output.emplace_back(">>> [INFO]: Commands are at very early stage so quality and accuracy is not guaranteed.");
         isDefaultMessageShown = true;
     }
 
+    int i = 1;
     for (auto &t : output) {
-        ImGui::TextUnformatted(t.c_str());
+        ImGui::PushStyleColor(ImGuiCol_FrameBg, ImColor(24, 25, 38, 255).Value);
+        ImGui::PushID(("id" + std::to_string(i)).c_str());
+        ImVec2 textSize = ImGui::CalcTextSize(t.c_str());
+        textSize.y += 5;
+        textSize.x += 7;
+        ImGui::InputTextEx("##TextSelection", nullptr, t.data(), t.length(), textSize, ImGuiInputTextFlags_ReadOnly, nullptr, nullptr);
+        ImGui::PopID();
+        i++;
+        ImGui::PopStyleColor();
+    if (ImGui::GetScrollY() >= ImGui::GetScrollMaxY())
+        ImGui::SetScrollHereY(1.0f);
     }
 
     if (ImGui::GetScrollY() >= ImGui::GetScrollMaxY())
@@ -480,7 +462,6 @@ void consoleWindow()
 
     ImGui::PopItemWidth();
     ImGui::EndChild();
-
     ImGui::PopFont();
     ImGui::End();
 }
