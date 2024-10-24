@@ -359,13 +359,13 @@ void parseCommands(const std::string& commandIn){
             }
         }
     }
-    else if ((command[0] == 's' && command[1]!='t') || command.starts_with("step")){
+    else if ((command[0] == 's' && command.length() == 1) || command == "step"){
         debugStepIn = true;
     }
-    else if (command[0] == 'n' || command.starts_with("next")){
+    else if ((command[0] == 'n' && command.length() == 1) || command == "next"){
         debugStepOver = true;
     }
-    else if (command[0] == 'r' || command.starts_with("run")){
+    else if ((command[0] == 'r' && command.length() == 1 )|| command == "run"){
         debugRun = true;
     }
     else if (command == "start"){
@@ -403,6 +403,9 @@ void parseCommands(const std::string& commandIn){
         output.emplace_back("breakpoint, b <n>: Set a breakpoint on the line n.\n");
         output.emplace_back("delete, d <n>: Delete breakpoint on the line n.\n");
     }
+    else {
+        return;
+    }
 }
 
 void consoleWindow()
@@ -414,7 +417,7 @@ void consoleWindow()
 
     if (!isDefaultMessageShown) {
         output.emplace_back(">>> Type help to get the list of all the commands that you can use!");
-        output.emplace_back(">>> [INFO]: Commands are at very early stage so quality and accuracy is not guaranteed.");
+        output.emplace_back(">>> Commands are at very early stage so quality and accuracy is not guaranteed.");
         isDefaultMessageShown = true;
     }
 

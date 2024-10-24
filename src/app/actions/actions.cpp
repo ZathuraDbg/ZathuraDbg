@@ -175,13 +175,54 @@ void runActions(){
         startDebugging();
         enableDebugMode = false;
     }
-    if (debugRestart){
-        if (isCodeRunning){
-            debugPauseAction();
+    if (debugModeEnabled) {
+        if (debugRestart){
+            if (isCodeRunning){
+                debugPauseAction();
+            }
+            restartDebugging();
+            debugRestart = false;
         }
-        restartDebugging();
-        debugRestart = false;
+        if (debugContinue){
+//        debugContinueAction();
+            std::thread continueActionThread(debugContinueAction, false);
+            continueActionThread.detach();
+            debugContinue = false;
+        }
+        if (debugStepOver){
+            if (isCodeRunning){
+                debugStepOver = false;
+                return;
+            }
+//        stepOverAction();
+            std::thread stepOverActionThread(stepOverAction);
+            stepOverActionThread.detach();
+            debugStepOver = false;
+        }
+        else if (debugStepIn){
+            if (isCodeRunning){
+                debugStepIn = false;
+                return;
+            }
+
+            stepInAction();
+
+//      should executing only one instruction really require a separate thread?
+//      std::thread stepInActionThread(stepInAction);
+//      stepInActionThread.detach();
+
+            debugStepIn = false;
+        }
+        if (debugPause){
+            debugPauseAction();
+            debugPause = false;
+        }
+        else if (debugStop){
+            debugStopAction();
+            debugStop = false;
+        }
     }
+
     if (runUntilHere){
         int _;
         editor->GetCursorPosition(runUntilLine, _);
@@ -207,44 +248,6 @@ void runActions(){
         }
 
         debugRun = false;
-    }
-    if (debugContinue){
-//        debugContinueAction();
-        std::thread continueActionThread(debugContinueAction, false);
-        continueActionThread.detach();
-        debugContinue = false;
-    }
-
-    if (debugStepOver){
-//        stepOverAction();
-        if (isCodeRunning){
-            debugStepOver = false;
-            return;
-        }
-        std::thread stepOverActionThread(stepOverAction);
-        stepOverActionThread.detach();
-        debugStepOver = false;
-    }
-    else if (debugStepIn){
-        if (isCodeRunning){
-            debugStepIn = false;
-            return;
-        }
-        stepInAction();
-
-//      should executing only one instruction really require a separate thread?
-//      std::thread stepInActionThread(stepInAction);
-//      stepInActionThread.detach();
-
-        debugStepIn = false;
-    }
-    if (debugPause){
-        debugPauseAction();
-        debugPause = false;
-    }
-    else if (debugStop){
-        debugStopAction();
-        debugStop = false;
     }
 
     if (saveFile){

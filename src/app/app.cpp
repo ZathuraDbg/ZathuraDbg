@@ -44,8 +44,7 @@ void setupViewPort() {
 
 
 void loadIniFile() {
-    std::string filename = executablePath;
-    filename += "/config.zlyt";
+    std::string filename = relativeToRealPath(executablePath, "config.zlyt");
     const std::filesystem::path dir(filename);
     ImGui::LoadIniSettingsFromDisk(dir.string().c_str());
     LOG_DEBUG("Loaded config file from " << dir.string());
