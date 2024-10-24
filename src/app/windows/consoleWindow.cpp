@@ -425,15 +425,27 @@ void parseCommands(const std::string& commandIn){
     else if (command == "stop"){
         debugStop = true;
     }
+    else if (command.starts_with("help")) {
+        std::cout << ""
+                     ""
+                     ""
+                     ""
+        << std::endl;
+    }
 }
 
 void consoleWindow()
 {
+    static bool isDefaultMessageShown = false;
     ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[JetBrainsMono20]);
+    const float footerHeightToReserve = ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
+    ImGui::BeginChild("ScrollingRegion", ImVec2(0, -footerHeightToReserve), ImGuiChildFlags_None, ImGuiWindowFlags_HorizontalScrollbar);
 
-    const float footer_height_to_reserve = ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
-
-    ImGui::BeginChild("ScrollingRegion", ImVec2(0, -footer_height_to_reserve), ImGuiChildFlags_None, ImGuiWindowFlags_HorizontalScrollbar);
+    if (!isDefaultMessageShown) {
+        output.emplace_back(">>> Type help to get the list of all the commands that you can use!");
+        output.emplace_back(">>> Commands are at very early stage so quality and accuracy is not guaranteed.");
+        isDefaultMessageShown = true;
+    }
 
     for (auto &t : output) {
         ImGui::TextUnformatted(t.c_str());
@@ -443,30 +455,27 @@ void consoleWindow()
         ImGui::SetScrollHereY(1.0f);
 
     ImGui::EndChild();
-
     ImGui::Separator();
-
-    ImGui::BeginChild("FixedInputRegion", ImVec2(0, footer_height_to_reserve), ImGuiChildFlags_None, ImGuiWindowFlags_NoScrollbar);
+    ImGui::BeginChild("FixedInputRegion", ImVec2(0, footerHeightToReserve), ImGuiChildFlags_None, ImGuiWindowFlags_NoScrollbar);
 
     static char input[500]{};
-    static bool reclaim_focus = false;
+    static bool reclaimFocus = false;
 
-    ImGui::PushItemWidth(-1);  // Make the input box take the full width
+    ImGui::PushItemWidth(-1);
     if (ImGui::InputText("##Command", input, IM_ARRAYSIZE(input),
                          ImGuiInputTextFlags_EnterReturnsTrue))
     {
-        output.emplace_back(">>> " + (const std::string)input);
+        output.emplace_back(">>> " + static_cast<const std::string>(input));
         parseCommands(input);
         input[0] = '\0';
-        reclaim_focus = true;
+        reclaimFocus = true;
     }
 
-    // Auto-focus on window apparition
     ImGui::SetItemDefaultFocus();
-    if (reclaim_focus)
+    if (reclaimFocus)
     {
-        ImGui::SetKeyboardFocusHere(-1); // Auto focus previous widget
-        reclaim_focus = false;
+        ImGui::SetKeyboardFocusHere(-1);
+        reclaimFocus = false;
     }
 
     ImGui::PopItemWidth();
