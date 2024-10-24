@@ -87,6 +87,7 @@ int main(int argc, const char** argv)
             wai_getExecutablePath(path, length, &dirnameLength);
             path[dirnameLength] = '\0';
             executablePath = std::string(path);
+            selectedFile = relativeToRealPath(executablePath, "test.asm");
             free(path);
         }
     }
