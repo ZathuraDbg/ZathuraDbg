@@ -3,7 +3,7 @@
 
 [![Discord](https://img.shields.io/badge/chat-on%20Discord-green.svg)](https://discord.gg/dyMuwaZfPf)
 
-An GUI open-source assembly emulator-based debugger. Mainly for reverse engineering and learning assembly. Under development, aims to support all major architecture.
+An GUI open-source assembly emulator-based debugger. Mainly for reverse engineering and learning assembly. Under development, aims to support all major architecture. Powered by Unicorn, Capstone and Keystone Engine.
 
 ZathuraDbg is still in beta, so expect major changes in the framework used or the UI, etc.
 
