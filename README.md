@@ -36,3 +36,13 @@ Read COMPILING.md to compile ZathuraDbg on your machine.
 - wervwolv for help with ImGui
 - NSG650
 - everyone else who supported this project
+
+# FAQs
+Q. Can ZathuraDbg debug binaries?    
+A. No, ZathuraDbg relies solely on the assembly code with the limitations of the Unicorn Engine emulator.    
+    
+Q. Does ZathuraDbg support syscalls and OS level APIs?    
+A. No, since Unicorn Engine is not a full OS emulator, it can't emulate system calls or OS level APIs and thus severaly limiting it's capabilities.    
+
+Q. Which architectures are currently supported in ZathuraDbg?    
+A. Intel x86 in 16, 32 and 64 bit modes.
