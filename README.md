@@ -5,6 +5,8 @@
 
 An GUI open-source assembly emulator-based debugger. Mainly for reverse engineering and learning assembly. Under development, aims to support all major architecture.
 
+ZathuraDbg is still in beta, so expect major changes in the framework used or the UI, etc.
+
 # Screenshots
 <img src="https://i.ibb.co/7SYVRZG/image.png">
 
