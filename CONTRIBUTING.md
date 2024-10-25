@@ -51,3 +51,4 @@ We understand that it can be disappointing to not get your feature implemented, 
 You can contact us through the following channels:
 - [ZathuraDbg](https://x.com/ZathuraDbg) on X/Twitter
 - [Mail us](mailto:crretsim@gmail.com)
+- Join our [discord](https://discord.com/invite/dyMuwaZfPf)
