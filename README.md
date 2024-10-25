@@ -14,7 +14,8 @@ An GUI open-source assembly emulator-based debugger. Mainly for reverse engineer
 
 # Installation
 1. Download the AppImage from the [releases](https://github.com/ZathuraDbg/ZathuraDbg) page.
-2. Run `chmod +x ZathuraDbg-*AppImage`
+2. Execute `chmod +x ZathuraDbg-*AppImage`
+2. Run the program with `./ZathuraDbg-*AppImage`
 
 # Usage
 - Video Tutorial
