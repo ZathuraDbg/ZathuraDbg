@@ -3,7 +3,7 @@
 
 [![Discord](https://img.shields.io/badge/chat-on%20Discord-green.svg)](https://discord.gg/dyMuwaZfPf)
 
-An GUI open-source assembly emulator-based debugger. Under development, aims to support all major architecture.
+An GUI open-source assembly emulator-based debugger. Mainly for reverse engineering and learning assembly. Under development, aims to support all major architecture.
 
 # Screenshots
 <img src="https://i.ibb.co/7SYVRZG/image.png">
@@ -11,3 +11,25 @@ An GUI open-source assembly emulator-based debugger. Under development, aims to 
 <img src="https://i.ibb.co/s90gWVq/image.png">
 
 <img src="https://i.ibb.co/Kytmwj1/image.png">
+
+# Installation
+1. Download the AppImage from the [releases](https://github.com/ZathuraDbg/ZathuraDbg) page.
+2. Run `chmod +x ZathuraDbg-*AppImage`
+
+# Usage
+- Video Tutorial
+- Text Tutorial
+
+# Compilation
+Read COMPILING.md to compile ZathuraDbg on your machine.
+
+# Contributing
+- To implement a new architecture to work with ZathuraDbg, read ARCHITECTURE.md
+- For making general contributions read CONTRIBUTING.md
+- If you have any questions you can always contact us or open an issue.
+
+# Credits
+- mrexodia for helping me with Unicorn related issues
+- wervwolv for help with ImGui
+- NSG650
+- everyone else who supported this project
