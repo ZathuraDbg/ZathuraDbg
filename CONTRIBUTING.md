@@ -3,7 +3,7 @@ This document is relevant for anyone who is interested in contributing to this p
 
 ## Overview
 The following is the list of things that you can do to contribute to this project.
-- [Compile](https://github.com/ZathuraDbg/ZathuraDbg/COMPILE.md) ZathuraDbg and work on new features or fix bugs from [issues](https://github.com/ZathuraDbg/ZathuraDbg/issues)
+- [Compile](https://github.com/ZathuraDbg/ZathuraDbg/blob/master/COMPILE.md) ZathuraDbg and work on new features or fix bugs from [issues](https://github.com/ZathuraDbg/ZathuraDbg/issues)
 - [Report bugs](https://github.com/ZathuraDbg/ZathuraDbg/issues) so they can be fixed.
 - Add feature requests as [issues](https://github.com/ZathuraDbg/ZathuraDbg/issues)
 - [Contact Us](https://ZathuraDbg.github.io/contact)
@@ -39,7 +39,6 @@ If you want to have the highest chance of getting your problem solved, you are g
 2. Give concrete steps on how to reproduce your bug.
 3. Tell us exactly which version of ZathuraDbg you used and the environment(s) you reproduced the bug in.
 
-You can take a look at the [issue template](https://github.com/ZathuraDbg/ZathuraDbg/ISSUE_TEMPLATE.md) for more details.
 
 ### Request features
 
