@@ -15,7 +15,7 @@ ZathuraDbg is still in beta, so expect major changes in the framework used or th
 <img src="https://i.ibb.co/Kytmwj1/image.png">
 
 # Installation
-1. Download the AppImage from the [releases](https://github.com/ZathuraDbg/ZathuraDbg) page.
+1. Download the AppImage from the [releases](https://github.com/ZathuraDbg/ZathuraDbg/releases) page.
 2. Execute `chmod +x ZathuraDbg-*AppImage`
 2. Run the program with `./ZathuraDbg-*AppImage`
 
@@ -24,7 +24,7 @@ ZathuraDbg is still in beta, so expect major changes in the framework used or th
 - Text Tutorial
 
 # Compilation
-Read [COMPILING.md](/COMPILING.md) to compile ZathuraDbg on your machine.
+Read [COMPILE.md](/COMPILE.md) to compile ZathuraDbg on your machine.
 
 # Contributing
 - To implement a new architecture to work with ZathuraDbg, read ARCHITECTURE.md
