@@ -24,7 +24,7 @@ ZathuraDbg is still in beta, so expect major changes in the framework used or th
 - Text Tutorial
 
 # Compilation
-Read COMPILING.md to compile ZathuraDbg on your machine.
+Read [COMPILING.md](/COMPILING.md) to compile ZathuraDbg on your machine.
 
 # Contributing
 - To implement a new architecture to work with ZathuraDbg, read ARCHITECTURE.md
