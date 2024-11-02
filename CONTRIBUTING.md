@@ -11,8 +11,7 @@ The following is the list of things that you can do to contribute to this projec
 - Help us improve the [documentation](https://github.com/ZathuraDbg/ZathuraDbg)
 
 ## Getting started
-- [Tutorial](https://ZathuraDbg.github.io/tutorials) of all the features of the program.
-- [Architecture of ZathuraDbg](https://ZathuraDbg.github.io/architecture) (**must read**)
+- [Tutorial](https://www.youtube.com/watch?v=NMq5xL3v2hw) of all the features of the program.
 - Documentation of [Unicorn Engine](https://www.unicorn-engine.org/docs/), the emulation framework on which ZathuraDbg is based on.
 - [ImGui](https://github.com/ocornut/imgui), the UI framework used to develop ZathuraDbg.
 
