@@ -20,8 +20,7 @@ ZathuraDbg is still in beta, so expect major changes in the framework used or th
 2. Run the program with `./ZathuraDbg-*AppImage`
 
 # Usage
-- Video Tutorial
-- Text Tutorial
+- [Video Tutorial](https://www.youtube.com/watch?v=NMq5xL3v2hw)
 
 # Compilation
 Read [COMPILE.md](/COMPILE.md) to compile ZathuraDbg on your machine.
