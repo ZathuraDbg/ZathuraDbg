@@ -17,3 +17,6 @@
 [submodule "vendor/whereami"]
 	path = vendor/whereami
 	url = https://github.com/gpakosz/whereami
+[submodule "vendor/tinyfdialogue"]
+	path = vendor/tinyfdialogue
+	url = https://github.com/ZathuraDbg/tinyfdialogue
