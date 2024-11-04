@@ -31,9 +31,9 @@ Read [COMPILE.md](/COMPILE.md) to compile ZathuraDbg on your machine.
 - If you have any questions you can always contact us or open an issue.
 
 # Credits
-- mrexodia for helping me with Unicorn related issues
-- wervwolv for help with ImGui
-- NSG650
+- [mrexodia](https://github.com/mrexodia) for helping me with Unicorn related issues
+- [WerWolv](https://github.com/WerWolv/) for help with ImGui
+- [NSG650](https://github.com/NSG650)
 - everyone else who supported this project
 
 # FAQs
