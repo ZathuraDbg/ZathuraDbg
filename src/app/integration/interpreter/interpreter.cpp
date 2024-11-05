@@ -553,7 +553,10 @@ void hook(uc_engine *uc, uint64_t address, uint32_t size, void *user_data){
 
         if (tempBPLineNum != -1){
             breakpointMutex.lock();
-            breakpointLines.erase(std::find(breakpointLines.begin(), breakpointLines.end(), tempBPLineNum));
+            const auto it = std::ranges::find(breakpointLines, tempBPLineNum);
+            if (it != breakpointLines.end()) {
+                breakpointLines.erase(it);
+            }
             breakpointMutex.unlock();
         }
     }
