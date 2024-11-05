@@ -400,6 +400,7 @@ bool stepCode(const size_t instructionCount){
     if (err) {
         printf("Failed on uc_emu_start() with error returned %u: %s\n",
                err, uc_strerror(err));
+        exit(-2);
     }
 
     isCodeRunning = false;
@@ -450,9 +451,13 @@ bool eraseTempBP = false;
 */
 
 bool pauseNext = false;
+bool wasJumpAndStepOver = false;
 int runUntilLine = 0;
+bool wasStepOver = false;
+int stepOverBpLine = 0;
 
-void hook(uc_engine *uc, uint64_t address, uint32_t size, void *user_data){
+void hook(uc_engine *uc, const uint64_t address, const uint32_t size, void *user_data){
+    bool jumpDetected = false;
     if ((!debugModeEnabled && !debugRun) || (executionComplete) || (pauseNext)){
         LOG_DEBUG("Execution halted.");
         uc_emu_stop(uc);
@@ -486,6 +491,12 @@ void hook(uc_engine *uc, uint64_t address, uint32_t size, void *user_data){
         lineNumber = -1;
     }
 
+    if (stepOver) {
+        wasStepOver = true;
+    }
+
+    LOG_DEBUG("At lineNo: " << lineNumber);
+
     if (lineNumber == runUntilLine){
         LOG_DEBUG("Run until here detected!");
         LOG_DEBUG("At lineNo: " << lineNumber);
@@ -516,10 +527,15 @@ void hook(uc_engine *uc, uint64_t address, uint32_t size, void *user_data){
         executionComplete = true;
     }
 
+    if (lineNumber == stepOverBPLineNo && wasJumpAndStepOver) {
+        uc_emu_stop(uc);
+        std::cout << "done" << std::endl;
+    }
     if (debugModeEnabled && !skipBreakpoints){
         uint64_t ip = getRegisterValue(getArchIPStr(codeInformation.mode), false).eightByteVal;
         if (ip != expectedIP && (ip > expectedIP)){
             LOG_INFO("Jump detected!");
+            jumpDetected = true;
             updateRegs();
             if (stepIn){
                 LOG_DEBUG("Step in detected!");
@@ -570,6 +586,9 @@ void hook(uc_engine *uc, uint64_t address, uint32_t size, void *user_data){
         pauseNext = true;
     }
 
+    if (!wasJumpAndStepOver) {
+        wasJumpAndStepOver = jumpDetected && wasStepOver;
+    }
     codeCurrentLen += size;
     expectedIP += size;
 }

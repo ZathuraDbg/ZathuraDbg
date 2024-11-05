@@ -1,6 +1,7 @@
 #include <thread>
 #include "actions.hpp"
 #include "../integration/interpreter/interpreter.hpp"
+
 void startDebugging(){
     LOG_INFO("Starting debugging...");
 
@@ -55,6 +56,17 @@ void stepOverAction(){
 
 void stepInAction(){
     LOG_INFO("Stepping in...");
+    if (wasJumpAndStepOver){
+        // workaround for the unicorn engine bug:
+        stepIn = false;
+        pauseNext = false;
+        LOG_INFO("Stepping in done.");
+        wasJumpAndStepOver = false;
+        wasStepOver = false;
+        debugStepOver = true;
+        return;
+        runActions();
+    }
     stepIn = true;
     stepCode(1);
     stepIn = false;
@@ -196,7 +208,7 @@ void runActions(){
             debugRestart = false;
         }
         if (debugContinue){
-//        debugContinueAction();
+  //        debugContinueAction();
             std::thread continueActionThread(debugContinueAction, false);
             continueActionThread.detach();
             debugContinue = false;
@@ -206,7 +218,11 @@ void runActions(){
                 debugStepOver = false;
                 return;
             }
-        // stepOverAction();
+
+            // stepOverAction();
+
+
+            wasStepOver = true;
             std::thread stepOverActionThread(stepOverAction);
             stepOverActionThread.detach();
             debugStepOver = false;
