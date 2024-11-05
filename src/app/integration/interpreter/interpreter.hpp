@@ -48,6 +48,8 @@ extern bool debugPaused;
 extern bool pauseNext;
 extern bool runUntilHere;
 extern int runUntilLine;
+extern bool wasJumpAndStepOver;
+extern bool wasStepOver;
 extern bool isCodeRunning;
 extern bool createStack(void* unicornEngine);
 extern bool runTempCode(const std::string& codeIn, uint64_t instructionCount);
