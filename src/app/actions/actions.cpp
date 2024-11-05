@@ -88,7 +88,9 @@ void debugToggleBreakpoint(){
     auto breakpointIterator= (std::ranges::find(breakpointLines, line + 1));
     if (breakpointIterator != breakpointLines.end()){
         LOG_DEBUG("Removing the breakpoint at line: " <<  line);
+        breakpointMutex.lock();
         breakpointLines.erase(breakpointIterator);
+        breakpointMutex.unlock();
         editor->RemoveHighlight(line);
     }
     else{
@@ -130,7 +132,9 @@ bool debugRemoveBreakpoint(const int lineNum){
         return false;
     }
     else{
+        breakpointMutex.lock();
         breakpointLines.erase(breakpointIter);
+        breakpointMutex.unlock();
         editor->RemoveHighlight(lineNum);
         LOG_DEBUG("Removed breakpoint at line no. " << lineNum);
     }
@@ -166,7 +170,9 @@ void debugContinueAction(const bool skipBP){
     if (std::ranges::find(breakpointLines, stepOverBPLineNo) != breakpointLines.end()){
         const auto it = std::ranges::find(breakpointLines, tempBPLineNum);
         if (it != breakpointLines.end()) {
+            breakpointMutex.lock();
             breakpointLines.erase(it);
+            breakpointMutex.unlock();
         }
         stepOverBPLineNo = -1;
     }
