@@ -39,7 +39,10 @@ void stepOverAction(){
         if (stepOverBPLineNo == lineNo){
             breakpointMutex.lock();
             LOG_DEBUG("Removing step over breakpoint line number: " << stepOverBPLineNo);
-            breakpointLines.erase(std::ranges::find(breakpointLines, stepOverBPLineNo));
+            const auto it = std::ranges::find(breakpointLines, stepOverBPLineNo);
+            if (it!=breakpointLines.end()) {
+                breakpointLines.erase(it);
+            }
             breakpointMutex.unlock();
             stepOverBPLineNo = -1;
         }
@@ -161,7 +164,10 @@ void debugContinueAction(const bool skipBP){
     LOG_DEBUG("Continuing debugging...");
 
     if (std::ranges::find(breakpointLines, stepOverBPLineNo) != breakpointLines.end()){
-        breakpointLines.erase(std::ranges::find(breakpointLines, tempBPLineNum));
+        const auto it = std::ranges::find(breakpointLines, tempBPLineNum);
+        if (it != breakpointLines.end()) {
+            breakpointLines.erase(it);
+        }
         stepOverBPLineNo = -1;
     }
 
@@ -194,7 +200,7 @@ void runActions(){
                 debugStepOver = false;
                 return;
             }
-//        stepOverAction();
+        // stepOverAction();
             std::thread stepOverActionThread(stepOverAction);
             stepOverActionThread.detach();
             debugStepOver = false;

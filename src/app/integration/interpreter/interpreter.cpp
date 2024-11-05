@@ -499,7 +499,10 @@ void hook(uc_engine *uc, uint64_t address, uint32_t size, void *user_data){
 //      erase the temporary breakpoint
         breakpointMutex.lock();
         LOG_DEBUG("Removing step over breakpoint line number: " << stepOverBPLineNo);
-        breakpointLines.erase(std::find(breakpointLines.begin(), breakpointLines.end(), stepOverBPLineNo));
+        if (!breakpointLines.empty()) {
+            breakpointLines.erase(std::find(breakpointLines.begin(), breakpointLines.end(), stepOverBPLineNo));
+        }
+
         breakpointMutex.unlock();
         stepOverBPLineNo = -1;
         eraseTempBP = false;
