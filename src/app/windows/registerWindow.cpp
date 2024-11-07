@@ -80,11 +80,16 @@ void updateRegs(bool useTempContext){
     std::stringstream hex;
     registerValueInfoT val;
     bool useSecondVal = false;
+
+    if (!useTempContext) {
+        if (context == nullptr) {
+            return;
+        }
+    }
     for (auto [name, value]: registerValueMap) {
         if (!isRegisterValid(toUpperCase(name), codeInformation.mode)){
             continue;
         }
-
 
         if (useTempContext){
             val = getRegister(toLowerCase(name), true);

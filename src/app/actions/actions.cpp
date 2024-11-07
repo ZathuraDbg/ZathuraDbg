@@ -64,8 +64,9 @@ void stepInAction(){
         wasJumpAndStepOver = false;
         wasStepOver = false;
         debugStepOver = true;
-        return;
         runActions();
+        stepInBypassed = true;
+        return;
     }
     stepIn = true;
     stepCode(1);
