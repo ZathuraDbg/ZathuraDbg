@@ -60,7 +60,6 @@ void stepInAction(){
     if (wasJumpAndStepOver){
         // workaround for the unicorn engine bug:
         stepIn = false;
-        pauseNext = false;
         LOG_INFO("Stepping in done.");
         wasJumpAndStepOver = false;
         wasStepOver = false;
@@ -72,7 +71,6 @@ void stepInAction(){
     stepIn = true;
     stepCode(1);
     stepIn = false;
-    pauseNext = false;
     LOG_INFO("Stepping in done.");
 }
 

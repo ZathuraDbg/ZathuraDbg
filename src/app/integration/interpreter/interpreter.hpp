@@ -45,7 +45,6 @@ extern std::mutex breakpointMutex;
 extern bool skipBreakpoints;
 extern bool runningAsContinue;
 extern bool debugPaused;
-extern bool pauseNext;
 extern bool runUntilHere;
 extern int runUntilLine;
 extern bool wasJumpAndStepOver;
