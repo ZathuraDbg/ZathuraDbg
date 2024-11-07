@@ -32,8 +32,6 @@
 using json = nlohmann::json;
 #define CONFIG_NAME "config"
 
-//extern ImU32 bgColorFn(const ImU8* data, size_t off);
-//extern void interactFn(const ImU8* data, size_t off);
 std::string parseVals(std::string val);
 void setupViewPort();
 void appMenuBar();
