@@ -18,3 +18,5 @@ src/build
 src/cmake-build-debug
 src/cmake-build-release
 src/.Zathura.zlog
+src/Zathura
+#ignore pushing the binary ^
