@@ -324,7 +324,6 @@ bool eraseTempBP = false;
  *  is the last instruction of the code because the code executes from top to bottom.
 */
 
-bool pauseNext = false;
 bool wasJumpAndStepOver = false;
 bool stepInBypassed = false;
 bool jumpAfterBypass = false;
@@ -347,18 +346,13 @@ void hook(uc_engine *uc, const uint64_t address, const uint32_t size, void *user
     }
 
     bool jumpDetected = false;
-    if ((!debugModeEnabled && !debugRun) || (executionComplete) || (pauseNext)){
+    if ((!debugModeEnabled && !debugRun) || (executionComplete)){
         LOG_DEBUG("Execution halted.");
         uc_emu_stop(uc);
         uc_context_save(uc, context);
 
         if (executionComplete){
             editor->HighlightDebugCurrentLine(lastInstructionLineNo - 1);
-        }
-
-        if (pauseNext){
-            LOG_DEBUG("Pause next detected!");
-            pauseNext = false;
         }
 
         return;
@@ -484,13 +478,7 @@ void hook(uc_engine *uc, const uint64_t address, const uint32_t size, void *user
         eraseTempBP = true;
     }
 
-    if (debugPaused && stepIn){
-        LOG_DEBUG("Step In detected after pause!");
-        stepIn = false;
-        pauseNext = true;
-    }
-
-    if (!wasJumpAndStepOver) {
+   if (!wasJumpAndStepOver) {
         wasJumpAndStepOver = jumpDetected && wasStepOver;
     }
     
