@@ -43,6 +43,7 @@ typedef struct{
 extern std::mutex execMutex;
 extern std::mutex breakpointMutex;
 extern bool skipBreakpoints;
+extern bool runningAsContinue;
 extern bool debugPaused;
 extern bool pauseNext;
 extern bool runUntilHere;
@@ -82,5 +83,6 @@ extern uint64_t expectedIP;
 extern int stepOverBPLineNo;
 extern uint64_t codeCurrentLen;
 extern int getCurrentLine();
+extern bool removeBreakpoint(const int& lineNo);
 
 #endif

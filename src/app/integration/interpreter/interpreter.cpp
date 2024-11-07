@@ -60,6 +60,12 @@ bool removeBreakpoint(const int& lineNo) {
     breakpointMutex.lock();
 
     bool success = false;
+
+    if (breakpointLines.empty()) {
+        breakpointMutex.unlock();
+        return success;
+    }
+
     const auto it = std::ranges::find(breakpointLines, lineNo);
     if  (it != breakpointLines.end()) {
         breakpointLines.erase(it);
@@ -358,12 +364,13 @@ void hook(uc_engine *uc, const uint64_t address, const uint32_t size, void *user
         return;
     }
 
-
-    for (auto &[label, range]: labelLineNoRange) {
+    if (!runningAsContinue) {
+     for (auto &[label, range]: labelLineNoRange) {
         if (lineNo > range.first && (lineNo <= range.second)) {
             currentLabel = label;
             break;
         }
+    }
     }
 
     if (stepOver) {
@@ -464,12 +471,13 @@ void hook(uc_engine *uc, const uint64_t address, const uint32_t size, void *user
         }
 
         if (tempBPLineNum != -1){
-            breakpointMutex.lock();
-            const auto it = std::ranges::find(breakpointLines, tempBPLineNum);
-            if (it != breakpointLines.end()) {
-                breakpointLines.erase(it);
-            }
-            breakpointMutex.unlock();
+            removeBreakpoint(tempBPLineNum);
+            // breakpointMutex.lock();
+            // const auto it = std::ranges::find(breakpointLines, tempBPLineNum);
+            // if (it != breakpointLines.end()) {
+            //     breakpointLines.erase(it);
+            // }
+            // breakpointMutex.unlock();
         }
     }
     if (stepOverBPLineNo != -1){
@@ -637,6 +645,7 @@ bool resetState(){
 
 bool isCodeRunning = false;
 bool skipBreakpoints = false;
+bool runningAsContinue = false;
 bool stepCode(const size_t instructionCount){
     LOG_DEBUG("Stepping into code...");
     if (isCodeRunning || executionComplete){
@@ -699,7 +708,9 @@ bool stepCode(const size_t instructionCount){
     if (skipBreakpoints){
         skipBreakpoints = false;
     }
-
+    if (runningAsContinue) {
+        runningAsContinue = !runningAsContinue;
+    }
    return true;
 }
 

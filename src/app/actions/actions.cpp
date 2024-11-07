@@ -38,13 +38,14 @@ void stepOverAction(){
         stepCode(0);
 
         if (stepOverBPLineNo == lineNo){
-            breakpointMutex.lock();
             LOG_DEBUG("Removing step over breakpoint line number: " << stepOverBPLineNo);
-            const auto it = std::ranges::find(breakpointLines, stepOverBPLineNo);
-            if (it!=breakpointLines.end()) {
-                breakpointLines.erase(it);
-            }
-            breakpointMutex.unlock();
+            removeBreakpoint(stepOverBPLineNo);
+            // breakpointMutex.lock();
+            // const auto it = std::ranges::find(breakpointLines, stepOverBPLineNo);
+            // if (it!=breakpointLines.end()) {
+            //     breakpointLines.erase(it);
+            // }
+            // breakpointMutex.unlock();
             stepOverBPLineNo = -1;
         }
 
@@ -98,12 +99,12 @@ void debugToggleBreakpoint(){
     int line, _;
     editor->GetCursorPosition(line, _);
 
-    auto breakpointIterator= (std::ranges::find(breakpointLines, line + 1));
-    if (breakpointIterator != breakpointLines.end()){
+    const auto isBreakpointRemoved = removeBreakpoint(line + 1);
+    if (isBreakpointRemoved){
         LOG_DEBUG("Removing the breakpoint at line: " <<  line);
-        breakpointMutex.lock();
-        breakpointLines.erase(breakpointIterator);
-        breakpointMutex.unlock();
+        // breakpointMutex.lock();
+        // breakpointLines.erase(breakpointIterator);
+        // breakpointMutex.unlock();
         editor->RemoveHighlight(line);
     }
     else{
@@ -121,10 +122,12 @@ void debugToggleBreakpoint(){
 
 bool debugAddBreakpoint(const int lineNum){
     LOG_DEBUG("Adding breakpoint on the line " << lineNum);
+    breakpointMutex.lock();
 
     const auto breakpointLineNo = (std::ranges::find(breakpointLines, lineNum + 1));
     if (breakpointLineNo != breakpointLines.end()){
         LOG_DEBUG("Breakpoint already exists, skipping...");
+        breakpointMutex.unlock();
         return false;
     }
     else{
@@ -133,6 +136,7 @@ bool debugAddBreakpoint(const int lineNum){
         LOG_DEBUG("Breakpoint added successfully!");
     }
 
+    breakpointMutex.unlock();
     return true;
 }
 
@@ -191,6 +195,7 @@ void debugContinueAction(const bool skipBP){
     }
 
     skipBreakpoints = skipBP;
+    runningAsContinue = true;
     std::thread stepCodeThread(stepCode, 0);
     stepCodeThread.detach();
 }
