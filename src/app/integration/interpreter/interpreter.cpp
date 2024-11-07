@@ -31,7 +31,6 @@ bool stepOver = false;
 bool stepContinue = false;
 bool executionComplete = false;
 bool use32BitLanes = false;
-bool isStoppedAtABreakpoint = false;
 
 std::vector<int> breakpointLines = {};
 
@@ -314,7 +313,7 @@ bool wasStepOver = false;
 int stepOverBpLine = 0;
 
 void hook(uc_engine *uc, const uint64_t address, const uint32_t size, void *user_data){
-    bool jumpDetected = false;
+   bool jumpDetected = false;
     if ((!debugModeEnabled && !debugRun) || (executionComplete) || (pauseNext)){
         LOG_DEBUG("Execution halted.");
         uc_emu_stop(uc);
@@ -604,12 +603,11 @@ bool resetState(){
 bool isCodeRunning = false;
 bool skipBreakpoints = false;
 bool stepCode(const size_t instructionCount){
-   LOG_DEBUG("Stepping into code...");
+    LOG_DEBUG("Stepping into code...");
     if (isCodeRunning || executionComplete){
         return true;
     }
 
-    // uc_context_restore(uc, context);
     uint64_t ip = getRegisterValue(getArchIPStr(codeInformation.mode), false).eightByteVal;
 
     execMutex.lock();

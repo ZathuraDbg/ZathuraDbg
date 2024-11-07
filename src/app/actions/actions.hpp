@@ -6,5 +6,4 @@ extern void startDebugging();
 extern void debugContinueAction(bool skipBP = false);
 extern bool debugAddBreakpoint(int lineNum);
 extern bool debugRemoveBreakpoint(int lineNum);
-//#include "../app.hpp"
 #endif //ZATHURA_ACTIONS_HPP
