@@ -78,7 +78,6 @@ extern bool stepIn;
 extern bool stepOver;
 extern bool stepContinue;
 extern bool use32BitLanes;
-extern bool isStoppedAtABreakpoint;
 extern registerValueT getRegisterValue(const std::string& regName, bool useTempContext);
 extern uint64_t expectedIP;
 extern int stepOverBPLineNo;

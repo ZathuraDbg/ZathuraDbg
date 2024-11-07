@@ -209,9 +209,11 @@ void runActions(){
             debugRestart = false;
         }
         if (debugContinue){
-  //        debugContinueAction();
-            std::thread continueActionThread(debugContinueAction, false);
-            continueActionThread.detach();
+            debugContinueAction();
+            // debugContinueAction itself creates a new thread, so there is no
+            // need to start itself as a thread
+            // std::thread continueActionThread(debugContinueAction, false);
+            // continueActionThread.detach();
             debugContinue = false;
         }
         if (debugStepOver){

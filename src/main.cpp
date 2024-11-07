@@ -167,6 +167,11 @@ int main(int argc, const char** argv)
        glfwSwapBuffers(window);
     }
 
+    if (isCodeRunning) {
+        debugStop = true;
+        runActions();
+    }
+
     uc_close(uc);
     destroyWindow();
     return 0;
