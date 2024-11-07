@@ -32,7 +32,7 @@ bool stepContinue = false;
 bool executionComplete = false;
 bool use32BitLanes = false;
 
-std::vector<int> breakpointLines = {};
+std::vector<uint> breakpointLines = {};
 
 int getCurrentLine(){
     uint64_t instructionPointer = -1;
@@ -54,6 +54,20 @@ int getCurrentLine(){
     }
 
     return -1;
+}
+
+bool removeBreakpoint(const int& lineNo) {
+    breakpointMutex.lock();
+
+    bool success = false;
+    const auto it = std::ranges::find(breakpointLines, lineNo);
+    if  (it != breakpointLines.end()) {
+        breakpointLines.erase(it);
+        success = true;
+    }
+
+    breakpointMutex.unlock();
+    return success;
 }
 
 std::pair<float, float> convert64BitToTwoFloats(const uint64_t bits) {
@@ -311,9 +325,22 @@ bool jumpAfterBypass = false;
 int runUntilLine = 0;
 bool wasStepOver = false;
 int stepOverBpLine = 0;
+std::string lastLabel{};
+uint lastLineNo = 0;
 
 void hook(uc_engine *uc, const uint64_t address, const uint32_t size, void *user_data){
-   bool jumpDetected = false;
+    std::string currentLabel{};
+
+    int lineNumber = -1;
+    std::string str = addressLineNoMap[std::to_string(address)];
+    if (!str.empty()){
+        lineNumber = std::atoi(str.c_str());
+    }
+    else{
+        lineNumber = -1;
+    }
+
+    bool jumpDetected = false;
     if ((!debugModeEnabled && !debugRun) || (executionComplete) || (pauseNext)){
         LOG_DEBUG("Execution halted.");
         uc_emu_stop(uc);
@@ -328,23 +355,15 @@ void hook(uc_engine *uc, const uint64_t address, const uint32_t size, void *user
             pauseNext = false;
         }
 
-        uint64_t ip;
-        const std::string str = addressLineNoMap[std::to_string(address)];
-
-        if (!str.empty()){
-            int lineNumber = std::atoi(str.c_str());
-        }
-
         return;
     }
 
-    int lineNumber = -1;
-    std::string str = addressLineNoMap[std::to_string(address)];
-    if (!str.empty()){
-        lineNumber = std::atoi(str.c_str());
-    }
-    else{
-        lineNumber = -1;
+
+    for (auto &[label, range]: labelLineNoRange) {
+        if (lineNo > range.first && (lineNo <= range.second)) {
+            currentLabel = label;
+            break;
+        }
     }
 
     if (stepOver) {
@@ -382,7 +401,16 @@ void hook(uc_engine *uc, const uint64_t address, const uint32_t size, void *user
         executionComplete = true;
     }
 
-        uint64_t ip = getRegisterValue(getArchIPStr(codeInformation.mode), false).eightByteVal;
+    uint64_t ip = getRegisterValue(getArchIPStr(codeInformation.mode), false).eightByteVal;
+
+
+    if (ip != expectedIP && expectedIP != 0 && !currentLabel.empty()) {
+        if (lastLineNo == labelLineNoRange[currentLabel].second && lineNumber != lastLineNo) {
+            uc_emu_stop(uc);
+            uc_context_save(uc, context);
+        }
+    }
+
     if (debugModeEnabled && !skipBreakpoints){
         if (ip != expectedIP && (ip > expectedIP)){
             LOG_INFO("Jump detected!");
@@ -461,6 +489,7 @@ void hook(uc_engine *uc, const uint64_t address, const uint32_t size, void *user
     uc_context_save(uc, context);
     codeCurrentLen += size;
     expectedIP += size;
+    lastLineNo = lineNumber;
 }
 
 bool initUC(const std::string& codeIn) {
@@ -578,10 +607,16 @@ bool resetState(){
         uc_close(tempUC);
         tempUC = nullptr;
     }
+
     labels.clear();
+    emptyLineNumbers.clear();
     labelLineNoMapInternal.clear();
-    labelLineNoMapInternal = {};
+    labelLineNoRange.clear();
+
     labels = {};
+    emptyLineNumbers = {};
+    labelLineNoRange = {};
+    labelLineNoMapInternal = {};
 
      if (getBytes(selectedFile).empty()) {
         return false;

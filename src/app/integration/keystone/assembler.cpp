@@ -11,7 +11,9 @@ uint64_t tempTotalIns = 0;
 
 std::map<std::string, std::string> addressLineNoMap{};
 std::map<std::string, int> labelLineNoMapInternal{};
+tsl::ordered_map<std::string, std::pair<uint, uint>> labelLineNoRange{};
 std::vector<uint16_t> instructionSizes{};
+std::vector<uint> emptyLineNumbers{};
 
 std::pair<std::string, std::size_t> assemble(const std::string& assemblyString, const keystoneSettings& ksSettings) {
     LOG_INFO("Assembling code...");
@@ -84,6 +86,7 @@ void initInsSizeInfoMap(){
     uint64_t insCount = 0;
     bool foundFirstLabel = false;
 
+    // TODO: Scan for multiline comments and ignore them
     while (std::getline(assembly, instructionStr, '\n')) {
         if (instructionStr.contains(":")){
             instructionStr.erase(std::ranges::remove_if(instructionStr, ::isspace).begin(), instructionStr.end());
@@ -97,8 +100,12 @@ void initInsSizeInfoMap(){
                             lastInstructionLineNo = std::atoi(std::prev(addressLineNoMap.end())->second.data());
                             foundFirstLabel = false;
                         }
+                        if (!labelLineNoRange.empty()) {
+                            labelLineNoRange[labelLineNoRange.back().first].second = strtol(std::prev(addressLineNoMap.end())->second.data(), nullptr, 10);
+                        }
 
                         labelLineNoMapInternal.insert({instructionStr.substr(0, instructionStr.find_first_of(':')), lineNo});
+                        labelLineNoRange.insert({instructionStr.substr(0, instructionStr.find_first_of(':')), {lineNo, 0}});
                         labels.push_back(instructionStr.substr(0, instructionStr.find_first_of(':')));
                     }
                 }
@@ -110,7 +117,13 @@ void initInsSizeInfoMap(){
                         lastInstructionLineNo = std::atoi(std::prev(addressLineNoMap.end())->second.data());
                         foundFirstLabel = false;
                     }
+
+                    if (!labelLineNoRange.empty()) {
+                        labelLineNoRange[labelLineNoRange.back().first].second = strtol(std::prev(addressLineNoMap.end())->second.data(), nullptr, 10);
+                    }
+
                     labelLineNoMapInternal.insert({instructionStr.substr(0, instructionStr.find_first_of(':')), lineNo});
+                    labelLineNoRange.insert({instructionStr.substr(0, instructionStr.find_first_of(':')), {lineNo, 0}});
                     labels.push_back(instructionStr.substr(0, instructionStr.find_first_of(':')));
                     lineNo++;
                     continue;
@@ -118,6 +131,7 @@ void initInsSizeInfoMap(){
             }
         }
         else if (instructionStr.empty()){
+            emptyLineNumbers.push_back(lineNo);
             lineNo++;
             continue;
         }
@@ -152,9 +166,15 @@ void initInsSizeInfoMap(){
             currentAddr += instructionSizes[count];
             count++;
         }
+        else {
+            emptyLineNumbers.push_back(lineNo);
+        }
         lineNo++;
     }
 
+    if (!labelLineNoRange.empty() && (!addressLineNoMap.empty())) {
+        labelLineNoRange[labelLineNoRange.back().first].second = strtol(std::prev(addressLineNoMap.end())->second.data(), nullptr, 10);
+    }
     totalInstructions = count;
     LOG_INFO("Updated to instruction size information map.");
     LOG_DEBUG("Total instructions to execute: " << totalInstructions);

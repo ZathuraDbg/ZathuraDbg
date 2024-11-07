@@ -40,7 +40,6 @@ typedef struct{
     registerValueT registerValueUn;
 } registerValueInfoT;
 
-
 extern std::mutex execMutex;
 extern std::mutex breakpointMutex;
 extern bool skipBreakpoints;
@@ -71,7 +70,7 @@ extern int tempBPLineNum;
 extern uint64_t CODE_BUF_SIZE;
 extern uc_context* context;
 extern bool stepCode(size_t instructionCount = 1);
-extern std::vector<int> breakpointLines;
+extern std::vector<uint> breakpointLines;
 extern bool resetState();
 extern bool continueOverBreakpoint;
 extern bool stepIn;

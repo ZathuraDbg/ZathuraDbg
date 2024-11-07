@@ -7,6 +7,8 @@
 #include <fstream>
 #include <algorithm>
 #include <vector>
+#include <tsl/ordered_map.h>
+
 #include "../../dialogs/dialogHeader.hpp"
 #include "../../../vendor/keystone/include/keystone/keystone.h"
 #include "../../../vendor/keystone/include/keystone/x86.h"
@@ -34,6 +36,7 @@ extern uint64_t totalInstructions;
 extern uint lastInstructionLineNo;
 extern std::map<std::string, std::string> addressLineNoMap;
 extern std::map<std::string, int> labelLineNoMapInternal;
+extern tsl::ordered_map<std::string, std::pair<uint, uint>> labelLineNoRange;
 extern std::vector<uint16_t> instructionSizes;
 extern std::stringstream assembly;
 extern void initInsSizeInfoMap();
@@ -45,4 +48,5 @@ extern std::string getBytes(const std::string& fileName);
 extern std::string getBytes(std::stringstream& assembly);
 extern uint64_t codeFinalLen;
 extern ks_engine *ks;
+extern std::vector<uint> emptyLineNumbers;
 #endif //ZATHURA_UI_ASSEMBLER_HPP
