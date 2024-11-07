@@ -249,14 +249,12 @@ int decimalCallback(ImGuiInputTextCallbackData* data) {
 
 int checkHexCharsCallback(ImGuiInputTextCallbackData* data)
 {
-    // This handles character filtering (only allows hex characters and "0x" prefix)
     if (data->EventFlag == ImGuiInputTextFlags_CallbackCharFilter)
     {
         if (data->EventChar < 256)
         {
             char c = static_cast<char>(data->EventChar);
 
-            // Allow '0'-'9', 'A'-'F', 'a'-'f', and the characters '0' and 'x'
             if ((c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f'))
             {
                 return 0; // Allow hex characters
