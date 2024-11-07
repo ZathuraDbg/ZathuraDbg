@@ -267,9 +267,9 @@ void MemoryEditor::GoToPopup(){
         ImGui::PushItemWidth(150);
 
         bool entered;
-        auto flags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackAlways;
-
-        entered = ImGui::InputTextWithHint("##input", "0x...", inputText, IM_ARRAYSIZE(inputText), flags, checkHexCharsCallback);
+        auto flags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackCharFilter;
+        entered = ImGui::InputTextWithHint("##input", "0x...", inputText, IM_ARRAYSIZE(inputText), flags,
+                                           checkHexCharsCallback);
 
         if (setFocus){
             ImGui::SetKeyboardFocusHere(-1);
