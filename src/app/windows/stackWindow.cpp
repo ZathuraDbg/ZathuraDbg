@@ -28,50 +28,16 @@ void stackWriteFunc(ImU8* data, const size_t offset, const ImU8 delta) {
 
 uint64_t stackErrorAddr = 0;
 bool showPopupError = false;
-void stackErrorPopup(){
-    auto text = "Stack in unmapped memory region!";
-
-    ImVec2 windowPos = ImGui::GetWindowPos();
-    ImVec2 windowTextPos= ImGui::CalcTextSize(text);
-    ImVec2 windowSize = ImGui::GetWindowSize();
-    ImVec2 popupSize = ImVec2(350, 110);
-    ImVec2 popupPos = windowPos + ImVec2((windowSize.x - popupSize.x) * 0.5f, (windowSize.y - popupSize.y) * 0.5f);
-
-    ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[SatoshiBold24]);
-    ImGui::SetNextWindowPos(popupPos, ImGuiCond_Appearing);
-
-    ImGui::GetStyle().Colors[ImGuiCol_PopupBg] = ImColor(0x1e, 0x20, 0x30);
-    ImGui::GetStyle().PopupBorderSize = 5.0f;
-    ImGui::SetNextWindowSize(popupSize, 0);
-    if (ImGui::BeginPopup("InputPopup", ImGuiWindowFlags_AlwaysAutoResize))
+bool stackErrorPopup(){
+   bool map= tinyfd_messageBox("Stack in unmapped memory!", "The stack value you have set is not mapped by default. Do you want to map it?", "okcancel", "error", 0);
+   if (map)
     {
-        windowSize = ImGui::GetWindowSize();
-
-        ImGui::SetCursorPosX((windowSize.x - windowTextPos.x) * 0.5f);
-        ImGui::Text("%s", text);
-        ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal, 6.0f);
-        ImGui::Dummy(ImVec2(0.0f, 5.0f));
-        ImGui::SameLine(0, 15);
-        ImGui::Text("Do you want to map the stack?");
-//        ImGui::SameLine(0, 5);
-        ImGui::Dummy(ImVec2(0, 4.0f));
-        ImGui::SetCursorPosX(ImGui::CalcTextSize(text).x - 40);
-        if (ImGui::Button("MAP"))
-        {
-            uc_mem_map(uc, STACK_ADDRESS, STACK_SIZE, UC_PROT_ALL);
-            showPopupError = false;
-            ImGui::CloseCurrentPopup();
-        }
-        ImGui::SameLine(0, 3);
-        if (ImGui::Button("Cancel"))
-        {
-            showPopupError = false;
-            ImGui::CloseCurrentPopup();
-        }
-
-        ImGui::EndPopup();
+        uc_mem_map(uc, STACK_ADDRESS, STACK_SIZE, UC_PROT_ALL);
+        showPopupError = false;
+       return true;
     }
-    ImGui::PopFont();
+
+    return false;
 }
 
 void stackEditorWindow() {
@@ -90,7 +56,7 @@ void stackEditorWindow() {
     memset(temp, 0, sizeof(temp));
 
     const auto err = uc_mem_read(uc, STACK_ADDRESS, temp, STACK_SIZE);
-    if ((err == UC_ERR_READ_UNMAPPED) && (stackErrorAddr != STACK_ADDRESS && (STACK_ADDRESS != 0))) {
+    if ((err == UC_ERR_READ_UNMAPPED) && ((STACK_ADDRESS != 0) && (!showPopupError))) {
         LOG_ERROR("Failed to read memory. Address: " << std::hex << STACK_ADDRESS);
         stackErrorAddr = STACK_ADDRESS;
         showPopupError = true;
@@ -99,11 +65,17 @@ void stackEditorWindow() {
     }
 
     if (showPopupError){
-        ImGui::OpenPopup("InputPopup");
-        stackErrorPopup();
+        if (!stackErrorPopup()) {
+            STACK_ADDRESS = DEFAULT_STACK_ADDRESS;
+            if (!isCodeRunning) {
+                tempRegisterValueMap[getArchSBPStr(codeInformation.mode).first] = "0x00";
+            }
+        }
+        showPopupError = false;
     }
-
-    copyBigEndian(data, temp, STACK_SIZE);
+    if (isCodeRunning) {
+        copyBigEndian(data, temp, STACK_SIZE);
+    }
 
     stackEditor.HighlightColor = ImColor(59, 60, 79);
     stackEditor.OptShowAddWindowButton = false;
