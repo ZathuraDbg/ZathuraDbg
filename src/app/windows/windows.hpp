@@ -57,6 +57,7 @@ extern const ks_opt_value ksSyntaxOpts[];
 extern tsl::ordered_map<std::string, std::string> registerValueMap;
 extern void changeEmulationSettings();
 extern std::unordered_map<std::string, std::string> tempRegisterValueMap;
+extern bool stackArraysZeroed;
 extern bool codeHasRun;
 extern bool stepClickedOnce;
 extern void registerWindow();

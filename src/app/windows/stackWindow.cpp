@@ -34,12 +34,16 @@ bool stackErrorPopup(){
     {
         uc_mem_map(uc, STACK_ADDRESS, STACK_SIZE, UC_PROT_ALL);
         showPopupError = false;
-       return true;
+        return true;
     }
 
     return false;
 }
 
+static char data[5 * 1024 * 1024];
+static char temp[5 * 1024 * 1024];
+
+bool stackArraysZeroed = false;
 void stackEditorWindow() {
     const auto io = ImGui::GetIO();
     ImGui::PushFont(io.Fonts->Fonts[3]);
@@ -49,11 +53,11 @@ void stackEditorWindow() {
         return;
     }
 
-    static char data[5 * 1024 * 1024];
-    static char temp[5 * 1024 * 1024];
-
-    memset(data, 0, sizeof(data));
-    memset(temp, 0, sizeof(temp));
+    if (!stackArraysZeroed) {
+         memset(data, 0, sizeof(data));
+         memset(temp, 0, sizeof(temp));
+         stackArraysZeroed = true;
+    }
 
     const auto err = uc_mem_read(uc, STACK_ADDRESS, temp, STACK_SIZE);
     if ((err == UC_ERR_READ_UNMAPPED) && ((STACK_ADDRESS != 0) && (!showPopupError))) {
@@ -73,9 +77,11 @@ void stackEditorWindow() {
         }
         showPopupError = false;
     }
-    // if (isCodeRunning) {
+
+    if (updateStack) {
         copyBigEndian(data, temp, STACK_SIZE);
-    // }
+        updateStack = false;
+    }
 
     stackEditor.HighlightColor = ImColor(59, 60, 79);
     stackEditor.OptShowAddWindowButton = false;
