@@ -73,16 +73,17 @@ void stackEditorWindow() {
         }
         showPopupError = false;
     }
-    if (isCodeRunning) {
+    // if (isCodeRunning) {
         copyBigEndian(data, temp, STACK_SIZE);
-    }
+    // }
 
     stackEditor.HighlightColor = ImColor(59, 60, 79);
     stackEditor.OptShowAddWindowButton = false;
     stackEditor.OptShowSetBaseAddrOption = true;
     stackEditor.OptFillMemoryRange = true;
     stackEditor.FillMemoryRange = fillMemoryWithBytePopup;
+    stackEditor.StackFashionAddrSubtraction = true;
 
-    stackEditor.DrawWindow("Stack", reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(data)), STACK_SIZE, STACK_ADDRESS);
+    stackEditor.DrawWindow("Stack", reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(data)), STACK_SIZE, STACK_ADDRESS + STACK_SIZE);
     ImGui::PopFont();
 }

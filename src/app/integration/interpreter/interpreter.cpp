@@ -6,7 +6,7 @@ uintptr_t STACK_ADDRESS = DEFAULT_STACK_ADDRESS;
 uint64_t CODE_BUF_SIZE = 0x3000;
 uintptr_t STACK_SIZE = 5 * 1024 * 1024;
 uintptr_t MEMORY_EDITOR_BASE;
-uintptr_t MEMORY_DEFAULT_SIZE = 0x2000;
+uintptr_t MEMORY_DEFAULT_SIZE = 0x4000;
 
 uint8_t* codeBuf = nullptr;
 

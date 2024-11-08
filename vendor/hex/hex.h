@@ -152,6 +152,7 @@ struct MemoryEditor
     bool            KeepFillMemoryWindow;
     bool            KeepGoToPopup;
     bool            CopySelection;
+    bool            StackFashionAddrSubtraction;
     uint8_t*        MemData;
     std::stack<Actions> UndoActions;
     std::stack<Actions> RedoActions;
@@ -361,8 +362,12 @@ struct MemoryEditor
             for (int line_i = clipper.DisplayStart; line_i < clipper.DisplayEnd; line_i++) // display only visible lines
             {
                 size_t addr = (size_t)(line_i * Cols);
-                ImGui::Text(format_address, s.AddrDigitsCount, base_display_addr + addr);
-
+                if (StackFashionAddrSubtraction) {
+                    ImGui::Text(format_address, s.AddrDigitsCount, base_display_addr - addr);
+                }
+                else {
+                    ImGui::Text(format_address, s.AddrDigitsCount, (base_display_addr + addr));
+                }
                 // Draw Hexadecimal
                 for (int n = 0; n < Cols && addr < mem_size; n++, addr++)
                 {
