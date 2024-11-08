@@ -6,6 +6,7 @@ main:
 	add rbx, rax
 	mov rdi, rbx
 	push rdi
+	push rdi
 	inc rdi
     call subtract_hundred
     mov r12, 0x1000
