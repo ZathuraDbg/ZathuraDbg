@@ -489,7 +489,12 @@ void hook(uc_engine *uc, const uint64_t address, const uint32_t size, void *user
     lastLineNo = lineNumber;
 }
 
-bool initUC(const std::string& codeIn) {
+bool updateStack = false;
+void hookStackWrite(uc_engine *uc, const uint64_t address, const uint32_t size, void *user_data) {
+    updateStack = true;
+}
+
+bool preExecutionSetup(const std::string& codeIn) {
     initRegistersToDefinedVals();
     if (codeBuf == nullptr){
         codeBuf = static_cast<uint8_t *>(malloc(CODE_BUF_SIZE));
@@ -514,6 +519,7 @@ bool initUC(const std::string& codeIn) {
 
     uc_hook trace;
     uc_hook_add(uc, &trace, UC_HOOK_CODE, (void*)hook, nullptr, 1, 0);
+    uc_hook_add(uc, &trace, UC_HOOK_MEM_WRITE, (void*)hookStackWrite, nullptr, STACK_ADDRESS + STACK_SIZE, STACK_ADDRESS);
     return true;
 }
 
@@ -564,6 +570,7 @@ bool resetState(){
     executionComplete = false;
     wasStepOver = false;
     wasJumpAndStepOver = false;
+    stackArraysZeroed = false;
     codeCurrentLen = 0;
     codeFinalLen = 0;
     lineNo = 0;
@@ -649,7 +656,7 @@ bool stepCode(const size_t instructionCount){
         uc_context_save(uc, context);
         ucInit(uc);
         createStack(uc);
-        initUC(getBytes(selectedFile));
+        preExecutionSetup(getBytes(selectedFile));
         uc_context_restore(uc, context);
         skipBreakpoints = true;
     }
@@ -694,20 +701,22 @@ bool stepCode(const size_t instructionCount){
 
     uc_context_save(uc, context);
     codeHasRun = true;
+
     if (skipBreakpoints){
         skipBreakpoints = false;
     }
     if (runningAsContinue) {
         runningAsContinue = !runningAsContinue;
     }
-   return true;
+
+    return true;
 }
 
 
 bool runCode(const std::string& codeIn, uint64_t instructionCount)
 {
     LOG_INFO("Running code...");
-    if (!initUC(codeIn)) {
+    if (!preExecutionSetup(codeIn)) {
         return false;
     }
 
