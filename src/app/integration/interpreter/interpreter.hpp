@@ -65,6 +65,7 @@ extern uintptr_t MEMORY_EDITOR_BASE; // default
 extern uintptr_t MEMORY_DEFAULT_SIZE; // default
 extern uintptr_t MEMORY_ALLOCATION_SIZE;
 extern uintptr_t STACK_ADDRESS;
+extern uintptr_t DEFAULT_STACK_ADDRESS;
 extern uintptr_t STACK_SIZE;
 extern int tempBPLineNum;
 extern uint64_t CODE_BUF_SIZE;

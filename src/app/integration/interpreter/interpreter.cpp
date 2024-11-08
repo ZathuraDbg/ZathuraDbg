@@ -1,7 +1,8 @@
 #include "interpreter.hpp"
 uintptr_t ENTRY_POINT_ADDRESS = 0x1000;
 uintptr_t MEMORY_ALLOCATION_SIZE = 2 * 1024 * 1024;
-uintptr_t STACK_ADDRESS = 0x300000;
+uintptr_t DEFAULT_STACK_ADDRESS = 0x300000;
+uintptr_t STACK_ADDRESS = DEFAULT_STACK_ADDRESS;
 uint64_t CODE_BUF_SIZE = 0x3000;
 uintptr_t STACK_SIZE = 5 * 1024 * 1024;
 uintptr_t MEMORY_EDITOR_BASE;
