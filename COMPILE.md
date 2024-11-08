@@ -24,7 +24,7 @@ sudo apt install gcc-14 g++-14
 
 ### On Arch Linux
 ```sh
-sudo pacman -S base-devel cmake gcc-14 g++-14 nlohmann-json mesa
+sudo pacman -S base-devel cmake gcc-14 g++-14 nlohmann-json mesa keystone
 ```
 
 - If you're using wayland
