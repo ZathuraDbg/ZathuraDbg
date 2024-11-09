@@ -75,8 +75,8 @@ void stackEditorWindow() {
                 tempRegisterValueMap[getArchSBPStr(codeInformation.mode).first] = "0x00";
             }
         }
-        showPopupError = false;
     }
+        showPopupError = false;
 
     if (updateStack) {
         copyBigEndian(data, temp, STACK_SIZE);
@@ -85,7 +85,7 @@ void stackEditorWindow() {
 
     stackEditor.HighlightColor = ImColor(59, 60, 79);
     stackEditor.OptShowAddWindowButton = false;
-    stackEditor.OptShowSetBaseAddrOption = true;
+    // stackEditor.OptShowSetBaseAddrOption = true;
     stackEditor.OptFillMemoryRange = true;
     stackEditor.FillMemoryRange = fillMemoryWithBytePopup;
     stackEditor.StackFashionAddrSubtraction = true;

@@ -345,11 +345,43 @@ bool createNewWindow(){
 
 bool setBaseAddr(){
     auto [address, size] = infoPopup("Modify Base Address", "8192 bytes default");
-    if (address && size){
+   if (address && size){
         MEMORY_EDITOR_BASE = address;
         return true;
     }
-    else if (address && (!size) || (!address && size)){
+    else if (address && (!size)) {
+        MEMORY_EDITOR_BASE = address;
+        MEMORY_DEFAULT_SIZE = 8192;
+        return true;
+    }
+    else if ((!address && size)){
+        return true;
+    }
+
+    return false;
+}
+
+std::variant<bool, std::pair<void*, size_t>> setBaseAddr2(uintptr_t baseAddr, uintptr_t editorSize){
+    if (baseAddr && editorSize) {
+        MEMORY_EDITOR_BASE = baseAddr;
+        MEMORY_DEFAULT_SIZE = editorSize;
+        std::pair<void*, size_t> ret = {(void*)baseAddr, editorSize};
+        return ret;
+    }
+
+    auto [address, size] = infoPopup("Modify Base Address", "8192 bytes default");
+    if (address && size){
+        MEMORY_EDITOR_BASE = address;
+        std::pair<void*, size_t> ret = {(void*)address, size};
+        return ret;
+    }
+    else if (address && (!size)) {
+        MEMORY_EDITOR_BASE = address;
+        MEMORY_DEFAULT_SIZE = 8192;
+        std::pair<void*, size_t> ret = {(void*)address, 8192};
+        return ret;
+    }
+    else if ((!address && size)){
         return true;
     }
 
@@ -370,44 +402,6 @@ bool fillMemoryRange(){
 }
 
 
-bool showRequiredButton(const std::string& buttonName, bool state){
-    ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[6]);
-    if (buttonName == "Preview"){
-        if (ImGui::Button(!state ? (ICON_CI_TRIANGLE_UP) : (ICON_CI_TRIANGLE_DOWN), {20, 30})){
-            ImGui::PopFont();
-            return true;
-        }
-        ImGui::PopFont();
-        return false;
-    }
-    else if (buttonName == "Case"){
-        if (ImGui::Button(ICON_CI_TEXT_SIZE, {20, 30})){
-            ImGui::PopFont();
-            return true;
-        }
-        ImGui::PopFont();
-        return false;
-    }
-    else if (buttonName == "Ascii"){
-        if (ImGui::Button(ICON_CI_SYMBOL_KEY, {20, 30})){
-            ImGui::PopFont();
-            return true;
-        }
-        ImGui::PopFont();
-        return false;
-    }
-    else if (buttonName == "Options"){
-        if (ImGui::Button(ICON_CI_ELLIPSIS, {20, 30})){
-            ImGui::PopFont();
-            return true;
-        }
-        ImGui::PopFont();
-        return false;
-    }
-    ImGui::PopFont();
-    return false;
-}
-
 void hexEditorWindow(){
     const auto io = ImGui::GetIO();
     char data[0x3000];
@@ -426,7 +420,7 @@ void hexEditorWindow(){
     memoryEditorWindow.ShowRequiredButton = stackEditor.ShowRequiredButton = &showRequiredButton;
     memoryEditorWindow.OptShowSetBaseAddrOption = true;
     memoryEditorWindow.OptFillMemoryRange = true;
-    memoryEditorWindow.SetBaseAddress = setBaseAddr;
+    memoryEditorWindow.SetBaseAddress2 = setBaseAddr2;
     memoryEditorWindow.FillMemoryRange = fillMemoryWithBytePopup;
     memoryEditorWindow.DrawWindow("Memory Editor", (void*)data, 0x3000, MEMORY_EDITOR_BASE);
 
