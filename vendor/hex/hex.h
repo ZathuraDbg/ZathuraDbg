@@ -86,7 +86,8 @@ struct MemoryEditor
 
     enum ActionType{
         MemWrite,
-        MemWriteBatch
+        MemWriteBatch,
+        SetBaseAddr
     };
 
     struct Actions{
@@ -94,8 +95,8 @@ struct MemoryEditor
         uint64_t startAddr;
         uint64_t endAddr;
         size_t operationSize;
-        std::vector<int> operationData;
-        std::vector<int> originalData;
+        std::vector<intptr_t> operationData;
+        std::vector<intptr_t> originalData;
     };
 
     struct fillRangeInfoT{
@@ -123,14 +124,14 @@ struct MemoryEditor
     ImU32           HighlightColor;                             //          // background color of highlighted bytes.
     ImU32 (*BgColorFn)(const ImU8* data, size_t off);
     void (*InteractFn)(const ImU8* data, size_t off);
+    void            GoToPopup();
     ImU8            (*ReadFn)(const ImU8* data, size_t off);    // = 0      // optional handler to read bytes.
     void            (*WriteFn)(ImU8* data, size_t off, ImU8 d); // = 0      // optional handler to write bytes.
     bool            (*HighlightFn)(const ImU8* data, size_t off);//= 0      // optional handler to return Highlight property (to support non-contiguous highlighting).
     bool            (*NewWindowInfoFn)();
     bool            (*ShowRequiredButton)(const std::string& buttonName, bool state);
-    bool            (*SetBaseAddress)();
     fillRangeInfoT  (*FillMemoryRange)();
-    void GoToPopup();
+    std::variant<bool, std::pair<void*, size_t>> (*SetBaseAddress2)(uintptr_t baseAddr, uintptr_t size);
 
     // [Internal State]
     bool            ContentsWidthChanged;
@@ -638,9 +639,21 @@ struct MemoryEditor
             }
         }
 
-        if (KeepSetBaseAddrWindow && SetBaseAddress){
-            if (SetBaseAddress()){
-                KeepSetBaseAddrWindow = false;
+        if (KeepSetBaseAddrWindow && SetBaseAddress2){
+            auto val = SetBaseAddress2(0, 0);
+            if (std::holds_alternative<std::pair<void*, size_t>>(val)) {
+                auto const&[addr, size] = std::get<std::pair<void*, size_t>>(val);
+                if (addr != mem_data_void) {
+                    Actions changeAddrAction = {.Action = ActionType::SetBaseAddr, .startAddr = reinterpret_cast<uintptr_t>(addr), .endAddr = (uintptr_t)(reinterpret_cast<uintptr_t>(addr) + size),.operationSize = size,
+                    .operationData = {reinterpret_cast<intptr_t>(addr)}, .originalData = {static_cast<intptr_t>(base_display_addr)}};
+                    UndoActions.push(changeAddrAction);
+                    KeepSetBaseAddrWindow = false;
+                }
+            }
+            else if (std::holds_alternative<bool>(val)){
+                if ( std::get<bool>(val)){
+                    KeepSetBaseAddrWindow = false;
+                }
             }
         }
 
@@ -729,6 +742,15 @@ struct MemoryEditor
                 }
                 break;
             }
+            case ActionType::SetBaseAddr:
+            {
+                if (SetBaseAddress2) {
+                    SetBaseAddress2(currentActionTop.originalData[0], currentActionTop.operationSize);
+                    std::swap(currentActionTop.operationData,  currentActionTop.originalData);
+                }
+
+                break;
+            }
             default:
                 break;
         }
@@ -756,7 +778,7 @@ struct MemoryEditor
         return true;
     }
 
-    bool WriteVectorToMemory(std::vector<int> vec, bool PasteAll = false) {
+    bool WriteVectorToMemory(const std::vector<intptr_t> &vec, bool PasteAll = false) {
         auto currentAddr = SelectionStartAddr;
         auto endAddr = SelectionEndAddr;
 
@@ -804,7 +826,7 @@ struct MemoryEditor
 
     bool PasteWriteToMemory(bool PasteAll = false){
         std::string clipboardText = ImGui::GetClipboardText();
-        std::vector<int> convertedInts;
+        std::vector<intptr_t> convertedInts;
         std::string hex;
 
         for (int i = 0; i < clipboardText.length(); i++){
@@ -878,8 +900,8 @@ struct MemoryEditor
             if (OptShowSetBaseAddrOption){
                 ImGui::Separator();
                 if (ImGui::MenuItem("Set Base Address", "CTRL + Shift + E", false)){
-                    if (SetBaseAddress){
-                        SetBaseAddress();
+                    if (SetBaseAddress2){
+                        SetBaseAddress2(0, 0);
                         KeepSetBaseAddrWindow = true;
                     }
                 }

@@ -4,6 +4,45 @@ bool openFile = false;
 bool saveFile = false;
 bool saveFileAs = false;
 
+
+bool showRequiredButton(const std::string& buttonName, bool state){
+    ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[6]);
+    if (buttonName == "Preview"){
+        if (ImGui::Button(!state ? (ICON_CI_TRIANGLE_UP) : (ICON_CI_TRIANGLE_DOWN), {20, 30})){
+            ImGui::PopFont();
+            return true;
+        }
+        ImGui::PopFont();
+        return false;
+    }
+    else if (buttonName == "Case"){
+        if (ImGui::Button(ICON_CI_TEXT_SIZE, {20, 30})){
+            ImGui::PopFont();
+            return true;
+        }
+        ImGui::PopFont();
+        return false;
+    }
+    else if (buttonName == "Ascii"){
+        if (ImGui::Button(ICON_CI_SYMBOL_KEY, {20, 30})){
+            ImGui::PopFont();
+            return true;
+        }
+        ImGui::PopFont();
+        return false;
+    }
+    else if (buttonName == "Options"){
+        if (ImGui::Button(ICON_CI_ELLIPSIS, {20, 30})){
+            ImGui::PopFont();
+            return true;
+        }
+        ImGui::PopFont();
+        return false;
+    }
+    ImGui::PopFont();
+    return false;
+}
+
 bool setupButtons() {
     using namespace ImGui;
 
