@@ -8,6 +8,7 @@
 #include <fstream>
 #include <iostream>
 #include <filesystem>
+#include <charconv>
 #include "../../vendor/code/tinyfiledialogs.h"
 #include "../../vendor/log/clue.hpp"
 #include <tsl/ordered_map.h>
@@ -26,7 +27,7 @@
 #include "../../vendor/hex/hex.h"
 #include "integration/interpreter/interpreter.hpp"
 #include "windows/windows.hpp"
-#include "nlohmann/json.hpp"
+#include "../../vendor/json/json.hpp"
 #include <capstone/capstone.h>
 #include "actions/actions.hpp"
 using json = nlohmann::json;
