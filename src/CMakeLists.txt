@@ -89,9 +89,9 @@ if (UNIX AND NOT APPLE)
     link_directories(/usr/lib /usr/local/lib)
     add_compile_options(${GLFW_CFLAGS})
     
-  set(LIBS ${GLFW_LDFLAGS} -lGL -ldl -lstdc++ -lunicorn 
-    -L${CMAKE_SOURCE_DIR}/../vendor/keystone -l:libkeystone.a  
-    -L${CMAKE_SOURCE_DIR}/../vendor/capstone -l:libcapstone.a 
+  set(LIBS ${GLFW_LDFLAGS} -lGL -ldl -lstdc++ -lunicorn -lkeystone -lcapstone
+    #    -L${CMAKE_SOURCE_DIR}/../vendor/keystone -l:libkeystone.a  
+    # -L${CMAKE_SOURCE_DIR}/../vendor/capstone -l:libcapstone.a 
     -pthread -std=c++23)
 elseif (APPLE)
     message("Mac OS X")
