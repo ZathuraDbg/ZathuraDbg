@@ -20,3 +20,9 @@
 [submodule "vendor/tinyfdialogue"]
 	path = vendor/tinyfdialogue
 	url = https://github.com/ZathuraDbg/tinyfdialogue
+[submodule "vendor/capstone"]
+	path = vendor/capstone
+	url = https://github.com/capstone-engine/capstone
+[submodule "vendor/keystone"]
+	path = vendor/keystone
+	url = https://github.com/keystone-engine/keystone
