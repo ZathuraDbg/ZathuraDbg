@@ -6,7 +6,7 @@ std::string normalizePath(const std::string& s) {
 }
 
 std::string relativeToRealPath(const std::string &executablePath, const char *s) {
-    std::string r = normalizePath(std::filesystem::path(executablePath + "/" + std::string(s)));
+    std::string r = normalizePath(std::filesystem::path(executablePath + "/" + std::string(s)).string());
     return r;
 }
 

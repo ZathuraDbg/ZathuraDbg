@@ -33,10 +33,10 @@ typedef struct{
 } keystoneSettings;
 
 extern uint64_t totalInstructions;
-extern uint lastInstructionLineNo;
+extern uint64_t lastInstructionLineNo;
 extern std::map<std::string, std::string> addressLineNoMap;
 extern std::map<std::string, int> labelLineNoMapInternal;
-extern tsl::ordered_map<std::string, std::pair<uint, uint>> labelLineNoRange;
+extern tsl::ordered_map<std::string, std::pair<uint64_t, uint64_t>> labelLineNoRange;
 extern std::vector<uint16_t> instructionSizes;
 extern std::stringstream assembly;
 extern void initInsSizeInfoMap();
@@ -48,5 +48,5 @@ extern std::string getBytes(const std::string& fileName);
 extern std::string getBytes(std::stringstream& assembly);
 extern uint64_t codeFinalLen;
 extern ks_engine *ks;
-extern std::vector<uint> emptyLineNumbers;
+extern std::vector<uint64_t> emptyLineNumbers;
 #endif //ZATHURA_UI_ASSEMBLER_HPP
