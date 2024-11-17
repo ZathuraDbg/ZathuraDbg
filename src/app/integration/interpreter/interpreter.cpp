@@ -33,7 +33,7 @@ bool stepContinue = false;
 bool executionComplete = false;
 bool use32BitLanes = false;
 
-std::vector<uint> breakpointLines = {};
+std::vector<uint64_t> breakpointLines = {};
 
 int getCurrentLine(){
     uint64_t instructionPointer = -1;
@@ -332,7 +332,7 @@ int runUntilLine = 0;
 bool wasStepOver = false;
 int stepOverBpLine = 0;
 std::string lastLabel{};
-uint lastLineNo = 0;
+uint64_t lastLineNo = 0;
 
 void hook(uc_engine *uc, const uint64_t address, const uint32_t size, void *user_data){
     std::string currentLabel{};
@@ -531,7 +531,7 @@ bool createStack(void* unicornEngine){
         return false;
     }
 
-    uint8_t zeroBuf[STACK_SIZE];
+    uint8_t *zeroBuf = (uint8_t *)malloc(STACK_SIZE);
 
     memset(zeroBuf, 0, STACK_SIZE);
     if (uc_mem_map(uc, STACK_ADDRESS, STACK_SIZE, UC_PROT_READ | UC_PROT_WRITE)){
