@@ -412,8 +412,9 @@ void hook(uc_engine *uc, const uint64_t address, const uint32_t size, void *user
             uc_context_save(uc, context);
         }
     }
-
+    // enters here during bug
     if (debugModeEnabled && !skipBreakpoints){
+        // skips the above
         if (ip != expectedIP && (ip > expectedIP)){
             LOG_INFO("Jump detected!");
             jumpDetected = true;
@@ -449,11 +450,15 @@ void hook(uc_engine *uc, const uint64_t address, const uint32_t size, void *user
         }
 
         editor->HighlightDebugCurrentLine(lineNumber - 1);
-
+        // skips
         if (std::ranges::find(breakpointLines, lineNumber) != breakpointLines.end() && (!skipBreakpoints)){
             editor->HighlightDebugCurrentLine(lineNumber - 1);
             LOG_DEBUG("Highlight from hook - breakpoint found at lineNo " << lineNumber);
-            if (!continueOverBreakpoint){
+            if (((runningAsContinue && lineNumber == stepOverBPLineNo))) {
+                removeBreakpoint(stepOverBPLineNo);
+            }
+            else if (!continueOverBreakpoint){
+                // second time in bug
                 LOG_DEBUG("Breakpoint hit!");
                 uc_emu_stop(uc);
                 uc_context_save(uc, context);
@@ -467,18 +472,13 @@ void hook(uc_engine *uc, const uint64_t address, const uint32_t size, void *user
 
         if (tempBPLineNum != -1){
             removeBreakpoint(tempBPLineNum);
-            // breakpointMutex.lock();
-            // const auto it = std::ranges::find(breakpointLines, tempBPLineNum);
-            // if (it != breakpointLines.end()) {
-            //     breakpointLines.erase(it);
-            // }
-            // breakpointMutex.unlock();
         }
     }
     if (stepOverBPLineNo != -1){
         eraseTempBP = true;
     }
 
+    // skips
    if (!wasJumpAndStepOver) {
         wasJumpAndStepOver = jumpDetected && wasStepOver;
     }
@@ -534,9 +534,16 @@ bool createStack(void* unicornEngine){
     uint8_t zeroBuf[STACK_SIZE];
 
     memset(zeroBuf, 0, STACK_SIZE);
-    if (uc_mem_map(uc, STACK_ADDRESS, STACK_SIZE, UC_PROT_READ | UC_PROT_WRITE)){
+    auto err = uc_mem_map(uc, STACK_ADDRESS, STACK_SIZE, UC_PROT_READ | UC_PROT_WRITE);
+    if (err && err != UC_ERR_MAP){
         LOG_ERROR("Failed to memory map the stack!!");
         return false;
+    }
+
+    if (err == UC_ERR_MAP) {
+        LOG_WARNING("Unicorn Mapping error triggered while initialising the stack.");
+        LOG_WARNING("The most probable cause is the workaround, if it still causes issues please report it otherwise ignore this.");
+        return true;
     }
 
     if (uc_mem_write(uc, STACK_ADDRESS, zeroBuf, STACK_SIZE)) {
@@ -653,8 +660,8 @@ bool stepCode(const size_t instructionCount){
     execMutex.lock();
     isCodeRunning = true;
     if (instructionCount == 1) {
+        LOG_DEBUG("Using a workaround...");
         uc_context_save(uc, context);
-        ucInit(uc);
         createStack(uc);
         preExecutionSetup(getBytes(selectedFile));
         uc_context_restore(uc, context);

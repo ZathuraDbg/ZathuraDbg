@@ -85,5 +85,5 @@ extern int stepOverBPLineNo;
 extern uint64_t codeCurrentLen;
 extern int getCurrentLine();
 extern bool removeBreakpoint(const int& lineNo);
-
+extern bool eraseTempBP;
 #endif

@@ -24,8 +24,8 @@ void restartDebugging(){
 }
 
 void stepOverAction(){
-    LOG_INFO("Stepping over...");
     uc_context_restore(uc, context);
+    LOG_INFO("Stepping over...");
     const uint64_t instructionPointer = getRegister(getArchIPStr(codeInformation.mode)).registerValueUn.eightByteVal;
     const std::string lineNoStr = addressLineNoMap[std::to_string(instructionPointer)];
 
@@ -40,12 +40,6 @@ void stepOverAction(){
         if (stepOverBPLineNo == lineNo){
             LOG_DEBUG("Removing step over breakpoint line number: " << stepOverBPLineNo);
             removeBreakpoint(stepOverBPLineNo);
-            // breakpointMutex.lock();
-            // const auto it = std::ranges::find(breakpointLines, stepOverBPLineNo);
-            // if (it!=breakpointLines.end()) {
-            //     breakpointLines.erase(it);
-            // }
-            // breakpointMutex.unlock();
             stepOverBPLineNo = -1;
         }
 
@@ -194,6 +188,7 @@ void debugContinueAction(const bool skipBP){
 
     skipBreakpoints = skipBP;
     runningAsContinue = true;
+    eraseTempBP = true;
     std::thread stepCodeThread(stepCode, 0);
     stepCodeThread.detach();
 }
