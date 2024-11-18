@@ -77,7 +77,7 @@ std::pair<std::string, std::size_t> assemble(const std::string& assemblyString, 
 
 uint lastInstructionLineNo = 0;
 void initInsSizeInfoMap(){
-    LOG_INFO("Upading instruction sizes...");
+    LOG_INFO("Upding instruction sizes info map...");
     std::string instructionStr;
 
     uint lineNo = 1;
@@ -227,7 +227,7 @@ uint64_t countValidInstructions(std::stringstream& asmStream){
 }
 
 void updateInstructionSizes(const std::string& compiledAsm){
-    LOG_INFO("Upading instruction sizes...");
+    LOG_INFO("Updating instruction sizes...");
     csh handle;
     cs_insn *instruction;
 
