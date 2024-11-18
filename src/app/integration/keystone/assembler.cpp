@@ -11,9 +11,9 @@ uint64_t tempTotalIns = 0;
 
 std::map<std::string, std::string> addressLineNoMap{};
 std::map<std::string, int> labelLineNoMapInternal{};
-tsl::ordered_map<std::string, std::pair<uint, uint>> labelLineNoRange{};
+tsl::ordered_map<std::string, std::pair<uint64_t, uint64_t>> labelLineNoRange{};
 std::vector<uint16_t> instructionSizes{};
-std::vector<uint> emptyLineNumbers{};
+std::vector<uint64_t> emptyLineNumbers{};
 
 std::pair<std::string, std::size_t> assemble(const std::string& assemblyString, const keystoneSettings& ksSettings) {
     LOG_INFO("Assembling code...");
@@ -75,12 +75,12 @@ std::pair<std::string, std::size_t> assemble(const std::string& assemblyString, 
     return assembled;
 }
 
-uint lastInstructionLineNo = 0;
+uint64_t lastInstructionLineNo = 0;
 void initInsSizeInfoMap(){
     LOG_INFO("Upding instruction sizes info map...");
     std::string instructionStr;
 
-    uint lineNo = 1;
+    uint64_t lineNo = 1;
     uint16_t count = 0;
     uint64_t currentAddr = ENTRY_POINT_ADDRESS;
     uint64_t insCount = 0;
