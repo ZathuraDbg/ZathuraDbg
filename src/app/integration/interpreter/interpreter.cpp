@@ -412,9 +412,8 @@ void hook(uc_engine *uc, const uint64_t address, const uint32_t size, void *user
             uc_context_save(uc, context);
         }
     }
-    // enters here during bug
+
     if (debugModeEnabled && !skipBreakpoints){
-        // skips the above
         if (ip != expectedIP && (ip > expectedIP)){
             LOG_INFO("Jump detected!");
             jumpDetected = true;
@@ -450,7 +449,6 @@ void hook(uc_engine *uc, const uint64_t address, const uint32_t size, void *user
         }
 
         editor->HighlightDebugCurrentLine(lineNumber - 1);
-        // skips
         if (std::ranges::find(breakpointLines, lineNumber) != breakpointLines.end() && (!skipBreakpoints)){
             editor->HighlightDebugCurrentLine(lineNumber - 1);
             LOG_DEBUG("Highlight from hook - breakpoint found at lineNo " << lineNumber);
@@ -458,7 +456,6 @@ void hook(uc_engine *uc, const uint64_t address, const uint32_t size, void *user
                 removeBreakpoint(stepOverBPLineNo);
             }
             else if (!continueOverBreakpoint){
-                // second time in bug
                 LOG_DEBUG("Breakpoint hit!");
                 uc_emu_stop(uc);
                 uc_context_save(uc, context);
@@ -478,7 +475,6 @@ void hook(uc_engine *uc, const uint64_t address, const uint32_t size, void *user
         eraseTempBP = true;
     }
 
-    // skips
    if (!wasJumpAndStepOver) {
         wasJumpAndStepOver = jumpDetected && wasStepOver;
     }
