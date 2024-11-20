@@ -65,6 +65,7 @@ void stepInAction(){
     stepIn = true;
     stepCode(1);
     stepIn = false;
+    pauseNext = false;
     LOG_INFO("Stepping in done.");
 }
 

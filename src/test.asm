@@ -9,9 +9,8 @@ main:
 	push rdi
 	inc rdi
     call subtract_hundred
-    mov r12, 0x1000
-    cmp r11, 200
     call subtract_hundred
+    cmp r11, 9000
     jne nextblock
     push rax
     push rbx
