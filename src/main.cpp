@@ -16,7 +16,7 @@
 #include <chrono>
 #include <thread>
 #include <filesystem>
-
+#include <fstream>
 GLFWwindow* window = nullptr;
 #if defined(_MSC_VER) && (_MSC_VER >= 1900) && !defined(IMGUI_DISABLE_WIN32_FUNCTIONS)
 #pragma comment(lib, "legacy_stdio_definitions")
@@ -111,6 +111,20 @@ int main(int argc, const char** argv)
 
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glsl_version);
+
+    // rotate log files after they fill more than 3MB of space
+    std::filesystem::path logPath = executablePath + "/.Zathura.zlog";
+    if (std::filesystem::exists(logPath))
+    {
+        std::ifstream logFile(logPath, std::ifstream::ate | std::ifstream::binary);
+        if (logFile.tellg() > 3000)
+        {
+            if (std::filesystem::remove(logPath))
+            {
+                LOG_ALERT("Logging restarted!");
+            }
+        }
+    }
 
     ImVec4 clearColor = hexToImVec4("101010");
     setupAppStyle();
