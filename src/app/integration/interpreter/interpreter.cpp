@@ -330,6 +330,8 @@ bool stepInBypassed = false;
 bool jumpAfterBypass = false;
 int runUntilLine = 0;
 bool wasStepOver = false;
+bool pauseNext = false;
+int pausedLineNo = -1;
 int stepOverBpLine = 0;
 std::string lastLabel{};
 uint64_t lastLineNo = 0;
@@ -347,7 +349,7 @@ void hook(uc_engine *uc, const uint64_t address, const uint32_t size, void *user
     }
 
     bool jumpDetected = false;
-    if ((!debugModeEnabled && !debugRun) || (executionComplete)){
+    if ((!debugModeEnabled && !debugRun) || (executionComplete) || (pauseNext && pausedLineNo != lineNumber)){
         LOG_DEBUG("Execution halted.");
         uc_emu_stop(uc);
         uc_context_save(uc, context);
@@ -356,6 +358,10 @@ void hook(uc_engine *uc, const uint64_t address, const uint32_t size, void *user
             editor->HighlightDebugCurrentLine(lastInstructionLineNo - 1);
         }
 
+        if (pauseNext && pausedLineNo != lastLineNo){
+            LOG_DEBUG("Pause next detected!");
+            pauseNext = false;
+        }
         return;
     }
 
@@ -477,6 +483,13 @@ void hook(uc_engine *uc, const uint64_t address, const uint32_t size, void *user
 
    if (!wasJumpAndStepOver) {
         wasJumpAndStepOver = jumpDetected && wasStepOver;
+   }
+
+    if (debugPaused && stepIn){
+        LOG_DEBUG("Step In detected after pause!");
+        stepIn = false;
+        pauseNext = true;
+        pausedLineNo = lineNumber;
     }
     
     uc_context_save(uc, context);
@@ -658,6 +671,7 @@ bool stepCode(const size_t instructionCount){
     if (instructionCount == 1) {
         LOG_DEBUG("Using a workaround...");
         uc_context_save(uc, context);
+        // ucInit(uc);
         createStack(uc);
         preExecutionSetup(getBytes(selectedFile));
         uc_context_restore(uc, context);
@@ -669,10 +683,6 @@ bool stepCode(const size_t instructionCount){
         printf("Failed on uc_emu_start() with error returned %u: %s\n",
                err, uc_strerror(err));
         exit(-2);
-    }
-
-    if (skipBreakpoints && instructionCount == 1) {
-        skipBreakpoints = !skipBreakpoints;
     }
 
     isCodeRunning = false;
