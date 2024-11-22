@@ -6,7 +6,7 @@ The following is the list of things that you can do to contribute to this projec
 - [Compile](https://github.com/ZathuraDbg/ZathuraDbg/blob/master/COMPILE.md) ZathuraDbg and work on new features or fix bugs from [issues](https://github.com/ZathuraDbg/ZathuraDbg/issues)
 - [Report bugs](https://github.com/ZathuraDbg/ZathuraDbg/issues) so they can be fixed.
 - Add feature requests as [issues](https://github.com/ZathuraDbg/ZathuraDbg/issues)
-- [Contact Us](https://ZathuraDbg.github.io/contact)
+- [Contact Us](#contact-us)
 - Send a [donation](https://github.com/sponsors/HACKE-RC) to support the project
 - Help us improve the [documentation](https://github.com/ZathuraDbg/ZathuraDbg)
 
