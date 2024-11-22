@@ -40,9 +40,7 @@ If you want to have the highest chance of getting your problem solved, you are g
 
 
 ### Request features
-
-Feature requests are often closed because they are out of scope. If you request one anyway, make sure to give a clear description of the desired behaviour and give clear examples of cases where your feature would be useful.
-
+We are looking for feature requests. If you request one, make sure to give a clear description of the desired behaviour and give clear examples of cases where your feature would be useful.
 We understand that it can be disappointing to not get your feature implemented, but opening an issue is the best way to communicate it regardless.
 
 ### Contact Us
