@@ -26,7 +26,7 @@ ZathuraDbg is still in beta, so expect major changes in the framework used or th
 Read [COMPILE.md](/COMPILE.md) to compile ZathuraDbg on your machine.
 
 # Contributing
-- To implement a new architecture to work with ZathuraDbg, read ARCHITECTURE.md
+- To implement a new architecture to work with ZathuraDbg, read [ARCHITECTURE.md](https://github.com/ZathuraDbg/ARCHITECTURE.md)
 - For making general contributions read CONTRIBUTING.md
 - If you have any questions you can always contact us or open an issue.
 
