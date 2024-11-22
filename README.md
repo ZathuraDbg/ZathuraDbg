@@ -27,7 +27,7 @@ Read [COMPILE.md](/COMPILE.md) to compile ZathuraDbg on your machine.
 
 # Contributing
 - To implement a new architecture to work with ZathuraDbg, read [ARCHITECTURE.md](https://github.com/ZathuraDbg/ARCHITECTURE.md)
-- For making general contributions read CONTRIBUTING.md
+- For making general contributions read [CONTRIBUTING.md](CONTRIBUTING.md)
 - If you have any questions you can always contact us or open an issue.
 
 # Credits
