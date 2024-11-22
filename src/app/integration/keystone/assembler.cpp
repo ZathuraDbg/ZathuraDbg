@@ -161,7 +161,7 @@ void initInsSizeInfoMap(){
         instructionStr = toUpperCase(instructionStr);
 
 //       if it's valid instruction
-        if (std::ranges::find(x86Instructions, instructionStr) != x86Instructions.end()){
+        if (std::ranges::find(archInstructions, instructionStr) != archInstructions.end()){
             addressLineNoMap.insert({std::to_string(currentAddr), std::to_string(lineNo)});
             currentAddr += instructionSizes[count];
             count++;
@@ -217,7 +217,7 @@ uint64_t countValidInstructions(std::stringstream& asmStream){
             instructionStr = instructionStr.substr(0, spaceIt);
         }
 
-        if (std::ranges::find(x86Instructions, instructionStr) != x86Instructions.end()){
+        if (std::ranges::find(archInstructions, instructionStr) != archInstructions.end()){
             count++;
         }
     }

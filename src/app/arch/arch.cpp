@@ -4,13 +4,14 @@ std::unordered_map<std::string, std::pair<size_t, int>> regInfoMap = {};
 std::string (*getArchIPStr)(uc_mode) = nullptr;
 std::pair<std::string, std::string> (*getArchSBPStr)(uc_mode) = nullptr;
 bool (*isRegisterValid)(const std::string&, uc_mode) = nullptr;
-void (*archModifyCallback)(uc_arch, uc_mode) = nullptr;
+void (*modeUpdateCallback)(uc_mode) = nullptr;
 std::vector<std::string> defaultShownRegs{};
+std::vector<std::string> archInstructions;
 
 void onArchChange(){
     initArch();
-    if (archModifyCallback != nullptr){
-        archModifyCallback(codeInformation.archUC, codeInformation.mode);
+    if (modeUpdateCallback != nullptr){
+        modeUpdateCallback(codeInformation.mode);
         defaultShownRegs = x86DefaultShownRegs;
     }
 }
@@ -23,7 +24,8 @@ bool initArch(){
             regInfoMap = x86RegInfoMap;
             defaultShownRegs = x86DefaultShownRegs;
             isRegisterValid = x86IsRegisterValid;
-            archModifyCallback = x86ModifyCallback;
+            modeUpdateCallback = x86ModeUpdateCallback;
+            archInstructions = x86ArchInstructions;
             return true;
         case UC_ARCH_ARM:
             getArchIPStr = armIPStr;
