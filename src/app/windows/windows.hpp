@@ -22,7 +22,8 @@ struct newMemEditWindowsInfo{
 enum arch{
     x86 = 0,
     ARM,
-    RISCV
+    RISCV,
+    PowerPC
 };
 
 extern bool saveContextToFile;
@@ -72,7 +73,7 @@ extern void stackWriteFunc(ImU8* data, size_t offset, ImU8 delta);
 extern void hexWriteFunc(ImU8* data, size_t off, ImU8 d);
 extern MemoryEditor stackEditor;
 extern int checkHexCharsCallback(ImGuiInputTextCallbackData* data);
-extern const char* items[];
+extern const char* architectureStrings[];
 bool showRequiredButton(const std::string& buttonName, bool state = false);
 extern uint16_t getRegisterActualSize(std::string str);
 extern MemoryEditor::fillRangeInfoT fillMemoryWithBytePopup();

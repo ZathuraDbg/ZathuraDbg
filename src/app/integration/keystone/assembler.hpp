@@ -15,15 +15,7 @@
 #include "../../../vendor/log/clue.hpp"
 #include "../utils/hex/hex.hpp"
 
-// #define ASM_FILE_NAME "tmpasm.asm"
 #define ASM_FILE_NAME selectedFile.c_str()
-
-typedef enum{
-    ASM_TARGET_X86 = 32,
-    ASM_TARGET_X86_64 = 64,
-    ASM_TARGET_INVALID = -1
-} target;
-
 
 typedef struct{
     ks_arch arch;

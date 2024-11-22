@@ -25,6 +25,7 @@ extern std::pair<std::string, std::string> (*getArchSBPStr)(uc_mode);
 extern bool (*isRegisterValid)(const std::string&, uc_mode);
 extern int regNameToConstant(const std::string &name);
 extern std::unordered_map<std::string, std::pair<size_t, int>> regInfoMap;
-extern void (*archModifyCallback)(uc_arch, uc_mode);
+extern void (*modeUpdateCallback)(uc_mode);
+extern std::vector<std::string> archInstructions;
 extern void onArchChange();
 #endif //ZATHURA_ARCH_HPP
