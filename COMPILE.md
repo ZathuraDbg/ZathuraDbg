@@ -45,9 +45,9 @@ NOTE: The Windows Build has not been tested thoroughly yet so expect issues.
 - Update the environment and then install the following dependencies
 ```sh
 pacman -Syyu
-pacman -S mingw-w64-x86_64-toolchain mingw-w64-x86_64-glfw mingw-w64-x86_64-keystone mingw-w64-x86_64-capstone mingw-w64-x86_64-unicorn mingw-w64-x86_64-cmake git 
+pacman -S mingw-w64-x86_64-toolchain mingw-w64-x86_64-glfw mingw-w64-x86_64-keystone mingw-w64-x86_64-unicorn mingw-w64-x86_64-cmake git 
 ```
-
+- Build [capstone engine](capstone-engine.org) from instructions [here](https://github.com/capstone-engine/capstone/blob/next/BUILDING.md)
 
 ## Building the project
 
@@ -63,11 +63,12 @@ mkdir build
 cmake .. 
 make -j`nproc`
 ```
-- Incase you get errors about missing features, compile as the above
+- Incase you get errors about missing features or dlls, compile as the above
 ```sh
 cd ..   # you should be in the src/ directory 
 rm -rf build
 mkdir build
+cd build
 CC=gcc-14 CXX=g++-14 cmake .. 
 CC=gcc-14 CXX=g++-14 make
 ```
@@ -82,6 +83,7 @@ CC=gcc-14 CXX=g++-14 make
 ```
 cd src
 mkdir build
+cd build
 cmake ..
 ninja -j`nproc`
 ```
