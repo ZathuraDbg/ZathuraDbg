@@ -60,6 +60,7 @@ git clone --recurse-submodules https://github.com/ZathuraDbg/ZathuraDbg
 ```
 cd src
 mkdir build
+cd build
 cmake .. 
 make -j`nproc`
 ```
