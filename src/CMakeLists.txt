@@ -50,6 +50,7 @@ set(SOURCES
         ${CMAKE_SOURCE_DIR}/../vendor/tinyexpr/tinyexpr.h
         app/codeContextMenu.cpp
         app/codeContextMenu.hpp
+        utils/stb_image.h
 )
 
 # Include directories
