@@ -70,7 +70,7 @@ include_directories(
 
 set(OpenGL_GL_PREFERENCE GLVND)
 # Compiler options
-add_compile_options(-g -Wformat -DLOG_TO_FILE=\".Zathura.zlog\")
+#add_compile_options(-g -Wformat -DLOG_TO_FILE=\".Zathura.zlog\")
 # Define the output directory for the binary
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
 
@@ -83,7 +83,7 @@ if (UNIX AND NOT APPLE)
     find_package(glfw3 REQUIRED)
 
    
-   include_directories(${OPENGL_INCLUDE_DIR})
+    include_directories(${OPENGL_INCLUDE_DIR})
     link_libraries(${OPENGL_LIBRARIES} glfw)
     link_libraries(${GLFW_LIBRARIES})
     link_directories(/usr/lib /usr/local/lib)

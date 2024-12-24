@@ -58,6 +58,7 @@
 #include <iomanip>
 #include <vector>
 #include <stack>
+#include <variant>
 
 #include "../../src/utils/iconfont.h"
 #include "../../src/utils/fonts.hpp"

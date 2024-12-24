@@ -16,7 +16,7 @@
 #include "errorHandler.hpp"
 #include <mutex>
 #include <array>
-
+#define UC_CONTEXT_SAVE_FAILED -94
 struct registerValueT{
     uint8_t charVal{};
     uint16_t twoByteVal{};
@@ -40,6 +40,7 @@ typedef struct{
     registerValueT registerValueUn;
 } registerValueInfoT;
 
+extern int saveUCContext(uc_engine *ucEngine, uc_context *ucContext);
 extern std::mutex execMutex;
 extern std::mutex breakpointMutex;
 extern bool skipBreakpoints;
