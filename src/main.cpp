@@ -21,6 +21,8 @@ GLFWwindow* window = nullptr;
 #if defined(_MSC_VER) && (_MSC_VER >= 1900) && !defined(IMGUI_DISABLE_WIN32_FUNCTIONS)
 #pragma comment(lib, "legacy_stdio_definitions")
 #endif
+#define STB_IMAGE_IMPLEMENTATION
+#include "utils/stb_image.h"
 
 static void glfw_error_callback(int error, const char* description)
 {
@@ -112,6 +114,11 @@ int main(int argc, const char** argv)
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glsl_version);
 
+    GLFWimage icons[1];
+    icons[0].pixels = stbi_load("../assets/ZathuraDbg.png", &icons[0].width, &icons[0].height, 0, 4);
+    glfwSetWindowIcon(window, 1, icons); // Set icon
+    stbi_image_free(icons[0].pixels);
+
     // rotate log files after they fill more than 3MB of space
     std::filesystem::path logPath = executablePath + "/.Zathura.zlog";
     if (std::filesystem::exists(logPath))
@@ -147,7 +154,7 @@ int main(int argc, const char** argv)
 
     while (!glfwWindowShouldClose(window))
     {
-        glfwWaitEvents();
+        glfwPollEvents();
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
