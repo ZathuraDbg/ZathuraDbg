@@ -651,7 +651,7 @@ void parseRegisterValueInput(const std::string& regName, const char *regValueFir
                             arr[laneIndex] = val;
 
                             uc_err err = uc_reg_write(uc, regNameToConstant(realRegName), arr);
-                            uc_context_save(uc, context);
+                            saveUCContext(uc, context);
                         }
                         else{
                             arrSize = (regSize == 128 ? 4 : 8);
@@ -671,14 +671,14 @@ void parseRegisterValueInput(const std::string& regName, const char *regValueFir
                             arr[laneIndex] = val;
 
                             uc_err err = uc_reg_write(uc, regNameToConstant(realRegName), arr);
-                            uc_context_save(uc, context);
+                            saveUCContext(uc, context);
                         }
                     }
                 }
             }
             else{
                 uc_reg_write(uc, regNameToConstant(regName), &temp);
-                uc_context_save(uc, context);
+                saveUCContext(uc, context);
             }
         }
         else{

@@ -77,7 +77,7 @@ void debugPauseAction(){
     const auto lineNumber = std::atoi(currentLineNo.c_str());
     editor->HighlightDebugCurrentLine(lineNumber - 1);
     debugPaused = true;
-    uc_context_save(uc, context);
+    saveUCContext(uc, context);
     uc_emu_stop(uc);
     LOG_INFO("Code paused successfully!");
 }

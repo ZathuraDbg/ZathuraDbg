@@ -23,6 +23,7 @@ int stepOverBPLineNo = -1;
 
 std::mutex execMutex;
 std::mutex breakpointMutex;
+std::mutex criticalSection{};
 
 bool debugModeEnabled = false;
 bool continueOverBreakpoint = false;
@@ -34,6 +35,14 @@ bool executionComplete = false;
 bool use32BitLanes = false;
 
 std::vector<uint64_t> breakpointLines = {};
+
+int saveUCContext(uc_engine *ucEngine, uc_context *ucContext){
+    if (ucEngine == nullptr || ucContext == nullptr){
+        return UC_CONTEXT_SAVE_FAILED;
+    }
+
+    return uc_context_save(ucEngine, ucContext);
+}
 
 int getCurrentLine(){
     uint64_t instructionPointer = -1;
@@ -352,7 +361,7 @@ void hook(uc_engine *uc, const uint64_t address, const uint32_t size, void *user
     if ((!debugModeEnabled && !debugRun) || (executionComplete) || (pauseNext && pausedLineNo != lineNumber)){
         LOG_DEBUG("Execution halted.");
         uc_emu_stop(uc);
-        uc_context_save(uc, context);
+        saveUCContext(uc, context);
 
         if (executionComplete){
             editor->HighlightDebugCurrentLine(lastInstructionLineNo - 1);
@@ -362,6 +371,7 @@ void hook(uc_engine *uc, const uint64_t address, const uint32_t size, void *user
             LOG_DEBUG("Pause next detected!");
             pauseNext = false;
         }
+        criticalSection.unlock();
         return;
     }
 
@@ -385,7 +395,7 @@ void hook(uc_engine *uc, const uint64_t address, const uint32_t size, void *user
         runUntilLine = 0;
         runUntilHere = false;
         uc_emu_stop(uc);
-        uc_context_save(uc, context);
+        saveUCContext(uc, context);
     }
 
     if (eraseTempBP) {
@@ -415,7 +425,7 @@ void hook(uc_engine *uc, const uint64_t address, const uint32_t size, void *user
     if (ip != expectedIP && expectedIP != 0 && !currentLabel.empty()) {
         if (lastLineNo == labelLineNoRange[currentLabel].second && lineNumber != lastLineNo) {
             uc_emu_stop(uc);
-            uc_context_save(uc, context);
+            saveUCContext(uc, context);
         }
     }
 
@@ -464,7 +474,7 @@ void hook(uc_engine *uc, const uint64_t address, const uint32_t size, void *user
             else if (!continueOverBreakpoint){
                 LOG_DEBUG("Breakpoint hit!");
                 uc_emu_stop(uc);
-                uc_context_save(uc, context);
+                saveUCContext(uc, context);
                 continueOverBreakpoint = true;
                 return;
             }
@@ -492,15 +502,16 @@ void hook(uc_engine *uc, const uint64_t address, const uint32_t size, void *user
         pausedLineNo = lineNumber;
     }
     
-    uc_context_save(uc, context);
+    saveUCContext(uc, context);
     codeCurrentLen += size;
     expectedIP += size;
     lastLineNo = lineNumber;
+    criticalSection.unlock();
 }
 
 bool updateStack = false;
 void hookStackWrite(uc_engine *uc, const uint64_t address, const uint32_t size, void *user_data) {
-    updateStack = true;
+//    updateStack = true;
 }
 
 bool preExecutionSetup(const std::string& codeIn) {
@@ -578,6 +589,7 @@ bool createStack(void* unicornEngine){
 
 bool resetState(){
     LOG_INFO("Resetting state...");
+    criticalSection.lock();
     codeHasRun = false;
     stepClickedOnce = false;
     continueOverBreakpoint = false;
@@ -595,7 +607,7 @@ bool resetState(){
     assembly.clear();
     assembly.str("");
     instructionSizes.clear();
-    addressLineNoMap.clear();
+
     editor->ClearExtraCursors();
     editor->ClearSelections();
     editor->HighlightDebugCurrentLine(-1);
@@ -605,7 +617,7 @@ bool resetState(){
             tempUC = nullptr;
         }
 
-        uc_close(uc);
+//        uc_close(uc);
         uc = nullptr;
     }
 
@@ -630,6 +642,7 @@ bool resetState(){
 
     labels.clear();
     emptyLineNumbers.clear();
+    addressLineNoMap.clear();
     labelLineNoMapInternal.clear();
     labelLineNoRange.clear();
 
@@ -639,6 +652,7 @@ bool resetState(){
     labelLineNoMapInternal = {};
 
      if (getBytes(selectedFile).empty()) {
+         criticalSection.unlock();
         return false;
     }
 
@@ -648,10 +662,12 @@ bool resetState(){
 
     if (!createStack(&uc)){
         LOG_ERROR("Unable to create stack!");
+        criticalSection.unlock();
         return false;
     }
 
     LOG_DEBUG("State reset completed!");
+    criticalSection.unlock();
     return true;
 }
 
@@ -661,6 +677,7 @@ bool runningAsContinue = false;
 bool stepCode(const size_t instructionCount){
     LOG_DEBUG("Stepping into code...");
     if (isCodeRunning || executionComplete){
+        criticalSection.unlock();
         return true;
     }
 
@@ -670,7 +687,7 @@ bool stepCode(const size_t instructionCount){
     isCodeRunning = true;
     if (instructionCount == 1) {
         LOG_DEBUG("Using a workaround...");
-        uc_context_save(uc, context);
+        saveUCContext(uc, context);
         // ucInit(uc);
         createStack(uc);
         preExecutionSetup(getBytes(selectedFile));
@@ -678,6 +695,7 @@ bool stepCode(const size_t instructionCount){
         skipBreakpoints = true;
     }
 
+    criticalSection.lock();
     const auto err = uc_emu_start(uc, ip, ENTRY_POINT_ADDRESS + CODE_BUF_SIZE, 0, instructionCount);
     if (err) {
         printf("Failed on uc_emu_start() with error returned %u: %s\n",
@@ -695,7 +713,11 @@ bool stepCode(const size_t instructionCount){
     }
 
     {
-        uc_context_save(uc, context);
+        if (saveUCContext(uc, context) == UC_CONTEXT_SAVE_FAILED){
+            criticalSection.unlock();
+            return false;
+        }
+
         ip = getRegisterValue(getArchIPStr(codeInformation.mode), false).eightByteVal;
         if (ip != expectedIP){
             expectedIP = ip;
@@ -708,16 +730,20 @@ bool stepCode(const size_t instructionCount){
             editor->HighlightDebugCurrentLine(lineNo - 1);
         }
         else{
+            criticalSection.unlock();
             return true;
         }
     }
 
-    uc_context_save(uc, context);
+    saveUCContext(uc, context);
+    criticalSection.unlock();
+
     codeHasRun = true;
 
     if (skipBreakpoints){
-        skipBreakpoints = false;
+        skipBreakpoints = !skipBreakpoints;
     }
+
     if (runningAsContinue) {
         runningAsContinue = !runningAsContinue;
     }
@@ -736,7 +762,7 @@ bool runCode(const std::string& codeIn, uint64_t instructionCount)
     if (instructionCount != 1 || (stepClickedOnce)){
         const uc_err err = uc_emu_start(uc, ENTRY_POINT_ADDRESS, ENTRY_POINT_ADDRESS + CODE_BUF_SIZE, 0, instructionCount);
         if (runningTempCode){
-            uc_context_save(uc, context);
+            saveUCContext(uc, context);
             updateRegs();
         }
 
@@ -754,7 +780,7 @@ bool runCode(const std::string& codeIn, uint64_t instructionCount)
         codeBuf = nullptr;
     }
     else {
-        uc_context_save(uc, context);
+        saveUCContext(uc, context);
 
         auto line = addressLineNoMap[std::to_string(ENTRY_POINT_ADDRESS)];
         if (line.empty()){
