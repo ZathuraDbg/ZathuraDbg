@@ -17,7 +17,8 @@ ZathuraDbg is still in beta, so expect major changes in the framework used or th
 # Installation
 1. Download the AppImage from the [releases](https://github.com/ZathuraDbg/ZathuraDbg/releases) page.
 2. Execute `chmod +x ZathuraDbg-*AppImage`
-2. Run the program with `./ZathuraDbg-*AppImage`
+3. Run the program with `./ZathuraDbg-*AppImage`
+Make sure you have glibc 2.38 or later installed.
 
 # Usage
 - [Video Tutorial](https://www.youtube.com/watch?v=NMq5xL3v2hw)
