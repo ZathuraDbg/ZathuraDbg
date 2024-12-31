@@ -17,6 +17,7 @@ const ks_mode armKSModes[] = {KS_MODE_ARM, KS_MODE_THUMB, KS_MODE_V8, KS_MODE_V9
 const cs_mode armCSMOdes[] = {CS_MODE_ARM, CS_MODE_THUMB, CS_MODE_V8, CS_MODE_V9};
 
 bool debugRestart = false;
+bool memoryMapsUI = false;
 bool debugStepIn = false;
 bool debugStepOver = false;
 bool debugContinue = false;
@@ -221,6 +222,7 @@ void appMenuBar()
             ImGui::MenuItem("Step Over", "CTRL+K", &debugStepOver, debugModeEnabled ? true : false);
             ImGui::MenuItem("Continue", debugModeEnabled ? "F5" : nullptr, &debugContinue, debugModeEnabled ? true : false);
             ImGui::MenuItem("Restart debugging", "CTRL+F5", &debugRestart, debugModeEnabled ? true : false);
+            ImGui::MenuItem("Memory maps", "CTRL+F7", &memoryMapsUI, true);
             ImGui::Separator();
             ImGui::EndMenu();
         }

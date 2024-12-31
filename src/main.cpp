@@ -164,7 +164,6 @@ int main(int argc, const char** argv)
         isRunning = true;
 
         mainWindow();
-
         if (!isRunning){
             LOG_ERROR("Quitting!");
             glfwSetWindowShouldClose(window, 1);
