@@ -11,6 +11,8 @@
 #include <regex>
 #include "../../vendor/tinyexpr/tinyexpr.h"
 #include "../actions/actions.hpp"
+#include "../actions/actions.hpp"
+#include "../../utils/uiElements.h"
 
 struct newMemEditWindowsInfo{
     MemoryEditor memEditor;
@@ -18,6 +20,18 @@ struct newMemEditWindowsInfo{
     size_t size{};
 };
 
+enum contextMenuOption {
+    REGISTER_HIDDEN,
+    LANES_TOGGLED,
+    NORMAL_ACTION
+};
+
+typedef struct
+{
+    uint64_t start;
+    uint64_t end;
+    uint32_t perms;
+} memoryMapInfo;
 
 enum arch{
     x86 = 0,
@@ -43,6 +57,7 @@ extern bool debugStop;
 extern bool debugPause;
 extern bool debugRun;
 extern bool enableDebugMode;
+extern bool memoryMapsUI;
 
 extern const uc_mode x86UCModes[];
 extern const uc_mode armUCModes[];
@@ -81,4 +96,6 @@ extern void parseRegisterValueInput(const std::string& regName, const char *regV
 extern void removeRegisterFromView(const std::string& reg, int regType = 1);
 extern std::string getRegisterActualName(const std::string& regName);
 extern bool updateRegistersOnLaneChange();
+extern std::vector<memoryMapInfo> getMemoryMapping(uc_engine* uc);
+extern void memoryMapWindow();
 #endif

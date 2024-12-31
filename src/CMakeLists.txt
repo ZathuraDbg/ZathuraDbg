@@ -51,6 +51,9 @@ set(SOURCES
         app/codeContextMenu.cpp
         app/codeContextMenu.hpp
         utils/stb_image.h
+        app/windows/memoryMapView.cpp
+        utils/uiElements.cpp
+        utils/uiElements.h
 )
 
 # Include directories

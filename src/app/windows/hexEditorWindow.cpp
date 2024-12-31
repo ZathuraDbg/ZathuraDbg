@@ -344,7 +344,7 @@ bool createNewWindow(){
 }
 
 bool setBaseAddr(){
-    auto [address, size] = infoPopup("Modify Base Address", "8192 bytes default");
+   auto [address, size] = infoPopup("Modify Base Address", "8192 bytes default");
    if (address && size){
         MEMORY_EDITOR_BASE = address;
         return true;

@@ -322,7 +322,6 @@ void runActions(){
     }
 
     if (changeEmulationSettingsOpt){
-        LOG_INFO("Change in emulation settings requested!");
         changeEmulationSettings();
     }
 
@@ -340,5 +339,10 @@ void runActions(){
         LOG_INFO("Going to label's definiton...");
         editor->SelectLabelDefinition(false);
         goToDefinition = false;
+    }
+
+    if (memoryMapsUI)
+    {
+        memoryMapWindow();
     }
 }

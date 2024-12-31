@@ -313,12 +313,6 @@ int checkHexCharsCallback(ImGuiInputTextCallbackData* data)
     return 0; // Return 0 to indicate successful handling
 }
 
-enum contextMenuOption {
-    REGISTER_HIDDEN,
-    LANES_TOGGLED,
-    NORMAL_ACTION
-};
-
 bool contextShown = false;
 contextMenuOption registerContextMenu(){
     contextMenuOption menuOption = NORMAL_ACTION;
@@ -831,13 +825,9 @@ bool updateRegistersOnLaneChange() {
         const auto regSize = getRegisterActualSize(regName);
         if (regSize > 64) {
             int type = 0;
-            int laneStart{}, laneEnd{};
 
             std::string s1 = regName.substr(regName.find_first_of('[') + 1);
             s1.erase(s1.size() - 1);
-
-            laneStart = std::atoi(s1.substr(0, s1.find_first_of(':')).c_str());
-            laneEnd = std::atoi(s1.substr(s1.find_first_of(':')+1).c_str()) + 1;
 
             if (regSize == 128) {
                 type = 1;

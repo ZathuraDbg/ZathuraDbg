@@ -31,6 +31,10 @@ void manageShortcuts(){
     if (isCtrlShortcut && (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Period)))){
         changeEmulationSettingsOpt = true;
     }
+    if (isCtrlShortcut && (ImGui::IsKeyDown(ImGui::GetKeyIndex(ImGuiKey_F7))))
+    {
+        memoryMapsUI = true;
+    }
     if (isCtrlShiftShortcut && (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_M)))){
        saveContextToFile = true;
     }
