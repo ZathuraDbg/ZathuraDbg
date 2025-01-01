@@ -302,12 +302,11 @@ void memoryMapWindow()
                     }
                     endAddrChanged = false;
                 }
-
             }
+
+            ImGui::PopFont();
             free(thing);
             ImGui::EndTable();
-
-
         }
     }
 
