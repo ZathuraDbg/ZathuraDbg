@@ -149,8 +149,17 @@ bool expandMemoryRegion(uc_engine* uc, const uint64_t startAddr, uint64_t oldEnd
     return true;
 }
 
+static int lastMemInfoSize;
+bool keep = false;
 void memoryMapWindow()
 {
+    bool tableUpdated = false;
+    bool tableSizeInc = false;
+
+    auto memInfo = getMemoryMapping(uc);
+    auto [x, y] = ImGui::GetWindowSize();
+    ImGui::SetNextWindowSize({x, (y - 130 + (25 * memInfo.size()))});
+
     if (ImGui::Begin("Memory Mappings"))
     {
         ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[JetBrainsMono20]);
@@ -164,19 +173,34 @@ void memoryMapWindow()
             ImGui::TableHeadersRow();
 
             std::string startAddrStr{};
-            std::string endAddrStr = "0x";
+            std::string endAddrStr;
             uint64_t newEndAddr{};
+
             ImGui::TableNextRow();
             ImGui::TableSetColumnIndex(0);
-            auto memInfo = getMemoryMapping(uc);
+
             bool read;
             bool write;
             bool execute;
             bool permsChanged = false;
             bool endAddrChanged = false;
+
             float posX{};
             float posY{};
-            char* thing = (char*)malloc(80);
+
+            if (lastMemInfoSize > 0 && (lastMemInfoSize != memInfo.size()))
+            {
+                tableUpdated = true;
+                if (lastMemInfoSize < memInfo.size())
+                {
+                    tableSizeInc = true;
+                }
+            }
+
+            lastMemInfoSize = memInfo.size();
+            const auto inputValue = static_cast<char*>(malloc(80));
+
+
             for (int i = 0; i < memInfo.size(); i++)
             {
                 ImGui::PushID((i + 1) * 91);
@@ -213,12 +237,10 @@ void memoryMapWindow()
                 ImGui::PushID(("third" + std::to_string(i)).c_str());
                 ImGui::SetNextItemWidth(150);
 
-                strncpy(thing, std::to_string(memInfo[i].end + 1).c_str(),
-                        std::to_string(memInfo[i].end + 1).length());;
-                if (InputHexadecimal("##end_addr", thing,
-                                     ImGuiInputTextFlags_CharsNoBlank | ImGuiInputTextFlags_EnterReturnsTrue))
+                strncpy(inputValue, std::to_string(memInfo[i].end + 1).c_str(), std::to_string(memInfo[i].end + 1).length());
+                if (InputHexadecimal("##end_addr", inputValue, ImGuiInputTextFlags_CharsNoBlank | ImGuiInputTextFlags_EnterReturnsTrue))
                 {
-                    newEndAddr = strtol(thing, nullptr, 16);
+                    newEndAddr = strtol(inputValue, nullptr, 16);
                     if (newEndAddr != memInfo[i].end || newEndAddr != (memInfo[i].end + 1))
                     {
                         endAddrChanged = true;
@@ -305,11 +327,53 @@ void memoryMapWindow()
             }
 
             ImGui::PopFont();
-            free(thing);
+            free(inputValue);
             ImGui::EndTable();
         }
+
+        if (tableUpdated)
+        {
+            auto [x, y] = ImGui::GetWindowSize();
+            if (tableSizeInc)
+            {
+                ImGui::SetNextWindowSize({x, y + 25});
+            }
+            else
+            {
+                ImGui::SetNextWindowSize({x, y - 25});
+            }
+        }
+
+        ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[RubikRegular16]);
+        if (ImGui::Button("ADD"))
+        {
+            keep = true;
+        }
+
+        ImGui::PopFont();
     }
 
+    if (keep)
+    {
+        auto [address, size] = infoPopup("Map a new region", "Multiple of 4KB");
+        if (address != 0 && size != 0)
+        {
+            uc_err ucErr = uc_mem_map(uc, address, size, UC_PROT_NONE);
+            if (ucErr != UC_ERR_OK)
+            {
+                LOG_INFO("Unable to map the newly requested memory region.");
+                keep = false;
+            }
+            else
+            {
+                keep =  false;
+            }
+        }
+        if (address == 0 && size == 1)
+        {
+            keep = false;
+        }
+    }
     ImGui::End();
     ImGui::CloseCurrentPopup();
 }

@@ -98,4 +98,5 @@ extern std::string getRegisterActualName(const std::string& regName);
 extern bool updateRegistersOnLaneChange();
 extern std::vector<memoryMapInfo> getMemoryMapping(uc_engine* uc);
 extern void memoryMapWindow();
+extern std::pair<size_t, size_t> infoPopup(const std::string& title = "", const std::string& sizeHint = "");
 #endif

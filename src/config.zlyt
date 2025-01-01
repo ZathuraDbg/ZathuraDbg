@@ -49,8 +49,8 @@ Size=473,121
 Collapsed=0
 
 [Window][Memory Mappings]
-Pos=133,369
-Size=688,199
+Pos=97,317
+Size=891,148
 Collapsed=0
 DockId=0x00000009,0
 
@@ -82,10 +82,10 @@ Column 2  Weight=1.0000
 Column 3  Weight=1.0000
 
 [Table][0x800062B0,4]
-Column 0  Weight=0.1963
+Column 0  Weight=0.1957
 Column 1  Weight=0.9069
-Column 2  Weight=0.8190
-Column 3  Weight=2.0778
+Column 2  Weight=0.8305
+Column 3  Weight=2.0668
 
 [Table][0x8DECF2ED,4]
 Column 0  Weight=0.1437
@@ -100,7 +100,7 @@ Column 2  Weight=0.7151
 Column 3  Weight=1.9545
 
 [Docking][Data]
-DockNode        ID=0x00000009 Pos=133,369 Size=688,199 Selected=0x02272699
+DockNode        ID=0x00000009 Pos=97,317 Size=891,148 Selected=0x02272699
 DockSpace       ID=0x7C6B3D9B Window=0xA87D555D Pos=0,22 Size=945,1010 Split=X
   DockNode      ID=0x00000001 Parent=0x7C6B3D9B SizeRef=683,1058 Selected=0xD5FB4B5E
   DockNode      ID=0x00000006 Parent=0x7C6B3D9B SizeRef=260,1058 Split=Y
@@ -108,6 +108,6 @@ DockSpace       ID=0x7C6B3D9B Window=0xA87D555D Pos=0,22 Size=945,1010 Split=X
       DockNode  ID=0x00000008 Parent=0x00000003 SizeRef=160,526 Selected=0x49278EEE
       DockNode  ID=0x00000002 Parent=0x00000003 SizeRef=98,526 Selected=0x7596994F
     DockNode    ID=0x00000007 Parent=0x00000006 SizeRef=1920,410 Split=X Selected=0x380C1307
-      DockNode  ID=0x00000004 Parent=0x00000007 SizeRef=20,530 CentralNode=1 Selected=0x380C1307
-      DockNode  ID=0x00000005 Parent=0x00000007 SizeRef=238,530 Selected=0x600D52CA
+      DockNode  ID=0x00000004 Parent=0x00000007 SizeRef=832,530 CentralNode=1 Selected=0x380C1307
+      DockNode  ID=0x00000005 Parent=0x00000007 SizeRef=401,530 Selected=0x600D52CA
 

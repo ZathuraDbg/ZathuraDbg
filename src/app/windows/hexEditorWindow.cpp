@@ -16,9 +16,9 @@ void hexWriteFunc(ImU8* data, size_t off, ImU8 d){
     }
 }
 
-std::pair<size_t, size_t> infoPopup(const std::string& title = "", const std::string& sizeHint = "") {
+std::pair<size_t, size_t> infoPopup(const std::string& title, const std::string& sizeHint) {
     ImGui::OpenPopup("InputPopup");
-    std::pair<size_t, size_t> windowInfo;
+    std::pair<size_t, size_t> windowInfo{};
 
     const ImVec2 parentPos = ImGui::GetWindowPos();
     const ImVec2 parentSize = ImGui::GetWindowSize();
@@ -85,6 +85,7 @@ std::pair<size_t, size_t> infoPopup(const std::string& title = "", const std::st
             ImGui::CloseCurrentPopup();
             ImGui::EndPopup();
             ImGui::PopStyleVar();
+
             windowInfo.first = hexStrToInt(addrNewWin);
             windowInfo.second = atol(size);
 
@@ -92,6 +93,8 @@ std::pair<size_t, size_t> infoPopup(const std::string& title = "", const std::st
                 return {0, 1};
             }
 
+            addrNewWin[0] = '\0';
+            size[0] = '\0';
             return windowInfo;
         }
 
@@ -104,6 +107,8 @@ std::pair<size_t, size_t> infoPopup(const std::string& title = "", const std::st
             ImGui::CloseCurrentPopup();
             ImGui::EndPopup();
             ImGui::PopStyleVar();
+            addrNewWin[0] = '\0';
+            size[0] = '\0';
             return {0, 1};
         }
 
@@ -337,24 +342,6 @@ bool createNewWindow(){
         return true;
     }
     else if (address && (!size) || (!address && size)){
-        return true;
-    }
-
-    return false;
-}
-
-bool setBaseAddr(){
-   auto [address, size] = infoPopup("Modify Base Address", "8192 bytes default");
-   if (address && size){
-        MEMORY_EDITOR_BASE = address;
-        return true;
-    }
-    else if (address && (!size)) {
-        MEMORY_EDITOR_BASE = address;
-        MEMORY_DEFAULT_SIZE = 8192;
-        return true;
-    }
-    else if ((!address && size)){
         return true;
     }
 
