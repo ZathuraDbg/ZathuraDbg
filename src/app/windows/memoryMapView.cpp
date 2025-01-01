@@ -158,7 +158,7 @@ void memoryMapWindow()
 
     auto memInfo = getMemoryMapping(uc);
     auto [x, y] = ImGui::GetWindowSize();
-    ImGui::SetNextWindowSize({x, (y - 130 + (25 * memInfo.size()))});
+    ImGui::SetNextWindowSize({x - 230, (y - 130 + (25 * memInfo.size()))});
 
     if (ImGui::Begin("Memory Mappings"))
     {
@@ -199,7 +199,6 @@ void memoryMapWindow()
 
             lastMemInfoSize = memInfo.size();
             const auto inputValue = static_cast<char*>(malloc(80));
-
 
             for (int i = 0; i < memInfo.size(); i++)
             {
