@@ -1,28 +1,5 @@
 #include "windows.hpp"
 
-std::vector<std::string> constToPermsStr(const uint32_t constant)
-{
-    std::vector<std::string> outRes;
-    if (constant & UC_PROT_READ)
-    {
-        outRes.emplace_back("Read");
-    }
-    if (constant & UC_PROT_WRITE)
-    {
-        outRes.emplace_back("Write");
-    }
-    if (constant & UC_PROT_EXEC)
-    {
-        outRes.emplace_back("Execute");
-    }
-    if (constant & UC_PROT_NONE)
-    {
-        outRes.emplace_back("None");
-    }
-
-    return outRes;
-}
-
 std::vector<memoryMapInfo> getMemoryMapping(uc_engine* uc)
 {
     uc_mem_region* regionsInformation;
@@ -56,7 +33,7 @@ inline bool updateMemoryPermissions(uc_engine* uc, const uint64_t startAddr, con
 }
 
 bool expandMemoryRegion(uc_engine* uc, const uint64_t startAddr, uint64_t oldEndAddr, uint64_t newEndAddr,
-                        const uint64_t oldSize, uint32_t perms)
+                        const uint64_t oldSize, const uint32_t perms)
 {
     if (!(perms & UC_PROT_READ && perms & UC_PROT_WRITE))
     {

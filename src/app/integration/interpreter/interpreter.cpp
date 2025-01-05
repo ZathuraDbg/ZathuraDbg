@@ -312,7 +312,7 @@ bool ucInit(void* unicornEngine){
         initArch();
     }
 
-    if (auto err = uc_open(codeInformation.archUC, codeInformation.mode, static_cast<uc_engine **>(unicornEngine))) {
+    if (auto err = uc_open(codeInformation.archUC, codeInformation.mode, static_cast<uc_engine **>(unicornEngine)); err != UC_ERR_OK) {
         LOG_ERROR("Failed to initialise Unicorn Engine!");
         tinyfd_messageBox("ERROR!", "Could not initialize Unicorn Engine. Please check if the environment is correctly setup.", "ok", "error", 0);
         return false;
@@ -349,7 +349,7 @@ void hook(uc_engine *uc, const uint64_t address, const uint32_t size, void *user
     std::string currentLabel{};
 
     int lineNumber = -1;
-    std::string str = addressLineNoMap[std::to_string(address)];
+    const std::string str = addressLineNoMap[std::to_string(address)];
     if (!str.empty()){
         lineNumber = std::atoi(str.c_str());
     }
@@ -403,7 +403,7 @@ void hook(uc_engine *uc, const uint64_t address, const uint32_t size, void *user
         breakpointMutex.lock();
         LOG_DEBUG("Removing step over breakpoint line number: " << stepOverBPLineNo);
         if (!breakpointLines.empty()) {
-            breakpointLines.erase(std::find(breakpointLines.begin(), breakpointLines.end(), stepOverBPLineNo));
+            breakpointLines.erase(std::ranges::find(breakpointLines, stepOverBPLineNo));
         }
 
         breakpointMutex.unlock();
@@ -551,10 +551,10 @@ bool createStack(void* unicornEngine){
         return false;
     }
 
-    uint8_t *zeroBuf = (uint8_t *)malloc(STACK_SIZE);
+    auto *zeroBuf = static_cast<uint8_t*>(malloc(STACK_SIZE));
 
     memset(zeroBuf, 0, STACK_SIZE);
-    auto err = uc_mem_map(uc, STACK_ADDRESS, STACK_SIZE, UC_PROT_READ | UC_PROT_WRITE);
+    const auto err = uc_mem_map(uc, STACK_ADDRESS, STACK_SIZE, UC_PROT_READ | UC_PROT_WRITE);
     if (err && err != UC_ERR_MAP){
         LOG_ERROR("Failed to memory map the stack!!");
         return false;

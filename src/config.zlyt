@@ -50,7 +50,7 @@ Collapsed=0
 
 [Window][Memory Mappings]
 Pos=77,540
-Size=661,149
+Size=661,124
 Collapsed=0
 DockId=0x00000009,0
 
@@ -100,7 +100,7 @@ Column 2  Weight=0.7151
 Column 3  Weight=1.9545
 
 [Docking][Data]
-DockNode        ID=0x00000009 Pos=77,540 Size=661,149 Selected=0x02272699
+DockNode        ID=0x00000009 Pos=77,540 Size=661,124 Selected=0x02272699
 DockSpace       ID=0x7C6B3D9B Window=0xA87D555D Pos=0,22 Size=945,1010 Split=X
   DockNode      ID=0x00000001 Parent=0x7C6B3D9B SizeRef=683,1058 Selected=0xD5FB4B5E
   DockNode      ID=0x00000006 Parent=0x7C6B3D9B SizeRef=260,1058 Split=Y

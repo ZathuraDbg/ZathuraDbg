@@ -16,7 +16,6 @@
 #include <chrono>
 #include <thread>
 #include <filesystem>
-#include <fstream>
 GLFWwindow* window = nullptr;
 #if defined(_MSC_VER) && (_MSC_VER >= 1900) && !defined(IMGUI_DISABLE_WIN32_FUNCTIONS)
 #pragma comment(lib, "legacy_stdio_definitions")
@@ -98,7 +97,6 @@ int main(int argc, const char** argv)
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
     io.IniFilename = "config.zlyt";
-    const char* currentPath = executablePath.c_str();
 	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
     loadIniFile();
@@ -115,7 +113,7 @@ int main(int argc, const char** argv)
     ImGui_ImplOpenGL3_Init(glsl_version);
 
     GLFWimage icons[1];
-    icons[0].pixels = stbi_load("../assets/ZathuraDbg.png", &icons[0].width, &icons[0].height, 0, 4);
+    icons[0].pixels = stbi_load("../assets/ZathuraDbg.png", &icons[0].width, &icons[0].height, nullptr, 4);
     glfwSetWindowIcon(window, 1, icons); // Set icon
     stbi_image_free(icons[0].pixels);
 

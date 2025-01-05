@@ -186,7 +186,7 @@ std::vector<uint8_t> hexToBytes(const std::string &hex) {
     return bytes;
 }
 
-void pasteCallback(std::string clipboardText) {
+void pasteCallback(const std::string& clipboardText) {
     if (clipboardText.starts_with("\\x")) {
         csh handle{};
         cs_insn *instruction{};
