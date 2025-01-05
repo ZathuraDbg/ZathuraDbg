@@ -10,37 +10,37 @@ Collapsed=0
 
 [Window][Code]
 Pos=0,22
-Size=683,1058
+Size=683,1010
 Collapsed=0
 DockId=0x00000001,0
 
 [Window][Register Values]
-Pos=1452,22
-Size=468,646
+Pos=847,22
+Size=98,646
 Collapsed=0
 DockId=0x00000002,0
 
 [Window][Console]
 Pos=685,22
-Size=765,646
+Size=160,646
 Collapsed=0
 DockId=0x00000008,0
 
 [Window][Memory Editor]
 Pos=685,670
-Size=832,410
+Size=20,362
 Collapsed=0
 DockId=0x00000004,0
 
 [Window][Stack]
-Pos=1519,670
-Size=401,410
+Pos=707,670
+Size=238,362
 Collapsed=0
 DockId=0x00000005,0
 
 [Window][WindowOverViewport_11111111]
 Pos=0,22
-Size=1920,1058
+Size=945,1010
 Collapsed=0
 
 [Window][memoryMapWindow]
@@ -49,8 +49,8 @@ Size=473,121
 Collapsed=0
 
 [Window][Memory Mappings]
-Pos=97,317
-Size=661,144
+Pos=77,540
+Size=661,149
 Collapsed=0
 DockId=0x00000009,0
 
@@ -100,8 +100,8 @@ Column 2  Weight=0.7151
 Column 3  Weight=1.9545
 
 [Docking][Data]
-DockNode        ID=0x00000009 Pos=97,317 Size=661,144 Selected=0x02272699
-DockSpace       ID=0x7C6B3D9B Window=0xA87D555D Pos=0,22 Size=1920,1058 Split=X
+DockNode        ID=0x00000009 Pos=77,540 Size=661,149 Selected=0x02272699
+DockSpace       ID=0x7C6B3D9B Window=0xA87D555D Pos=0,22 Size=945,1010 Split=X
   DockNode      ID=0x00000001 Parent=0x7C6B3D9B SizeRef=683,1058 Selected=0xD5FB4B5E
   DockNode      ID=0x00000006 Parent=0x7C6B3D9B SizeRef=260,1058 Split=Y
     DockNode    ID=0x00000003 Parent=0x00000006 SizeRef=1920,646 Split=X Selected=0x49278EEE
