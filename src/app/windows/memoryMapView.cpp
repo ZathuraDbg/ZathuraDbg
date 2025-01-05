@@ -153,15 +153,14 @@ static int lastMemInfoSize;
 bool keep = false;
 void memoryMapWindow()
 {
-    bool tableUpdated = false;
-    bool tableSizeInc = false;
-
     auto memInfo = getMemoryMapping(uc);
     auto [x, y] = ImGui::GetWindowSize();
-    ImGui::SetNextWindowSize({x - 230, (y - 130 + (25 * memInfo.size()))});
+    ImGui::SetNextWindowSize({x - 230, (y - 125 + (25 * memInfo.size()))});
 
     if (ImGui::Begin("Memory Mappings"))
     {
+        bool tableSizeInc = false;
+        bool tableUpdated = false;
         ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[JetBrainsMono20]);
         if (ImGui::BeginTable("memoryMapTable", 4,
                               ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_Resizable))
