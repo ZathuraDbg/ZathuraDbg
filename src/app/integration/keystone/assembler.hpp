@@ -1,7 +1,6 @@
 #ifndef ZATHURA_UI_ASSEMBLER_HPP
 #define ZATHURA_UI_ASSEMBLER_HPP
 
-#include <stdlib.h>
 #include <iostream>
 #include <sstream>
 #include <fstream>
@@ -11,9 +10,6 @@
 
 #include "../../dialogs/dialogHeader.hpp"
 #include "../../../vendor/keystone/include/keystone/keystone.h"
-#include "../../../vendor/keystone/include/keystone/x86.h"
-#include "../../../vendor/log/clue.hpp"
-#include "../utils/hex/hex.hpp"
 
 #define ASM_FILE_NAME selectedFile.c_str()
 

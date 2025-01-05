@@ -48,7 +48,7 @@ bool setupButtons() {
 
     ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[6]);
 
-    if (ImGui::Button(ICON_CI_FOLDER_OPENED, ImVec2(20, 20))) {
+    if (ImGui::Button(ICON_CI_FILE_CODE, ImVec2(20, 20))) {
         openFile = true;
     }
 
