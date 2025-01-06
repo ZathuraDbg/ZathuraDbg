@@ -325,6 +325,21 @@ void memoryMapWindow()
             keep = true;
         }
 
+
+        ImGui::SameLine();
+        auto [x, y] = ImGui::GetWindowSize();
+        const ImVec2 windowSize = ImGui::GetWindowSize();
+        const ImVec2 padding = ImGui::GetStyle().WindowPadding;
+
+        ImVec2 contentRegion = ImGui::GetContentRegionAvail();
+
+        const ImVec2 widgetSize = ImGui::CalcTextSize("Add");
+        ImGui::SetCursorPos(ImVec2(windowSize.x - padding.x - widgetSize.x - 8,
+                                   windowSize.y - padding.y - widgetSize.y + 16 - ImGui::GetFrameHeight()));
+        if (ImGui::Button("OK"))
+        {
+            memoryMapsUI = false;
+        }
         ImGui::PopFont();
     }
 
