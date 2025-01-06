@@ -511,7 +511,7 @@ void hook(uc_engine *uc, const uint64_t address, const uint32_t size, void *user
 
 bool updateStack = false;
 void hookStackWrite(uc_engine *uc, const uint64_t address, const uint32_t size, void *user_data) {
-//    updateStack = true;
+    updateStack = true;
 }
 
 bool preExecutionSetup(const std::string& codeIn) {

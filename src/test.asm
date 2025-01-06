@@ -14,6 +14,7 @@ main:
     jne nextblock
     push rax
     push rbx
+    nop
     
 subtract_hundred:
     sub rdi, 0x100

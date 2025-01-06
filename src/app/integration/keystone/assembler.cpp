@@ -276,7 +276,7 @@ std::string getBytes(const std::string& fileName){
     return hexlify({bytes.data(), size});
 }
 
-std::string getBytes(std::stringstream &assembly){
+std::string getBytes(const std::stringstream &assembly){
     const keystoneSettings ksSettings = {.arch = codeInformation.archKS, .mode = codeInformation.modeKS, .optionType = KS_OPT_SYNTAX, .optionValue=codeInformation.syntax};
     auto [bytes, size] = assemble(assembly.str(), ksSettings);
     LOG_INFO("Got bytes, now hexlifying...");

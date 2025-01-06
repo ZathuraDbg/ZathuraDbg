@@ -9,6 +9,8 @@
 #include <tsl/ordered_map.h>
 
 #include "../../dialogs/dialogHeader.hpp"
+#include "../tasks/editorTasks.hpp"
+#include "../../app/integration/utils/hex/hex.hpp"
 #include "../../../vendor/keystone/include/keystone/keystone.h"
 
 #define ASM_FILE_NAME selectedFile.c_str()
@@ -33,7 +35,7 @@ extern bool isFirstLineLabel;
 extern std::pair<std::string, std::size_t> assemble(const std::string& assemblyString, const keystoneSettings& ksSettings);
 extern uint64_t countValidInstructions(std::stringstream& asmStream);
 extern std::string getBytes(const std::string& fileName);
-extern std::string getBytes(std::stringstream& assembly);
+extern std::string getBytes(const std::stringstream& assembly);
 extern uint64_t codeFinalLen;
 extern ks_engine *ks;
 extern std::vector<uint64_t> emptyLineNumbers;
