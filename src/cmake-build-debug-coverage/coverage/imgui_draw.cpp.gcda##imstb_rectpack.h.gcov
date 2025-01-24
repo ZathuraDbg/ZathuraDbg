@@ -1,0 +1,888 @@
+        -:    0:Source:/home/rc/ZathuraDbg/vendor/imgui/imstb_rectpack.h
+        -:    0:Graph:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/home/rc/ZathuraDbg/vendor/imgui/imgui_draw.cpp.gcno
+        -:    0:Data:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/home/rc/ZathuraDbg/vendor/imgui/imgui_draw.cpp.gcda
+        -:    0:Runs:1
+        -:    1:// [DEAR IMGUI]
+        -:    2:// This is a slightly modified version of stb_rect_pack.h 1.01.
+        -:    3:// Grep for [DEAR IMGUI] to find the changes.
+        -:    4:// 
+        -:    5:// stb_rect_pack.h - v1.01 - public domain - rectangle packing
+        -:    6:// Sean Barrett 2014
+        -:    7://
+        -:    8:// Useful for e.g. packing rectangular textures into an atlas.
+        -:    9:// Does not do rotation.
+        -:   10://
+        -:   11:// Before #including,
+        -:   12://
+        -:   13://    #define STB_RECT_PACK_IMPLEMENTATION
+        -:   14://
+        -:   15:// in the file that you want to have the implementation.
+        -:   16://
+        -:   17:// Not necessarily the awesomest packing method, but better than
+        -:   18:// the totally naive one in stb_truetype (which is primarily what
+        -:   19:// this is meant to replace).
+        -:   20://
+        -:   21:// Has only had a few tests run, may have issues.
+        -:   22://
+        -:   23:// More docs to come.
+        -:   24://
+        -:   25:// No memory allocations; uses qsort() and assert() from stdlib.
+        -:   26:// Can override those by defining STBRP_SORT and STBRP_ASSERT.
+        -:   27://
+        -:   28:// This library currently uses the Skyline Bottom-Left algorithm.
+        -:   29://
+        -:   30:// Please note: better rectangle packers are welcome! Please
+        -:   31:// implement them to the same API, but with a different init
+        -:   32:// function.
+        -:   33://
+        -:   34:// Credits
+        -:   35://
+        -:   36://  Library
+        -:   37://    Sean Barrett
+        -:   38://  Minor features
+        -:   39://    Martins Mozeiko
+        -:   40://    github:IntellectualKitty
+        -:   41://
+        -:   42://  Bugfixes / warning fixes
+        -:   43://    Jeremy Jaussaud
+        -:   44://    Fabian Giesen
+        -:   45://
+        -:   46:// Version history:
+        -:   47://
+        -:   48://     1.01  (2021-07-11)  always use large rect mode, expose STBRP__MAXVAL in public section
+        -:   49://     1.00  (2019-02-25)  avoid small space waste; gracefully fail too-wide rectangles
+        -:   50://     0.99  (2019-02-07)  warning fixes
+        -:   51://     0.11  (2017-03-03)  return packing success/fail result
+        -:   52://     0.10  (2016-10-25)  remove cast-away-const to avoid warnings
+        -:   53://     0.09  (2016-08-27)  fix compiler warnings
+        -:   54://     0.08  (2015-09-13)  really fix bug with empty rects (w=0 or h=0)
+        -:   55://     0.07  (2015-09-13)  fix bug with empty rects (w=0 or h=0)
+        -:   56://     0.06  (2015-04-15)  added STBRP_SORT to allow replacing qsort
+        -:   57://     0.05:  added STBRP_ASSERT to allow replacing assert
+        -:   58://     0.04:  fixed minor bug in STBRP_LARGE_RECTS support
+        -:   59://     0.01:  initial release
+        -:   60://
+        -:   61:// LICENSE
+        -:   62://
+        -:   63://   See end of file for license information.
+        -:   64:
+        -:   65://////////////////////////////////////////////////////////////////////////////
+        -:   66://
+        -:   67://       INCLUDE SECTION
+        -:   68://
+        -:   69:
+        -:   70:#ifndef STB_INCLUDE_STB_RECT_PACK_H
+        -:   71:#define STB_INCLUDE_STB_RECT_PACK_H
+        -:   72:
+        -:   73:#define STB_RECT_PACK_VERSION  1
+        -:   74:
+        -:   75:#ifdef STBRP_STATIC
+        -:   76:#define STBRP_DEF static
+        -:   77:#else
+        -:   78:#define STBRP_DEF extern
+        -:   79:#endif
+        -:   80:
+        -:   81:#ifdef __cplusplus
+        -:   82:extern "C" {
+        -:   83:#endif
+        -:   84:
+        -:   85:typedef struct stbrp_context stbrp_context;
+        -:   86:typedef struct stbrp_node    stbrp_node;
+        -:   87:typedef struct stbrp_rect    stbrp_rect;
+        -:   88:
+        -:   89:typedef int            stbrp_coord;
+        -:   90:
+        -:   91:#define STBRP__MAXVAL  0x7fffffff
+        -:   92:// Mostly for internal use, but this is the maximum supported coordinate value.
+        -:   93:
+        -:   94:STBRP_DEF int stbrp_pack_rects (stbrp_context *context, stbrp_rect *rects, int num_rects);
+        -:   95:// Assign packed locations to rectangles. The rectangles are of type
+        -:   96:// 'stbrp_rect' defined below, stored in the array 'rects', and there
+        -:   97:// are 'num_rects' many of them.
+        -:   98://
+        -:   99:// Rectangles which are successfully packed have the 'was_packed' flag
+        -:  100:// set to a non-zero value and 'x' and 'y' store the minimum location
+        -:  101:// on each axis (i.e. bottom-left in cartesian coordinates, top-left
+        -:  102:// if you imagine y increasing downwards). Rectangles which do not fit
+        -:  103:// have the 'was_packed' flag set to 0.
+        -:  104://
+        -:  105:// You should not try to access the 'rects' array from another thread
+        -:  106:// while this function is running, as the function temporarily reorders
+        -:  107:// the array while it executes.
+        -:  108://
+        -:  109:// To pack into another rectangle, you need to call stbrp_init_target
+        -:  110:// again. To continue packing into the same rectangle, you can call
+        -:  111:// this function again. Calling this multiple times with multiple rect
+        -:  112:// arrays will probably produce worse packing results than calling it
+        -:  113:// a single time with the full rectangle array, but the option is
+        -:  114:// available.
+        -:  115://
+        -:  116:// The function returns 1 if all of the rectangles were successfully
+        -:  117:// packed and 0 otherwise.
+        -:  118:
+        -:  119:struct stbrp_rect
+        -:  120:{
+        -:  121:   // reserved for your use:
+        -:  122:   int            id;
+        -:  123:
+        -:  124:   // input:
+        -:  125:   stbrp_coord    w, h;
+        -:  126:
+        -:  127:   // output:
+        -:  128:   stbrp_coord    x, y;
+        -:  129:   int            was_packed;  // non-zero if valid packing
+        -:  130:
+        -:  131:}; // 16 bytes, nominally
+        -:  132:
+        -:  133:
+        -:  134:STBRP_DEF void stbrp_init_target (stbrp_context *context, int width, int height, stbrp_node *nodes, int num_nodes);
+        -:  135:// Initialize a rectangle packer to:
+        -:  136://    pack a rectangle that is 'width' by 'height' in dimensions
+        -:  137://    using temporary storage provided by the array 'nodes', which is 'num_nodes' long
+        -:  138://
+        -:  139:// You must call this function every time you start packing into a new target.
+        -:  140://
+        -:  141:// There is no "shutdown" function. The 'nodes' memory must stay valid for
+        -:  142:// the following stbrp_pack_rects() call (or calls), but can be freed after
+        -:  143:// the call (or calls) finish.
+        -:  144://
+        -:  145:// Note: to guarantee best results, either:
+        -:  146://       1. make sure 'num_nodes' >= 'width'
+        -:  147://   or  2. call stbrp_allow_out_of_mem() defined below with 'allow_out_of_mem = 1'
+        -:  148://
+        -:  149:// If you don't do either of the above things, widths will be quantized to multiples
+        -:  150:// of small integers to guarantee the algorithm doesn't run out of temporary storage.
+        -:  151://
+        -:  152:// If you do #2, then the non-quantized algorithm will be used, but the algorithm
+        -:  153:// may run out of temporary storage and be unable to pack some rectangles.
+        -:  154:
+        -:  155:STBRP_DEF void stbrp_setup_allow_out_of_mem (stbrp_context *context, int allow_out_of_mem);
+        -:  156:// Optionally call this function after init but before doing any packing to
+        -:  157:// change the handling of the out-of-temp-memory scenario, described above.
+        -:  158:// If you call init again, this will be reset to the default (false).
+        -:  159:
+        -:  160:
+        -:  161:STBRP_DEF void stbrp_setup_heuristic (stbrp_context *context, int heuristic);
+        -:  162:// Optionally select which packing heuristic the library should use. Different
+        -:  163:// heuristics will produce better/worse results for different data sets.
+        -:  164:// If you call init again, this will be reset to the default.
+        -:  165:
+        -:  166:enum
+        -:  167:{
+        -:  168:   STBRP_HEURISTIC_Skyline_default=0,
+        -:  169:   STBRP_HEURISTIC_Skyline_BL_sortHeight = STBRP_HEURISTIC_Skyline_default,
+        -:  170:   STBRP_HEURISTIC_Skyline_BF_sortHeight
+        -:  171:};
+        -:  172:
+        -:  173:
+        -:  174://////////////////////////////////////////////////////////////////////////////
+        -:  175://
+        -:  176:// the details of the following structures don't matter to you, but they must
+        -:  177:// be visible so you can handle the memory allocations for them
+        -:  178:
+        -:  179:struct stbrp_node
+        -:  180:{
+        -:  181:   stbrp_coord  x,y;
+        -:  182:   stbrp_node  *next;
+        -:  183:};
+        -:  184:
+        -:  185:struct stbrp_context
+        -:  186:{
+        -:  187:   int width;
+        -:  188:   int height;
+        -:  189:   int align;
+        -:  190:   int init_mode;
+        -:  191:   int heuristic;
+        -:  192:   int num_nodes;
+        -:  193:   stbrp_node *active_head;
+        -:  194:   stbrp_node *free_head;
+        -:  195:   stbrp_node extra[2]; // we allocate two extra nodes so optimal user-node-count is 'width' not 'width+2'
+        -:  196:};
+        -:  197:
+        -:  198:#ifdef __cplusplus
+        -:  199:}
+        -:  200:#endif
+        -:  201:
+        -:  202:#endif
+        -:  203:
+        -:  204://////////////////////////////////////////////////////////////////////////////
+        -:  205://
+        -:  206://     IMPLEMENTATION SECTION
+        -:  207://
+        -:  208:
+        -:  209:#ifdef STB_RECT_PACK_IMPLEMENTATION
+        -:  210:#ifndef STBRP_SORT
+        -:  211:#include <stdlib.h>
+        -:  212:#define STBRP_SORT qsort
+        -:  213:#endif
+        -:  214:
+        -:  215:#ifndef STBRP_ASSERT
+        -:  216:#include <assert.h>
+        -:  217:#define STBRP_ASSERT assert
+        -:  218:#endif
+        -:  219:
+        -:  220:#ifdef _MSC_VER
+        -:  221:#define STBRP__NOTUSED(v)  (void)(v)
+        -:  222:#define STBRP__CDECL       __cdecl
+        -:  223:#else
+        -:  224:#define STBRP__NOTUSED(v)  (void)sizeof(v)
+        -:  225:#define STBRP__CDECL
+        -:  226:#endif
+        -:  227:
+        -:  228:enum
+        -:  229:{
+        -:  230:   STBRP__INIT_skyline = 1
+        -:  231:};
+        -:  232:
+function stbrp_setup_heuristic called 0 returned 0% blocks executed 0%
+    #####:  233:STBRP_DEF void stbrp_setup_heuristic(stbrp_context *context, int heuristic)
+        -:  234:{
+    #####:  235:   switch (context->init_mode) {
+    %%%%%:  235-block 2
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  236:      case STBRP__INIT_skyline:
+    #####:  237:         STBRP_ASSERT(heuristic == STBRP_HEURISTIC_Skyline_BL_sortHeight || heuristic == STBRP_HEURISTIC_Skyline_BF_sortHeight);
+    %%%%%:  237-block 3
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  237-block 4
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    %%%%%:  237-block 5
+call    4 never executed
+    #####:  238:         context->heuristic = heuristic;
+    #####:  239:         break;
+    %%%%%:  239-block 6
+    #####:  240:      default:
+    #####:  241:         STBRP_ASSERT(0);
+    %%%%%:  241-block 7
+call    0 never executed
+        -:  242:   }
+    #####:  243:}
+        -:  244:
+function stbrp_setup_allow_out_of_mem called 1 returned 100% blocks executed 75%
+        1:  245:STBRP_DEF void stbrp_setup_allow_out_of_mem(stbrp_context *context, int allow_out_of_mem)
+        -:  246:{
+        1:  247:   if (allow_out_of_mem)
+        1:  247-block 2
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+        -:  248:      // if it's ok to run out of memory, then don't bother aligning them;
+        -:  249:      // this gives better packing, but may fail due to OOM (even though
+        -:  250:      // the rectangles easily fit). @TODO a smarter approach would be to only
+        -:  251:      // quantize once we've hit OOM, then we could get rid of this parameter.
+    #####:  252:      context->align = 1;
+    %%%%%:  252-block 3
+        -:  253:   else {
+        -:  254:      // if it's not ok to run out of memory, then quantize the widths
+        -:  255:      // so that num_nodes is always enough nodes.
+        -:  256:      //
+        -:  257:      // I.e. num_nodes * align >= width
+        -:  258:      //                  align >= width / num_nodes
+        -:  259:      //                  align = ceil(width/num_nodes)
+        -:  260:
+        1:  261:      context->align = (context->width + context->num_nodes-1) / context->num_nodes;
+        1:  261-block 4
+        -:  262:   }
+        1:  263:}
+        -:  264:
+function stbrp_init_target called 1 returned 100% blocks executed 100%
+        1:  265:STBRP_DEF void stbrp_init_target(stbrp_context *context, int width, int height, stbrp_node *nodes, int num_nodes)
+        -:  266:{
+        -:  267:   int i;
+        -:  268:
+     1023:  269:   for (i=0; i < num_nodes-1; ++i)
+        1:  269-block 2
+     1023:  269-block 4
+branch  0 taken 1022
+branch  1 taken 1 (fallthrough)
+     1022:  270:      nodes[i].next = &nodes[i+1];
+     1022:  270-block 3
+        1:  271:   nodes[i].next = NULL;
+        1:  272:   context->init_mode = STBRP__INIT_skyline;
+        1:  273:   context->heuristic = STBRP_HEURISTIC_Skyline_default;
+        1:  274:   context->free_head = &nodes[0];
+        1:  275:   context->active_head = &context->extra[0];
+        1:  276:   context->width = width;
+        1:  277:   context->height = height;
+        1:  278:   context->num_nodes = num_nodes;
+        1:  279:   stbrp_setup_allow_out_of_mem(context, 0);
+        1:  279-block 5
+call    0 returned 1
+        -:  280:
+        -:  281:   // node 0 is the full width, node 1 is the sentinel (lets us not store width explicitly)
+        1:  282:   context->extra[0].x = 0;
+        1:  283:   context->extra[0].y = 0;
+        1:  284:   context->extra[0].next = &context->extra[1];
+        1:  285:   context->extra[1].x = (stbrp_coord) width;
+        1:  286:   context->extra[1].y = (1<<30);
+        1:  287:   context->extra[1].next = NULL;
+        1:  288:}
+        -:  289:
+        -:  290:// find minimum y position if it starts at x1
+function _ZL25stbrp__skyline_find_min_yP13stbrp_contextP10stbrp_nodeiiPi called 150799 returned 100% blocks executed 78%
+   150799:  291:static int stbrp__skyline_find_min_y(stbrp_context *c, stbrp_node *first, int x0, int width, int *pwaste)
+        -:  292:{
+   150799:  293:   stbrp_node *node = first;
+   150799:  294:   int x1 = x0 + width;
+        -:  295:   int min_y, visited_width, waste_area;
+        -:  296:
+        -:  297:   STBRP__NOTUSED(c);
+        -:  298:
+  150799*:  299:   STBRP_ASSERT(first->x <= x0);
+   150799:  299-block 2
+branch  0 taken 0 (fallthrough)
+branch  1 taken 150799
+    %%%%%:  299-block 3
+call    2 never executed
+        -:  300:
+        -:  301:   #if 0
+        -:  302:   // skip in case we're past the node
+        -:  303:   while (node->next->x <= x0)
+        -:  304:      ++node;
+        -:  305:   #else
+  150799*:  306:   STBRP_ASSERT(node->next->x > x0); // we ended up handling this in the caller for efficiency
+   150799:  306-block 4
+branch  0 taken 0 (fallthrough)
+branch  1 taken 150799
+    %%%%%:  306-block 5
+call    2 never executed
+        -:  307:   #endif
+        -:  308:
+  150799*:  309:   STBRP_ASSERT(node->x <= x0);
+   150799:  309-block 6
+branch  0 taken 0 (fallthrough)
+branch  1 taken 150799
+    %%%%%:  309-block 7
+call    2 never executed
+        -:  310:
+   150799:  311:   min_y = 0;
+   150799:  312:   waste_area = 0;
+   150799:  313:   visited_width = 0;
+   383276:  314:   while (node->x < x1) {
+   150799:  314-block 8
+   383276:  314-block 17
+branch  0 taken 232477
+branch  1 taken 150799 (fallthrough)
+   232477:  315:      if (node->y > min_y) {
+   232477:  315-block 9
+branch  0 taken 170891 (fallthrough)
+branch  1 taken 61586
+        -:  316:         // raise min_y higher.
+        -:  317:         // we've accounted for all waste up to min_y,
+        -:  318:         // but we'll now add more waste for everything we've visted
+   170891:  319:         waste_area += visited_width * (node->y - min_y);
+   170891:  320:         min_y = node->y;
+        -:  321:         // the first time through, visited_width might be reduced
+   170891:  322:         if (node->x < x0)
+   170891:  322-block 10
+branch  0 taken 0 (fallthrough)
+branch  1 taken 170891
+    #####:  323:            visited_width += node->next->x - x0;
+    %%%%%:  323-block 11
+        -:  324:         else
+   170891:  325:            visited_width += node->next->x - node->x;
+   170891:  325-block 12
+        -:  326:      } else {
+        -:  327:         // add waste area
+    61586:  328:         int under_width = node->next->x - node->x;
+    61586:  329:         if (under_width + visited_width > width)
+    61586:  329-block 13
+branch  0 taken 44136 (fallthrough)
+branch  1 taken 17450
+    44136:  330:            under_width = width - visited_width;
+    44136:  330-block 14
+    61586:  331:         waste_area += under_width * (min_y - node->y);
+    61586:  332:         visited_width += under_width;
+    61586:  332-block 15
+        -:  333:      }
+   232477:  334:      node = node->next;
+   232477:  334-block 16
+        -:  335:   }
+        -:  336:
+   150799:  337:   *pwaste = waste_area;
+   150799:  338:   return min_y;
+   150799:  338-block 18
+        -:  339:}
+        -:  340:
+        -:  341:typedef struct
+        -:  342:{
+        -:  343:   int x,y;
+        -:  344:   stbrp_node **prev_link;
+        -:  345:} stbrp__findresult;
+        -:  346:
+function _ZL28stbrp__skyline_find_best_posP13stbrp_contextii called 2382 returned 100% blocks executed 34%
+     2382:  347:static stbrp__findresult stbrp__skyline_find_best_pos(stbrp_context *c, int width, int height)
+        -:  348:{
+     2382:  349:   int best_waste = (1<<30), best_x, best_y = (1 << 30);
+        -:  350:   stbrp__findresult fr;
+     2382:  351:   stbrp_node **prev, *node, *tail, **best = NULL;
+        -:  352:
+        -:  353:   // align to multiple of c->align
+     2382:  354:   width = (width + c->align - 1);
+     2382:  355:   width -= width % c->align;
+    2382*:  356:   STBRP_ASSERT(width % c->align == 0);
+     2382:  356-block 2
+branch  0 taken 0 (fallthrough)
+branch  1 taken 2382
+    %%%%%:  356-block 3
+call    2 never executed
+        -:  357:
+        -:  358:   // if it can't possibly fit, bail immediately
+     2382:  359:   if (width > c->width || height > c->height) {
+     2382:  359-block 4
+branch  0 taken 2382 (fallthrough)
+branch  1 taken 0
+     2382:  359-block 5
+branch  2 taken 0 (fallthrough)
+branch  3 taken 2382
+    #####:  360:      fr.prev_link = NULL;
+    #####:  361:      fr.x = fr.y = 0;
+    #####:  362:      return fr;
+    %%%%%:  362-block 6
+        -:  363:   }
+        -:  364:
+     2382:  365:   node = c->active_head;
+     2382:  366:   prev = &c->active_head;
+   153181:  367:   while (node->x + width <= c->width) {
+     2382:  367-block 7
+   153181:  367-block 18
+branch  0 taken 150799
+branch  1 taken 2382 (fallthrough)
+        -:  368:      int y,waste;
+   150799:  369:      y = stbrp__skyline_find_min_y(c, node, node->x, width, &waste);
+   150799:  369-block 8
+call    0 returned 150799
+   150799:  370:      if (c->heuristic == STBRP_HEURISTIC_Skyline_BL_sortHeight) { // actually just want to test BL
+branch  0 taken 150799 (fallthrough)
+branch  1 taken 0
+        -:  371:         // bottom left
+   150799:  372:         if (y < best_y) {
+   150799:  372-block 10
+branch  0 taken 9138 (fallthrough)
+branch  1 taken 141661
+     9138:  373:            best_y = y;
+     9138:  374:            best = prev;
+     9138:  374-block 11
+        -:  375:         }
+        -:  376:      } else {
+        -:  377:         // best-fit
+    #####:  378:         if (y + height <= c->height) {
+    %%%%%:  378-block 12
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  379:            // can only use it if it first vertically
+    #####:  380:            if (y < best_y || (y == best_y && waste < best_waste)) {
+    %%%%%:  380-block 13
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  380-block 14
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    %%%%%:  380-block 15
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    #####:  381:               best_y = y;
+    #####:  382:               best_waste = waste;
+    #####:  383:               best = prev;
+    %%%%%:  383-block 16
+        -:  384:            }
+        -:  385:         }
+        -:  386:      }
+   150799:  387:      prev = &node->next;
+   150799:  388:      node = node->next;
+   150799:  388-block 17
+        -:  389:   }
+        -:  390:
+    2382*:  391:   best_x = (best == NULL) ? 0 : (*best)->x;
+     2382:  391-block 19
+branch  0 taken 2382 (fallthrough)
+branch  1 taken 0
+     2382:  391-block 20
+    %%%%%:  391-block 21
+        -:  392:
+        -:  393:   // if doing best-fit (BF), we also have to try aligning right edge to each node position
+        -:  394:   //
+        -:  395:   // e.g, if fitting
+        -:  396:   //
+        -:  397:   //     ____________________
+        -:  398:   //    |____________________|
+        -:  399:   //
+        -:  400:   //            into
+        -:  401:   //
+        -:  402:   //   |                         |
+        -:  403:   //   |             ____________|
+        -:  404:   //   |____________|
+        -:  405:   //
+        -:  406:   // then right-aligned reduces waste, but bottom-left BL is always chooses left-aligned
+        -:  407:   //
+        -:  408:   // This makes BF take about 2x the time
+        -:  409:
+     2382:  410:   if (c->heuristic == STBRP_HEURISTIC_Skyline_BF_sortHeight) {
+     2382:  410-block 22
+branch  0 taken 0 (fallthrough)
+branch  1 taken 2382
+    #####:  411:      tail = c->active_head;
+    #####:  412:      node = c->active_head;
+    #####:  413:      prev = &c->active_head;
+        -:  414:      // find first node that's admissible
+    #####:  415:      while (tail->x < width)
+    %%%%%:  415-block 23
+    %%%%%:  415-block 25
+branch  0 never executed
+branch  1 never executed (fallthrough)
+    #####:  416:         tail = tail->next;
+    %%%%%:  416-block 24
+    #####:  417:      while (tail) {
+    %%%%%:  417-block 26
+    %%%%%:  417-block 45
+branch  0 never executed
+branch  1 never executed (fallthrough)
+    #####:  418:         int xpos = tail->x - width;
+        -:  419:         int y,waste;
+    #####:  420:         STBRP_ASSERT(xpos >= 0);
+    %%%%%:  420-block 27
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  420-block 28
+call    2 never executed
+        -:  421:         // find the left position that matches this
+    #####:  422:         while (node->next->x <= xpos) {
+    %%%%%:  422-block 29
+    %%%%%:  422-block 31
+branch  0 never executed
+branch  1 never executed (fallthrough)
+    #####:  423:            prev = &node->next;
+    #####:  424:            node = node->next;
+    %%%%%:  424-block 30
+        -:  425:         }
+    #####:  426:         STBRP_ASSERT(node->next->x > xpos && node->x <= xpos);
+    %%%%%:  426-block 32
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  426-block 33
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    %%%%%:  426-block 34
+    %%%%%:  426-block 35
+call    4 never executed
+    #####:  427:         y = stbrp__skyline_find_min_y(c, node, xpos, width, &waste);
+    %%%%%:  427-block 36
+call    0 never executed
+    #####:  428:         if (y + height <= c->height) {
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  429:            if (y <= best_y) {
+    %%%%%:  429-block 38
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  430:               if (y < best_y || waste < best_waste || (waste==best_waste && xpos < best_x)) {
+    %%%%%:  430-block 39
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  430-block 40
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    %%%%%:  430-block 41
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:  430-block 42
+branch  6 never executed (fallthrough)
+branch  7 never executed
+    #####:  431:                  best_x = xpos;
+        -:  432:                  //STBRP_ASSERT(y <= best_y); [DEAR IMGUI]
+    #####:  433:                  best_y = y;
+    #####:  434:                  best_waste = waste;
+    #####:  435:                  best = prev;
+    %%%%%:  435-block 43
+        -:  436:               }
+        -:  437:            }
+        -:  438:         }
+    #####:  439:         tail = tail->next;
+    %%%%%:  439-block 44
+        -:  440:      }
+        -:  441:   }
+        -:  442:
+     2382:  443:   fr.prev_link = best;
+     2382:  444:   fr.x = best_x;
+     2382:  445:   fr.y = best_y;
+     2382:  446:   return fr;
+     2382:  446-block 46
+        -:  447:}
+        -:  448:
+function _ZL29stbrp__skyline_pack_rectangleP13stbrp_contextii called 2382 returned 100% blocks executed 88%
+     2382:  449:static stbrp__findresult stbrp__skyline_pack_rectangle(stbrp_context *context, int width, int height)
+        -:  450:{
+        -:  451:   // find best position according to heuristic
+     2382:  452:   stbrp__findresult res = stbrp__skyline_find_best_pos(context, width, height);
+     2382:  452-block 2
+call    0 returned 2382
+        -:  453:   stbrp_node *node, *cur;
+        -:  454:
+        -:  455:   // bail if:
+        -:  456:   //    1. it failed
+        -:  457:   //    2. the best node doesn't fit (we don't always check this)
+        -:  458:   //    3. we're out of memory
+     2382:  459:   if (res.prev_link == NULL || res.y + height > context->height || context->free_head == NULL) {
+branch  0 taken 2382 (fallthrough)
+branch  1 taken 0
+     2382:  459-block 4
+branch  2 taken 2382 (fallthrough)
+branch  3 taken 0
+     2382:  459-block 5
+branch  4 taken 0 (fallthrough)
+branch  5 taken 2382
+    #####:  460:      res.prev_link = NULL;
+    #####:  461:      return res;
+    %%%%%:  461-block 6
+        -:  462:   }
+        -:  463:
+        -:  464:   // on success, create new node
+     2382:  465:   node = context->free_head;
+     2382:  466:   node->x = (stbrp_coord) res.x;
+     2382:  467:   node->y = (stbrp_coord) (res.y + height);
+        -:  468:
+     2382:  469:   context->free_head = node->next;
+        -:  470:
+        -:  471:   // insert the new node into the right starting point, and
+        -:  472:   // let 'cur' point to the remaining nodes needing to be
+        -:  473:   // stiched back in
+        -:  474:
+     2382:  475:   cur = *res.prev_link;
+     2382:  476:   if (cur->x < res.x) {
+     2382:  476-block 7
+branch  0 taken 0 (fallthrough)
+branch  1 taken 2382
+        -:  477:      // preserve the existing one, so start testing with the next one
+    #####:  478:      stbrp_node *next = cur->next;
+    #####:  479:      cur->next = node;
+    #####:  480:      cur = next;
+    %%%%%:  480-block 8
+        -:  481:   } else {
+     2382:  482:      *res.prev_link = node;
+     2382:  482-block 9
+        -:  483:   }
+        -:  484:
+        -:  485:   // from here, traverse cur and free the nodes, until we get to one
+        -:  486:   // that shouldn't be freed
+     4688:  487:   while (cur->next && cur->next->x <= res.x + width) {
+     2382:  487-block 10
+     4688:  487-block 12
+branch  0 taken 4677 (fallthrough)
+branch  1 taken 11
+     4677:  487-block 13
+branch  2 taken 2306
+branch  3 taken 2371 (fallthrough)
+     2306:  488:      stbrp_node *next = cur->next;
+        -:  489:      // move the current node to the free list
+     2306:  490:      cur->next = context->free_head;
+     2306:  491:      context->free_head = cur;
+     2306:  492:      cur = next;
+     2306:  492-block 11
+        -:  493:   }
+        -:  494:
+        -:  495:   // stitch the list back in
+     2382:  496:   node->next = cur;
+        -:  497:
+     2382:  498:   if (cur->x < res.x + width)
+     2382:  498-block 14
+branch  0 taken 2120 (fallthrough)
+branch  1 taken 262
+     2120:  499:      cur->x = (stbrp_coord) (res.x + width);
+     2120:  499-block 15
+        -:  500:
+        -:  501:#ifdef _DEBUG
+        -:  502:   cur = context->active_head;
+        -:  503:   while (cur->x < context->width) {
+        -:  504:      STBRP_ASSERT(cur->x < cur->next->x);
+        -:  505:      cur = cur->next;
+        -:  506:   }
+        -:  507:   STBRP_ASSERT(cur->next == NULL);
+        -:  508:
+        -:  509:   {
+        -:  510:      int count=0;
+        -:  511:      cur = context->active_head;
+        -:  512:      while (cur) {
+        -:  513:         cur = cur->next;
+        -:  514:         ++count;
+        -:  515:      }
+        -:  516:      cur = context->free_head;
+        -:  517:      while (cur) {
+        -:  518:         cur = cur->next;
+        -:  519:         ++count;
+        -:  520:      }
+        -:  521:      STBRP_ASSERT(count == context->num_nodes+2);
+        -:  522:   }
+        -:  523:#endif
+        -:  524:
+     2382:  525:   return res;
+     2382:  525-block 16
+        -:  526:}
+        -:  527:
+function _ZL19rect_height_comparePKvS0_ called 15161 returned 100% blocks executed 100%
+    15161:  528:static int STBRP__CDECL rect_height_compare(const void *a, const void *b)
+        -:  529:{
+    15161:  530:   const stbrp_rect *p = (const stbrp_rect *) a;
+    15161:  531:   const stbrp_rect *q = (const stbrp_rect *) b;
+    15161:  532:   if (p->h > q->h)
+    15161:  532-block 2
+branch  0 taken 2397 (fallthrough)
+branch  1 taken 12764
+     2397:  533:      return -1;
+     2397:  533-block 3
+    12764:  534:   if (p->h < q->h)
+    12764:  534-block 4
+branch  0 taken 3828 (fallthrough)
+branch  1 taken 8936
+     3828:  535:      return  1;
+     3828:  535-block 5
+     8936:  536:   return (p->w > q->w) ? -1 : (p->w < q->w);
+     8936:  536-block 6
+branch  0 taken 7024 (fallthrough)
+branch  1 taken 1912
+     7024:  536-block 7
+     1912:  536-block 8
+     8936:  536-block 9
+        -:  537:}
+        -:  538:
+function _ZL19rect_original_orderPKvS0_ called 14644 returned 100% blocks executed 100%
+    14644:  539:static int STBRP__CDECL rect_original_order(const void *a, const void *b)
+        -:  540:{
+    14644:  541:   const stbrp_rect *p = (const stbrp_rect *) a;
+    14644:  542:   const stbrp_rect *q = (const stbrp_rect *) b;
+    14644:  543:   return (p->was_packed < q->was_packed) ? -1 : (p->was_packed > q->was_packed);
+    14644:  543-block 2
+branch  0 taken 6822 (fallthrough)
+branch  1 taken 7822
+     6822:  543-block 3
+     7822:  543-block 4
+    14644:  543-block 5
+        -:  544:}
+        -:  545:
+function stbrp_pack_rects called 12 returned 100% blocks executed 81%
+       12:  546:STBRP_DEF int stbrp_pack_rects(stbrp_context *context, stbrp_rect *rects, int num_rects)
+        -:  547:{
+       12:  548:   int i, all_rects_packed = 1;
+        -:  549:
+        -:  550:   // we use the 'was_packed' field internally to allow sorting/unsorting
+     2394:  551:   for (i=0; i < num_rects; ++i) {
+       12:  551-block 2
+     2394:  551-block 4
+branch  0 taken 2382
+branch  1 taken 12 (fallthrough)
+     2382:  552:      rects[i].was_packed = i;
+     2382:  552-block 3
+        -:  553:   }
+        -:  554:
+        -:  555:   // sort according to heuristic
+       12:  556:   STBRP_SORT(rects, num_rects, sizeof(rects[0]), rect_height_compare);
+       12:  556-block 5
+call    0 returned 12
+        -:  557:
+     2394:  558:   for (i=0; i < num_rects; ++i) {
+     2382:  558-block 15
+     2394:  558-block 16
+branch  0 taken 2382
+branch  1 taken 12 (fallthrough)
+     2382:  559:      if (rects[i].w == 0 || rects[i].h == 0) {
+     2382:  559-block 7
+branch  0 taken 2382 (fallthrough)
+branch  1 taken 0
+     2382:  559-block 8
+branch  2 taken 0 (fallthrough)
+branch  3 taken 2382
+    #####:  560:         rects[i].x = rects[i].y = 0;  // empty rect needs no space
+    %%%%%:  560-block 9
+        -:  561:      } else {
+     2382:  562:         stbrp__findresult fr = stbrp__skyline_pack_rectangle(context, rects[i].w, rects[i].h);
+     2382:  562-block 10
+call    0 returned 2382
+     2382:  563:         if (fr.prev_link) {
+branch  0 taken 2382 (fallthrough)
+branch  1 taken 0
+     2382:  564:            rects[i].x = (stbrp_coord) fr.x;
+     2382:  565:            rects[i].y = (stbrp_coord) fr.y;
+     2382:  565-block 12
+        -:  566:         } else {
+    #####:  567:            rects[i].x = rects[i].y = STBRP__MAXVAL;
+    %%%%%:  567-block 13
+        -:  568:         }
+        -:  569:      }
+        -:  570:   }
+        -:  571:
+        -:  572:   // unsort
+       12:  573:   STBRP_SORT(rects, num_rects, sizeof(rects[0]), rect_original_order);
+       12:  573-block 17
+call    0 returned 12
+        -:  574:
+        -:  575:   // set was_packed flags and all_rects_packed status
+     2394:  576:   for (i=0; i < num_rects; ++i) {
+     2382:  576-block 25
+     2394:  576-block 26
+branch  0 taken 2382
+branch  1 taken 12 (fallthrough)
+    2382*:  577:      rects[i].was_packed = !(rects[i].x == STBRP__MAXVAL && rects[i].y == STBRP__MAXVAL);
+     2382:  577-block 19
+branch  0 taken 0 (fallthrough)
+branch  1 taken 2382
+    %%%%%:  577-block 20
+branch  2 never executed (fallthrough)
+branch  3 never executed
+     2382:  577-block 21
+    %%%%%:  577-block 22
+     2382:  578:      if (!rects[i].was_packed)
+     2382:  578-block 23
+branch  0 taken 0 (fallthrough)
+branch  1 taken 2382
+    #####:  579:         all_rects_packed = 0;
+    %%%%%:  579-block 24
+        -:  580:   }
+        -:  581:
+        -:  582:   // return the all_rects_packed status
+       12:  583:   return all_rects_packed;
+       12:  583-block 27
+        -:  584:}
+        -:  585:#endif
+        -:  586:
+        -:  587:/*
+        -:  588:------------------------------------------------------------------------------
+        -:  589:This software is available under 2 licenses -- choose whichever you prefer.
+        -:  590:------------------------------------------------------------------------------
+        -:  591:ALTERNATIVE A - MIT License
+        -:  592:Copyright (c) 2017 Sean Barrett
+        -:  593:Permission is hereby granted, free of charge, to any person obtaining a copy of
+        -:  594:this software and associated documentation files (the "Software"), to deal in
+        -:  595:the Software without restriction, including without limitation the rights to
+        -:  596:use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+        -:  597:of the Software, and to permit persons to whom the Software is furnished to do
+        -:  598:so, subject to the following conditions:
+        -:  599:The above copyright notice and this permission notice shall be included in all
+        -:  600:copies or substantial portions of the Software.
+        -:  601:THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+        -:  602:IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+        -:  603:FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+        -:  604:AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+        -:  605:LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+        -:  606:OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+        -:  607:SOFTWARE.
+        -:  608:------------------------------------------------------------------------------
+        -:  609:ALTERNATIVE B - Public Domain (www.unlicense.org)
+        -:  610:This is free and unencumbered software released into the public domain.
+        -:  611:Anyone is free to copy, modify, publish, use, compile, sell, or distribute this
+        -:  612:software, either in source code form or as a compiled binary, for any purpose,
+        -:  613:commercial or non-commercial, and by any means.
+        -:  614:In jurisdictions that recognize copyright laws, the author or authors of this
+        -:  615:software dedicate any and all copyright interest in the software to the public
+        -:  616:domain. We make this dedication for the benefit of the public at large and to
+        -:  617:the detriment of our heirs and successors. We intend this dedication to be an
+        -:  618:overt act of relinquishment in perpetuity of all present and future rights to
+        -:  619:this software under copyright law.
+        -:  620:THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+        -:  621:IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+        -:  622:FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+        -:  623:AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+        -:  624:ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+        -:  625:WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+        -:  626:------------------------------------------------------------------------------
+        -:  627:*/

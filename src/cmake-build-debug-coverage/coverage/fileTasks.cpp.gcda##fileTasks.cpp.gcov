@@ -1,0 +1,2374 @@
+        -:    0:Source:/home/rc/ZathuraDbg/src/app/tasks/fileTasks.cpp
+        -:    0:Graph:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/app/tasks/fileTasks.cpp.gcno
+        -:    0:Data:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/app/tasks/fileTasks.cpp.gcda
+        -:    0:Runs:1
+        -:    1:#include "fileTasks.hpp"
+        -:    2:#include "../app.hpp"
+        -:    3:
+function _Z16getTemporaryPathB5cxx11v called 0 returned 0% blocks executed 0%
+    #####:    4:std::filesystem::path getTemporaryPath(){
+    #####:    5:    std::filesystem::path tempDir;
+    %%%%%:    5-block 2
+call    0 never executed
+        -:    6:    try{
+    #####:    7:         tempDir = std::filesystem::temp_directory_path();
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:    7-block 4
+call    3 never executed
+call    4 never executed
+    $$$$$:    7-block 9
+        -:    8:    }
+    =====:    9:    catch (const std::filesystem::filesystem_error& e){
+    $$$$$:    9-block 10
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    $$$$$:    9-block 12
+call    2 never executed
+    =====:   10:        LOG_NOTICE("Temporary directory not found...\n"
+    $$$$$:   10-block 14
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    $$$$$:   10-block 16
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    $$$$$:   10-block 18
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    $$$$$:   10-block 19
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+    $$$$$:   10-block 20
+call   12 never executed
+call   13 never executed
+call   14 never executed
+branch 15 never executed (fallthrough)
+branch 16 never executed (throw)
+    $$$$$:   10-block 23
+call   17 never executed
+branch 18 never executed (fallthrough)
+branch 19 never executed (throw)
+    $$$$$:   10-block 24
+    $$$$$:   10-block 26
+call   20 never executed
+branch 21 never executed (fallthrough)
+branch 22 never executed (throw)
+    $$$$$:   10-block 27
+call   23 never executed
+branch 24 never executed (fallthrough)
+branch 25 never executed (throw)
+    $$$$$:   10-block 28
+call   26 never executed
+branch 27 never executed (fallthrough)
+branch 28 never executed (throw)
+    $$$$$:   10-block 29
+call   29 never executed
+branch 30 never executed (fallthrough)
+branch 31 never executed (throw)
+    $$$$$:   10-block 30
+call   32 never executed
+branch 33 never executed (fallthrough)
+branch 34 never executed (throw)
+    $$$$$:   10-block 31
+call   35 never executed
+branch 36 never executed (fallthrough)
+branch 37 never executed (throw)
+    $$$$$:   10-block 32
+call   38 never executed
+call   39 never executed
+    $$$$$:   10-block 35
+call   40 never executed
+call   41 never executed
+    $$$$$:   10-block 38
+call   42 never executed
+branch 43 never executed
+branch 44 never executed (fallthrough)
+    $$$$$:   10-block 44
+call   45 never executed
+    $$$$$:   10-block 46
+call   46 never executed
+    $$$$$:   10-block 50
+    $$$$$:   10-block 51
+    $$$$$:   10-block 52
+    $$$$$:   10-block 53
+call   47 never executed
+    $$$$$:   10-block 55
+    $$$$$:   10-block 56
+call   48 never executed
+    $$$$$:   10-block 58
+        -:   11:                   "Using current directory for saving temp files");
+    =====:   12:        tempDir = std::filesystem::current_path();
+    $$$$$:   12-block 40
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    $$$$$:   12-block 41
+call    3 never executed
+call    4 never executed
+    $$$$$:   12-block 59
+    =====:   13:    }
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    $$$$$:   13-block 60
+call    3 never executed
+        -:   14:
+    #####:   15:    return tempDir;
+    %%%%%:   15-block 7
+    %%%%%:   15-block 8
+    =====:   16:}
+    $$$$$:   16-block 62
+call    0 never executed
+        -:   17:
+function _Z12fileOpenTaskRKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE called 0 returned 0% blocks executed 0%
+    #####:   18:bool fileOpenTask(const std::string& fileName){
+    #####:   19:    if (!fileName.empty()){
+    %%%%%:   19-block 2
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:   20:        LOG_DEBUG("Opening the file " << fileName);
+    %%%%%:   20-block 4
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:   20-block 6
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:   20-block 8
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:   20-block 9
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+    %%%%%:   20-block 10
+call   12 never executed
+call   13 never executed
+call   14 never executed
+branch 15 never executed (fallthrough)
+branch 16 never executed (throw)
+    %%%%%:   20-block 13
+call   17 never executed
+branch 18 never executed (fallthrough)
+branch 19 never executed (throw)
+    %%%%%:   20-block 14
+    %%%%%:   20-block 16
+call   20 never executed
+branch 21 never executed (fallthrough)
+branch 22 never executed (throw)
+    %%%%%:   20-block 17
+call   23 never executed
+branch 24 never executed (fallthrough)
+branch 25 never executed (throw)
+    %%%%%:   20-block 18
+call   26 never executed
+branch 27 never executed (fallthrough)
+branch 28 never executed (throw)
+    %%%%%:   20-block 19
+call   29 never executed
+branch 30 never executed (fallthrough)
+branch 31 never executed (throw)
+    %%%%%:   20-block 20
+call   32 never executed
+branch 33 never executed (fallthrough)
+branch 34 never executed (throw)
+    %%%%%:   20-block 21
+call   35 never executed
+branch 36 never executed (fallthrough)
+branch 37 never executed (throw)
+    %%%%%:   20-block 22
+call   38 never executed
+branch 39 never executed (fallthrough)
+branch 40 never executed (throw)
+    %%%%%:   20-block 23
+call   41 never executed
+call   42 never executed
+    %%%%%:   20-block 26
+call   43 never executed
+call   44 never executed
+    %%%%%:   20-block 29
+call   45 never executed
+branch 46 never executed
+branch 47 never executed (fallthrough)
+    $$$$$:   20-block 94
+call   48 never executed
+    $$$$$:   20-block 96
+call   49 never executed
+    $$$$$:   20-block 100
+    $$$$$:   20-block 101
+    $$$$$:   20-block 102
+    $$$$$:   20-block 103
+call   50 never executed
+    $$$$$:   20-block 105
+    $$$$$:   20-block 106
+call   51 never executed
+    $$$$$:   20-block 108
+call   52 never executed
+    #####:   21:        if (!readFileIntoEditor(fileName)){
+    %%%%%:   21-block 31
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:   22:            LOG_ERROR("Read operation failed on the file: " << fileName);
+    %%%%%:   22-block 33
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:   22-block 35
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:   22-block 37
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:   22-block 38
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+    %%%%%:   22-block 39
+call   12 never executed
+call   13 never executed
+call   14 never executed
+branch 15 never executed (fallthrough)
+branch 16 never executed (throw)
+    %%%%%:   22-block 42
+call   17 never executed
+branch 18 never executed (fallthrough)
+branch 19 never executed (throw)
+    %%%%%:   22-block 43
+    %%%%%:   22-block 45
+call   20 never executed
+branch 21 never executed (fallthrough)
+branch 22 never executed (throw)
+    %%%%%:   22-block 46
+call   23 never executed
+branch 24 never executed (fallthrough)
+branch 25 never executed (throw)
+    %%%%%:   22-block 47
+call   26 never executed
+branch 27 never executed (fallthrough)
+branch 28 never executed (throw)
+    %%%%%:   22-block 48
+call   29 never executed
+branch 30 never executed (fallthrough)
+branch 31 never executed (throw)
+    %%%%%:   22-block 49
+call   32 never executed
+branch 33 never executed (fallthrough)
+branch 34 never executed (throw)
+    %%%%%:   22-block 50
+call   35 never executed
+branch 36 never executed (fallthrough)
+branch 37 never executed (throw)
+    %%%%%:   22-block 51
+call   38 never executed
+branch 39 never executed (fallthrough)
+branch 40 never executed (throw)
+    %%%%%:   22-block 52
+call   41 never executed
+call   42 never executed
+    %%%%%:   22-block 55
+call   43 never executed
+call   44 never executed
+    %%%%%:   22-block 58
+call   45 never executed
+branch 46 never executed
+branch 47 never executed (fallthrough)
+    $$$$$:   22-block 109
+call   48 never executed
+    $$$$$:   22-block 111
+call   49 never executed
+    $$$$$:   22-block 115
+    $$$$$:   22-block 116
+    $$$$$:   22-block 117
+    $$$$$:   22-block 118
+call   50 never executed
+    $$$$$:   22-block 120
+    $$$$$:   22-block 121
+call   51 never executed
+    $$$$$:   22-block 123
+call   52 never executed
+    #####:   23:            return false;
+    %%%%%:   23-block 60
+        -:   24:        }
+        -:   25:
+    #####:   26:        selectedFile = fileName;
+    %%%%%:   26-block 61
+call    0 never executed
+    #####:   27:        editor->HighlightBreakpoints(-1);
+call    0 never executed
+    #####:   28:        LOG_INFO("The provided file " << fileName << " opened successfully.");
+    %%%%%:   28-block 63
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:   28-block 65
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:   28-block 67
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:   28-block 68
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+    %%%%%:   28-block 69
+call   12 never executed
+call   13 never executed
+call   14 never executed
+branch 15 never executed (fallthrough)
+branch 16 never executed (throw)
+    %%%%%:   28-block 72
+call   17 never executed
+branch 18 never executed (fallthrough)
+branch 19 never executed (throw)
+    %%%%%:   28-block 73
+    %%%%%:   28-block 75
+call   20 never executed
+branch 21 never executed (fallthrough)
+branch 22 never executed (throw)
+    %%%%%:   28-block 76
+call   23 never executed
+branch 24 never executed (fallthrough)
+branch 25 never executed (throw)
+    %%%%%:   28-block 77
+call   26 never executed
+branch 27 never executed (fallthrough)
+branch 28 never executed (throw)
+    %%%%%:   28-block 78
+call   29 never executed
+branch 30 never executed (fallthrough)
+branch 31 never executed (throw)
+    %%%%%:   28-block 79
+call   32 never executed
+branch 33 never executed (fallthrough)
+branch 34 never executed (throw)
+    %%%%%:   28-block 80
+call   35 never executed
+branch 36 never executed (fallthrough)
+branch 37 never executed (throw)
+    %%%%%:   28-block 81
+call   38 never executed
+branch 39 never executed (fallthrough)
+branch 40 never executed (throw)
+    %%%%%:   28-block 82
+call   41 never executed
+branch 42 never executed (fallthrough)
+branch 43 never executed (throw)
+    %%%%%:   28-block 83
+call   44 never executed
+call   45 never executed
+    %%%%%:   28-block 86
+call   46 never executed
+call   47 never executed
+    %%%%%:   28-block 89
+call   48 never executed
+branch 49 never executed
+branch 50 never executed (fallthrough)
+    $$$$$:   28-block 124
+call   51 never executed
+    $$$$$:   28-block 126
+call   52 never executed
+    $$$$$:   28-block 130
+    $$$$$:   28-block 131
+    $$$$$:   28-block 132
+    $$$$$:   28-block 133
+call   53 never executed
+    $$$$$:   28-block 135
+    $$$$$:   28-block 136
+call   54 never executed
+    #####:   29:        return true;
+    %%%%%:   29-block 91
+        -:   30:    }
+        -:   31:
+    #####:   32:    return true;
+    %%%%%:   32-block 92
+        -:   33:}
+        -:   34:
+function _Z14fileSaveAsTaskRKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE called 0 returned 0% blocks executed 0%
+    #####:   35:void fileSaveAsTask(const std::string &fileName){
+    #####:   36:    if (!fileName.empty()) {
+    %%%%%:   36-block 2
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:   37:        LOG_DEBUG("Saving the file " << fileName);
+    %%%%%:   37-block 4
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:   37-block 6
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:   37-block 8
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:   37-block 9
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+    %%%%%:   37-block 10
+call   12 never executed
+call   13 never executed
+call   14 never executed
+branch 15 never executed (fallthrough)
+branch 16 never executed (throw)
+    %%%%%:   37-block 13
+call   17 never executed
+branch 18 never executed (fallthrough)
+branch 19 never executed (throw)
+    %%%%%:   37-block 14
+    %%%%%:   37-block 16
+call   20 never executed
+branch 21 never executed (fallthrough)
+branch 22 never executed (throw)
+    %%%%%:   37-block 17
+call   23 never executed
+branch 24 never executed (fallthrough)
+branch 25 never executed (throw)
+    %%%%%:   37-block 18
+call   26 never executed
+branch 27 never executed (fallthrough)
+branch 28 never executed (throw)
+    %%%%%:   37-block 19
+call   29 never executed
+branch 30 never executed (fallthrough)
+branch 31 never executed (throw)
+    %%%%%:   37-block 20
+call   32 never executed
+branch 33 never executed (fallthrough)
+branch 34 never executed (throw)
+    %%%%%:   37-block 21
+call   35 never executed
+branch 36 never executed (fallthrough)
+branch 37 never executed (throw)
+    %%%%%:   37-block 22
+call   38 never executed
+branch 39 never executed (fallthrough)
+branch 40 never executed (throw)
+    %%%%%:   37-block 23
+call   41 never executed
+call   42 never executed
+    %%%%%:   37-block 26
+call   43 never executed
+call   44 never executed
+    %%%%%:   37-block 29
+call   45 never executed
+branch 46 never executed
+branch 47 never executed (fallthrough)
+    $$$$$:   37-block 63
+call   48 never executed
+    $$$$$:   37-block 65
+call   49 never executed
+    $$$$$:   37-block 69
+    $$$$$:   37-block 70
+    $$$$$:   37-block 71
+    $$$$$:   37-block 72
+call   50 never executed
+    $$$$$:   37-block 74
+    $$$$$:   37-block 75
+call   51 never executed
+    $$$$$:   37-block 77
+call   52 never executed
+    #####:   38:        if (!writeEditorToFile(fileName)) {
+    %%%%%:   38-block 31
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:   39:            LOG_ERROR("Save as operation failed on the file: " << fileName << " !");
+    %%%%%:   39-block 33
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:   39-block 35
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:   39-block 37
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:   39-block 38
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+    %%%%%:   39-block 39
+call   12 never executed
+call   13 never executed
+call   14 never executed
+branch 15 never executed (fallthrough)
+branch 16 never executed (throw)
+    %%%%%:   39-block 42
+call   17 never executed
+branch 18 never executed (fallthrough)
+branch 19 never executed (throw)
+    %%%%%:   39-block 43
+    %%%%%:   39-block 45
+call   20 never executed
+branch 21 never executed (fallthrough)
+branch 22 never executed (throw)
+    %%%%%:   39-block 46
+call   23 never executed
+branch 24 never executed (fallthrough)
+branch 25 never executed (throw)
+    %%%%%:   39-block 47
+call   26 never executed
+branch 27 never executed (fallthrough)
+branch 28 never executed (throw)
+    %%%%%:   39-block 48
+call   29 never executed
+branch 30 never executed (fallthrough)
+branch 31 never executed (throw)
+    %%%%%:   39-block 49
+call   32 never executed
+branch 33 never executed (fallthrough)
+branch 34 never executed (throw)
+    %%%%%:   39-block 50
+call   35 never executed
+branch 36 never executed (fallthrough)
+branch 37 never executed (throw)
+    %%%%%:   39-block 51
+call   38 never executed
+branch 39 never executed (fallthrough)
+branch 40 never executed (throw)
+    %%%%%:   39-block 52
+call   41 never executed
+branch 42 never executed (fallthrough)
+branch 43 never executed (throw)
+    %%%%%:   39-block 53
+call   44 never executed
+call   45 never executed
+    %%%%%:   39-block 56
+call   46 never executed
+call   47 never executed
+    %%%%%:   39-block 59
+call   48 never executed
+branch 49 never executed
+branch 50 never executed (fallthrough)
+    $$$$$:   39-block 78
+call   51 never executed
+    $$$$$:   39-block 80
+call   52 never executed
+    $$$$$:   39-block 84
+    $$$$$:   39-block 85
+    $$$$$:   39-block 86
+    $$$$$:   39-block 87
+call   53 never executed
+    $$$$$:   39-block 89
+    $$$$$:   39-block 90
+call   54 never executed
+        -:   40:        }
+    #####:   41:        selectedFile = fileName;
+    %%%%%:   41-block 61
+call    0 never executed
+        -:   42:    }
+    #####:   43:}
+    %%%%%:   43-block 62
+        -:   44:
+function _Z12fileSaveTaskRKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE called 0 returned 0% blocks executed 0%
+    #####:   45:void fileSaveTask(const std::string &fileName){
+    #####:   46:    if (!fileName.empty()){
+    %%%%%:   46-block 2
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:   47:        LOG_DEBUG("Saving the file " << fileName);
+    %%%%%:   47-block 4
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:   47-block 6
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:   47-block 8
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:   47-block 9
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+    %%%%%:   47-block 10
+call   12 never executed
+call   13 never executed
+call   14 never executed
+branch 15 never executed (fallthrough)
+branch 16 never executed (throw)
+    %%%%%:   47-block 13
+call   17 never executed
+branch 18 never executed (fallthrough)
+branch 19 never executed (throw)
+    %%%%%:   47-block 14
+    %%%%%:   47-block 16
+call   20 never executed
+branch 21 never executed (fallthrough)
+branch 22 never executed (throw)
+    %%%%%:   47-block 17
+call   23 never executed
+branch 24 never executed (fallthrough)
+branch 25 never executed (throw)
+    %%%%%:   47-block 18
+call   26 never executed
+branch 27 never executed (fallthrough)
+branch 28 never executed (throw)
+    %%%%%:   47-block 19
+call   29 never executed
+branch 30 never executed (fallthrough)
+branch 31 never executed (throw)
+    %%%%%:   47-block 20
+call   32 never executed
+branch 33 never executed (fallthrough)
+branch 34 never executed (throw)
+    %%%%%:   47-block 21
+call   35 never executed
+branch 36 never executed (fallthrough)
+branch 37 never executed (throw)
+    %%%%%:   47-block 22
+call   38 never executed
+branch 39 never executed (fallthrough)
+branch 40 never executed (throw)
+    %%%%%:   47-block 23
+call   41 never executed
+call   42 never executed
+    %%%%%:   47-block 26
+call   43 never executed
+call   44 never executed
+    %%%%%:   47-block 29
+call   45 never executed
+branch 46 never executed
+branch 47 never executed (fallthrough)
+    $$$$$:   47-block 63
+call   48 never executed
+    $$$$$:   47-block 65
+call   49 never executed
+    $$$$$:   47-block 69
+    $$$$$:   47-block 70
+    $$$$$:   47-block 71
+    $$$$$:   47-block 72
+call   50 never executed
+    $$$$$:   47-block 74
+    $$$$$:   47-block 75
+call   51 never executed
+    $$$$$:   47-block 77
+call   52 never executed
+    #####:   48:        if (!writeEditorToFile(selectedFile)) {
+    %%%%%:   48-block 31
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:   49:            LOG_ERROR("Save operation failed on the file: " << fileName << " !");
+    %%%%%:   49-block 33
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:   49-block 35
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:   49-block 37
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:   49-block 38
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+    %%%%%:   49-block 39
+call   12 never executed
+call   13 never executed
+call   14 never executed
+branch 15 never executed (fallthrough)
+branch 16 never executed (throw)
+    %%%%%:   49-block 42
+call   17 never executed
+branch 18 never executed (fallthrough)
+branch 19 never executed (throw)
+    %%%%%:   49-block 43
+    %%%%%:   49-block 45
+call   20 never executed
+branch 21 never executed (fallthrough)
+branch 22 never executed (throw)
+    %%%%%:   49-block 46
+call   23 never executed
+branch 24 never executed (fallthrough)
+branch 25 never executed (throw)
+    %%%%%:   49-block 47
+call   26 never executed
+branch 27 never executed (fallthrough)
+branch 28 never executed (throw)
+    %%%%%:   49-block 48
+call   29 never executed
+branch 30 never executed (fallthrough)
+branch 31 never executed (throw)
+    %%%%%:   49-block 49
+call   32 never executed
+branch 33 never executed (fallthrough)
+branch 34 never executed (throw)
+    %%%%%:   49-block 50
+call   35 never executed
+branch 36 never executed (fallthrough)
+branch 37 never executed (throw)
+    %%%%%:   49-block 51
+call   38 never executed
+branch 39 never executed (fallthrough)
+branch 40 never executed (throw)
+    %%%%%:   49-block 52
+call   41 never executed
+branch 42 never executed (fallthrough)
+branch 43 never executed (throw)
+    %%%%%:   49-block 53
+call   44 never executed
+call   45 never executed
+    %%%%%:   49-block 56
+call   46 never executed
+call   47 never executed
+    %%%%%:   49-block 59
+call   48 never executed
+branch 49 never executed
+branch 50 never executed (fallthrough)
+    $$$$$:   49-block 78
+call   51 never executed
+    $$$$$:   49-block 80
+call   52 never executed
+    $$$$$:   49-block 84
+    $$$$$:   49-block 85
+    $$$$$:   49-block 86
+    $$$$$:   49-block 87
+call   53 never executed
+    $$$$$:   49-block 89
+    $$$$$:   49-block 90
+call   54 never executed
+        -:   50:        }
+    #####:   51:        selectedFile = fileName;
+    %%%%%:   51-block 61
+call    0 never executed
+        -:   52:    }
+    #####:   53:}
+    %%%%%:   53-block 62
+function _Z11fileRunTaskm called 1 returned 100% blocks executed 24%
+        1:   54:bool fileRunTask(const uint64_t instructionCount){
+        1:   55:    if (!selectedFile.empty()){
+        1:   55-block 2
+call    0 returned 1
+branch  1 taken 1 (fallthrough)
+branch  2 taken 0
+        3:   56:        LOG_DEBUG("Running code from: " << selectedFile);
+        1:   56-block 4
+call    0 returned 1
+branch  1 taken 1 (fallthrough)
+branch  2 taken 0
+        1:   56-block 6
+call    3 returned 1
+branch  4 taken 1 (fallthrough)
+branch  5 taken 0
+        1:   56-block 8
+call    6 returned 1
+branch  7 taken 1 (fallthrough)
+branch  8 taken 0 (throw)
+        1:   56-block 9
+call    9 returned 1
+branch 10 taken 1 (fallthrough)
+branch 11 taken 0 (throw)
+        1:   56-block 10
+call   12 returned 1
+call   13 returned 1
+call   14 returned 1
+branch 15 taken 1 (fallthrough)
+branch 16 taken 0 (throw)
+        1:   56-block 13
+call   17 returned 1
+branch 18 taken 1 (fallthrough)
+branch 19 taken 0 (throw)
+        1:   56-block 14
+        1:   56-block 16
+call   20 returned 1
+branch 21 taken 1 (fallthrough)
+branch 22 taken 0 (throw)
+        1:   56-block 17
+call   23 returned 1
+branch 24 taken 1 (fallthrough)
+branch 25 taken 0 (throw)
+        1:   56-block 18
+call   26 returned 1
+branch 27 taken 1 (fallthrough)
+branch 28 taken 0 (throw)
+        1:   56-block 19
+call   29 returned 1
+branch 30 taken 1 (fallthrough)
+branch 31 taken 0 (throw)
+        1:   56-block 20
+call   32 returned 1
+branch 33 taken 1 (fallthrough)
+branch 34 taken 0 (throw)
+        1:   56-block 21
+call   35 returned 1
+branch 36 taken 1 (fallthrough)
+branch 37 taken 0 (throw)
+        1:   56-block 22
+call   38 returned 1
+branch 39 taken 1 (fallthrough)
+branch 40 taken 0 (throw)
+        1:   56-block 23
+call   41 returned 1
+call   42 returned 1
+        1:   56-block 26
+call   43 returned 1
+call   44 returned 1
+        1:   56-block 29
+call   45 returned 1
+branch 46 taken 0
+branch 47 taken 1 (fallthrough)
+    $$$$$:   56-block 136
+call   48 never executed
+    $$$$$:   56-block 138
+call   49 never executed
+    $$$$$:   56-block 142
+    $$$$$:   56-block 143
+    $$$$$:   56-block 144
+    $$$$$:   56-block 145
+call   50 never executed
+    $$$$$:   56-block 147
+    $$$$$:   56-block 148
+call   51 never executed
+    $$$$$:   56-block 150
+call   52 never executed
+        -:   57:
+        1:   58:        if (uc != nullptr){
+        1:   58-block 31
+branch  0 taken 1 (fallthrough)
+branch  1 taken 0
+        1:   59:            uc_close(uc);
+        1:   59-block 32
+call    0 returned 1
+        1:   60:            uc = nullptr;
+        -:   61:        }
+        -:   62:
+        1:   63:        if (createStack(&uc)){
+        1:   63-block 34
+call    0 returned 1
+branch  1 taken 1 (fallthrough)
+branch  2 taken 0
+        1:   64:            if (instructionCount == 1){
+        1:   64-block 36
+branch  0 taken 1 (fallthrough)
+branch  1 taken 0
+        1:   65:                std::string bytes = getBytes(selectedFile);
+        1:   65-block 37
+call    0 returned 1
+branch  1 taken 1 (fallthrough)
+branch  2 taken 0 (throw)
+        1:   66:                if (!bytes.empty()){
+        1:   66-block 38
+call    0 returned 1
+branch  1 taken 1 (fallthrough)
+branch  2 taken 0
+        1:   67:                     runCode(bytes, instructionCount);
+        1:   67-block 40
+call    0 returned 1
+branch  1 taken 1 (fallthrough)
+branch  2 taken 0 (throw)
+        -:   68:                 }
+        -:   69:                else {
+    #####:   70:                    LOG_ERROR("Unable to run the code. Either no code is present or invalid architecture is selected.");
+    %%%%%:   70-block 41
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:   70-block 43
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:   70-block 45
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:   70-block 46
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+    %%%%%:   70-block 47
+call   12 never executed
+call   13 never executed
+call   14 never executed
+branch 15 never executed (fallthrough)
+branch 16 never executed (throw)
+    %%%%%:   70-block 50
+call   17 never executed
+branch 18 never executed (fallthrough)
+branch 19 never executed (throw)
+    %%%%%:   70-block 51
+    %%%%%:   70-block 53
+call   20 never executed
+branch 21 never executed (fallthrough)
+branch 22 never executed (throw)
+    %%%%%:   70-block 54
+call   23 never executed
+branch 24 never executed (fallthrough)
+branch 25 never executed (throw)
+    %%%%%:   70-block 55
+call   26 never executed
+branch 27 never executed (fallthrough)
+branch 28 never executed (throw)
+    %%%%%:   70-block 56
+call   29 never executed
+branch 30 never executed (fallthrough)
+branch 31 never executed (throw)
+    %%%%%:   70-block 57
+call   32 never executed
+branch 33 never executed (fallthrough)
+branch 34 never executed (throw)
+    %%%%%:   70-block 58
+call   35 never executed
+branch 36 never executed (fallthrough)
+branch 37 never executed (throw)
+    %%%%%:   70-block 59
+call   38 never executed
+call   39 never executed
+    %%%%%:   70-block 62
+call   40 never executed
+call   41 never executed
+    %%%%%:   70-block 65
+call   42 never executed
+branch 43 never executed
+branch 44 never executed (fallthrough)
+    $$$$$:   70-block 151
+call   45 never executed
+    $$$$$:   70-block 153
+call   46 never executed
+    $$$$$:   70-block 157
+    $$$$$:   70-block 158
+    $$$$$:   70-block 159
+    $$$$$:   70-block 160
+call   47 never executed
+    $$$$$:   70-block 162
+    $$$$$:   70-block 163
+call   48 never executed
+    $$$$$:   70-block 165
+    #####:   71:                    return false;
+    %%%%%:   71-block 67
+        -:   72:                }
+        1:   73:            }
+        1:   73-block 68
+        1:   73-block 69
+call    0 returned 1
+branch  1 taken 1 (fallthrough)
+branch  2 taken 0
+    $$$$$:   73-block 166
+call    3 never executed
+    #####:   74:            else if (instructionCount == -1){
+    %%%%%:   74-block 74
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:   75:                startDebugging();
+    %%%%%:   75-block 75
+call    0 never executed
+    #####:   76:                debugContinueAction(true);
+call    0 never executed
+    #####:   77:                return true;
+        -:   78:            }
+        -:   79:        }
+        -:   80:        else{
+    #####:   81:            tinyfd_messageBox("Stack creation failed!", "The app was unable to create the stack to run the code.\nPlease try restarting it or report this issue on github!",
+    %%%%%:   81-block 78
+call    0 never executed
+        -:   82:                "ok", "error", 0);
+        -:   83:
+    #####:   84:            LOG_ERROR("Unable to create stack!, quitting!");
+    %%%%%:   84-block 79
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:   84-block 81
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:   84-block 83
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:   84-block 84
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+    %%%%%:   84-block 85
+call   12 never executed
+call   13 never executed
+call   14 never executed
+branch 15 never executed (fallthrough)
+branch 16 never executed (throw)
+    %%%%%:   84-block 88
+call   17 never executed
+branch 18 never executed (fallthrough)
+branch 19 never executed (throw)
+    %%%%%:   84-block 89
+    %%%%%:   84-block 91
+call   20 never executed
+branch 21 never executed (fallthrough)
+branch 22 never executed (throw)
+    %%%%%:   84-block 92
+call   23 never executed
+branch 24 never executed (fallthrough)
+branch 25 never executed (throw)
+    %%%%%:   84-block 93
+call   26 never executed
+branch 27 never executed (fallthrough)
+branch 28 never executed (throw)
+    %%%%%:   84-block 94
+call   29 never executed
+branch 30 never executed (fallthrough)
+branch 31 never executed (throw)
+    %%%%%:   84-block 95
+call   32 never executed
+branch 33 never executed (fallthrough)
+branch 34 never executed (throw)
+    %%%%%:   84-block 96
+call   35 never executed
+branch 36 never executed (fallthrough)
+branch 37 never executed (throw)
+    %%%%%:   84-block 97
+call   38 never executed
+call   39 never executed
+    %%%%%:   84-block 100
+call   40 never executed
+call   41 never executed
+    %%%%%:   84-block 103
+call   42 never executed
+branch 43 never executed
+branch 44 never executed (fallthrough)
+    $$$$$:   84-block 169
+call   45 never executed
+    $$$$$:   84-block 171
+call   46 never executed
+    $$$$$:   84-block 175
+    $$$$$:   84-block 176
+    $$$$$:   84-block 177
+    $$$$$:   84-block 178
+call   47 never executed
+    $$$$$:   84-block 180
+    $$$$$:   84-block 181
+call   48 never executed
+    $$$$$:   84-block 183
+call   49 never executed
+    #####:   85:            return false;
+    %%%%%:   85-block 105
+        -:   86:        }
+        -:   87:    }
+        -:   88:    else{
+    #####:   89:        LOG_ERROR("No file selected to run!");
+    %%%%%:   89-block 106
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:   89-block 108
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:   89-block 110
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:   89-block 111
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+    %%%%%:   89-block 112
+call   12 never executed
+call   13 never executed
+call   14 never executed
+branch 15 never executed (fallthrough)
+branch 16 never executed (throw)
+    %%%%%:   89-block 115
+call   17 never executed
+branch 18 never executed (fallthrough)
+branch 19 never executed (throw)
+    %%%%%:   89-block 116
+    %%%%%:   89-block 118
+call   20 never executed
+branch 21 never executed (fallthrough)
+branch 22 never executed (throw)
+    %%%%%:   89-block 119
+call   23 never executed
+branch 24 never executed (fallthrough)
+branch 25 never executed (throw)
+    %%%%%:   89-block 120
+call   26 never executed
+branch 27 never executed (fallthrough)
+branch 28 never executed (throw)
+    %%%%%:   89-block 121
+call   29 never executed
+branch 30 never executed (fallthrough)
+branch 31 never executed (throw)
+    %%%%%:   89-block 122
+call   32 never executed
+branch 33 never executed (fallthrough)
+branch 34 never executed (throw)
+    %%%%%:   89-block 123
+call   35 never executed
+branch 36 never executed (fallthrough)
+branch 37 never executed (throw)
+    %%%%%:   89-block 124
+call   38 never executed
+call   39 never executed
+    %%%%%:   89-block 127
+call   40 never executed
+call   41 never executed
+    %%%%%:   89-block 130
+call   42 never executed
+branch 43 never executed
+branch 44 never executed (fallthrough)
+    $$$$$:   89-block 184
+call   45 never executed
+    $$$$$:   89-block 186
+call   46 never executed
+    $$$$$:   89-block 190
+    $$$$$:   89-block 191
+    $$$$$:   89-block 192
+    $$$$$:   89-block 193
+call   47 never executed
+    $$$$$:   89-block 195
+    $$$$$:   89-block 196
+call   48 never executed
+    #####:   90:        tinyfd_messageBox("No file selected!", "Please open a file to run the code!", "ok", "error", 0);
+    %%%%%:   90-block 132
+call    0 never executed
+    #####:   91:        return false;
+        -:   92:    }
+        -:   93:
+        1:   94:    return true;
+        1:   94-block 134
+        -:   95:}
+        -:   96:
+function _Z23fileSaveUCContextAsJsonRKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE called 0 returned 0% blocks executed 0%
+    #####:   97:void fileSaveUCContextAsJson(const std::string& jsonFilename){
+    #####:   98:    LOG_INFO("Saving context as a file...");
+    %%%%%:   98-block 2
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:   98-block 4
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:   98-block 6
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:   98-block 7
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+    %%%%%:   98-block 8
+call   12 never executed
+call   13 never executed
+call   14 never executed
+branch 15 never executed (fallthrough)
+branch 16 never executed (throw)
+    %%%%%:   98-block 11
+call   17 never executed
+branch 18 never executed (fallthrough)
+branch 19 never executed (throw)
+    %%%%%:   98-block 12
+    %%%%%:   98-block 14
+call   20 never executed
+branch 21 never executed (fallthrough)
+branch 22 never executed (throw)
+    %%%%%:   98-block 15
+call   23 never executed
+branch 24 never executed (fallthrough)
+branch 25 never executed (throw)
+    %%%%%:   98-block 16
+call   26 never executed
+branch 27 never executed (fallthrough)
+branch 28 never executed (throw)
+    %%%%%:   98-block 17
+call   29 never executed
+branch 30 never executed (fallthrough)
+branch 31 never executed (throw)
+    %%%%%:   98-block 18
+call   32 never executed
+branch 33 never executed (fallthrough)
+branch 34 never executed (throw)
+    %%%%%:   98-block 19
+call   35 never executed
+branch 36 never executed (fallthrough)
+branch 37 never executed (throw)
+    %%%%%:   98-block 20
+call   38 never executed
+call   39 never executed
+    %%%%%:   98-block 23
+call   40 never executed
+call   41 never executed
+    %%%%%:   98-block 26
+call   42 never executed
+branch 43 never executed
+branch 44 never executed (fallthrough)
+    $$$$$:   98-block 205
+call   45 never executed
+    $$$$$:   98-block 207
+call   46 never executed
+    $$$$$:   98-block 211
+    $$$$$:   98-block 212
+    $$$$$:   98-block 213
+    $$$$$:   98-block 214
+call   47 never executed
+    $$$$$:   98-block 216
+    $$$$$:   98-block 217
+call   48 never executed
+    $$$$$:   98-block 219
+    #####:   99:    LOG_DEBUG("File name is " << jsonFilename);
+    %%%%%:   99-block 28
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:   99-block 30
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:   99-block 32
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:   99-block 33
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+    %%%%%:   99-block 34
+call   12 never executed
+call   13 never executed
+call   14 never executed
+branch 15 never executed (fallthrough)
+branch 16 never executed (throw)
+    %%%%%:   99-block 37
+call   17 never executed
+branch 18 never executed (fallthrough)
+branch 19 never executed (throw)
+    %%%%%:   99-block 38
+    %%%%%:   99-block 40
+call   20 never executed
+branch 21 never executed (fallthrough)
+branch 22 never executed (throw)
+    %%%%%:   99-block 41
+call   23 never executed
+branch 24 never executed (fallthrough)
+branch 25 never executed (throw)
+    %%%%%:   99-block 42
+call   26 never executed
+branch 27 never executed (fallthrough)
+branch 28 never executed (throw)
+    %%%%%:   99-block 43
+call   29 never executed
+branch 30 never executed (fallthrough)
+branch 31 never executed (throw)
+    %%%%%:   99-block 44
+call   32 never executed
+branch 33 never executed (fallthrough)
+branch 34 never executed (throw)
+    %%%%%:   99-block 45
+call   35 never executed
+branch 36 never executed (fallthrough)
+branch 37 never executed (throw)
+    %%%%%:   99-block 46
+call   38 never executed
+branch 39 never executed (fallthrough)
+branch 40 never executed (throw)
+    %%%%%:   99-block 47
+call   41 never executed
+call   42 never executed
+    %%%%%:   99-block 50
+call   43 never executed
+call   44 never executed
+    %%%%%:   99-block 53
+call   45 never executed
+branch 46 never executed
+branch 47 never executed (fallthrough)
+    $$$$$:   99-block 220
+call   48 never executed
+    $$$$$:   99-block 222
+call   49 never executed
+    $$$$$:   99-block 226
+    $$$$$:   99-block 227
+    $$$$$:   99-block 228
+    $$$$$:   99-block 229
+call   50 never executed
+    $$$$$:   99-block 231
+    $$$$$:   99-block 232
+call   51 never executed
+    $$$$$:   99-block 234
+    #####:  100:    json contextJson;
+    %%%%%:  100-block 55
+call    0 never executed
+        -:  101:
+        -:  102:
+        -:  103:
+    #####:  104:    for (auto&[registerName, regInfo]: regInfoMap){
+call    0 never executed
+call    1 never executed
+    %%%%%:  104-block 58
+call    2 never executed
+call    3 never executed
+call    4 never executed
+    %%%%%:  104-block 167
+call    5 never executed
+    %%%%%:  104-block 168
+call    6 never executed
+branch  7 never executed
+branch  8 never executed (fallthrough)
+    #####:  105:        if (isRegisterValid(registerName, codeInformation.mode) && (registerName != "INVALID")){
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  105-block 62
+branch  3 never executed (fallthrough)
+branch  4 never executed
+    %%%%%:  105-block 63
+call    5 never executed
+branch  6 never executed (fallthrough)
+branch  7 never executed (throw)
+    %%%%%:  105-block 64
+branch  8 never executed (fallthrough)
+branch  9 never executed
+    %%%%%:  105-block 65
+    %%%%%:  105-block 66
+    %%%%%:  105-block 67
+branch 10 never executed (fallthrough)
+branch 11 never executed
+    #####:  106:            registerValueT registerValue = getRegisterValue(registerName, false);
+    %%%%%:  106-block 68
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  107:            if (regInfo.first <= 64){
+    %%%%%:  107-block 69
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  108:                contextJson[registerName] = getRegister(registerName).registerValueUn.eightByteVal;
+    %%%%%:  108-block 70
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  108-block 71
+call    3 never executed
+call    4 never executed
+branch  5 never executed (fallthrough)
+branch  6 never executed (throw)
+    %%%%%:  108-block 73
+call    7 never executed
+branch  8 never executed (fallthrough)
+branch  9 never executed (throw)
+    %%%%%:  108-block 74
+call   10 never executed
+call   11 never executed
+call   12 never executed
+    $$$$$:  108-block 235
+call   13 never executed
+    $$$$$:  108-block 237
+    $$$$$:  108-block 238
+call   14 never executed
+    $$$$$:  108-block 240
+    $$$$$:  108-block 241
+        -:  109:            }
+    #####:  110:            else if (regInfo.first == 128){
+    %%%%%:  110-block 78
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  111:                // disable saving contexts before code has run
+    #####:  112:                if (use32BitLanes) {
+    %%%%%:  112-block 79
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  113:                    for (int i = 1; i<5; i++) {
+    %%%%%:  113-block 80
+    %%%%%:  113-block 100
+branch  0 never executed
+branch  1 never executed
+    #####:  114:                        contextJson[registerName+ "[" + std::to_string(32 * (i - 1)) + ":" + std::to_string((32 * i) - 1) + "]"] = registerValue.info.arrays.floatArray[i-1];
+    %%%%%:  114-block 81
+call    0 never executed
+call    1 never executed
+call    2 never executed
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    %%%%%:  114-block 85
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:  114-block 86
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+    %%%%%:  114-block 87
+call   12 never executed
+branch 13 never executed (fallthrough)
+branch 14 never executed (throw)
+    %%%%%:  114-block 88
+call   15 never executed
+branch 16 never executed (fallthrough)
+branch 17 never executed (throw)
+    %%%%%:  114-block 89
+call   18 never executed
+branch 19 never executed (fallthrough)
+branch 20 never executed (throw)
+    %%%%%:  114-block 90
+call   21 never executed
+call   22 never executed
+call   23 never executed
+call   24 never executed
+call   25 never executed
+call   26 never executed
+call   27 never executed
+call   28 never executed
+call   29 never executed
+    $$$$$:  114-block 242
+call   30 never executed
+    $$$$$:  114-block 244
+call   31 never executed
+    $$$$$:  114-block 246
+call   32 never executed
+    $$$$$:  114-block 248
+call   33 never executed
+    $$$$$:  114-block 250
+call   34 never executed
+    $$$$$:  114-block 252
+    $$$$$:  114-block 253
+call   35 never executed
+    $$$$$:  114-block 255
+    $$$$$:  114-block 256
+    $$$$$:  114-block 257
+    $$$$$:  114-block 258
+call   36 never executed
+    $$$$$:  114-block 260
+    $$$$$:  114-block 261
+    $$$$$:  114-block 262
+    $$$$$:  114-block 263
+call   37 never executed
+    $$$$$:  114-block 265
+        -:  115:                    }
+        -:  116:                }
+        -:  117:                else {
+    #####:  118:                    for (int i = 1; i<3; i++) {
+    %%%%%:  118-block 101
+    %%%%%:  118-block 121
+branch  0 never executed
+branch  1 never executed
+    #####:  119:                        contextJson[registerName+ "[" + std::to_string(64 * (i - 1)) + ":" + std::to_string((64  * i) - 1) + "]"] = registerValue.info.arrays.doubleArray[i-1];
+    %%%%%:  119-block 102
+call    0 never executed
+call    1 never executed
+call    2 never executed
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    %%%%%:  119-block 106
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:  119-block 107
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+    %%%%%:  119-block 108
+call   12 never executed
+branch 13 never executed (fallthrough)
+branch 14 never executed (throw)
+    %%%%%:  119-block 109
+call   15 never executed
+branch 16 never executed (fallthrough)
+branch 17 never executed (throw)
+    %%%%%:  119-block 110
+call   18 never executed
+branch 19 never executed (fallthrough)
+branch 20 never executed (throw)
+    %%%%%:  119-block 111
+call   21 never executed
+call   22 never executed
+call   23 never executed
+call   24 never executed
+call   25 never executed
+call   26 never executed
+call   27 never executed
+call   28 never executed
+call   29 never executed
+    $$$$$:  119-block 266
+call   30 never executed
+    $$$$$:  119-block 268
+call   31 never executed
+    $$$$$:  119-block 270
+call   32 never executed
+    $$$$$:  119-block 272
+call   33 never executed
+    $$$$$:  119-block 274
+call   34 never executed
+    $$$$$:  119-block 276
+    $$$$$:  119-block 277
+call   35 never executed
+    $$$$$:  119-block 279
+    $$$$$:  119-block 280
+    $$$$$:  119-block 281
+    $$$$$:  119-block 282
+call   36 never executed
+    $$$$$:  119-block 284
+    $$$$$:  119-block 285
+    $$$$$:  119-block 286
+    $$$$$:  119-block 287
+call   37 never executed
+    $$$$$:  119-block 289
+        -:  120:                    }
+        -:  121:                }
+        -:  122:            }
+    #####:  123:            else if (regInfo.first == 256) {
+    %%%%%:  123-block 122
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  124:                if (use32BitLanes) {
+    %%%%%:  124-block 123
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  125:                    for (int i = 1; i<9; i++) {
+    %%%%%:  125-block 124
+    %%%%%:  125-block 144
+branch  0 never executed
+branch  1 never executed
+    #####:  126:                        contextJson[registerName+ "[" + std::to_string(32 * (i - 1)) + ":" + std::to_string((32 * i) - 1) + "]"] = registerValue.info.arrays.floatArray[i-1];
+    %%%%%:  126-block 125
+call    0 never executed
+call    1 never executed
+call    2 never executed
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    %%%%%:  126-block 129
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:  126-block 130
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+    %%%%%:  126-block 131
+call   12 never executed
+branch 13 never executed (fallthrough)
+branch 14 never executed (throw)
+    %%%%%:  126-block 132
+call   15 never executed
+branch 16 never executed (fallthrough)
+branch 17 never executed (throw)
+    %%%%%:  126-block 133
+call   18 never executed
+branch 19 never executed (fallthrough)
+branch 20 never executed (throw)
+    %%%%%:  126-block 134
+call   21 never executed
+call   22 never executed
+call   23 never executed
+call   24 never executed
+call   25 never executed
+call   26 never executed
+call   27 never executed
+call   28 never executed
+call   29 never executed
+    $$$$$:  126-block 290
+call   30 never executed
+    $$$$$:  126-block 292
+call   31 never executed
+    $$$$$:  126-block 294
+call   32 never executed
+    $$$$$:  126-block 296
+call   33 never executed
+    $$$$$:  126-block 298
+call   34 never executed
+    $$$$$:  126-block 300
+    $$$$$:  126-block 301
+call   35 never executed
+    $$$$$:  126-block 303
+    $$$$$:  126-block 304
+    $$$$$:  126-block 305
+    $$$$$:  126-block 306
+call   36 never executed
+    $$$$$:  126-block 308
+    $$$$$:  126-block 309
+    $$$$$:  126-block 310
+    $$$$$:  126-block 311
+call   37 never executed
+    $$$$$:  126-block 313
+        -:  127:                    }
+        -:  128:                }
+        -:  129:                else {
+    #####:  130:                    for (int i = 1; i<5; i++) {
+    %%%%%:  130-block 145
+    %%%%%:  130-block 165
+branch  0 never executed
+branch  1 never executed (fallthrough)
+    #####:  131:                        contextJson[registerName+ "[" + std::to_string(64 * (i - 1)) + ":" + std::to_string((64  * i) - 1) + "]"] = registerValue.info.arrays.doubleArray[i-1];
+    %%%%%:  131-block 146
+call    0 never executed
+call    1 never executed
+call    2 never executed
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    %%%%%:  131-block 150
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:  131-block 151
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+    %%%%%:  131-block 152
+call   12 never executed
+branch 13 never executed (fallthrough)
+branch 14 never executed (throw)
+    %%%%%:  131-block 153
+call   15 never executed
+branch 16 never executed (fallthrough)
+branch 17 never executed (throw)
+    %%%%%:  131-block 154
+call   18 never executed
+branch 19 never executed (fallthrough)
+branch 20 never executed (throw)
+    %%%%%:  131-block 155
+call   21 never executed
+call   22 never executed
+call   23 never executed
+call   24 never executed
+call   25 never executed
+call   26 never executed
+call   27 never executed
+call   28 never executed
+call   29 never executed
+    $$$$$:  131-block 314
+call   30 never executed
+    $$$$$:  131-block 316
+call   31 never executed
+    $$$$$:  131-block 318
+call   32 never executed
+    $$$$$:  131-block 320
+call   33 never executed
+    $$$$$:  131-block 322
+call   34 never executed
+    $$$$$:  131-block 324
+    $$$$$:  131-block 325
+call   35 never executed
+    $$$$$:  131-block 327
+    $$$$$:  131-block 328
+    $$$$$:  131-block 329
+    $$$$$:  131-block 330
+call   36 never executed
+    $$$$$:  131-block 332
+    $$$$$:  131-block 333
+    $$$$$:  131-block 334
+    $$$$$:  131-block 335
+call   37 never executed
+    $$$$$:  131-block 337
+        -:  132:                        }
+        -:  133:                }
+        -:  134:            }
+        -:  135:        }
+        -:  136:    }
+        -:  137:
+    #####:  138:    std::ofstream jsonFile(jsonFilename, std::ios::out);
+    %%%%%:  138-block 170
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  139:    jsonFile << contextJson.dump() << std::endl;
+    %%%%%:  139-block 171
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  139-block 172
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    %%%%%:  139-block 173
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:  139-block 174
+call    9 never executed
+    $$$$$:  139-block 340
+call   10 never executed
+    $$$$$:  139-block 342
+    #####:  140:    jsonFile.close();
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  141:    LOG_INFO("Saved context successfully!");
+    %%%%%:  141-block 176
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:  141-block 178
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:  141-block 180
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:  141-block 181
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+    %%%%%:  141-block 182
+call   12 never executed
+call   13 never executed
+call   14 never executed
+branch 15 never executed (fallthrough)
+branch 16 never executed (throw)
+    %%%%%:  141-block 185
+call   17 never executed
+branch 18 never executed (fallthrough)
+branch 19 never executed (throw)
+    %%%%%:  141-block 186
+    %%%%%:  141-block 188
+call   20 never executed
+branch 21 never executed (fallthrough)
+branch 22 never executed (throw)
+    %%%%%:  141-block 189
+call   23 never executed
+branch 24 never executed (fallthrough)
+branch 25 never executed (throw)
+    %%%%%:  141-block 190
+call   26 never executed
+branch 27 never executed (fallthrough)
+branch 28 never executed (throw)
+    %%%%%:  141-block 191
+call   29 never executed
+branch 30 never executed (fallthrough)
+branch 31 never executed (throw)
+    %%%%%:  141-block 192
+call   32 never executed
+branch 33 never executed (fallthrough)
+branch 34 never executed (throw)
+    %%%%%:  141-block 193
+call   35 never executed
+branch 36 never executed (fallthrough)
+branch 37 never executed (throw)
+    %%%%%:  141-block 194
+call   38 never executed
+call   39 never executed
+    %%%%%:  141-block 197
+call   40 never executed
+call   41 never executed
+    %%%%%:  141-block 200
+call   42 never executed
+branch 43 never executed
+branch 44 never executed (fallthrough)
+    $$$$$:  141-block 343
+call   45 never executed
+    $$$$$:  141-block 345
+call   46 never executed
+    $$$$$:  141-block 349
+    $$$$$:  141-block 350
+    $$$$$:  141-block 351
+    $$$$$:  141-block 352
+call   47 never executed
+    $$$$$:  141-block 354
+    $$$$$:  141-block 355
+call   48 never executed
+    $$$$$:  141-block 357
+    #####:  142:}
+    %%%%%:  142-block 202
+call    0 never executed
+call    1 never executed
+    $$$$$:  142-block 358
+call    2 never executed
+    $$$$$:  142-block 360
+call    3 never executed
+        -:  143:
+function _Z25fileLoadUCContextFromJsonRKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE called 0 returned 0% blocks executed 0%
+    #####:  144:void fileLoadUCContextFromJson(const std::string& jsonFilename){
+    #####:  145:    LOG_DEBUG("Loading context from file " << jsonFilename);
+    %%%%%:  145-block 2
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:  145-block 4
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:  145-block 6
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:  145-block 7
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+    %%%%%:  145-block 8
+call   12 never executed
+call   13 never executed
+call   14 never executed
+branch 15 never executed (fallthrough)
+branch 16 never executed (throw)
+    %%%%%:  145-block 11
+call   17 never executed
+branch 18 never executed (fallthrough)
+branch 19 never executed (throw)
+    %%%%%:  145-block 12
+    %%%%%:  145-block 14
+call   20 never executed
+branch 21 never executed (fallthrough)
+branch 22 never executed (throw)
+    %%%%%:  145-block 15
+call   23 never executed
+branch 24 never executed (fallthrough)
+branch 25 never executed (throw)
+    %%%%%:  145-block 16
+call   26 never executed
+branch 27 never executed (fallthrough)
+branch 28 never executed (throw)
+    %%%%%:  145-block 17
+call   29 never executed
+branch 30 never executed (fallthrough)
+branch 31 never executed (throw)
+    %%%%%:  145-block 18
+call   32 never executed
+branch 33 never executed (fallthrough)
+branch 34 never executed (throw)
+    %%%%%:  145-block 19
+call   35 never executed
+branch 36 never executed (fallthrough)
+branch 37 never executed (throw)
+    %%%%%:  145-block 20
+call   38 never executed
+branch 39 never executed (fallthrough)
+branch 40 never executed (throw)
+    %%%%%:  145-block 21
+call   41 never executed
+call   42 never executed
+    %%%%%:  145-block 24
+call   43 never executed
+call   44 never executed
+    %%%%%:  145-block 27
+call   45 never executed
+branch 46 never executed
+branch 47 never executed (fallthrough)
+    $$$$$:  145-block 198
+call   48 never executed
+    $$$$$:  145-block 200
+call   49 never executed
+    $$$$$:  145-block 204
+    $$$$$:  145-block 205
+    $$$$$:  145-block 206
+    $$$$$:  145-block 207
+call   50 never executed
+    $$$$$:  145-block 209
+    $$$$$:  145-block 210
+call   51 never executed
+    $$$$$:  145-block 212
+    #####:  146:    if (jsonFilename.empty()){
+    %%%%%:  146-block 29
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  147:        LOG_ERROR("Unable to load context because the file is empty!");
+    %%%%%:  147-block 31
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:  147-block 33
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:  147-block 35
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:  147-block 36
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+    %%%%%:  147-block 37
+call   12 never executed
+call   13 never executed
+call   14 never executed
+branch 15 never executed (fallthrough)
+branch 16 never executed (throw)
+    %%%%%:  147-block 40
+call   17 never executed
+branch 18 never executed (fallthrough)
+branch 19 never executed (throw)
+    %%%%%:  147-block 41
+    %%%%%:  147-block 43
+call   20 never executed
+branch 21 never executed (fallthrough)
+branch 22 never executed (throw)
+    %%%%%:  147-block 44
+call   23 never executed
+branch 24 never executed (fallthrough)
+branch 25 never executed (throw)
+    %%%%%:  147-block 45
+call   26 never executed
+branch 27 never executed (fallthrough)
+branch 28 never executed (throw)
+    %%%%%:  147-block 46
+call   29 never executed
+branch 30 never executed (fallthrough)
+branch 31 never executed (throw)
+    %%%%%:  147-block 47
+call   32 never executed
+branch 33 never executed (fallthrough)
+branch 34 never executed (throw)
+    %%%%%:  147-block 48
+call   35 never executed
+branch 36 never executed (fallthrough)
+branch 37 never executed (throw)
+    %%%%%:  147-block 49
+call   38 never executed
+call   39 never executed
+    %%%%%:  147-block 52
+call   40 never executed
+call   41 never executed
+    %%%%%:  147-block 55
+call   42 never executed
+branch 43 never executed
+branch 44 never executed (fallthrough)
+    $$$$$:  147-block 213
+call   45 never executed
+    $$$$$:  147-block 215
+call   46 never executed
+    $$$$$:  147-block 219
+    $$$$$:  147-block 220
+    $$$$$:  147-block 221
+    $$$$$:  147-block 222
+call   47 never executed
+    $$$$$:  147-block 224
+    $$$$$:  147-block 225
+call   48 never executed
+    $$$$$:  147-block 227
+    #####:  148:        return;
+    %%%%%:  148-block 57
+    %%%%%:  148-block 196
+        -:  149:    }
+        -:  150:
+    #####:  151:    std::ifstream jsonFile(jsonFilename);
+    %%%%%:  151-block 58
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:  152:
+    #####:  153:    if (jsonFile.bad() || jsonFile.fail() || !jsonFile.is_open()){
+    %%%%%:  153-block 59
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:  153-block 61
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:  153-block 63
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed
+    %%%%%:  153-block 65
+    %%%%%:  153-block 66
+    %%%%%:  153-block 67
+branch  9 never executed (fallthrough)
+branch 10 never executed
+    #####:  154:         tinyfd_messageBox("Context loading failed!", "Context loading has failed because the file you provided has invalid json format!",
+    %%%%%:  154-block 68
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:  155:            "ok", "error", 0);
+    #####:  156:        LOG_ERROR("Unable to open the file: " << jsonFilename << " for loading the context!");
+    %%%%%:  156-block 69
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:  156-block 71
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:  156-block 73
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:  156-block 74
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+    %%%%%:  156-block 75
+call   12 never executed
+call   13 never executed
+call   14 never executed
+branch 15 never executed (fallthrough)
+branch 16 never executed (throw)
+    %%%%%:  156-block 78
+call   17 never executed
+branch 18 never executed (fallthrough)
+branch 19 never executed (throw)
+    %%%%%:  156-block 79
+    %%%%%:  156-block 81
+call   20 never executed
+branch 21 never executed (fallthrough)
+branch 22 never executed (throw)
+    %%%%%:  156-block 82
+call   23 never executed
+branch 24 never executed (fallthrough)
+branch 25 never executed (throw)
+    %%%%%:  156-block 83
+call   26 never executed
+branch 27 never executed (fallthrough)
+branch 28 never executed (throw)
+    %%%%%:  156-block 84
+call   29 never executed
+branch 30 never executed (fallthrough)
+branch 31 never executed (throw)
+    %%%%%:  156-block 85
+call   32 never executed
+branch 33 never executed (fallthrough)
+branch 34 never executed (throw)
+    %%%%%:  156-block 86
+call   35 never executed
+branch 36 never executed (fallthrough)
+branch 37 never executed (throw)
+    %%%%%:  156-block 87
+call   38 never executed
+branch 39 never executed (fallthrough)
+branch 40 never executed (throw)
+    %%%%%:  156-block 88
+call   41 never executed
+branch 42 never executed (fallthrough)
+branch 43 never executed (throw)
+    %%%%%:  156-block 89
+call   44 never executed
+call   45 never executed
+    %%%%%:  156-block 92
+call   46 never executed
+call   47 never executed
+    %%%%%:  156-block 95
+call   48 never executed
+branch 49 never executed
+branch 50 never executed (fallthrough)
+    $$$$$:  156-block 228
+call   51 never executed
+    $$$$$:  156-block 230
+call   52 never executed
+    $$$$$:  156-block 234
+    $$$$$:  156-block 235
+    $$$$$:  156-block 236
+    $$$$$:  156-block 237
+call   53 never executed
+    $$$$$:  156-block 239
+    $$$$$:  156-block 240
+call   54 never executed
+    $$$$$:  156-block 242
+    #####:  157:        return;
+    %%%%%:  157-block 97
+        -:  158:    }
+        -:  159:
+    #####:  160:    json j;
+    %%%%%:  160-block 98
+call    0 never executed
+    #####:  161:    std::stringstream jsonStream;
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:  162:
+    #####:  163:    if (context == nullptr){
+    %%%%%:  163-block 100
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  164:        enableDebugMode = true;
+    #####:  165:        fileLoadContext = false;
+    #####:  166:        runActions();
+    %%%%%:  166-block 101
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:  167:    }
+        -:  168:
+    #####:  169:    jsonStream << jsonFile.rdbuf();
+    %%%%%:  169-block 102
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+    #####:  170:    auto j2 = json::parse(jsonStream.str());
+    %%%%%:  170-block 104
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+    %%%%%:  170-block 106
+call    4 never executed
+branch  5 never executed (fallthrough)
+branch  6 never executed (throw)
+    %%%%%:  170-block 107
+call    7 never executed
+call    8 never executed
+    $$$$$:  170-block 243
+call    9 never executed
+    $$$$$:  170-block 245
+    $$$$$:  170-block 246
+call   10 never executed
+    $$$$$:  170-block 248
+        -:  171:
+    #####:  172:    for (auto jsonIter = j2.begin(); jsonIter != j2.end(); ++jsonIter){
+call    0 never executed
+    %%%%%:  172-block 142
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+    %%%%%:  172-block 143
+call    4 never executed
+call    5 never executed
+branch  6 never executed (fallthrough)
+branch  7 never executed (throw)
+    %%%%%:  172-block 145
+branch  8 never executed
+branch  9 never executed (fallthrough)
+    $$$$$:  172-block 255
+    #####:  173:        auto value = jsonIter.value().dump();
+    %%%%%:  173-block 110
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  173-block 111
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+        -:  174:
+    #####:  175:        if (value.empty() || value == "\"-\"" || value == "'-'"){
+    %%%%%:  175-block 112
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:  175-block 114
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    %%%%%:  175-block 115
+branch  6 never executed (fallthrough)
+branch  7 never executed
+    %%%%%:  175-block 116
+call    8 never executed
+branch  9 never executed (fallthrough)
+branch 10 never executed (throw)
+    %%%%%:  175-block 117
+branch 11 never executed (fallthrough)
+branch 12 never executed
+    %%%%%:  175-block 118
+    %%%%%:  175-block 119
+    %%%%%:  175-block 120
+branch 13 never executed (fallthrough)
+branch 14 never executed
+        -:  176:        // {"reg": '-'} signals to use the current value of the register
+        -:  177:        // and make no changes to it
+    #####:  178:            continue;
+    %%%%%:  178-block 121
+        -:  179:        }
+        -:  180:
+        -:  181:        char *ptr;
+    #####:  182:        auto ret = strtoul(value.data(), &ptr, 10);
+    %%%%%:  182-block 122
+call    0 never executed
+call    1 never executed
+    #####:  183:        if (getRegisterActualSize(jsonIter.key()) > 64) {
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  183-block 125
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    %%%%%:  183-block 126
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:  183-block 127
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed
+    $$$$$:  183-block 249
+call   12 never executed
+    $$$$$:  183-block 251
+    #####:  184:            parseRegisterValueInput(jsonIter.key(), value.c_str(), true);
+    %%%%%:  184-block 129
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+    %%%%%:  184-block 131
+call    4 never executed
+branch  5 never executed (fallthrough)
+branch  6 never executed (throw)
+    #####:  185:            continue;
+    %%%%%:  185-block 132
+        -:  186:        }
+    #####:  187:        uc_reg_write(uc, regNameToConstant(jsonIter.key()), &ret);
+    %%%%%:  187-block 133
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  187-block 134
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    %%%%%:  187-block 135
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    #####:  188:    }
+    %%%%%:  188-block 136
+    %%%%%:  188-block 137
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    $$$$$:  188-block 252
+call    3 never executed
+        -:  189:
+        -:  190:    // only show default regs after loading
+    #####:  191:    auto idx = registerValueMap.begin();
+    %%%%%:  191-block 146
+call    0 never executed
+    #####:  192:    while (idx!=registerValueMap.end()) {
+    %%%%%:  192-block 158
+call    0 never executed
+call    1 never executed
+branch  2 never executed
+branch  3 never executed (fallthrough)
+    #####:  193:        if (std::ranges::find(defaultShownRegs, idx->first) == defaultShownRegs.end()) {
+    %%%%%:  193-block 148
+call    0 never executed
+call    1 never executed
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed (throw)
+    %%%%%:  193-block 151
+call    5 never executed
+branch  6 never executed (fallthrough)
+branch  7 never executed
+    $$$$$:  193-block 257
+    $$$$$:  193-block 258
+    #####:  194:            registerValueMap.erase(idx);
+    %%%%%:  194-block 153
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+    $$$$$:  194-block 259
+    $$$$$:  194-block 260
+    #####:  195:            idx = registerValueMap.begin();
+    %%%%%:  195-block 155
+call    0 never executed
+        -:  196:        }
+    #####:  197:        ++idx;
+    %%%%%:  197-block 157
+call    0 never executed
+        -:  198:    }
+        -:  199:
+    #####:  200:    LOG_DEBUG("Context loaded successfully from " << jsonFilename);
+    %%%%%:  200-block 161
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:  200-block 163
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:  200-block 165
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:  200-block 166
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+    %%%%%:  200-block 167
+call   12 never executed
+call   13 never executed
+call   14 never executed
+branch 15 never executed (fallthrough)
+branch 16 never executed (throw)
+    %%%%%:  200-block 170
+call   17 never executed
+branch 18 never executed (fallthrough)
+branch 19 never executed (throw)
+    %%%%%:  200-block 171
+    %%%%%:  200-block 173
+call   20 never executed
+branch 21 never executed (fallthrough)
+branch 22 never executed (throw)
+    %%%%%:  200-block 174
+call   23 never executed
+branch 24 never executed (fallthrough)
+branch 25 never executed (throw)
+    %%%%%:  200-block 175
+call   26 never executed
+branch 27 never executed (fallthrough)
+branch 28 never executed (throw)
+    %%%%%:  200-block 176
+call   29 never executed
+branch 30 never executed (fallthrough)
+branch 31 never executed (throw)
+    %%%%%:  200-block 177
+call   32 never executed
+branch 33 never executed (fallthrough)
+branch 34 never executed (throw)
+    %%%%%:  200-block 178
+call   35 never executed
+branch 36 never executed (fallthrough)
+branch 37 never executed (throw)
+    %%%%%:  200-block 179
+call   38 never executed
+branch 39 never executed (fallthrough)
+branch 40 never executed (throw)
+    %%%%%:  200-block 180
+call   41 never executed
+call   42 never executed
+    %%%%%:  200-block 183
+call   43 never executed
+call   44 never executed
+    %%%%%:  200-block 186
+call   45 never executed
+branch 46 never executed
+branch 47 never executed (fallthrough)
+    $$$$$:  200-block 261
+call   48 never executed
+    $$$$$:  200-block 263
+call   49 never executed
+    $$$$$:  200-block 267
+    $$$$$:  200-block 268
+    $$$$$:  200-block 269
+    $$$$$:  200-block 270
+call   50 never executed
+    $$$$$:  200-block 272
+    $$$$$:  200-block 273
+call   51 never executed
+    $$$$$:  200-block 275
+    #####:  201:}
+    %%%%%:  201-block 188
+call    0 never executed
+call    1 never executed
+call    2 never executed
+    %%%%%:  201-block 192
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    $$$$$:  201-block 276
+call    6 never executed
+    $$$$$:  201-block 278
+call    7 never executed
+    $$$$$:  201-block 280
+call    8 never executed
+    $$$$$:  201-block 282
+call    9 never executed

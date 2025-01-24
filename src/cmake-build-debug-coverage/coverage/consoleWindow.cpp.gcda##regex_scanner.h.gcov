@@ -1,0 +1,350 @@
+        -:    0:Source:/usr/include/c++/14.2.1/bits/regex_scanner.h
+        -:    0:Graph:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/app/windows/consoleWindow.cpp.gcno
+        -:    0:Data:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/app/windows/consoleWindow.cpp.gcda
+        -:    0:Runs:1
+        -:    1:// class template regex -*- C++ -*-
+        -:    2:
+        -:    3:// Copyright (C) 2013-2024 Free Software Foundation, Inc.
+        -:    4://
+        -:    5:// This file is part of the GNU ISO C++ Library.  This library is free
+        -:    6:// software; you can redistribute it and/or modify it under the
+        -:    7:// terms of the GNU General Public License as published by the
+        -:    8:// Free Software Foundation; either version 3, or (at your option)
+        -:    9:// any later version.
+        -:   10:
+        -:   11:// This library is distributed in the hope that it will be useful,
+        -:   12:// but WITHOUT ANY WARRANTY; without even the implied warranty of
+        -:   13:// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+        -:   14:// GNU General Public License for more details.
+        -:   15:
+        -:   16:// Under Section 7 of GPL version 3, you are granted additional
+        -:   17:// permissions described in the GCC Runtime Library Exception, version
+        -:   18:// 3.1, as published by the Free Software Foundation.
+        -:   19:
+        -:   20:// You should have received a copy of the GNU General Public License and
+        -:   21:// a copy of the GCC Runtime Library Exception along with this program;
+        -:   22:// see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+        -:   23:// <http://www.gnu.org/licenses/>.
+        -:   24:
+        -:   25:/**
+        -:   26: *  @file bits/regex_scanner.h
+        -:   27: *  This is an internal header file, included by other library headers.
+        -:   28: *  Do not attempt to use it directly. @headername{regex}
+        -:   29: */
+        -:   30:
+        -:   31:namespace std _GLIBCXX_VISIBILITY(default)
+        -:   32:{
+        -:   33:_GLIBCXX_BEGIN_NAMESPACE_VERSION
+        -:   34:
+        -:   35:namespace __detail
+        -:   36:{
+        -:   37:  /**
+        -:   38:   * @addtogroup regex-detail
+        -:   39:   * @{
+        -:   40:   */
+        -:   41:
+        -:   42:  struct _ScannerBase
+        -:   43:  {
+        -:   44:  public:
+        -:   45:    /// Token types returned from the scanner.
+        -:   46:    enum _TokenT : unsigned
+        -:   47:    {
+        -:   48:      _S_token_anychar,
+        -:   49:      _S_token_ord_char,
+        -:   50:      _S_token_oct_num,
+        -:   51:      _S_token_hex_num,
+        -:   52:      _S_token_backref,
+        -:   53:      _S_token_subexpr_begin,
+        -:   54:      _S_token_subexpr_no_group_begin,
+        -:   55:      _S_token_subexpr_lookahead_begin, // neg if _M_value[0] == 'n'
+        -:   56:      _S_token_subexpr_end,
+        -:   57:      _S_token_bracket_begin,
+        -:   58:      _S_token_bracket_neg_begin,
+        -:   59:      _S_token_bracket_end,
+        -:   60:      _S_token_interval_begin,
+        -:   61:      _S_token_interval_end,
+        -:   62:      _S_token_quoted_class,
+        -:   63:      _S_token_char_class_name,
+        -:   64:      _S_token_collsymbol,
+        -:   65:      _S_token_equiv_class_name,
+        -:   66:      _S_token_opt,
+        -:   67:      _S_token_or,
+        -:   68:      _S_token_closure0,
+        -:   69:      _S_token_closure1,
+        -:   70:      _S_token_line_begin,
+        -:   71:      _S_token_line_end,
+        -:   72:      _S_token_word_bound, // neg if _M_value[0] == 'n'
+        -:   73:      _S_token_comma,
+        -:   74:      _S_token_dup_count,
+        -:   75:      _S_token_eof,
+        -:   76:      _S_token_bracket_dash,
+        -:   77:      _S_token_unknown = -1u
+        -:   78:    };
+        -:   79:
+        -:   80:  protected:
+        -:   81:    typedef regex_constants::syntax_option_type _FlagT;
+        -:   82:
+        -:   83:    enum _StateT
+        -:   84:    {
+        -:   85:      _S_state_normal,
+        -:   86:      _S_state_in_brace,
+        -:   87:      _S_state_in_bracket,
+        -:   88:    };
+        -:   89:
+        -:   90:  protected:
+function _ZNSt8__detail12_ScannerBaseC2ENSt15regex_constants18syntax_option_typeE called 0 returned 0% blocks executed 0%
+    #####:   91:    _ScannerBase(_FlagT __flags)
+    #####:   92:    : _M_state(_S_state_normal),
+    #####:   93:    _M_flags(__flags),
+    #####:   94:    _M_escape_tbl(_M_is_ecma()
+    #####:   95:		  ? _M_ecma_escape_tbl
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:   95-block 4
+    %%%%%:   95-block 5
+        -:   96:		  : _M_awk_escape_tbl),
+    #####:   97:    _M_spec_char(_M_is_ecma()
+    %%%%%:   97-block 6
+call    0 never executed
+    #####:   98:		 ? _M_ecma_spec_char
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:   98-block 8
+    %%%%%:   98-block 29
+    #####:   99:		 : _M_flags & regex_constants::basic
+    %%%%%:   99-block 9
+call    0 never executed
+    #####:  100:		 ? _M_basic_spec_char
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  100-block 11
+    %%%%%:  100-block 28
+    #####:  101:		 : _M_flags & regex_constants::extended
+    %%%%%:  101-block 12
+call    0 never executed
+    #####:  102:		 ? _M_extended_spec_char
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  102-block 14
+    %%%%%:  102-block 27
+    #####:  103:		 : _M_flags & regex_constants::grep
+    %%%%%:  103-block 15
+call    0 never executed
+    #####:  104:		 ?  ".[\\*^$\n"
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  104-block 25
+    %%%%%:  104-block 26
+    #####:  105:		 : _M_flags & regex_constants::egrep
+    %%%%%:  105-block 17
+call    0 never executed
+    #####:  106:		 ? ".[\\()*+?{|^$\n"
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  106-block 23
+    %%%%%:  106-block 24
+    #####:  107:		 : _M_flags & regex_constants::awk
+    %%%%%:  107-block 19
+call    0 never executed
+    #####:  108:		 ? _M_extended_spec_char
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  108-block 21
+    %%%%%:  108-block 22
+        -:  109:		 : nullptr),
+    #####:  110:    _M_at_bracket_start(false)
+    %%%%%:  110-block 2
+call    0 never executed
+    %%%%%:  110-block 30
+    #####:  111:    { __glibcxx_assert(_M_spec_char); }
+    %%%%%:  111-block 32
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  111-block 33
+branch  2 never executed (fallthrough)
+branch  3 never executed
+        -:  112:
+        -:  113:  protected:
+        -:  114:    const char*
+function _ZNSt8__detail12_ScannerBase14_M_find_escapeEc called 0 returned 0% blocks executed 0%
+    #####:  115:    _M_find_escape(char __c)
+        -:  116:    {
+    #####:  117:      auto __it = _M_escape_tbl;
+    #####:  118:      for (; __it->first != '\0'; ++__it)
+    %%%%%:  118-block 2
+    %%%%%:  118-block 5
+    %%%%%:  118-block 6
+branch  0 never executed
+branch  1 never executed (fallthrough)
+    #####:  119:	if (__it->first == __c)
+    %%%%%:  119-block 3
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  120:	  return &__it->second;
+    %%%%%:  120-block 4
+    #####:  121:      return nullptr;
+    %%%%%:  121-block 7
+        -:  122:    }
+        -:  123:
+        -:  124:    bool
+function _ZNKSt8__detail12_ScannerBase10_M_is_ecmaEv called 0 returned 0% blocks executed 0%
+    #####:  125:    _M_is_ecma() const
+    #####:  126:    { return _M_flags & regex_constants::ECMAScript; }
+    %%%%%:  126-block 2
+call    0 never executed
+        -:  127:
+        -:  128:    bool
+function _ZNKSt8__detail12_ScannerBase11_M_is_basicEv called 0 returned 0% blocks executed 0%
+    #####:  129:    _M_is_basic() const
+    #####:  130:    { return _M_flags & (regex_constants::basic | regex_constants::grep); }
+    %%%%%:  130-block 2
+call    0 never executed
+call    1 never executed
+        -:  131:
+        -:  132:    bool
+        -:  133:    _M_is_extended() const
+        -:  134:    {
+        -:  135:      return _M_flags & (regex_constants::extended
+        -:  136:			 | regex_constants::egrep
+        -:  137:			 | regex_constants::awk);
+        -:  138:    }
+        -:  139:
+        -:  140:    bool
+        -:  141:    _M_is_grep() const
+        -:  142:    { return _M_flags & (regex_constants::grep | regex_constants::egrep); }
+        -:  143:
+        -:  144:    bool
+function _ZNKSt8__detail12_ScannerBase9_M_is_awkEv called 0 returned 0% blocks executed 0%
+    #####:  145:    _M_is_awk() const
+    #####:  146:    { return _M_flags & regex_constants::awk; }
+    %%%%%:  146-block 2
+call    0 never executed
+        -:  147:
+        -:  148:  protected:
+        -:  149:    // TODO: Make them static in the next abi change.
+        -:  150:    const std::pair<char, _TokenT> _M_token_tbl[9] =
+        -:  151:      {
+        -:  152:	{'^', _S_token_line_begin},
+        -:  153:	{'$', _S_token_line_end},
+        -:  154:	{'.', _S_token_anychar},
+        -:  155:	{'*', _S_token_closure0},
+        -:  156:	{'+', _S_token_closure1},
+        -:  157:	{'?', _S_token_opt},
+        -:  158:	{'|', _S_token_or},
+        -:  159:	{'\n', _S_token_or}, // grep and egrep
+        -:  160:	{'\0', _S_token_or},
+        -:  161:      };
+        -:  162:    const std::pair<char, char> _M_ecma_escape_tbl[8] =
+        -:  163:      {
+        -:  164:	{'0', '\0'},
+        -:  165:	{'b', '\b'},
+        -:  166:	{'f', '\f'},
+        -:  167:	{'n', '\n'},
+        -:  168:	{'r', '\r'},
+        -:  169:	{'t', '\t'},
+        -:  170:	{'v', '\v'},
+        -:  171:	{'\0', '\0'},
+        -:  172:      };
+        -:  173:    const std::pair<char, char> _M_awk_escape_tbl[11] =
+        -:  174:      {
+        -:  175:	{'"', '"'},
+        -:  176:	{'/', '/'},
+        -:  177:	{'\\', '\\'},
+        -:  178:	{'a', '\a'},
+        -:  179:	{'b', '\b'},
+        -:  180:	{'f', '\f'},
+        -:  181:	{'n', '\n'},
+        -:  182:	{'r', '\r'},
+        -:  183:	{'t', '\t'},
+        -:  184:	{'v', '\v'},
+        -:  185:	{'\0', '\0'},
+        -:  186:      };
+        -:  187:    const char* _M_ecma_spec_char = "^$\\.*+?()[]{}|";
+        -:  188:    const char* _M_basic_spec_char = ".[\\*^$";
+        -:  189:    const char* _M_extended_spec_char = ".[\\()*+?{|^$";
+        -:  190:
+        -:  191:    _StateT                       _M_state;
+        -:  192:    _FlagT                        _M_flags;
+        -:  193:    _TokenT                       _M_token;
+        -:  194:    const std::pair<char, char>*  _M_escape_tbl;
+        -:  195:    const char*                   _M_spec_char;
+        -:  196:    bool                          _M_at_bracket_start;
+        -:  197:  };
+        -:  198:
+        -:  199:  /**
+        -:  200:   * @brief Scans an input range for regex tokens.
+        -:  201:   *
+        -:  202:   * The %_Scanner class interprets the regular expression pattern in
+        -:  203:   * the input range passed to its constructor as a sequence of parse
+        -:  204:   * tokens passed to the regular expression compiler.  The sequence
+        -:  205:   * of tokens provided depends on the flag settings passed to the
+        -:  206:   * constructor: different regular expression grammars will interpret
+        -:  207:   * the same input pattern in syntactically different ways.
+        -:  208:   */
+        -:  209:  template<typename _CharT>
+        -:  210:    class _Scanner
+        -:  211:    : public _ScannerBase
+        -:  212:    {
+        -:  213:    public:
+        -:  214:      typedef std::basic_string<_CharT>                           _StringT;
+        -:  215:      typedef regex_constants::syntax_option_type                 _FlagT;
+        -:  216:      typedef const std::ctype<_CharT>                            _CtypeT;
+        -:  217:
+        -:  218:      _Scanner(const _CharT* __begin, const _CharT* __end,
+        -:  219:	       _FlagT __flags, std::locale __loc);
+        -:  220:
+        -:  221:      void
+        -:  222:      _M_advance();
+        -:  223:
+        -:  224:      _TokenT
+function _ZNKSt8__detail8_ScannerIcE12_M_get_tokenEv called 0 returned 0% blocks executed 0%
+    #####:  225:      _M_get_token() const noexcept
+    #####:  226:      { return _M_token; }
+    %%%%%:  226-block 2
+        -:  227:
+        -:  228:      const _StringT&
+function _ZNKSt8__detail8_ScannerIcE12_M_get_valueB5cxx11Ev called 0 returned 0% blocks executed 0%
+    #####:  229:      _M_get_value() const noexcept
+    #####:  230:      { return _M_value; }
+    %%%%%:  230-block 2
+        -:  231:
+        -:  232:#ifdef _GLIBCXX_DEBUG
+        -:  233:      std::ostream&
+        -:  234:      _M_print(std::ostream&);
+        -:  235:#endif
+        -:  236:
+        -:  237:    private:
+        -:  238:      void
+        -:  239:      _M_scan_normal();
+        -:  240:
+        -:  241:      void
+        -:  242:      _M_scan_in_bracket();
+        -:  243:
+        -:  244:      void
+        -:  245:      _M_scan_in_brace();
+        -:  246:
+        -:  247:      void
+        -:  248:      _M_eat_escape_ecma();
+        -:  249:
+        -:  250:      void
+        -:  251:      _M_eat_escape_posix();
+        -:  252:
+        -:  253:      void
+        -:  254:      _M_eat_escape_awk();
+        -:  255:
+        -:  256:      void
+        -:  257:      _M_eat_class(char);
+        -:  258:
+        -:  259:      const _CharT*                 _M_current;
+        -:  260:      const _CharT*                 _M_end;
+        -:  261:      _CtypeT&                      _M_ctype;
+        -:  262:      _StringT                      _M_value;
+        -:  263:      void (_Scanner::* _M_eat_escape)();
+        -:  264:    };
+        -:  265:
+        -:  266: ///@} regex-detail
+        -:  267:} // namespace __detail
+        -:  268:_GLIBCXX_END_NAMESPACE_VERSION
+        -:  269:} // namespace std
+        -:  270:
+        -:  271:#include <bits/regex_scanner.tcc>

@@ -1,0 +1,577 @@
+        -:    0:Source:/usr/include/c++/14.2.1/bits/streambuf_iterator.h
+        -:    0:Graph:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/app/tasks/editorTasks.cpp.gcno
+        -:    0:Data:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/app/tasks/editorTasks.cpp.gcda
+        -:    0:Runs:1
+        -:    1:// Streambuf iterators
+        -:    2:
+        -:    3:// Copyright (C) 1997-2024 Free Software Foundation, Inc.
+        -:    4://
+        -:    5:// This file is part of the GNU ISO C++ Library.  This library is free
+        -:    6:// software; you can redistribute it and/or modify it under the
+        -:    7:// terms of the GNU General Public License as published by the
+        -:    8:// Free Software Foundation; either version 3, or (at your option)
+        -:    9:// any later version.
+        -:   10:
+        -:   11:// This library is distributed in the hope that it will be useful,
+        -:   12:// but WITHOUT ANY WARRANTY; without even the implied warranty of
+        -:   13:// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+        -:   14:// GNU General Public License for more details.
+        -:   15:
+        -:   16:// Under Section 7 of GPL version 3, you are granted additional
+        -:   17:// permissions described in the GCC Runtime Library Exception, version
+        -:   18:// 3.1, as published by the Free Software Foundation.
+        -:   19:
+        -:   20:// You should have received a copy of the GNU General Public License and
+        -:   21:// a copy of the GCC Runtime Library Exception along with this program;
+        -:   22:// see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+        -:   23:// <http://www.gnu.org/licenses/>.
+        -:   24:
+        -:   25:/** @file bits/streambuf_iterator.h
+        -:   26: *  This is an internal header file, included by other library headers.
+        -:   27: *  Do not attempt to use it directly. @headername{iterator}
+        -:   28: */
+        -:   29:
+        -:   30:#ifndef _STREAMBUF_ITERATOR_H
+        -:   31:#define _STREAMBUF_ITERATOR_H 1
+        -:   32:
+        -:   33:#pragma GCC system_header
+        -:   34:
+        -:   35:#include <streambuf>
+        -:   36:#include <bits/stl_iterator_base_types.h>
+        -:   37:#include <debug/debug.h>
+        -:   38:
+        -:   39:namespace std _GLIBCXX_VISIBILITY(default)
+        -:   40:{
+        -:   41:_GLIBCXX_BEGIN_NAMESPACE_VERSION
+        -:   42:
+        -:   43:  /**
+        -:   44:   * @addtogroup iterators
+        -:   45:   * @{
+        -:   46:   */
+        -:   47:
+        -:   48:// Ignore warnings about std::iterator.
+        -:   49:#pragma GCC diagnostic push
+        -:   50:#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+        -:   51:  // 24.5.3 Template class istreambuf_iterator
+        -:   52:  /// Provides input iterator semantics for streambufs.
+        -:   53:  template<typename _CharT, typename _Traits>
+        -:   54:    class istreambuf_iterator
+        -:   55:    : public iterator<input_iterator_tag, _CharT, typename _Traits::off_type,
+        -:   56:		      _CharT*, _CharT>
+        -:   57:    {
+        -:   58:    public:
+        -:   59:      // Types:
+        -:   60:      ///@{
+        -:   61:      /// Public typedefs
+        -:   62:#if __cplusplus < 201103L
+        -:   63:      typedef _CharT& reference; // Changed to _CharT by LWG 445
+        -:   64:#elif __cplusplus > 201703L
+        -:   65:      // _GLIBCXX_RESOLVE_LIB_DEFECTS
+        -:   66:      // 3188. istreambuf_iterator::pointer should not be unspecified
+        -:   67:      using pointer = void;
+        -:   68:#endif
+        -:   69:
+        -:   70:      typedef _CharT					char_type;
+        -:   71:      typedef _Traits					traits_type;
+        -:   72:      typedef typename _Traits::int_type		int_type;
+        -:   73:      typedef basic_streambuf<_CharT, _Traits>		streambuf_type;
+        -:   74:      typedef basic_istream<_CharT, _Traits>		istream_type;
+        -:   75:      ///@}
+        -:   76:
+        -:   77:      template<typename _CharT2>
+        -:   78:	friend typename __gnu_cxx::__enable_if<__is_char<_CharT2>::__value,
+        -:   79:				    ostreambuf_iterator<_CharT2> >::__type
+        -:   80:	copy(istreambuf_iterator<_CharT2>, istreambuf_iterator<_CharT2>,
+        -:   81:	     ostreambuf_iterator<_CharT2>);
+        -:   82:
+        -:   83:      template<bool _IsMove, typename _CharT2>
+        -:   84:	friend typename __gnu_cxx::__enable_if<__is_char<_CharT2>::__value,
+        -:   85:					       _CharT2*>::__type
+        -:   86:	__copy_move_a2(istreambuf_iterator<_CharT2>,
+        -:   87:		       istreambuf_iterator<_CharT2>, _CharT2*);
+        -:   88:
+        -:   89:      template<typename _CharT2, typename _Size>
+        -:   90:	friend typename __gnu_cxx::__enable_if<__is_char<_CharT2>::__value,
+        -:   91:					       _CharT2*>::__type
+        -:   92:	__copy_n_a(istreambuf_iterator<_CharT2>, _Size, _CharT2*, bool);
+        -:   93:
+        -:   94:      template<typename _CharT2>
+        -:   95:	friend typename __gnu_cxx::__enable_if<__is_char<_CharT2>::__value,
+        -:   96:				    istreambuf_iterator<_CharT2> >::__type
+        -:   97:	find(istreambuf_iterator<_CharT2>, istreambuf_iterator<_CharT2>,
+        -:   98:	     const _CharT2&);
+        -:   99:
+        -:  100:      template<typename _CharT2, typename _Distance>
+        -:  101:	friend typename __gnu_cxx::__enable_if<__is_char<_CharT2>::__value,
+        -:  102:					       void>::__type
+        -:  103:	advance(istreambuf_iterator<_CharT2>&, _Distance);
+        -:  104:
+        -:  105:    private:
+        -:  106:      // 24.5.3 istreambuf_iterator
+        -:  107:      // p 1
+        -:  108:      // If the end of stream is reached (streambuf_type::sgetc()
+        -:  109:      // returns traits_type::eof()), the iterator becomes equal to
+        -:  110:      // the "end of stream" iterator value.
+        -:  111:      // NB: This implementation assumes the "end of stream" value
+        -:  112:      // is EOF, or -1.
+        -:  113:      mutable streambuf_type*	_M_sbuf;
+        -:  114:      int_type			_M_c;
+        -:  115:
+        -:  116:    public:
+        -:  117:      ///  Construct end of input stream iterator.
+function _ZNSt19istreambuf_iteratorIcSt11char_traitsIcEEC2Ev called 0 returned 0% blocks executed 0%
+    #####:  118:      _GLIBCXX_CONSTEXPR istreambuf_iterator() _GLIBCXX_USE_NOEXCEPT
+    #####:  119:      : _M_sbuf(0), _M_c(traits_type::eof()) { }
+    %%%%%:  119-block 2
+call    0 never executed
+        -:  120:
+        -:  121:#if __cplusplus > 201703L && __cpp_lib_concepts
+        -:  122:      constexpr istreambuf_iterator(default_sentinel_t) noexcept
+        -:  123:      : istreambuf_iterator() { }
+        -:  124:#endif
+        -:  125:
+        -:  126:#if __cplusplus >= 201103L
+        -:  127:      istreambuf_iterator(const istreambuf_iterator&) noexcept = default;
+        -:  128:
+        -:  129:      ~istreambuf_iterator() = default;
+        -:  130:#endif
+        -:  131:
+        -:  132:      ///  Construct start of input stream iterator.
+function _ZNSt19istreambuf_iteratorIcSt11char_traitsIcEEC2ERSi called 0 returned 0% blocks executed 0%
+    #####:  133:      istreambuf_iterator(istream_type& __s) _GLIBCXX_USE_NOEXCEPT
+    #####:  134:      : _M_sbuf(__s.rdbuf()), _M_c(traits_type::eof()) { }
+    %%%%%:  134-block 2
+call    0 never executed
+call    1 never executed
+        -:  135:
+        -:  136:      ///  Construct start of streambuf iterator.
+        -:  137:      istreambuf_iterator(streambuf_type* __s) _GLIBCXX_USE_NOEXCEPT
+        -:  138:      : _M_sbuf(__s), _M_c(traits_type::eof()) { }
+        -:  139:
+        -:  140:#if __cplusplus >= 201103L
+        -:  141:      istreambuf_iterator&
+        -:  142:      operator=(const istreambuf_iterator&) noexcept = default;
+        -:  143:#endif
+        -:  144:
+        -:  145:      ///  Return the current character pointed to by iterator.  This returns
+        -:  146:      ///  streambuf.sgetc().  It cannot be assigned.  NB: The result of
+        -:  147:      ///  operator*() on an end of stream is undefined.
+        -:  148:      _GLIBCXX_NODISCARD
+        -:  149:      char_type
+function _ZNKSt19istreambuf_iteratorIcSt11char_traitsIcEEdeEv called 0 returned 0% blocks executed 0%
+    #####:  150:      operator*() const
+        -:  151:      {
+    #####:  152:	int_type __c = _M_get();
+    %%%%%:  152-block 2
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:  153:
+        -:  154:#ifdef _GLIBCXX_DEBUG_PEDANTIC
+        -:  155:	// Dereferencing a past-the-end istreambuf_iterator is a
+        -:  156:	// libstdc++ extension
+        -:  157:	__glibcxx_requires_cond(!_S_is_eof(__c),
+        -:  158:				_M_message(__gnu_debug::__msg_deref_istreambuf)
+        -:  159:				._M_iterator(*this));
+        -:  160:#endif
+    #####:  161:	return traits_type::to_char_type(__c);
+    %%%%%:  161-block 3
+call    0 never executed
+    %%%%%:  161-block 5
+        -:  162:      }
+        -:  163:
+        -:  164:      /// Advance the iterator.  Calls streambuf.sbumpc().
+        -:  165:      istreambuf_iterator&
+function _ZNSt19istreambuf_iteratorIcSt11char_traitsIcEEppEv called 0 returned 0% blocks executed 0%
+    #####:  166:      operator++()
+        -:  167:      {
+        -:  168:	__glibcxx_requires_cond(_M_sbuf &&
+        -:  169:				(!_S_is_eof(_M_c) || !_S_is_eof(_M_sbuf->sgetc())),
+        -:  170:				_M_message(__gnu_debug::__msg_inc_istreambuf)
+        -:  171:				._M_iterator(*this));
+        -:  172:
+    #####:  173:	_M_sbuf->sbumpc();
+    %%%%%:  173-block 2
+call    0 never executed
+    #####:  174:	_M_c = traits_type::eof();
+call    0 never executed
+    #####:  175:	return *this;
+        -:  176:      }
+        -:  177:
+        -:  178:      /// Advance the iterator.  Calls streambuf.sbumpc().
+        -:  179:      istreambuf_iterator
+        -:  180:      operator++(int)
+        -:  181:      {
+        -:  182:	__glibcxx_requires_cond(_M_sbuf &&
+        -:  183:				(!_S_is_eof(_M_c) || !_S_is_eof(_M_sbuf->sgetc())),
+        -:  184:				_M_message(__gnu_debug::__msg_inc_istreambuf)
+        -:  185:				._M_iterator(*this));
+        -:  186:
+        -:  187:	istreambuf_iterator __old = *this;
+        -:  188:	__old._M_c = _M_sbuf->sbumpc();
+        -:  189:	_M_c = traits_type::eof();
+        -:  190:	return __old;
+        -:  191:      }
+        -:  192:
+        -:  193:      // _GLIBCXX_RESOLVE_LIB_DEFECTS
+        -:  194:      // 110 istreambuf_iterator::equal not const
+        -:  195:      // NB: there is also number 111 (NAD) relevant to this function.
+        -:  196:      /// Return true both iterators are end or both are not end.
+        -:  197:      _GLIBCXX_NODISCARD
+        -:  198:      bool
+function _ZNKSt19istreambuf_iteratorIcSt11char_traitsIcEE5equalERKS2_ called 0 returned 0% blocks executed 0%
+    #####:  199:      equal(const istreambuf_iterator& __b) const
+    #####:  200:      { return _M_at_eof() == __b._M_at_eof(); }
+    %%%%%:  200-block 2
+call    0 never executed
+call    1 never executed
+        -:  201:
+        -:  202:    private:
+        -:  203:      int_type
+function _ZNKSt19istreambuf_iteratorIcSt11char_traitsIcEE6_M_getEv called 0 returned 0% blocks executed 0%
+    #####:  204:      _M_get() const
+        -:  205:      {
+    #####:  206:	int_type __ret = _M_c;
+    #####:  207:	if (_M_sbuf && _S_is_eof(__ret) && _S_is_eof(__ret = _M_sbuf->sgetc()))
+    %%%%%:  207-block 2
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  207-block 3
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed
+    %%%%%:  207-block 5
+call    5 never executed
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed
+    %%%%%:  207-block 8
+    %%%%%:  207-block 9
+    %%%%%:  207-block 10
+branch  9 never executed (fallthrough)
+branch 10 never executed
+    #####:  208:	  _M_sbuf = 0;
+    %%%%%:  208-block 11
+    #####:  209:	return __ret;
+    %%%%%:  209-block 12
+        -:  210:      }
+        -:  211:
+        -:  212:      bool
+function _ZNKSt19istreambuf_iteratorIcSt11char_traitsIcEE9_M_at_eofEv called 0 returned 0% blocks executed 0%
+    #####:  213:      _M_at_eof() const
+    #####:  214:      { return _S_is_eof(_M_get()); }
+    %%%%%:  214-block 2
+call    0 never executed
+call    1 never executed
+        -:  215:
+        -:  216:      static bool
+function _ZNSt19istreambuf_iteratorIcSt11char_traitsIcEE9_S_is_eofEi called 0 returned 0% blocks executed 0%
+    #####:  217:      _S_is_eof(int_type __c)
+        -:  218:      {
+    #####:  219:	const int_type __eof = traits_type::eof();
+    #####:  220:	return traits_type::eq_int_type(__c, __eof);
+    %%%%%:  220-block 2
+call    0 never executed
+        -:  221:      }
+        -:  222:
+        -:  223:#if __cplusplus > 201703L && __cpp_lib_concepts
+        -:  224:      [[nodiscard]]
+        -:  225:      friend bool
+        -:  226:      operator==(const istreambuf_iterator& __i, default_sentinel_t)
+        -:  227:      { return __i._M_at_eof(); }
+        -:  228:#endif
+        -:  229:    };
+        -:  230:
+        -:  231:  template<typename _CharT, typename _Traits>
+        -:  232:    _GLIBCXX_NODISCARD
+        -:  233:    inline bool
+function _ZSteqIcSt11char_traitsIcEEbRKSt19istreambuf_iteratorIT_T0_ES7_ called 0 returned 0% blocks executed 0%
+    #####:  234:    operator==(const istreambuf_iterator<_CharT, _Traits>& __a,
+        -:  235:	       const istreambuf_iterator<_CharT, _Traits>& __b)
+    #####:  236:    { return __a.equal(__b); }
+    %%%%%:  236-block 2
+call    0 never executed
+        -:  237:
+        -:  238:#if __cpp_impl_three_way_comparison < 201907L
+        -:  239:  template<typename _CharT, typename _Traits>
+        -:  240:    _GLIBCXX_NODISCARD
+        -:  241:    inline bool
+        -:  242:    operator!=(const istreambuf_iterator<_CharT, _Traits>& __a,
+        -:  243:	       const istreambuf_iterator<_CharT, _Traits>& __b)
+        -:  244:    { return !__a.equal(__b); }
+        -:  245:#endif
+        -:  246:
+        -:  247:  /// Provides output iterator semantics for streambufs.
+        -:  248:  template<typename _CharT, typename _Traits>
+        -:  249:    class ostreambuf_iterator
+        -:  250:    : public iterator<output_iterator_tag, void, void, void, void>
+        -:  251:    {
+        -:  252:    public:
+        -:  253:      // Types:
+        -:  254:      ///@{
+        -:  255:      /// Public typedefs
+        -:  256:#if __cplusplus > 201703L
+        -:  257:      using difference_type = ptrdiff_t;
+        -:  258:#endif
+        -:  259:      typedef _CharT			       char_type;
+        -:  260:      typedef _Traits			       traits_type;
+        -:  261:      typedef basic_streambuf<_CharT, _Traits> streambuf_type;
+        -:  262:      typedef basic_ostream<_CharT, _Traits>   ostream_type;
+        -:  263:      ///@}
+        -:  264:
+        -:  265:      template<typename _CharT2>
+        -:  266:	friend typename __gnu_cxx::__enable_if<__is_char<_CharT2>::__value,
+        -:  267:				    ostreambuf_iterator<_CharT2> >::__type
+        -:  268:	copy(istreambuf_iterator<_CharT2>, istreambuf_iterator<_CharT2>,
+        -:  269:	     ostreambuf_iterator<_CharT2>);
+        -:  270:
+        -:  271:    private:
+        -:  272:      streambuf_type*	_M_sbuf;
+        -:  273:      bool		_M_failed;
+        -:  274:
+        -:  275:    public:
+        -:  276:
+        -:  277:#if __cplusplus > 201703L
+        -:  278:      constexpr
+        -:  279:      ostreambuf_iterator() noexcept
+        -:  280:      : _M_sbuf(nullptr), _M_failed(true) { }
+        -:  281:#endif
+        -:  282:
+        -:  283:      ///  Construct output iterator from ostream.
+        -:  284:      ostreambuf_iterator(ostream_type& __s) _GLIBCXX_USE_NOEXCEPT
+        -:  285:      : _M_sbuf(__s.rdbuf()), _M_failed(!_M_sbuf) { }
+        -:  286:
+        -:  287:      ///  Construct output iterator from streambuf.
+        -:  288:      ostreambuf_iterator(streambuf_type* __s) _GLIBCXX_USE_NOEXCEPT
+        -:  289:      : _M_sbuf(__s), _M_failed(!_M_sbuf) { }
+        -:  290:
+        -:  291:      ///  Write character to streambuf.  Calls streambuf.sputc().
+        -:  292:      ostreambuf_iterator&
+        -:  293:      operator=(_CharT __c)
+        -:  294:      {
+        -:  295:	if (!_M_failed &&
+        -:  296:	    _Traits::eq_int_type(_M_sbuf->sputc(__c), _Traits::eof()))
+        -:  297:	  _M_failed = true;
+        -:  298:	return *this;
+        -:  299:      }
+        -:  300:
+        -:  301:      /// Return *this.
+        -:  302:      _GLIBCXX_NODISCARD
+        -:  303:      ostreambuf_iterator&
+        -:  304:      operator*()
+        -:  305:      { return *this; }
+        -:  306:
+        -:  307:      /// Return *this.
+        -:  308:      ostreambuf_iterator&
+        -:  309:      operator++(int)
+        -:  310:      { return *this; }
+        -:  311:
+        -:  312:      /// Return *this.
+        -:  313:      ostreambuf_iterator&
+        -:  314:      operator++()
+        -:  315:      { return *this; }
+        -:  316:
+        -:  317:      /// Return true if previous operator=() failed.
+        -:  318:      _GLIBCXX_NODISCARD
+        -:  319:      bool
+        -:  320:      failed() const _GLIBCXX_USE_NOEXCEPT
+        -:  321:      { return _M_failed; }
+        -:  322:
+        -:  323:      ostreambuf_iterator&
+        -:  324:      _M_put(const _CharT* __ws, streamsize __len)
+        -:  325:      {
+        -:  326:	if (__builtin_expect(!_M_failed, true)
+        -:  327:	    && __builtin_expect(this->_M_sbuf->sputn(__ws, __len) != __len,
+        -:  328:				false))
+        -:  329:	  _M_failed = true;
+        -:  330:	return *this;
+        -:  331:      }
+        -:  332:    };
+        -:  333:#pragma GCC diagnostic pop
+        -:  334:
+        -:  335:  // Overloads for streambuf iterators.
+        -:  336:  template<typename _CharT>
+        -:  337:    typename __gnu_cxx::__enable_if<__is_char<_CharT>::__value,
+        -:  338:				    ostreambuf_iterator<_CharT> >::__type
+        -:  339:    copy(istreambuf_iterator<_CharT> __first,
+        -:  340:	 istreambuf_iterator<_CharT> __last,
+        -:  341:	 ostreambuf_iterator<_CharT> __result)
+        -:  342:    {
+        -:  343:      if (__first._M_sbuf && !__last._M_sbuf && !__result._M_failed)
+        -:  344:	{
+        -:  345:	  bool __ineof;
+        -:  346:	  __copy_streambufs_eof(__first._M_sbuf, __result._M_sbuf, __ineof);
+        -:  347:	  if (!__ineof)
+        -:  348:	    __result._M_failed = true;
+        -:  349:	}
+        -:  350:      return __result;
+        -:  351:    }
+        -:  352:
+        -:  353:  template<bool _IsMove, typename _CharT>
+        -:  354:    typename __gnu_cxx::__enable_if<__is_char<_CharT>::__value,
+        -:  355:				    ostreambuf_iterator<_CharT> >::__type
+        -:  356:    __copy_move_a2(_CharT* __first, _CharT* __last,
+        -:  357:		   ostreambuf_iterator<_CharT> __result)
+        -:  358:    {
+        -:  359:      const streamsize __num = __last - __first;
+        -:  360:      if (__num > 0)
+        -:  361:	__result._M_put(__first, __num);
+        -:  362:      return __result;
+        -:  363:    }
+        -:  364:
+        -:  365:  template<bool _IsMove, typename _CharT>
+        -:  366:    typename __gnu_cxx::__enable_if<__is_char<_CharT>::__value,
+        -:  367:				    ostreambuf_iterator<_CharT> >::__type
+        -:  368:    __copy_move_a2(const _CharT* __first, const _CharT* __last,
+        -:  369:		   ostreambuf_iterator<_CharT> __result)
+        -:  370:    {
+        -:  371:      const streamsize __num = __last - __first;
+        -:  372:      if (__num > 0)
+        -:  373:	__result._M_put(__first, __num);
+        -:  374:      return __result;
+        -:  375:    }
+        -:  376:
+        -:  377:  template<bool _IsMove, typename _CharT>
+        -:  378:    typename __gnu_cxx::__enable_if<__is_char<_CharT>::__value,
+        -:  379:				    _CharT*>::__type
+        -:  380:    __copy_move_a2(istreambuf_iterator<_CharT> __first,
+        -:  381:		   istreambuf_iterator<_CharT> __last, _CharT* __result)
+        -:  382:    {
+        -:  383:      typedef istreambuf_iterator<_CharT>		   __is_iterator_type;
+        -:  384:      typedef typename __is_iterator_type::traits_type	   traits_type;
+        -:  385:      typedef typename __is_iterator_type::streambuf_type  streambuf_type;
+        -:  386:      typedef typename traits_type::int_type		   int_type;
+        -:  387:
+        -:  388:      if (__first._M_sbuf && !__last._M_sbuf)
+        -:  389:	{
+        -:  390:	  streambuf_type* __sb = __first._M_sbuf;
+        -:  391:	  int_type __c = __sb->sgetc();
+        -:  392:	  while (!traits_type::eq_int_type(__c, traits_type::eof()))
+        -:  393:	    {
+        -:  394:	      const streamsize __n = __sb->egptr() - __sb->gptr();
+        -:  395:	      if (__n > 1)
+        -:  396:		{
+        -:  397:		  traits_type::copy(__result, __sb->gptr(), __n);
+        -:  398:		  __sb->__safe_gbump(__n);
+        -:  399:		  __result += __n;
+        -:  400:		  __c = __sb->underflow();
+        -:  401:		}
+        -:  402:	      else
+        -:  403:		{
+        -:  404:		  *__result++ = traits_type::to_char_type(__c);
+        -:  405:		  __c = __sb->snextc();
+        -:  406:		}
+        -:  407:	    }
+        -:  408:	}
+        -:  409:      return __result;
+        -:  410:    }
+        -:  411:
+        -:  412:  template<typename _CharT, typename _Size>
+        -:  413:    typename __gnu_cxx::__enable_if<__is_char<_CharT>::__value,
+        -:  414:				    _CharT*>::__type
+        -:  415:    __copy_n_a(istreambuf_iterator<_CharT> __it, _Size __n, _CharT* __result,
+        -:  416:	       bool __strict __attribute__((__unused__)))
+        -:  417:    {
+        -:  418:      if (__n == 0)
+        -:  419:	return __result;
+        -:  420:
+        -:  421:      __glibcxx_requires_cond(__it._M_sbuf,
+        -:  422:			      _M_message(__gnu_debug::__msg_inc_istreambuf)
+        -:  423:			      ._M_iterator(__it));
+        -:  424:      _CharT* __beg = __result;
+        -:  425:      __result += __it._M_sbuf->sgetn(__beg, __n);
+        -:  426:      __glibcxx_requires_cond(!__strict || __result - __beg == __n,
+        -:  427:			      _M_message(__gnu_debug::__msg_inc_istreambuf)
+        -:  428:			      ._M_iterator(__it));
+        -:  429:      return __result;
+        -:  430:    }
+        -:  431:
+        -:  432:  template<typename _CharT>
+        -:  433:    typename __gnu_cxx::__enable_if<__is_char<_CharT>::__value,
+        -:  434:		  		    istreambuf_iterator<_CharT> >::__type
+        -:  435:    find(istreambuf_iterator<_CharT> __first,
+        -:  436:	 istreambuf_iterator<_CharT> __last, const _CharT& __val)
+        -:  437:    {
+        -:  438:      typedef istreambuf_iterator<_CharT>		   __is_iterator_type;
+        -:  439:      typedef typename __is_iterator_type::traits_type     traits_type;
+        -:  440:      typedef typename __is_iterator_type::streambuf_type  streambuf_type;
+        -:  441:      typedef typename traits_type::int_type		   int_type;
+        -:  442:      const int_type __eof = traits_type::eof();
+        -:  443:
+        -:  444:      if (__first._M_sbuf && !__last._M_sbuf)
+        -:  445:	{
+        -:  446:	  const int_type __ival = traits_type::to_int_type(__val);
+        -:  447:	  streambuf_type* __sb = __first._M_sbuf;
+        -:  448:	  int_type __c = __sb->sgetc();
+        -:  449:	  while (!traits_type::eq_int_type(__c, __eof)
+        -:  450:		 && !traits_type::eq_int_type(__c, __ival))
+        -:  451:	    {
+        -:  452:	      streamsize __n = __sb->egptr() - __sb->gptr();
+        -:  453:	      if (__n > 1)
+        -:  454:		{
+        -:  455:		  const _CharT* __p = traits_type::find(__sb->gptr(),
+        -:  456:							__n, __val);
+        -:  457:		  if (__p)
+        -:  458:		    __n = __p - __sb->gptr();
+        -:  459:		  __sb->__safe_gbump(__n);
+        -:  460:		  __c = __sb->sgetc();
+        -:  461:		}
+        -:  462:	      else
+        -:  463:		__c = __sb->snextc();
+        -:  464:	    }
+        -:  465:
+        -:  466:	  __first._M_c = __eof;
+        -:  467:	}
+        -:  468:
+        -:  469:      return __first;
+        -:  470:    }
+        -:  471:
+        -:  472:  template<typename _CharT, typename _Distance>
+        -:  473:    typename __gnu_cxx::__enable_if<__is_char<_CharT>::__value,
+        -:  474:				    void>::__type
+        -:  475:    advance(istreambuf_iterator<_CharT>& __i, _Distance __n)
+        -:  476:    {
+        -:  477:      if (__n == 0)
+        -:  478:	return;
+        -:  479:
+        -:  480:      __glibcxx_assert(__n > 0);
+        -:  481:      __glibcxx_requires_cond(!__i._M_at_eof(),
+        -:  482:			      _M_message(__gnu_debug::__msg_inc_istreambuf)
+        -:  483:			      ._M_iterator(__i));
+        -:  484:
+        -:  485:      typedef istreambuf_iterator<_CharT>		   __is_iterator_type;
+        -:  486:      typedef typename __is_iterator_type::traits_type	   traits_type;
+        -:  487:      typedef typename __is_iterator_type::streambuf_type  streambuf_type;
+        -:  488:      typedef typename traits_type::int_type		   int_type;
+        -:  489:      const int_type __eof = traits_type::eof();
+        -:  490:
+        -:  491:      streambuf_type* __sb = __i._M_sbuf;
+        -:  492:      while (__n > 0)
+        -:  493:	{
+        -:  494:	  streamsize __size = __sb->egptr() - __sb->gptr();
+        -:  495:	  if (__size > __n)
+        -:  496:	    {
+        -:  497:	      __sb->__safe_gbump(__n);
+        -:  498:	      break;
+        -:  499:	    }
+        -:  500:
+        -:  501:	  __sb->__safe_gbump(__size);
+        -:  502:	  __n -= __size;
+        -:  503:	  if (traits_type::eq_int_type(__sb->underflow(), __eof))
+        -:  504:	    {
+        -:  505:	      __glibcxx_requires_cond(__n == 0,
+        -:  506:				_M_message(__gnu_debug::__msg_inc_istreambuf)
+        -:  507:				._M_iterator(__i));
+        -:  508:	      break;
+        -:  509:	    }
+        -:  510:	}
+        -:  511:
+        -:  512:      __i._M_c = __eof;
+        -:  513:    }
+        -:  514:
+        -:  515:/// @} group iterators
+        -:  516:
+        -:  517:_GLIBCXX_END_NAMESPACE_VERSION
+        -:  518:} // namespace
+        -:  519:
+        -:  520:#endif

@@ -1,0 +1,1480 @@
+        -:    0:Source:/usr/include/c++/14.2.1/bits/locale_facets.tcc
+        -:    0:Graph:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/utils/uiElements.cpp.gcno
+        -:    0:Data:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/utils/uiElements.cpp.gcda
+        -:    0:Runs:1
+        -:    1:// Locale support -*- C++ -*-
+        -:    2:
+        -:    3:// Copyright (C) 1997-2024 Free Software Foundation, Inc.
+        -:    4://
+        -:    5:// This file is part of the GNU ISO C++ Library.  This library is free
+        -:    6:// software; you can redistribute it and/or modify it under the
+        -:    7:// terms of the GNU General Public License as published by the
+        -:    8:// Free Software Foundation; either version 3, or (at your option)
+        -:    9:// any later version.
+        -:   10:
+        -:   11:// This library is distributed in the hope that it will be useful,
+        -:   12:// but WITHOUT ANY WARRANTY; without even the implied warranty of
+        -:   13:// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+        -:   14:// GNU General Public License for more details.
+        -:   15:
+        -:   16:// Under Section 7 of GPL version 3, you are granted additional
+        -:   17:// permissions described in the GCC Runtime Library Exception, version
+        -:   18:// 3.1, as published by the Free Software Foundation.
+        -:   19:
+        -:   20:// You should have received a copy of the GNU General Public License and
+        -:   21:// a copy of the GCC Runtime Library Exception along with this program;
+        -:   22:// see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+        -:   23:// <http://www.gnu.org/licenses/>.
+        -:   24:
+        -:   25:/** @file bits/locale_facets.tcc
+        -:   26: *  This is an internal header file, included by other library headers.
+        -:   27: *  Do not attempt to use it directly. @headername{locale}
+        -:   28: */
+        -:   29:
+        -:   30:#ifndef _LOCALE_FACETS_TCC
+        -:   31:#define _LOCALE_FACETS_TCC 1
+        -:   32:
+        -:   33:#pragma GCC system_header
+        -:   34:
+        -:   35:namespace std _GLIBCXX_VISIBILITY(default)
+        -:   36:{
+        -:   37:_GLIBCXX_BEGIN_NAMESPACE_VERSION
+        -:   38:
+        -:   39:  // Routine to access a cache for the facet.  If the cache didn't
+        -:   40:  // exist before, it gets constructed on the fly.
+        -:   41:  template<typename _Facet>
+        -:   42:    struct __use_cache
+        -:   43:    {
+        -:   44:      const _Facet*
+        -:   45:      operator() (const locale& __loc) const;
+        -:   46:    };
+        -:   47:
+        -:   48:  // Specializations.
+        -:   49:  template<typename _CharT>
+        -:   50:    struct __use_cache<__numpunct_cache<_CharT> >
+        -:   51:    {
+        -:   52:      const __numpunct_cache<_CharT>*
+        -:   53:      operator() (const locale& __loc) const
+        -:   54:      {
+        -:   55:	const size_t __i = numpunct<_CharT>::id._M_id();
+        -:   56:	const locale::facet** __caches = __loc._M_impl->_M_caches;
+        -:   57:	if (!__caches[__i])
+        -:   58:	  {
+        -:   59:	    __numpunct_cache<_CharT>* __tmp = 0;
+        -:   60:	    __try
+        -:   61:	      {
+        -:   62:		__tmp = new __numpunct_cache<_CharT>;
+        -:   63:		__tmp->_M_cache(__loc);
+        -:   64:	      }
+        -:   65:	    __catch(...)
+        -:   66:	      {
+        -:   67:		delete __tmp;
+        -:   68:		__throw_exception_again;
+        -:   69:	      }
+        -:   70:	    __loc._M_impl->_M_install_cache(__tmp, __i);
+        -:   71:	  }
+        -:   72:	return static_cast<const __numpunct_cache<_CharT>*>(__caches[__i]);
+        -:   73:      }
+        -:   74:    };
+        -:   75:
+        -:   76:  template<typename _CharT>
+        -:   77:    void
+        -:   78:    __numpunct_cache<_CharT>::_M_cache(const locale& __loc)
+        -:   79:    {
+        -:   80:      const numpunct<_CharT>& __np = use_facet<numpunct<_CharT> >(__loc);
+        -:   81:
+        -:   82:      char* __grouping = 0;
+        -:   83:      _CharT* __truename = 0;
+        -:   84:      _CharT* __falsename = 0;
+        -:   85:      __try
+        -:   86:	{
+        -:   87:	  const string& __g = __np.grouping();
+        -:   88:	  _M_grouping_size = __g.size();
+        -:   89:	  __grouping = new char[_M_grouping_size];
+        -:   90:	  __g.copy(__grouping, _M_grouping_size);
+        -:   91:	  _M_use_grouping = (_M_grouping_size
+        -:   92:			     && static_cast<signed char>(__grouping[0]) > 0
+        -:   93:			     && (__grouping[0]
+        -:   94:				 != __gnu_cxx::__numeric_traits<char>::__max));
+        -:   95:
+        -:   96:	  const basic_string<_CharT>& __tn = __np.truename();
+        -:   97:	  _M_truename_size = __tn.size();
+        -:   98:	  __truename = new _CharT[_M_truename_size];
+        -:   99:	  __tn.copy(__truename, _M_truename_size);
+        -:  100:
+        -:  101:	  const basic_string<_CharT>& __fn = __np.falsename();
+        -:  102:	  _M_falsename_size = __fn.size();
+        -:  103:	  __falsename = new _CharT[_M_falsename_size];
+        -:  104:	  __fn.copy(__falsename, _M_falsename_size);
+        -:  105:
+        -:  106:	  _M_decimal_point = __np.decimal_point();
+        -:  107:	  _M_thousands_sep = __np.thousands_sep();
+        -:  108:
+        -:  109:	  const ctype<_CharT>& __ct = use_facet<ctype<_CharT> >(__loc);
+        -:  110:	  __ct.widen(__num_base::_S_atoms_out,
+        -:  111:		     __num_base::_S_atoms_out
+        -:  112:		     + __num_base::_S_oend, _M_atoms_out);
+        -:  113:	  __ct.widen(__num_base::_S_atoms_in,
+        -:  114:		     __num_base::_S_atoms_in
+        -:  115:		     + __num_base::_S_iend, _M_atoms_in);
+        -:  116:
+        -:  117:	  _M_grouping = __grouping;
+        -:  118:	  _M_truename = __truename;
+        -:  119:	  _M_falsename = __falsename;
+        -:  120:	  _M_allocated = true;
+        -:  121:	}
+        -:  122:      __catch(...)
+        -:  123:	{
+        -:  124:	  delete [] __grouping;
+        -:  125:	  delete [] __truename;
+        -:  126:	  delete [] __falsename;
+        -:  127:	  __throw_exception_again;
+        -:  128:	}
+        -:  129:    }
+        -:  130:
+        -:  131:  // Used by both numeric and monetary facets.
+        -:  132:  // Check to make sure that the __grouping_tmp string constructed in
+        -:  133:  // money_get or num_get matches the canonical grouping for a given
+        -:  134:  // locale.
+        -:  135:  // __grouping_tmp is parsed L to R
+        -:  136:  // 1,222,444 == __grouping_tmp of "\1\3\3"
+        -:  137:  // __grouping is parsed R to L
+        -:  138:  // 1,222,444 == __grouping of "\3" == "\3\3\3"
+        -:  139:  _GLIBCXX_PURE bool
+        -:  140:  __verify_grouping(const char* __grouping, size_t __grouping_size,
+        -:  141:		    const string& __grouping_tmp) throw ();
+        -:  142:
+        -:  143:_GLIBCXX_BEGIN_NAMESPACE_LDBL
+        -:  144:
+        -:  145:  template<typename _CharT, typename _InIter>
+        -:  146:    _GLIBCXX_DEFAULT_ABI_TAG
+        -:  147:    _InIter
+        -:  148:    num_get<_CharT, _InIter>::
+        -:  149:    _M_extract_float(_InIter __beg, _InIter __end, ios_base& __io,
+        -:  150:		     ios_base::iostate& __err, string& __xtrc) const
+        -:  151:    {
+        -:  152:      typedef char_traits<_CharT>			__traits_type;
+        -:  153:      typedef __numpunct_cache<_CharT>                  __cache_type;
+        -:  154:      __use_cache<__cache_type> __uc;
+        -:  155:      const locale& __loc = __io._M_getloc();
+        -:  156:      const __cache_type* __lc = __uc(__loc);
+        -:  157:      const _CharT* __lit = __lc->_M_atoms_in;
+        -:  158:      char_type __c = char_type();
+        -:  159:
+        -:  160:      // True if __beg becomes equal to __end.
+        -:  161:      bool __testeof = __beg == __end;
+        -:  162:
+        -:  163:      // First check for sign.
+        -:  164:      if (!__testeof)
+        -:  165:	{
+        -:  166:	  __c = *__beg;
+        -:  167:	  const bool __plus = __c == __lit[__num_base::_S_iplus];
+        -:  168:	  if ((__plus || __c == __lit[__num_base::_S_iminus])
+        -:  169:	      && !(__lc->_M_use_grouping && __c == __lc->_M_thousands_sep)
+        -:  170:	      && !(__c == __lc->_M_decimal_point))
+        -:  171:	    {
+        -:  172:	      __xtrc += __plus ? '+' : '-';
+        -:  173:	      if (++__beg != __end)
+        -:  174:		__c = *__beg;
+        -:  175:	      else
+        -:  176:		__testeof = true;
+        -:  177:	    }
+        -:  178:	}
+        -:  179:
+        -:  180:      // Next, look for leading zeros.
+        -:  181:      bool __found_mantissa = false;
+        -:  182:      int __sep_pos = 0;
+        -:  183:      while (!__testeof)
+        -:  184:	{
+        -:  185:	  if ((__lc->_M_use_grouping && __c == __lc->_M_thousands_sep)
+        -:  186:	      || __c == __lc->_M_decimal_point)
+        -:  187:	    break;
+        -:  188:	  else if (__c == __lit[__num_base::_S_izero])
+        -:  189:	    {
+        -:  190:	      if (!__found_mantissa)
+        -:  191:		{
+        -:  192:		  __xtrc += '0';
+        -:  193:		  __found_mantissa = true;
+        -:  194:		}
+        -:  195:	      ++__sep_pos;
+        -:  196:
+        -:  197:	      if (++__beg != __end)
+        -:  198:		__c = *__beg;
+        -:  199:	      else
+        -:  200:		__testeof = true;
+        -:  201:	    }
+        -:  202:	  else
+        -:  203:	    break;
+        -:  204:	}
+        -:  205:
+        -:  206:      // Only need acceptable digits for floating point numbers.
+        -:  207:      bool __found_dec = false;
+        -:  208:      bool __found_sci = false;
+        -:  209:      string __found_grouping;
+        -:  210:      if (__lc->_M_use_grouping)
+        -:  211:	__found_grouping.reserve(32);
+        -:  212:      const char_type* __lit_zero = __lit + __num_base::_S_izero;
+        -:  213:
+        -:  214:      if (!__lc->_M_allocated)
+        -:  215:	// "C" locale
+        -:  216:	while (!__testeof)
+        -:  217:	  {
+        -:  218:	    const int __digit = _M_find(__lit_zero, 10, __c);
+        -:  219:	    if (__digit != -1)
+        -:  220:	      {
+        -:  221:		__xtrc += '0' + __digit;
+        -:  222:		__found_mantissa = true;
+        -:  223:	      }
+        -:  224:	    else if (__c == __lc->_M_decimal_point
+        -:  225:		     && !__found_dec && !__found_sci)
+        -:  226:	      {
+        -:  227:		__xtrc += '.';
+        -:  228:		__found_dec = true;
+        -:  229:	      }
+        -:  230:	    else if ((__c == __lit[__num_base::_S_ie] 
+        -:  231:		      || __c == __lit[__num_base::_S_iE])
+        -:  232:		     && !__found_sci && __found_mantissa)
+        -:  233:	      {
+        -:  234:		// Scientific notation.
+        -:  235:		__xtrc += 'e';
+        -:  236:		__found_sci = true;
+        -:  237:		
+        -:  238:		// Remove optional plus or minus sign, if they exist.
+        -:  239:		if (++__beg != __end)
+        -:  240:		  {
+        -:  241:		    __c = *__beg;
+        -:  242:		    const bool __plus = __c == __lit[__num_base::_S_iplus];
+        -:  243:		    if (__plus || __c == __lit[__num_base::_S_iminus])
+        -:  244:		      __xtrc += __plus ? '+' : '-';
+        -:  245:		    else
+        -:  246:		      continue;
+        -:  247:		  }
+        -:  248:		else
+        -:  249:		  {
+        -:  250:		    __testeof = true;
+        -:  251:		    break;
+        -:  252:		  }
+        -:  253:	      }
+        -:  254:	    else
+        -:  255:	      break;
+        -:  256:
+        -:  257:	    if (++__beg != __end)
+        -:  258:	      __c = *__beg;
+        -:  259:	    else
+        -:  260:	      __testeof = true;
+        -:  261:	  }
+        -:  262:      else
+        -:  263:	while (!__testeof)
+        -:  264:	  {
+        -:  265:	    // According to 22.2.2.1.2, p8-9, first look for thousands_sep
+        -:  266:	    // and decimal_point.
+        -:  267:	    if (__lc->_M_use_grouping && __c == __lc->_M_thousands_sep)
+        -:  268:	      {
+        -:  269:		if (!__found_dec && !__found_sci)
+        -:  270:		  {
+        -:  271:		    // NB: Thousands separator at the beginning of a string
+        -:  272:		    // is a no-no, as is two consecutive thousands separators.
+        -:  273:		    if (__sep_pos)
+        -:  274:		      {
+        -:  275:			__found_grouping += static_cast<char>(__sep_pos);
+        -:  276:			__sep_pos = 0;
+        -:  277:		      }
+        -:  278:		    else
+        -:  279:		      {
+        -:  280:			// NB: __convert_to_v will not assign __v and will
+        -:  281:			// set the failbit.
+        -:  282:			__xtrc.clear();
+        -:  283:			break;
+        -:  284:		      }
+        -:  285:		  }
+        -:  286:		else
+        -:  287:		  break;
+        -:  288:	      }
+        -:  289:	    else if (__c == __lc->_M_decimal_point)
+        -:  290:	      {
+        -:  291:		if (!__found_dec && !__found_sci)
+        -:  292:		  {
+        -:  293:		    // If no grouping chars are seen, no grouping check
+        -:  294:		    // is applied. Therefore __found_grouping is adjusted
+        -:  295:		    // only if decimal_point comes after some thousands_sep.
+        -:  296:		    if (__found_grouping.size())
+        -:  297:		      __found_grouping += static_cast<char>(__sep_pos);
+        -:  298:		    __xtrc += '.';
+        -:  299:		    __found_dec = true;
+        -:  300:		  }
+        -:  301:		else
+        -:  302:		  break;
+        -:  303:	      }
+        -:  304:	    else
+        -:  305:	      {
+        -:  306:		const char_type* __q =
+        -:  307:		  __traits_type::find(__lit_zero, 10, __c);
+        -:  308:		if (__q)
+        -:  309:		  {
+        -:  310:		    __xtrc += '0' + (__q - __lit_zero);
+        -:  311:		    __found_mantissa = true;
+        -:  312:		    ++__sep_pos;
+        -:  313:		  }
+        -:  314:		else if ((__c == __lit[__num_base::_S_ie] 
+        -:  315:			  || __c == __lit[__num_base::_S_iE])
+        -:  316:			 && !__found_sci && __found_mantissa)
+        -:  317:		  {
+        -:  318:		    // Scientific notation.
+        -:  319:		    if (__found_grouping.size() && !__found_dec)
+        -:  320:		      __found_grouping += static_cast<char>(__sep_pos);
+        -:  321:		    __xtrc += 'e';
+        -:  322:		    __found_sci = true;
+        -:  323:		    
+        -:  324:		    // Remove optional plus or minus sign, if they exist.
+        -:  325:		    if (++__beg != __end)
+        -:  326:		      {
+        -:  327:			__c = *__beg;
+        -:  328:			const bool __plus = __c == __lit[__num_base::_S_iplus];
+        -:  329:			if ((__plus || __c == __lit[__num_base::_S_iminus])
+        -:  330:			    && !(__lc->_M_use_grouping
+        -:  331:				 && __c == __lc->_M_thousands_sep)
+        -:  332:			    && !(__c == __lc->_M_decimal_point))
+        -:  333:		      __xtrc += __plus ? '+' : '-';
+        -:  334:			else
+        -:  335:			  continue;
+        -:  336:		      }
+        -:  337:		    else
+        -:  338:		      {
+        -:  339:			__testeof = true;
+        -:  340:			break;
+        -:  341:		      }
+        -:  342:		  }
+        -:  343:		else
+        -:  344:		  break;
+        -:  345:	      }
+        -:  346:	    
+        -:  347:	    if (++__beg != __end)
+        -:  348:	      __c = *__beg;
+        -:  349:	    else
+        -:  350:	      __testeof = true;
+        -:  351:	  }
+        -:  352:
+        -:  353:      // Digit grouping is checked. If grouping and found_grouping don't
+        -:  354:      // match, then get very very upset, and set failbit.
+        -:  355:      if (__found_grouping.size())
+        -:  356:        {
+        -:  357:          // Add the ending grouping if a decimal or 'e'/'E' wasn't found.
+        -:  358:	  if (!__found_dec && !__found_sci)
+        -:  359:	    __found_grouping += static_cast<char>(__sep_pos);
+        -:  360:
+        -:  361:          if (!std::__verify_grouping(__lc->_M_grouping, 
+        -:  362:				      __lc->_M_grouping_size,
+        -:  363:				      __found_grouping))
+        -:  364:	    __err = ios_base::failbit;
+        -:  365:        }
+        -:  366:
+        -:  367:      return __beg;
+        -:  368:    }
+        -:  369:
+        -:  370:  template<typename _CharT, typename _InIter>
+        -:  371:    template<typename _ValueT>
+        -:  372:      _GLIBCXX_DEFAULT_ABI_TAG
+        -:  373:      _InIter
+        -:  374:      num_get<_CharT, _InIter>::
+        -:  375:      _M_extract_int(_InIter __beg, _InIter __end, ios_base& __io,
+        -:  376:		     ios_base::iostate& __err, _ValueT& __v) const
+        -:  377:      {
+        -:  378:        typedef char_traits<_CharT>			    __traits_type;
+        -:  379:	using __gnu_cxx::__add_unsigned;
+        -:  380:	typedef typename __add_unsigned<_ValueT>::__type    __unsigned_type;
+        -:  381:	typedef __numpunct_cache<_CharT>                    __cache_type;
+        -:  382:	__use_cache<__cache_type> __uc;
+        -:  383:	const locale& __loc = __io._M_getloc();
+        -:  384:	const __cache_type* __lc = __uc(__loc);
+        -:  385:	const _CharT* __lit = __lc->_M_atoms_in;
+        -:  386:	char_type __c = char_type();
+        -:  387:
+        -:  388:	// NB: Iff __basefield == 0, __base can change based on contents.
+        -:  389:	const ios_base::fmtflags __basefield = __io.flags()
+        -:  390:	                                       & ios_base::basefield;
+        -:  391:	const bool __oct = __basefield == ios_base::oct;
+        -:  392:	int __base = __oct ? 8 : (__basefield == ios_base::hex ? 16 : 10);
+        -:  393:
+        -:  394:	// True if __beg becomes equal to __end.
+        -:  395:	bool __testeof = __beg == __end;
+        -:  396:
+        -:  397:	// First check for sign.
+        -:  398:	bool __negative = false;
+        -:  399:	if (!__testeof)
+        -:  400:	  {
+        -:  401:	    __c = *__beg;
+        -:  402:	    __negative = __c == __lit[__num_base::_S_iminus];
+        -:  403:	    if ((__negative || __c == __lit[__num_base::_S_iplus])
+        -:  404:		&& !(__lc->_M_use_grouping && __c == __lc->_M_thousands_sep)
+        -:  405:		&& !(__c == __lc->_M_decimal_point))
+        -:  406:	      {
+        -:  407:		if (++__beg != __end)
+        -:  408:		  __c = *__beg;
+        -:  409:		else
+        -:  410:		  __testeof = true;
+        -:  411:	      }
+        -:  412:	  }
+        -:  413:
+        -:  414:	// Next, look for leading zeros and check required digits
+        -:  415:	// for base formats.
+        -:  416:	bool __found_zero = false;
+        -:  417:	int __sep_pos = 0;
+        -:  418:	while (!__testeof)
+        -:  419:	  {
+        -:  420:	    if ((__lc->_M_use_grouping && __c == __lc->_M_thousands_sep)
+        -:  421:		|| __c == __lc->_M_decimal_point)
+        -:  422:	      break;
+        -:  423:	    else if (__c == __lit[__num_base::_S_izero] 
+        -:  424:		     && (!__found_zero || __base == 10))
+        -:  425:	      {
+        -:  426:		__found_zero = true;
+        -:  427:		++__sep_pos;
+        -:  428:		if (__basefield == 0)
+        -:  429:		  __base = 8;
+        -:  430:		if (__base == 8)
+        -:  431:		  __sep_pos = 0;
+        -:  432:	      }
+        -:  433:	    else if (__found_zero
+        -:  434:		     && (__c == __lit[__num_base::_S_ix]
+        -:  435:			 || __c == __lit[__num_base::_S_iX]))
+        -:  436:	      {
+        -:  437:		if (__basefield == 0)
+        -:  438:		  __base = 16;
+        -:  439:		if (__base == 16)
+        -:  440:		  {
+        -:  441:		    __found_zero = false;
+        -:  442:		    __sep_pos = 0;
+        -:  443:		  }
+        -:  444:		else
+        -:  445:		  break;
+        -:  446:	      }
+        -:  447:	    else
+        -:  448:	      break;
+        -:  449:
+        -:  450:	    if (++__beg != __end)
+        -:  451:	      {
+        -:  452:		__c = *__beg;
+        -:  453:		if (!__found_zero)
+        -:  454:		  break;
+        -:  455:	      }
+        -:  456:	    else
+        -:  457:	      __testeof = true;
+        -:  458:	  }
+        -:  459:	
+        -:  460:	// At this point, base is determined. If not hex, only allow
+        -:  461:	// base digits as valid input.
+        -:  462:	const size_t __len = (__base == 16 ? __num_base::_S_iend
+        -:  463:			      - __num_base::_S_izero : __base);
+        -:  464:
+        -:  465:	// Extract.
+        -:  466:	typedef __gnu_cxx::__numeric_traits<_ValueT> __num_traits;
+        -:  467:	string __found_grouping;
+        -:  468:	if (__lc->_M_use_grouping)
+        -:  469:	  __found_grouping.reserve(32);
+        -:  470:	bool __testfail = false;
+        -:  471:	bool __testoverflow = false;
+        -:  472:	const __unsigned_type __max =
+        -:  473:	  (__negative && __num_traits::__is_signed)
+        -:  474:	  ? -static_cast<__unsigned_type>(__num_traits::__min)
+        -:  475:	  : __num_traits::__max;
+        -:  476:	const __unsigned_type __smax = __max / __base;
+        -:  477:	__unsigned_type __result = 0;
+        -:  478:	int __digit = 0;
+        -:  479:	const char_type* __lit_zero = __lit + __num_base::_S_izero;
+        -:  480:
+        -:  481:	if (!__lc->_M_allocated)
+        -:  482:	  // "C" locale
+        -:  483:	  while (!__testeof)
+        -:  484:	    {
+        -:  485:	      __digit = _M_find(__lit_zero, __len, __c);
+        -:  486:	      if (__digit == -1)
+        -:  487:		break;
+        -:  488:	      
+        -:  489:	      if (__result > __smax)
+        -:  490:		__testoverflow = true;
+        -:  491:	      else
+        -:  492:		{
+        -:  493:		  __result *= __base;
+        -:  494:		  __testoverflow |= __result > __max - __digit;
+        -:  495:		  __result += __digit;
+        -:  496:		  ++__sep_pos;
+        -:  497:		}
+        -:  498:	      
+        -:  499:	      if (++__beg != __end)
+        -:  500:		__c = *__beg;
+        -:  501:	      else
+        -:  502:		__testeof = true;
+        -:  503:	    }
+        -:  504:	else
+        -:  505:	  while (!__testeof)
+        -:  506:	    {
+        -:  507:	      // According to 22.2.2.1.2, p8-9, first look for thousands_sep
+        -:  508:	      // and decimal_point.
+        -:  509:	      if (__lc->_M_use_grouping && __c == __lc->_M_thousands_sep)
+        -:  510:		{
+        -:  511:		  // NB: Thousands separator at the beginning of a string
+        -:  512:		  // is a no-no, as is two consecutive thousands separators.
+        -:  513:		  if (__sep_pos)
+        -:  514:		    {
+        -:  515:		      __found_grouping += static_cast<char>(__sep_pos);
+        -:  516:		      __sep_pos = 0;
+        -:  517:		    }
+        -:  518:		  else
+        -:  519:		    {
+        -:  520:		      __testfail = true;
+        -:  521:		      break;
+        -:  522:		    }
+        -:  523:		}
+        -:  524:	      else if (__c == __lc->_M_decimal_point)
+        -:  525:		break;
+        -:  526:	      else
+        -:  527:		{
+        -:  528:		  const char_type* __q =
+        -:  529:		    __traits_type::find(__lit_zero, __len, __c);
+        -:  530:		  if (!__q)
+        -:  531:		    break;
+        -:  532:		  
+        -:  533:		  __digit = __q - __lit_zero;
+        -:  534:		  if (__digit > 15)
+        -:  535:		    __digit -= 6;
+        -:  536:		  if (__result > __smax)
+        -:  537:		    __testoverflow = true;
+        -:  538:		  else
+        -:  539:		    {
+        -:  540:		      __result *= __base;
+        -:  541:		      __testoverflow |= __result > __max - __digit;
+        -:  542:		      __result += __digit;
+        -:  543:		      ++__sep_pos;
+        -:  544:		    }
+        -:  545:		}
+        -:  546:	      
+        -:  547:	      if (++__beg != __end)
+        -:  548:		__c = *__beg;
+        -:  549:	      else
+        -:  550:		__testeof = true;
+        -:  551:	    }
+        -:  552:	
+        -:  553:	// Digit grouping is checked. If grouping and found_grouping don't
+        -:  554:	// match, then get very very upset, and set failbit.
+        -:  555:	if (__found_grouping.size())
+        -:  556:	  {
+        -:  557:	    // Add the ending grouping.
+        -:  558:	    __found_grouping += static_cast<char>(__sep_pos);
+        -:  559:
+        -:  560:	    if (!std::__verify_grouping(__lc->_M_grouping,
+        -:  561:					__lc->_M_grouping_size,
+        -:  562:					__found_grouping))
+        -:  563:	      __err = ios_base::failbit;
+        -:  564:	  }
+        -:  565:
+        -:  566:	// _GLIBCXX_RESOLVE_LIB_DEFECTS
+        -:  567:	// 23. Num_get overflow result.
+        -:  568:	if ((!__sep_pos && !__found_zero && !__found_grouping.size())
+        -:  569:	    || __testfail)
+        -:  570:	  {
+        -:  571:	    __v = 0;
+        -:  572:	    __err = ios_base::failbit;
+        -:  573:	  }
+        -:  574:	else if (__testoverflow)
+        -:  575:	  {
+        -:  576:	    if (__negative && __num_traits::__is_signed)
+        -:  577:	      __v = __num_traits::__min;
+        -:  578:	    else
+        -:  579:	      __v = __num_traits::__max;
+        -:  580:	    __err = ios_base::failbit;
+        -:  581:	  }
+        -:  582:	else
+        -:  583:	  __v = __negative ? -__result : __result;
+        -:  584:
+        -:  585:	if (__testeof)
+        -:  586:	  __err |= ios_base::eofbit;
+        -:  587:	return __beg;
+        -:  588:      }
+        -:  589:
+        -:  590:  // _GLIBCXX_RESOLVE_LIB_DEFECTS
+        -:  591:  // 17.  Bad bool parsing
+        -:  592:  template<typename _CharT, typename _InIter>
+        -:  593:    _InIter
+        -:  594:    num_get<_CharT, _InIter>::
+        -:  595:    do_get(iter_type __beg, iter_type __end, ios_base& __io,
+        -:  596:           ios_base::iostate& __err, bool& __v) const
+        -:  597:    {
+        -:  598:      if (!(__io.flags() & ios_base::boolalpha))
+        -:  599:        {
+        -:  600:	  // Parse bool values as long.
+        -:  601:          // NB: We can't just call do_get(long) here, as it might
+        -:  602:          // refer to a derived class.
+        -:  603:	  long __l = -1;
+        -:  604:          __beg = _M_extract_int(__beg, __end, __io, __err, __l);
+        -:  605:	  if (__l == 0 || __l == 1)
+        -:  606:	    __v = bool(__l);
+        -:  607:	  else
+        -:  608:	    {
+        -:  609:	      // _GLIBCXX_RESOLVE_LIB_DEFECTS
+        -:  610:	      // 23. Num_get overflow result.
+        -:  611:	      __v = true;
+        -:  612:	      __err = ios_base::failbit;
+        -:  613:	      if (__beg == __end)
+        -:  614:		__err |= ios_base::eofbit;
+        -:  615:	    }
+        -:  616:        }
+        -:  617:      else
+        -:  618:        {
+        -:  619:	  // Parse bool values as alphanumeric.
+        -:  620:	  typedef __numpunct_cache<_CharT>  __cache_type;
+        -:  621:	  __use_cache<__cache_type> __uc;
+        -:  622:	  const locale& __loc = __io._M_getloc();
+        -:  623:	  const __cache_type* __lc = __uc(__loc);
+        -:  624:
+        -:  625:	  bool __testf = true;
+        -:  626:	  bool __testt = true;
+        -:  627:	  bool __donef = __lc->_M_falsename_size == 0;
+        -:  628:	  bool __donet = __lc->_M_truename_size == 0;
+        -:  629:	  bool __testeof = false;
+        -:  630:	  size_t __n = 0;
+        -:  631:	  while (!__donef || !__donet)
+        -:  632:	    {
+        -:  633:	      if (__beg == __end)
+        -:  634:		{
+        -:  635:		  __testeof = true;
+        -:  636:		  break;
+        -:  637:		}
+        -:  638:
+        -:  639:	      const char_type __c = *__beg;
+        -:  640:
+        -:  641:	      if (!__donef)
+        -:  642:		__testf = __c == __lc->_M_falsename[__n];
+        -:  643:
+        -:  644:	      if (!__testf && __donet)
+        -:  645:		break;
+        -:  646:
+        -:  647:	      if (!__donet)
+        -:  648:		__testt = __c == __lc->_M_truename[__n];
+        -:  649:
+        -:  650:	      if (!__testt && __donef)
+        -:  651:		break;
+        -:  652:
+        -:  653:	      if (!__testt && !__testf)
+        -:  654:		break;
+        -:  655:
+        -:  656:	      ++__n;
+        -:  657:	      ++__beg;
+        -:  658:
+        -:  659:	      __donef = !__testf || __n >= __lc->_M_falsename_size;
+        -:  660:	      __donet = !__testt || __n >= __lc->_M_truename_size;
+        -:  661:	    }
+        -:  662:	  if (__testf && __n == __lc->_M_falsename_size && __n)
+        -:  663:	    {
+        -:  664:	      __v = false;
+        -:  665:	      if (__testt && __n == __lc->_M_truename_size)
+        -:  666:		__err = ios_base::failbit;
+        -:  667:	      else
+        -:  668:		__err = __testeof ? ios_base::eofbit : ios_base::goodbit;
+        -:  669:	    }
+        -:  670:	  else if (__testt && __n == __lc->_M_truename_size && __n)
+        -:  671:	    {
+        -:  672:	      __v = true;
+        -:  673:	      __err = __testeof ? ios_base::eofbit : ios_base::goodbit;
+        -:  674:	    }
+        -:  675:	  else
+        -:  676:	    {
+        -:  677:	      // _GLIBCXX_RESOLVE_LIB_DEFECTS
+        -:  678:	      // 23. Num_get overflow result.
+        -:  679:	      __v = false;
+        -:  680:	      __err = ios_base::failbit;
+        -:  681:	      if (__testeof)
+        -:  682:		__err |= ios_base::eofbit;
+        -:  683:	    }
+        -:  684:	}
+        -:  685:      return __beg;
+        -:  686:    }
+        -:  687:
+        -:  688:  template<typename _CharT, typename _InIter>
+        -:  689:    _InIter
+        -:  690:    num_get<_CharT, _InIter>::
+        -:  691:    do_get(iter_type __beg, iter_type __end, ios_base& __io,
+        -:  692:	   ios_base::iostate& __err, float& __v) const
+        -:  693:    {
+        -:  694:      string __xtrc;
+        -:  695:      __xtrc.reserve(32);
+        -:  696:      __beg = _M_extract_float(__beg, __end, __io, __err, __xtrc);
+        -:  697:      std::__convert_to_v(__xtrc.c_str(), __v, __err, _S_get_c_locale());
+        -:  698:      if (__beg == __end)
+        -:  699:	__err |= ios_base::eofbit;
+        -:  700:      return __beg;
+        -:  701:    }
+        -:  702:
+        -:  703:  template<typename _CharT, typename _InIter>
+        -:  704:    _InIter
+        -:  705:    num_get<_CharT, _InIter>::
+        -:  706:    do_get(iter_type __beg, iter_type __end, ios_base& __io,
+        -:  707:           ios_base::iostate& __err, double& __v) const
+        -:  708:    {
+        -:  709:      string __xtrc;
+        -:  710:      __xtrc.reserve(32);
+        -:  711:      __beg = _M_extract_float(__beg, __end, __io, __err, __xtrc);
+        -:  712:      std::__convert_to_v(__xtrc.c_str(), __v, __err, _S_get_c_locale());
+        -:  713:      if (__beg == __end)
+        -:  714:	__err |= ios_base::eofbit;
+        -:  715:      return __beg;
+        -:  716:    }
+        -:  717:
+        -:  718:#if defined _GLIBCXX_LONG_DOUBLE_COMPAT && defined __LONG_DOUBLE_128__
+        -:  719:  template<typename _CharT, typename _InIter>
+        -:  720:    _InIter
+        -:  721:    num_get<_CharT, _InIter>::
+        -:  722:    __do_get(iter_type __beg, iter_type __end, ios_base& __io,
+        -:  723:	     ios_base::iostate& __err, double& __v) const
+        -:  724:    {
+        -:  725:      string __xtrc;
+        -:  726:      __xtrc.reserve(32);
+        -:  727:      __beg = _M_extract_float(__beg, __end, __io, __err, __xtrc);
+        -:  728:      std::__convert_to_v(__xtrc.c_str(), __v, __err, _S_get_c_locale());
+        -:  729:      if (__beg == __end)
+        -:  730:	__err |= ios_base::eofbit;
+        -:  731:      return __beg;
+        -:  732:    }
+        -:  733:#endif
+        -:  734:
+        -:  735:  template<typename _CharT, typename _InIter>
+        -:  736:    _InIter
+        -:  737:    num_get<_CharT, _InIter>::
+        -:  738:    do_get(iter_type __beg, iter_type __end, ios_base& __io,
+        -:  739:           ios_base::iostate& __err, long double& __v) const
+        -:  740:    {
+        -:  741:      string __xtrc;
+        -:  742:      __xtrc.reserve(32);
+        -:  743:      __beg = _M_extract_float(__beg, __end, __io, __err, __xtrc);
+        -:  744:      std::__convert_to_v(__xtrc.c_str(), __v, __err, _S_get_c_locale());
+        -:  745:      if (__beg == __end)
+        -:  746:	__err |= ios_base::eofbit;
+        -:  747:      return __beg;
+        -:  748:    }
+        -:  749:
+        -:  750:  template<typename _CharT, typename _InIter>
+        -:  751:    _InIter
+        -:  752:    num_get<_CharT, _InIter>::
+        -:  753:    do_get(iter_type __beg, iter_type __end, ios_base& __io,
+        -:  754:           ios_base::iostate& __err, void*& __v) const
+        -:  755:    {
+        -:  756:      // Prepare for hex formatted input.
+        -:  757:      typedef ios_base::fmtflags        fmtflags;
+        -:  758:      const fmtflags __fmt = __io.flags();
+        -:  759:      __io.flags((__fmt & ~ios_base::basefield) | ios_base::hex);
+        -:  760:
+        -:  761:      typedef __gnu_cxx::__conditional_type<(sizeof(void*)
+        -:  762:					     <= sizeof(unsigned long)),
+        -:  763:	unsigned long, unsigned long long>::__type _UIntPtrType;       
+        -:  764:
+        -:  765:      _UIntPtrType __ul;
+        -:  766:      __beg = _M_extract_int(__beg, __end, __io, __err, __ul);
+        -:  767:
+        -:  768:      // Reset from hex formatted input.
+        -:  769:      __io.flags(__fmt);
+        -:  770:
+        -:  771:      __v = reinterpret_cast<void*>(__ul);
+        -:  772:      return __beg;
+        -:  773:    }
+        -:  774:
+        -:  775:#if defined _GLIBCXX_LONG_DOUBLE_ALT128_COMPAT \
+        -:  776:      && defined __LONG_DOUBLE_IEEE128__
+        -:  777:  template<typename _CharT, typename _InIter>
+        -:  778:    _InIter
+        -:  779:    num_get<_CharT, _InIter>::
+        -:  780:    __do_get(iter_type __beg, iter_type __end, ios_base& __io,
+        -:  781:	     ios_base::iostate& __err, __ibm128& __v) const
+        -:  782:    {
+        -:  783:      string __xtrc;
+        -:  784:      __xtrc.reserve(32);
+        -:  785:      __beg = _M_extract_float(__beg, __end, __io, __err, __xtrc);
+        -:  786:      std::__convert_to_v(__xtrc.c_str(), __v, __err, _S_get_c_locale());
+        -:  787:      if (__beg == __end)
+        -:  788:	__err |= ios_base::eofbit;
+        -:  789:      return __beg;
+        -:  790:    }
+        -:  791:#endif
+        -:  792:
+        -:  793:  // For use by integer and floating-point types after they have been
+        -:  794:  // converted into a char_type string.
+        -:  795:  template<typename _CharT, typename _OutIter>
+        -:  796:    void
+        -:  797:    num_put<_CharT, _OutIter>::
+        -:  798:    _M_pad(_CharT __fill, streamsize __w, ios_base& __io,
+        -:  799:	   _CharT* __new, const _CharT* __cs, int& __len) const
+        -:  800:    {
+        -:  801:      // [22.2.2.2.2] Stage 3.
+        -:  802:      // If necessary, pad.
+        -:  803:      __pad<_CharT, char_traits<_CharT> >::_S_pad(__io, __fill, __new,
+        -:  804:						  __cs, __w, __len);
+        -:  805:      __len = static_cast<int>(__w);
+        -:  806:    }
+        -:  807:
+        -:  808:_GLIBCXX_END_NAMESPACE_LDBL
+        -:  809:
+        -:  810:  template<typename _CharT, typename _ValueT>
+        -:  811:    int
+        -:  812:    __int_to_char(_CharT* __bufend, _ValueT __v, const _CharT* __lit,
+        -:  813:		  ios_base::fmtflags __flags, bool __dec)
+        -:  814:    {
+        -:  815:      _CharT* __buf = __bufend;
+        -:  816:      if (__builtin_expect(__dec, true))
+        -:  817:	{
+        -:  818:	  // Decimal.
+        -:  819:	  do
+        -:  820:	    {
+        -:  821:	      *--__buf = __lit[(__v % 10) + __num_base::_S_odigits];
+        -:  822:	      __v /= 10;
+        -:  823:	    }
+        -:  824:	  while (__v != 0);
+        -:  825:	}
+        -:  826:      else if ((__flags & ios_base::basefield) == ios_base::oct)
+        -:  827:	{
+        -:  828:	  // Octal.
+        -:  829:	  do
+        -:  830:	    {
+        -:  831:	      *--__buf = __lit[(__v & 0x7) + __num_base::_S_odigits];
+        -:  832:	      __v >>= 3;
+        -:  833:	    }
+        -:  834:	  while (__v != 0);
+        -:  835:	}
+        -:  836:      else
+        -:  837:	{
+        -:  838:	  // Hex.
+        -:  839:	  const bool __uppercase = __flags & ios_base::uppercase;
+        -:  840:	  const int __case_offset = __uppercase ? __num_base::_S_oudigits
+        -:  841:	                                        : __num_base::_S_odigits;
+        -:  842:	  do
+        -:  843:	    {
+        -:  844:	      *--__buf = __lit[(__v & 0xf) + __case_offset];
+        -:  845:	      __v >>= 4;
+        -:  846:	    }
+        -:  847:	  while (__v != 0);
+        -:  848:	}
+        -:  849:      return __bufend - __buf;
+        -:  850:    }
+        -:  851:
+        -:  852:_GLIBCXX_BEGIN_NAMESPACE_LDBL
+        -:  853:
+        -:  854:  template<typename _CharT, typename _OutIter>
+        -:  855:    void
+        -:  856:    num_put<_CharT, _OutIter>::
+        -:  857:    _M_group_int(const char* __grouping, size_t __grouping_size, _CharT __sep,
+        -:  858:		 ios_base&, _CharT* __new, _CharT* __cs, int& __len) const
+        -:  859:    {
+        -:  860:      _CharT* __p = std::__add_grouping(__new, __sep, __grouping,
+        -:  861:					__grouping_size, __cs, __cs + __len);
+        -:  862:      __len = __p - __new;
+        -:  863:    }
+        -:  864:  
+        -:  865:  template<typename _CharT, typename _OutIter>
+        -:  866:    template<typename _ValueT>
+        -:  867:      _OutIter
+        -:  868:      num_put<_CharT, _OutIter>::
+        -:  869:      _M_insert_int(_OutIter __s, ios_base& __io, _CharT __fill,
+        -:  870:		    _ValueT __v) const
+        -:  871:      {
+        -:  872:	using __gnu_cxx::__add_unsigned;
+        -:  873:	typedef typename __add_unsigned<_ValueT>::__type __unsigned_type;
+        -:  874:	typedef __numpunct_cache<_CharT>	             __cache_type;
+        -:  875:	__use_cache<__cache_type> __uc;
+        -:  876:	const locale& __loc = __io._M_getloc();
+        -:  877:	const __cache_type* __lc = __uc(__loc);
+        -:  878:	const _CharT* __lit = __lc->_M_atoms_out;
+        -:  879:	const ios_base::fmtflags __flags = __io.flags();
+        -:  880:
+        -:  881:	// Long enough to hold hex, dec, and octal representations.
+        -:  882:	const int __ilen = 5 * sizeof(_ValueT);
+        -:  883:	_CharT* __cs = static_cast<_CharT*>(__builtin_alloca(sizeof(_CharT)
+        -:  884:							     * __ilen));
+        -:  885:
+        -:  886:	// [22.2.2.2.2] Stage 1, numeric conversion to character.
+        -:  887:	// Result is returned right-justified in the buffer.
+        -:  888:	const ios_base::fmtflags __basefield = __flags & ios_base::basefield;
+        -:  889:	const bool __dec = (__basefield != ios_base::oct
+        -:  890:			    && __basefield != ios_base::hex);
+        -:  891:	const __unsigned_type __u = ((__v > 0 || !__dec)
+        -:  892:				     ? __unsigned_type(__v)
+        -:  893:				     : -__unsigned_type(__v));
+        -:  894: 	int __len = __int_to_char(__cs + __ilen, __u, __lit, __flags, __dec);
+        -:  895:	__cs += __ilen - __len;
+        -:  896:
+        -:  897:	// Add grouping, if necessary.
+        -:  898:	if (__lc->_M_use_grouping)
+        -:  899:	  {
+        -:  900:	    // Grouping can add (almost) as many separators as the number
+        -:  901:	    // of digits + space is reserved for numeric base or sign.
+        -:  902:	    _CharT* __cs2 = static_cast<_CharT*>(__builtin_alloca(sizeof(_CharT)
+        -:  903:								  * (__len + 1)
+        -:  904:								  * 2));
+        -:  905:	    _M_group_int(__lc->_M_grouping, __lc->_M_grouping_size,
+        -:  906:			 __lc->_M_thousands_sep, __io, __cs2 + 2, __cs, __len);
+        -:  907:	    __cs = __cs2 + 2;
+        -:  908:	  }
+        -:  909:
+        -:  910:	// Complete Stage 1, prepend numeric base or sign.
+        -:  911:	if (__builtin_expect(__dec, true))
+        -:  912:	  {
+        -:  913:	    // Decimal.
+        -:  914:	    if (__v >= 0)
+        -:  915:	      {
+        -:  916:		if (bool(__flags & ios_base::showpos)
+        -:  917:		    && __gnu_cxx::__numeric_traits<_ValueT>::__is_signed)
+        -:  918:		  *--__cs = __lit[__num_base::_S_oplus], ++__len;
+        -:  919:	      }
+        -:  920:	    else
+        -:  921:	      *--__cs = __lit[__num_base::_S_ominus], ++__len;
+        -:  922:	  }
+        -:  923:	else if (bool(__flags & ios_base::showbase) && __v)
+        -:  924:	  {
+        -:  925:	    if (__basefield == ios_base::oct)
+        -:  926:	      *--__cs = __lit[__num_base::_S_odigits], ++__len;
+        -:  927:	    else
+        -:  928:	      {
+        -:  929:		// 'x' or 'X'
+        -:  930:		const bool __uppercase = __flags & ios_base::uppercase;
+        -:  931:		*--__cs = __lit[__num_base::_S_ox + __uppercase];
+        -:  932:		// '0'
+        -:  933:		*--__cs = __lit[__num_base::_S_odigits];
+        -:  934:		__len += 2;
+        -:  935:	      }
+        -:  936:	  }
+        -:  937:
+        -:  938:	// Pad.
+        -:  939:	const streamsize __w = __io.width();
+        -:  940:	if (__w > static_cast<streamsize>(__len))
+        -:  941:	  {
+        -:  942:	    _CharT* __cs3 = static_cast<_CharT*>(__builtin_alloca(sizeof(_CharT)
+        -:  943:								  * __w));
+        -:  944:	    _M_pad(__fill, __w, __io, __cs3, __cs, __len);
+        -:  945:	    __cs = __cs3;
+        -:  946:	  }
+        -:  947:	__io.width(0);
+        -:  948:
+        -:  949:	// [22.2.2.2.2] Stage 4.
+        -:  950:	// Write resulting, fully-formatted string to output iterator.
+        -:  951:	return std::__write(__s, __cs, __len);
+        -:  952:      }
+        -:  953:
+        -:  954:  template<typename _CharT, typename _OutIter>
+        -:  955:    void
+        -:  956:    num_put<_CharT, _OutIter>::
+        -:  957:    _M_group_float(const char* __grouping, size_t __grouping_size,
+        -:  958:		   _CharT __sep, const _CharT* __p, _CharT* __new,
+        -:  959:		   _CharT* __cs, int& __len) const
+        -:  960:    {
+        -:  961:      // _GLIBCXX_RESOLVE_LIB_DEFECTS
+        -:  962:      // 282. What types does numpunct grouping refer to?
+        -:  963:      // Add grouping, if necessary.
+        -:  964:      const int __declen = __p ? __p - __cs : __len;
+        -:  965:      _CharT* __p2 = std::__add_grouping(__new, __sep, __grouping,
+        -:  966:					 __grouping_size,
+        -:  967:					 __cs, __cs + __declen);
+        -:  968:
+        -:  969:      // Tack on decimal part.
+        -:  970:      int __newlen = __p2 - __new;
+        -:  971:      if (__p)
+        -:  972:	{
+        -:  973:	  char_traits<_CharT>::copy(__p2, __p, __len - __declen);
+        -:  974:	  __newlen += __len - __declen;
+        -:  975:	}
+        -:  976:      __len = __newlen;
+        -:  977:    }
+        -:  978:
+        -:  979:  // The following code uses vsnprintf (or vsprintf(), when
+        -:  980:  // _GLIBCXX_USE_C99_STDIO is not defined) to convert floating point
+        -:  981:  // values for insertion into a stream.  An optimization would be to
+        -:  982:  // replace them with code that works directly on a wide buffer and
+        -:  983:  // then use __pad to do the padding.  It would be good to replace
+        -:  984:  // them anyway to gain back the efficiency that C++ provides by
+        -:  985:  // knowing up front the type of the values to insert.  Also, sprintf
+        -:  986:  // is dangerous since may lead to accidental buffer overruns.  This
+        -:  987:  // implementation follows the C++ standard fairly directly as
+        -:  988:  // outlined in 22.2.2.2 [lib.locale.num.put]
+        -:  989:  template<typename _CharT, typename _OutIter>
+        -:  990:    template<typename _ValueT>
+        -:  991:      _OutIter
+        -:  992:      num_put<_CharT, _OutIter>::
+        -:  993:      _M_insert_float(_OutIter __s, ios_base& __io, _CharT __fill, char __mod,
+        -:  994:		       _ValueT __v) const
+        -:  995:      {
+        -:  996:	typedef __numpunct_cache<_CharT>                __cache_type;
+        -:  997:	__use_cache<__cache_type> __uc;
+        -:  998:	const locale& __loc = __io._M_getloc();
+        -:  999:	const __cache_type* __lc = __uc(__loc);
+        -: 1000:
+        -: 1001:	// Use default precision if out of range.
+        -: 1002:	const streamsize __prec = __io.precision() < 0 ? 6 : __io.precision();
+        -: 1003:
+        -: 1004:	const int __max_digits =
+        -: 1005:	  __gnu_cxx::__numeric_traits<_ValueT>::__digits10;
+        -: 1006:
+        -: 1007:	// [22.2.2.2.2] Stage 1, numeric conversion to character.
+        -: 1008:	int __len;
+        -: 1009:	// Long enough for the max format spec.
+        -: 1010:	char __fbuf[16];
+        -: 1011:	__num_base::_S_format_float(__io, __fbuf, __mod);
+        -: 1012:
+        -: 1013:#if _GLIBCXX_USE_C99_STDIO && !_GLIBCXX_HAVE_BROKEN_VSNPRINTF
+        -: 1014:	// Precision is always used except for hexfloat format.
+        -: 1015:	const bool __use_prec =
+        -: 1016:	  (__io.flags() & ios_base::floatfield) != ios_base::floatfield;
+        -: 1017:
+        -: 1018:	// First try a buffer perhaps big enough (most probably sufficient
+        -: 1019:	// for non-ios_base::fixed outputs)
+        -: 1020:	int __cs_size = __max_digits * 3;
+        -: 1021:	char* __cs = static_cast<char*>(__builtin_alloca(__cs_size));
+        -: 1022:	if (__use_prec)
+        -: 1023:	  __len = std::__convert_from_v(_S_get_c_locale(), __cs, __cs_size,
+        -: 1024:					__fbuf, __prec, __v);
+        -: 1025:	else
+        -: 1026:	  __len = std::__convert_from_v(_S_get_c_locale(), __cs, __cs_size,
+        -: 1027:					__fbuf, __v);
+        -: 1028:
+        -: 1029:	// If the buffer was not large enough, try again with the correct size.
+        -: 1030:	if (__len >= __cs_size)
+        -: 1031:	  {
+        -: 1032:	    __cs_size = __len + 1;
+        -: 1033:	    __cs = static_cast<char*>(__builtin_alloca(__cs_size));
+        -: 1034:	    if (__use_prec)
+        -: 1035:	      __len = std::__convert_from_v(_S_get_c_locale(), __cs, __cs_size,
+        -: 1036:					    __fbuf, __prec, __v);
+        -: 1037:	    else
+        -: 1038:	      __len = std::__convert_from_v(_S_get_c_locale(), __cs, __cs_size,
+        -: 1039:					    __fbuf, __v);
+        -: 1040:	  }
+        -: 1041:#else
+        -: 1042:	// Consider the possibility of long ios_base::fixed outputs
+        -: 1043:	const bool __fixed = __io.flags() & ios_base::fixed;
+        -: 1044:	const int __max_exp =
+        -: 1045:	  __gnu_cxx::__numeric_traits<_ValueT>::__max_exponent10;
+        -: 1046:
+        -: 1047:	// The size of the output string is computed as follows.
+        -: 1048:	// ios_base::fixed outputs may need up to __max_exp + 1 chars
+        -: 1049:	// for the integer part + __prec chars for the fractional part
+        -: 1050:	// + 3 chars for sign, decimal point, '\0'. On the other hand,
+        -: 1051:	// for non-fixed outputs __max_digits * 2 + __prec chars are
+        -: 1052:	// largely sufficient.
+        -: 1053:	const int __cs_size = __fixed ? __max_exp + __prec + 4
+        -: 1054:	                              : __max_digits * 2 + __prec;
+        -: 1055:	char* __cs = static_cast<char*>(__builtin_alloca(__cs_size));
+        -: 1056:	__len = std::__convert_from_v(_S_get_c_locale(), __cs, 0, __fbuf, 
+        -: 1057:				      __prec, __v);
+        -: 1058:#endif
+        -: 1059:
+        -: 1060:	// [22.2.2.2.2] Stage 2, convert to char_type, using correct
+        -: 1061:	// numpunct.decimal_point() values for '.' and adding grouping.
+        -: 1062:	const ctype<_CharT>& __ctype = use_facet<ctype<_CharT> >(__loc);
+        -: 1063:	
+        -: 1064:	_CharT* __ws = static_cast<_CharT*>(__builtin_alloca(sizeof(_CharT)
+        -: 1065:							     * __len));
+        -: 1066:	__ctype.widen(__cs, __cs + __len, __ws);
+        -: 1067:	
+        -: 1068:	// Replace decimal point.
+        -: 1069:	_CharT* __wp = 0;
+        -: 1070:	const char* __p = char_traits<char>::find(__cs, __len, '.');
+        -: 1071:	if (__p)
+        -: 1072:	  {
+        -: 1073:	    __wp = __ws + (__p - __cs);
+        -: 1074:	    *__wp = __lc->_M_decimal_point;
+        -: 1075:	  }
+        -: 1076:	
+        -: 1077:	// Add grouping, if necessary.
+        -: 1078:	// N.B. Make sure to not group things like 2e20, i.e., no decimal
+        -: 1079:	// point, scientific notation.
+        -: 1080:	if (__lc->_M_use_grouping
+        -: 1081:	    && (__wp || __len < 3 || (__cs[1] <= '9' && __cs[2] <= '9'
+        -: 1082:				      && __cs[1] >= '0' && __cs[2] >= '0')))
+        -: 1083:	  {
+        -: 1084:	    // Grouping can add (almost) as many separators as the
+        -: 1085:	    // number of digits, but no more.
+        -: 1086:	    _CharT* __ws2 = static_cast<_CharT*>(__builtin_alloca(sizeof(_CharT)
+        -: 1087:								  * __len * 2));
+        -: 1088:	    
+        -: 1089:	    streamsize __off = 0;
+        -: 1090:	    if (__cs[0] == '-' || __cs[0] == '+')
+        -: 1091:	      {
+        -: 1092:		__off = 1;
+        -: 1093:		__ws2[0] = __ws[0];
+        -: 1094:		__len -= 1;
+        -: 1095:	      }
+        -: 1096:	    
+        -: 1097:	    _M_group_float(__lc->_M_grouping, __lc->_M_grouping_size,
+        -: 1098:			   __lc->_M_thousands_sep, __wp, __ws2 + __off,
+        -: 1099:			   __ws + __off, __len);
+        -: 1100:	    __len += __off;
+        -: 1101:	    
+        -: 1102:	    __ws = __ws2;
+        -: 1103:	  }
+        -: 1104:
+        -: 1105:	// Pad.
+        -: 1106:	const streamsize __w = __io.width();
+        -: 1107:	if (__w > static_cast<streamsize>(__len))
+        -: 1108:	  {
+        -: 1109:	    _CharT* __ws3 = static_cast<_CharT*>(__builtin_alloca(sizeof(_CharT)
+        -: 1110:								  * __w));
+        -: 1111:	    _M_pad(__fill, __w, __io, __ws3, __ws, __len);
+        -: 1112:	    __ws = __ws3;
+        -: 1113:	  }
+        -: 1114:	__io.width(0);
+        -: 1115:	
+        -: 1116:	// [22.2.2.2.2] Stage 4.
+        -: 1117:	// Write resulting, fully-formatted string to output iterator.
+        -: 1118:	return std::__write(__s, __ws, __len);
+        -: 1119:      }
+        -: 1120:  
+        -: 1121:  template<typename _CharT, typename _OutIter>
+        -: 1122:    _OutIter
+        -: 1123:    num_put<_CharT, _OutIter>::
+        -: 1124:    do_put(iter_type __s, ios_base& __io, char_type __fill, bool __v) const
+        -: 1125:    {
+        -: 1126:      const ios_base::fmtflags __flags = __io.flags();
+        -: 1127:      if ((__flags & ios_base::boolalpha) == 0)
+        -: 1128:        {
+        -: 1129:          const long __l = __v;
+        -: 1130:          __s = _M_insert_int(__s, __io, __fill, __l);
+        -: 1131:        }
+        -: 1132:      else
+        -: 1133:        {
+        -: 1134:	  typedef __numpunct_cache<_CharT>              __cache_type;
+        -: 1135:	  __use_cache<__cache_type> __uc;
+        -: 1136:	  const locale& __loc = __io._M_getloc();
+        -: 1137:	  const __cache_type* __lc = __uc(__loc);
+        -: 1138:
+        -: 1139:	  const _CharT* __name = __v ? __lc->_M_truename
+        -: 1140:	                             : __lc->_M_falsename;
+        -: 1141:	  int __len = __v ? __lc->_M_truename_size
+        -: 1142:	                  : __lc->_M_falsename_size;
+        -: 1143:
+        -: 1144:	  const streamsize __w = __io.width();
+        -: 1145:	  if (__w > static_cast<streamsize>(__len))
+        -: 1146:	    {
+        -: 1147:	      const streamsize __plen = __w - __len;
+        -: 1148:	      _CharT* __ps
+        -: 1149:		= static_cast<_CharT*>(__builtin_alloca(sizeof(_CharT)
+        -: 1150:							* __plen));
+        -: 1151:
+        -: 1152:	      char_traits<_CharT>::assign(__ps, __plen, __fill);
+        -: 1153:	      __io.width(0);
+        -: 1154:
+        -: 1155:	      if ((__flags & ios_base::adjustfield) == ios_base::left)
+        -: 1156:		{
+        -: 1157:		  __s = std::__write(__s, __name, __len);
+        -: 1158:		  __s = std::__write(__s, __ps, __plen);
+        -: 1159:		}
+        -: 1160:	      else
+        -: 1161:		{
+        -: 1162:		  __s = std::__write(__s, __ps, __plen);
+        -: 1163:		  __s = std::__write(__s, __name, __len);
+        -: 1164:		}
+        -: 1165:	      return __s;
+        -: 1166:	    }
+        -: 1167:	  __io.width(0);
+        -: 1168:	  __s = std::__write(__s, __name, __len);
+        -: 1169:	}
+        -: 1170:      return __s;
+        -: 1171:    }
+        -: 1172:
+        -: 1173:  template<typename _CharT, typename _OutIter>
+        -: 1174:    _OutIter
+        -: 1175:    num_put<_CharT, _OutIter>::
+        -: 1176:    do_put(iter_type __s, ios_base& __io, char_type __fill, double __v) const
+        -: 1177:    { return _M_insert_float(__s, __io, __fill, char(), __v); }
+        -: 1178:
+        -: 1179:#if defined _GLIBCXX_LONG_DOUBLE_COMPAT && defined __LONG_DOUBLE_128__
+        -: 1180:  template<typename _CharT, typename _OutIter>
+        -: 1181:    _OutIter
+        -: 1182:    num_put<_CharT, _OutIter>::
+        -: 1183:    __do_put(iter_type __s, ios_base& __io, char_type __fill, double __v) const
+        -: 1184:    { return _M_insert_float(__s, __io, __fill, char(), __v); }
+        -: 1185:#endif
+        -: 1186:
+        -: 1187:  template<typename _CharT, typename _OutIter>
+        -: 1188:    _OutIter
+        -: 1189:    num_put<_CharT, _OutIter>::
+        -: 1190:    do_put(iter_type __s, ios_base& __io, char_type __fill,
+        -: 1191:	   long double __v) const
+        -: 1192:    { return _M_insert_float(__s, __io, __fill, 'L', __v); }
+        -: 1193:
+        -: 1194:  template<typename _CharT, typename _OutIter>
+        -: 1195:    _OutIter
+        -: 1196:    num_put<_CharT, _OutIter>::
+        -: 1197:    do_put(iter_type __s, ios_base& __io, char_type __fill,
+        -: 1198:           const void* __v) const
+        -: 1199:    {
+        -: 1200:      const ios_base::fmtflags __flags = __io.flags();
+        -: 1201:      const ios_base::fmtflags __fmt = ~(ios_base::basefield
+        -: 1202:					 | ios_base::uppercase);
+        -: 1203:      __io.flags((__flags & __fmt) | (ios_base::hex | ios_base::showbase));
+        -: 1204:
+        -: 1205:      typedef __gnu_cxx::__conditional_type<(sizeof(const void*)
+        -: 1206:					     <= sizeof(unsigned long)),
+        -: 1207:	unsigned long, unsigned long long>::__type _UIntPtrType;       
+        -: 1208:
+        -: 1209:      __s = _M_insert_int(__s, __io, __fill,
+        -: 1210:			  reinterpret_cast<_UIntPtrType>(__v));
+        -: 1211:      __io.flags(__flags);
+        -: 1212:      return __s;
+        -: 1213:    }
+        -: 1214:
+        -: 1215:#if defined _GLIBCXX_LONG_DOUBLE_ALT128_COMPAT \
+        -: 1216:      && defined __LONG_DOUBLE_IEEE128__
+        -: 1217:  template<typename _CharT, typename _OutIter>
+        -: 1218:    _OutIter
+        -: 1219:    num_put<_CharT, _OutIter>::
+        -: 1220:    __do_put(iter_type __s, ios_base& __io, char_type __fill,
+        -: 1221:	     __ibm128 __v) const
+        -: 1222:    { return _M_insert_float(__s, __io, __fill, 'L', __v); }
+        -: 1223:#endif
+        -: 1224:_GLIBCXX_END_NAMESPACE_LDBL
+        -: 1225:
+        -: 1226:  // Construct correctly padded string, as per 22.2.2.2.2
+        -: 1227:  // Assumes
+        -: 1228:  // __newlen > __oldlen
+        -: 1229:  // __news is allocated for __newlen size
+        -: 1230:
+        -: 1231:  // NB: Of the two parameters, _CharT can be deduced from the
+        -: 1232:  // function arguments. The other (_Traits) has to be explicitly specified.
+        -: 1233:  template<typename _CharT, typename _Traits>
+        -: 1234:    void
+        -: 1235:    __pad<_CharT, _Traits>::_S_pad(ios_base& __io, _CharT __fill,
+        -: 1236:				   _CharT* __news, const _CharT* __olds,
+        -: 1237:				   streamsize __newlen, streamsize __oldlen)
+        -: 1238:    {
+        -: 1239:      const size_t __plen = static_cast<size_t>(__newlen - __oldlen);
+        -: 1240:      const ios_base::fmtflags __adjust = __io.flags() & ios_base::adjustfield;
+        -: 1241:
+        -: 1242:      // Padding last.
+        -: 1243:      if (__adjust == ios_base::left)
+        -: 1244:	{
+        -: 1245:	  _Traits::copy(__news, __olds, __oldlen);
+        -: 1246:	  _Traits::assign(__news + __oldlen, __plen, __fill);
+        -: 1247:	  return;
+        -: 1248:	}
+        -: 1249:
+        -: 1250:      size_t __mod = 0;
+        -: 1251:      if (__adjust == ios_base::internal)
+        -: 1252:	{
+        -: 1253:	  // Pad after the sign, if there is one.
+        -: 1254:	  // Pad after 0[xX], if there is one.
+        -: 1255:	  // Who came up with these rules, anyway? Jeeze.
+        -: 1256:          const locale& __loc = __io._M_getloc();
+        -: 1257:	  const ctype<_CharT>& __ctype = use_facet<ctype<_CharT> >(__loc);
+        -: 1258:
+        -: 1259:	  if (__ctype.widen('-') == __olds[0]
+        -: 1260:	      || __ctype.widen('+') == __olds[0])
+        -: 1261:	    {
+        -: 1262:	      __news[0] = __olds[0];
+        -: 1263:	      __mod = 1;
+        -: 1264:	      ++__news;
+        -: 1265:	    }
+        -: 1266:	  else if (__ctype.widen('0') == __olds[0]
+        -: 1267:		   && __oldlen > 1
+        -: 1268:		   && (__ctype.widen('x') == __olds[1]
+        -: 1269:		       || __ctype.widen('X') == __olds[1]))
+        -: 1270:	    {
+        -: 1271:	      __news[0] = __olds[0];
+        -: 1272:	      __news[1] = __olds[1];
+        -: 1273:	      __mod = 2;
+        -: 1274:	      __news += 2;
+        -: 1275:	    }
+        -: 1276:	  // else Padding first.
+        -: 1277:	}
+        -: 1278:      _Traits::assign(__news, __plen, __fill);
+        -: 1279:      _Traits::copy(__news + __plen, __olds + __mod, __oldlen - __mod);
+        -: 1280:    }
+        -: 1281:
+        -: 1282:  template<typename _CharT>
+        -: 1283:    _CharT*
+function _ZSt14__add_groupingIcEPT_S1_S0_PKcmPKS0_S5_ called 0 returned 0% blocks executed 0%
+    #####: 1284:    __add_grouping(_CharT* __s, _CharT __sep,
+        -: 1285:		   const char* __gbeg, size_t __gsize,
+        -: 1286:		   const _CharT* __first, const _CharT* __last)
+        -: 1287:    {
+    #####: 1288:      size_t __idx = 0;
+    #####: 1289:      size_t __ctr = 0;
+        -: 1290:
+    #####: 1291:      while (__last - __first > __gbeg[__idx]
+    %%%%%: 1291-block 2
+    #####: 1292:	     && static_cast<signed char>(__gbeg[__idx]) > 0
+    %%%%%: 1292-block 7
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####: 1293:	     && __gbeg[__idx] != __gnu_cxx::__numeric_traits<char>::__max)
+    %%%%%: 1293-block 6
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%: 1293-block 8
+branch  2 never executed
+branch  3 never executed (fallthrough)
+        -: 1294:	{
+    #####: 1295:	  __last -= __gbeg[__idx];
+    #####: 1296:	  __idx < __gsize - 1 ? ++__idx : ++__ctr;
+    %%%%%: 1296-block 3
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%: 1296-block 4
+    %%%%%: 1296-block 5
+        -: 1297:	}
+        -: 1298:
+    #####: 1299:      while (__first != __last)
+    %%%%%: 1299-block 9
+    %%%%%: 1299-block 11
+branch  0 never executed
+branch  1 never executed (fallthrough)
+    #####: 1300:	*__s++ = *__first++;
+    %%%%%: 1300-block 10
+        -: 1301:
+    #####: 1302:      while (__ctr--)
+    %%%%%: 1302-block 12
+    %%%%%: 1302-block 16
+branch  0 never executed
+branch  1 never executed (fallthrough)
+        -: 1303:	{
+    #####: 1304:	  *__s++ = __sep;	  
+    #####: 1305:	  for (char __i = __gbeg[__idx]; __i > 0; --__i)
+    %%%%%: 1305-block 13
+    %%%%%: 1305-block 15
+branch  0 never executed
+branch  1 never executed (fallthrough)
+    #####: 1306:	    *__s++ = *__first++;
+    %%%%%: 1306-block 14
+        -: 1307:	}
+        -: 1308:
+    #####: 1309:      while (__idx--)
+    %%%%%: 1309-block 17
+    %%%%%: 1309-block 21
+branch  0 never executed
+branch  1 never executed (fallthrough)
+        -: 1310:	{
+    #####: 1311:	  *__s++ = __sep;	  
+    #####: 1312:	  for (char __i = __gbeg[__idx]; __i > 0; --__i)
+    %%%%%: 1312-block 18
+    %%%%%: 1312-block 20
+branch  0 never executed
+branch  1 never executed (fallthrough)
+    #####: 1313:	    *__s++ = *__first++;
+    %%%%%: 1313-block 19
+        -: 1314:	}
+        -: 1315:
+    #####: 1316:      return __s;
+    %%%%%: 1316-block 22
+        -: 1317:    }
+        -: 1318:
+        -: 1319:  // Inhibit implicit instantiations for required instantiations,
+        -: 1320:  // which are defined via explicit instantiations elsewhere.
+        -: 1321:#if _GLIBCXX_EXTERN_TEMPLATE
+        -: 1322:  extern template class _GLIBCXX_NAMESPACE_CXX11 numpunct<char>;
+        -: 1323:  extern template class _GLIBCXX_NAMESPACE_CXX11 numpunct_byname<char>;
+        -: 1324:  extern template class _GLIBCXX_NAMESPACE_LDBL num_get<char>;
+        -: 1325:  extern template class _GLIBCXX_NAMESPACE_LDBL num_put<char>;
+        -: 1326:  extern template class ctype_byname<char>;
+        -: 1327:
+        -: 1328:  extern template
+        -: 1329:    const ctype<char>*
+        -: 1330:    __try_use_facet<ctype<char> >(const locale&) _GLIBCXX_NOTHROW;
+        -: 1331:
+        -: 1332:  extern template
+        -: 1333:    const numpunct<char>*
+        -: 1334:    __try_use_facet<numpunct<char> >(const locale&) _GLIBCXX_NOTHROW;
+        -: 1335:
+        -: 1336:  extern template
+        -: 1337:    const num_put<char>*
+        -: 1338:    __try_use_facet<num_put<char> >(const locale&) _GLIBCXX_NOTHROW;
+        -: 1339:
+        -: 1340:  extern template
+        -: 1341:    const num_get<char>*
+        -: 1342:    __try_use_facet<num_get<char> >(const locale&) _GLIBCXX_NOTHROW;
+        -: 1343:
+        -: 1344:  extern template
+        -: 1345:    const ctype<char>&
+        -: 1346:    use_facet<ctype<char> >(const locale&);
+        -: 1347:
+        -: 1348:  extern template
+        -: 1349:    const numpunct<char>&
+        -: 1350:    use_facet<numpunct<char> >(const locale&);
+        -: 1351:
+        -: 1352:  extern template
+        -: 1353:    const num_put<char>&
+        -: 1354:    use_facet<num_put<char> >(const locale&);
+        -: 1355:
+        -: 1356:  extern template
+        -: 1357:    const num_get<char>&
+        -: 1358:    use_facet<num_get<char> >(const locale&);
+        -: 1359:
+        -: 1360:  extern template
+        -: 1361:    bool
+        -: 1362:    has_facet<ctype<char> >(const locale&);
+        -: 1363:
+        -: 1364:  extern template
+        -: 1365:    bool
+        -: 1366:    has_facet<numpunct<char> >(const locale&);
+        -: 1367:
+        -: 1368:  extern template
+        -: 1369:    bool
+        -: 1370:    has_facet<num_put<char> >(const locale&);
+        -: 1371:
+        -: 1372:  extern template
+        -: 1373:    bool
+        -: 1374:    has_facet<num_get<char> >(const locale&);
+        -: 1375:
+        -: 1376:#ifdef _GLIBCXX_USE_WCHAR_T
+        -: 1377:  extern template class _GLIBCXX_NAMESPACE_CXX11 numpunct<wchar_t>;
+        -: 1378:  extern template class _GLIBCXX_NAMESPACE_CXX11 numpunct_byname<wchar_t>;
+        -: 1379:  extern template class _GLIBCXX_NAMESPACE_LDBL num_get<wchar_t>;
+        -: 1380:  extern template class _GLIBCXX_NAMESPACE_LDBL num_put<wchar_t>;
+        -: 1381:  extern template class ctype_byname<wchar_t>;
+        -: 1382:
+        -: 1383:  extern template
+        -: 1384:    const ctype<wchar_t>*
+        -: 1385:    __try_use_facet<ctype<wchar_t> >(const locale&) _GLIBCXX_NOTHROW;
+        -: 1386:
+        -: 1387:  extern template
+        -: 1388:    const numpunct<wchar_t>*
+        -: 1389:    __try_use_facet<numpunct<wchar_t> >(const locale&) _GLIBCXX_NOTHROW;
+        -: 1390:
+        -: 1391:  extern template
+        -: 1392:    const num_put<wchar_t>*
+        -: 1393:    __try_use_facet<num_put<wchar_t> >(const locale&) _GLIBCXX_NOTHROW;
+        -: 1394:
+        -: 1395:  extern template
+        -: 1396:    const num_get<wchar_t>*
+        -: 1397:    __try_use_facet<num_get<wchar_t> >(const locale&) _GLIBCXX_NOTHROW;
+        -: 1398:
+        -: 1399:  extern template
+        -: 1400:    const ctype<wchar_t>&
+        -: 1401:    use_facet<ctype<wchar_t> >(const locale&);
+        -: 1402:
+        -: 1403:  extern template
+        -: 1404:    const numpunct<wchar_t>&
+        -: 1405:    use_facet<numpunct<wchar_t> >(const locale&);
+        -: 1406:
+        -: 1407:  extern template
+        -: 1408:    const num_put<wchar_t>&
+        -: 1409:    use_facet<num_put<wchar_t> >(const locale&);
+        -: 1410:
+        -: 1411:  extern template
+        -: 1412:    const num_get<wchar_t>&
+        -: 1413:    use_facet<num_get<wchar_t> >(const locale&);
+        -: 1414:
+        -: 1415:  extern template
+        -: 1416:    bool
+        -: 1417:    has_facet<ctype<wchar_t> >(const locale&);
+        -: 1418:
+        -: 1419:  extern template
+        -: 1420:    bool
+        -: 1421:    has_facet<numpunct<wchar_t> >(const locale&);
+        -: 1422:
+        -: 1423:  extern template
+        -: 1424:    bool
+        -: 1425:    has_facet<num_put<wchar_t> >(const locale&);
+        -: 1426:
+        -: 1427:  extern template
+        -: 1428:    bool
+        -: 1429:    has_facet<num_get<wchar_t> >(const locale&);
+        -: 1430:#endif
+        -: 1431:#endif
+        -: 1432:
+        -: 1433:_GLIBCXX_END_NAMESPACE_VERSION
+        -: 1434:} // namespace
+        -: 1435:
+        -: 1436:#endif

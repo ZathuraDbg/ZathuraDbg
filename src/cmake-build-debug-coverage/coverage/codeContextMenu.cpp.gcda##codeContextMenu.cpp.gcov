@@ -1,0 +1,712 @@
+        -:    0:Source:/home/rc/ZathuraDbg/src/app/codeContextMenu.cpp
+        -:    0:Graph:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/app/codeContextMenu.cpp.gcno
+        -:    0:Data:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/app/codeContextMenu.cpp.gcda
+        -:    0:Runs:1
+        -:    1:#include "codeContextMenu.hpp"
+function _Z11contextMenuv called 1077 returned 100% blocks executed 5%
+     1077:    2:void contextMenu() {
+     1077:    3:    const auto& io = ImGui::GetIO();
+     1077:    3-block 2
+call    0 returned 1077
+     1077:    4:    ImGui::GetStyle().Colors[ImGuiCol_PopupBg] = ImColor(0x1e, 0x20, 0x30);
+call    0 returned 1077
+call    1 returned 1077
+call    2 returned 1077
+branch  3 taken 1077 (fallthrough)
+branch  4 taken 0 (throw)
+    $$$$$:    4-block 234
+call    5 never executed
+        -:    5:
+     1077:    6:    ImGui::GetStyle().Colors[ImGuiCol_HeaderHovered] = ImColor(0x18, 0x19, 0x26);
+     1077:    6-block 6
+call    0 returned 1077
+call    1 returned 1077
+call    2 returned 1077
+branch  3 taken 1077 (fallthrough)
+branch  4 taken 0 (throw)
+    $$$$$:    6-block 235
+call    5 never executed
+     1077:    7:    ImGui::PushFont(io.Fonts->Fonts[RubikRegular16]);
+     1077:    7-block 9
+call    0 returned 1077
+call    1 returned 1077
+        -:    8:
+     1077:    9:    if (ImGui::BeginPopupContextItem("TextEditorContextMenu")) {
+call    0 returned 1077
+branch  1 taken 0 (fallthrough)
+branch  2 taken 1077
+    #####:   10:        if (ImGui::MenuItem("Copy", "Ctrl + C", false))
+    %%%%%:   10-block 13
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+        -:   11:        {
+    #####:   12:            editor->Copy();
+    %%%%%:   12-block 15
+call    0 never executed
+    #####:   13:            LOG_INFO("Copied text to clipboard");
+    %%%%%:   13-block 16
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:   13-block 18
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:   13-block 20
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:   13-block 21
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+    %%%%%:   13-block 22
+call   12 never executed
+call   13 never executed
+call   14 never executed
+branch 15 never executed (fallthrough)
+branch 16 never executed (throw)
+    %%%%%:   13-block 25
+call   17 never executed
+branch 18 never executed (fallthrough)
+branch 19 never executed (throw)
+    %%%%%:   13-block 26
+    %%%%%:   13-block 28
+call   20 never executed
+branch 21 never executed (fallthrough)
+branch 22 never executed (throw)
+    %%%%%:   13-block 29
+call   23 never executed
+branch 24 never executed (fallthrough)
+branch 25 never executed (throw)
+    %%%%%:   13-block 30
+call   26 never executed
+branch 27 never executed (fallthrough)
+branch 28 never executed (throw)
+    %%%%%:   13-block 31
+call   29 never executed
+branch 30 never executed (fallthrough)
+branch 31 never executed (throw)
+    %%%%%:   13-block 32
+call   32 never executed
+branch 33 never executed (fallthrough)
+branch 34 never executed (throw)
+    %%%%%:   13-block 33
+call   35 never executed
+branch 36 never executed (fallthrough)
+branch 37 never executed (throw)
+    %%%%%:   13-block 34
+call   38 never executed
+call   39 never executed
+    %%%%%:   13-block 37
+call   40 never executed
+call   41 never executed
+    %%%%%:   13-block 40
+call   42 never executed
+branch 43 never executed
+branch 44 never executed (fallthrough)
+    $$$$$:   13-block 236
+call   45 never executed
+    $$$$$:   13-block 238
+call   46 never executed
+    $$$$$:   13-block 242
+    $$$$$:   13-block 243
+    $$$$$:   13-block 244
+    $$$$$:   13-block 245
+call   47 never executed
+    $$$$$:   13-block 247
+    $$$$$:   13-block 248
+call   48 never executed
+    $$$$$:   13-block 250
+call   49 never executed
+        -:   14:        }
+        -:   15:
+    #####:   16:        ImGui::Separator();
+    %%%%%:   16-block 42
+call    0 never executed
+        -:   17:
+    #####:   18:        if (ImGui::MenuItem("Cut", "Ctrl + X", false))
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+        -:   19:        {
+    #####:   20:            editor->Cut();
+    %%%%%:   20-block 45
+call    0 never executed
+    #####:   21:            LOG_INFO("Cut text to clipboard");
+    %%%%%:   21-block 46
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:   21-block 48
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:   21-block 50
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:   21-block 51
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+    %%%%%:   21-block 52
+call   12 never executed
+call   13 never executed
+call   14 never executed
+branch 15 never executed (fallthrough)
+branch 16 never executed (throw)
+    %%%%%:   21-block 55
+call   17 never executed
+branch 18 never executed (fallthrough)
+branch 19 never executed (throw)
+    %%%%%:   21-block 56
+    %%%%%:   21-block 58
+call   20 never executed
+branch 21 never executed (fallthrough)
+branch 22 never executed (throw)
+    %%%%%:   21-block 59
+call   23 never executed
+branch 24 never executed (fallthrough)
+branch 25 never executed (throw)
+    %%%%%:   21-block 60
+call   26 never executed
+branch 27 never executed (fallthrough)
+branch 28 never executed (throw)
+    %%%%%:   21-block 61
+call   29 never executed
+branch 30 never executed (fallthrough)
+branch 31 never executed (throw)
+    %%%%%:   21-block 62
+call   32 never executed
+branch 33 never executed (fallthrough)
+branch 34 never executed (throw)
+    %%%%%:   21-block 63
+call   35 never executed
+branch 36 never executed (fallthrough)
+branch 37 never executed (throw)
+    %%%%%:   21-block 64
+call   38 never executed
+call   39 never executed
+    %%%%%:   21-block 67
+call   40 never executed
+call   41 never executed
+    %%%%%:   21-block 70
+call   42 never executed
+branch 43 never executed
+branch 44 never executed (fallthrough)
+    $$$$$:   21-block 251
+call   45 never executed
+    $$$$$:   21-block 253
+call   46 never executed
+    $$$$$:   21-block 257
+    $$$$$:   21-block 258
+    $$$$$:   21-block 259
+    $$$$$:   21-block 260
+call   47 never executed
+    $$$$$:   21-block 262
+    $$$$$:   21-block 263
+call   48 never executed
+    $$$$$:   21-block 265
+call   49 never executed
+        -:   22:        }
+        -:   23:
+    #####:   24:        ImGui::Separator();
+    %%%%%:   24-block 72
+call    0 never executed
+        -:   25:
+    #####:   26:        if (ImGui::MenuItem("Paste", "Ctrl + V", false))
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+        -:   27:        {
+    #####:   28:            editor->Paste();
+    %%%%%:   28-block 75
+call    0 never executed
+    #####:   29:            LOG_INFO("Pasted text from clipboard");
+    %%%%%:   29-block 76
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:   29-block 78
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:   29-block 80
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:   29-block 81
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+    %%%%%:   29-block 82
+call   12 never executed
+call   13 never executed
+call   14 never executed
+branch 15 never executed (fallthrough)
+branch 16 never executed (throw)
+    %%%%%:   29-block 85
+call   17 never executed
+branch 18 never executed (fallthrough)
+branch 19 never executed (throw)
+    %%%%%:   29-block 86
+    %%%%%:   29-block 88
+call   20 never executed
+branch 21 never executed (fallthrough)
+branch 22 never executed (throw)
+    %%%%%:   29-block 89
+call   23 never executed
+branch 24 never executed (fallthrough)
+branch 25 never executed (throw)
+    %%%%%:   29-block 90
+call   26 never executed
+branch 27 never executed (fallthrough)
+branch 28 never executed (throw)
+    %%%%%:   29-block 91
+call   29 never executed
+branch 30 never executed (fallthrough)
+branch 31 never executed (throw)
+    %%%%%:   29-block 92
+call   32 never executed
+branch 33 never executed (fallthrough)
+branch 34 never executed (throw)
+    %%%%%:   29-block 93
+call   35 never executed
+branch 36 never executed (fallthrough)
+branch 37 never executed (throw)
+    %%%%%:   29-block 94
+call   38 never executed
+call   39 never executed
+    %%%%%:   29-block 97
+call   40 never executed
+call   41 never executed
+    %%%%%:   29-block 100
+call   42 never executed
+branch 43 never executed
+branch 44 never executed (fallthrough)
+    $$$$$:   29-block 266
+call   45 never executed
+    $$$$$:   29-block 268
+call   46 never executed
+    $$$$$:   29-block 272
+    $$$$$:   29-block 273
+    $$$$$:   29-block 274
+    $$$$$:   29-block 275
+call   47 never executed
+    $$$$$:   29-block 277
+    $$$$$:   29-block 278
+call   48 never executed
+    $$$$$:   29-block 280
+call   49 never executed
+        -:   30:        }
+        -:   31:
+    #####:   32:        ImGui::Separator();
+    %%%%%:   32-block 102
+call    0 never executed
+        -:   33:
+    #####:   34:        if (ImGui::MenuItem("Undo", "Ctrl + Z", false))
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+        -:   35:        {
+    #####:   36:            if (editor->CanUndo()) {
+    %%%%%:   36-block 105
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:   37:                editor->Undo();
+    %%%%%:   37-block 107
+call    0 never executed
+    #####:   38:                LOG_INFO("Performed undo!");
+    %%%%%:   38-block 108
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:   38-block 110
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:   38-block 112
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:   38-block 113
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+    %%%%%:   38-block 114
+call   12 never executed
+call   13 never executed
+call   14 never executed
+branch 15 never executed (fallthrough)
+branch 16 never executed (throw)
+    %%%%%:   38-block 117
+call   17 never executed
+branch 18 never executed (fallthrough)
+branch 19 never executed (throw)
+    %%%%%:   38-block 118
+    %%%%%:   38-block 120
+call   20 never executed
+branch 21 never executed (fallthrough)
+branch 22 never executed (throw)
+    %%%%%:   38-block 121
+call   23 never executed
+branch 24 never executed (fallthrough)
+branch 25 never executed (throw)
+    %%%%%:   38-block 122
+call   26 never executed
+branch 27 never executed (fallthrough)
+branch 28 never executed (throw)
+    %%%%%:   38-block 123
+call   29 never executed
+branch 30 never executed (fallthrough)
+branch 31 never executed (throw)
+    %%%%%:   38-block 124
+call   32 never executed
+branch 33 never executed (fallthrough)
+branch 34 never executed (throw)
+    %%%%%:   38-block 125
+call   35 never executed
+branch 36 never executed (fallthrough)
+branch 37 never executed (throw)
+    %%%%%:   38-block 126
+call   38 never executed
+call   39 never executed
+    %%%%%:   38-block 129
+call   40 never executed
+call   41 never executed
+    %%%%%:   38-block 132
+call   42 never executed
+branch 43 never executed
+branch 44 never executed (fallthrough)
+    $$$$$:   38-block 281
+call   45 never executed
+    $$$$$:   38-block 283
+call   46 never executed
+    $$$$$:   38-block 287
+    $$$$$:   38-block 288
+    $$$$$:   38-block 289
+    $$$$$:   38-block 290
+call   47 never executed
+    $$$$$:   38-block 292
+    $$$$$:   38-block 293
+call   48 never executed
+    $$$$$:   38-block 295
+call   49 never executed
+        -:   39:            }
+        -:   40:        }
+        -:   41:
+    #####:   42:        ImGui::Separator();
+    %%%%%:   42-block 134
+call    0 never executed
+        -:   43:
+    #####:   44:        if (ImGui::MenuItem("Redo", "Ctrl + Y", false))
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+        -:   45:        {
+    #####:   46:            if (editor->CanRedo()) {
+    %%%%%:   46-block 137
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:   47:                editor->Redo();
+    %%%%%:   47-block 139
+call    0 never executed
+    #####:   48:                LOG_INFO("Performed redo!");
+    %%%%%:   48-block 140
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:   48-block 142
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:   48-block 144
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:   48-block 145
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+    %%%%%:   48-block 146
+call   12 never executed
+call   13 never executed
+call   14 never executed
+branch 15 never executed (fallthrough)
+branch 16 never executed (throw)
+    %%%%%:   48-block 149
+call   17 never executed
+branch 18 never executed (fallthrough)
+branch 19 never executed (throw)
+    %%%%%:   48-block 150
+    %%%%%:   48-block 152
+call   20 never executed
+branch 21 never executed (fallthrough)
+branch 22 never executed (throw)
+    %%%%%:   48-block 153
+call   23 never executed
+branch 24 never executed (fallthrough)
+branch 25 never executed (throw)
+    %%%%%:   48-block 154
+call   26 never executed
+branch 27 never executed (fallthrough)
+branch 28 never executed (throw)
+    %%%%%:   48-block 155
+call   29 never executed
+branch 30 never executed (fallthrough)
+branch 31 never executed (throw)
+    %%%%%:   48-block 156
+call   32 never executed
+branch 33 never executed (fallthrough)
+branch 34 never executed (throw)
+    %%%%%:   48-block 157
+call   35 never executed
+branch 36 never executed (fallthrough)
+branch 37 never executed (throw)
+    %%%%%:   48-block 158
+call   38 never executed
+call   39 never executed
+    %%%%%:   48-block 161
+call   40 never executed
+call   41 never executed
+    %%%%%:   48-block 164
+call   42 never executed
+branch 43 never executed
+branch 44 never executed (fallthrough)
+    $$$$$:   48-block 296
+call   45 never executed
+    $$$$$:   48-block 298
+call   46 never executed
+    $$$$$:   48-block 302
+    $$$$$:   48-block 303
+    $$$$$:   48-block 304
+    $$$$$:   48-block 305
+call   47 never executed
+    $$$$$:   48-block 307
+    $$$$$:   48-block 308
+call   48 never executed
+    $$$$$:   48-block 310
+call   49 never executed
+        -:   49:            }
+        -:   50:        }
+        -:   51:
+    #####:   52:        ImGui::Separator();
+    %%%%%:   52-block 166
+call    0 never executed
+        -:   53:
+    #####:   54:        if (ImGui::MenuItem("Toggle breakpoint", "F9", false)) {
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:   55:            toggleBreakpoint = true;
+    %%%%%:   55-block 169
+        -:   56:        }
+        -:   57:
+    #####:   58:        ImGui::Separator();
+    %%%%%:   58-block 170
+call    0 never executed
+        -:   59:
+    #####:   60:        if (!lineNumbersShown) {
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:   61:            if (ImGui::MenuItem("Show line numbers", nullptr, false)) {
+    %%%%%:   61-block 172
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:   62:                editor->SetShowLineNumbersEnabled(true);
+    %%%%%:   62-block 174
+call    0 never executed
+    #####:   63:                lineNumbersShown = true;
+        -:   64:            }
+        -:   65:        } else {
+    #####:   66:            if (ImGui::MenuItem("Hide line numbers", nullptr,
+    %%%%%:   66-block 176
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+        -:   67:                                false))
+        -:   68:            {
+    #####:   69:                editor->SetShowLineNumbersEnabled(false);
+    %%%%%:   69-block 178
+call    0 never executed
+    #####:   70:                lineNumbersShown = false;
+        -:   71:            }
+        -:   72:        }
+        -:   73:
+    #####:   74:        ImGui::Separator();
+    %%%%%:   74-block 180
+call    0 never executed
+        -:   75:
+    #####:   76:        if (ImGui::BeginMenu("Copy as")) {
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:   77:            std::stringstream selectedAsmText(editor->GetSelectedText());
+    %%%%%:   77-block 183
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+    %%%%%:   77-block 185
+call    4 never executed
+branch  5 never executed (fallthrough)
+branch  6 never executed (throw)
+    %%%%%:   77-block 186
+call    7 never executed
+    $$$$$:   77-block 311
+call    8 never executed
+    $$$$$:   77-block 313
+    #####:   78:            if (ImGui::MenuItem("C array")){
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:   78-block 188
+branch  3 never executed (fallthrough)
+branch  4 never executed
+    #####:   79:                if (!selectedAsmText.str().empty()) {
+    %%%%%:   79-block 189
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:   79-block 190
+call    3 never executed
+call    4 never executed
+branch  5 never executed (fallthrough)
+branch  6 never executed
+    $$$$$:   79-block 314
+    #####:   80:                    ImGui::SetClipboardText(getDataToCopy(selectedAsmText, true).c_str());
+    %%%%%:   80-block 193
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:   80-block 194
+call    3 never executed
+call    4 never executed
+branch  5 never executed (fallthrough)
+branch  6 never executed (throw)
+    %%%%%:   80-block 196
+call    7 never executed
+    $$$$$:   80-block 315
+call    8 never executed
+    $$$$$:   80-block 317
+        -:   81:                }
+        -:   82:            }
+        -:   83:
+    #####:   84:            if (ImGui::MenuItem("Hex")){
+    %%%%%:   84-block 198
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:   84-block 199
+branch  3 never executed (fallthrough)
+branch  4 never executed
+    #####:   85:                std::stringstream selectedAsmStr(editor->GetSelectedText());
+    %%%%%:   85-block 200
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+    %%%%%:   85-block 202
+call    4 never executed
+branch  5 never executed (fallthrough)
+branch  6 never executed (throw)
+    %%%%%:   85-block 203
+call    7 never executed
+    $$$$$:   85-block 318
+call    8 never executed
+    $$$$$:   85-block 320
+    #####:   86:                if (!selectedAsmStr.str().empty()) {
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:   86-block 205
+call    3 never executed
+call    4 never executed
+branch  5 never executed (fallthrough)
+branch  6 never executed
+    $$$$$:   86-block 321
+    #####:   87:                    ImGui::SetClipboardText(getDataToCopy(selectedAsmStr, false).c_str());
+    %%%%%:   87-block 208
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:   87-block 209
+call    3 never executed
+call    4 never executed
+branch  5 never executed (fallthrough)
+branch  6 never executed (throw)
+    %%%%%:   87-block 211
+call    7 never executed
+    $$$$$:   87-block 322
+call    8 never executed
+    $$$$$:   87-block 324
+        -:   88:                }
+    #####:   89:            }
+    %%%%%:   89-block 213
+call    0 never executed
+    $$$$$:   89-block 325
+call    1 never executed
+    #####:   90:            ImGui::EndMenu();
+    %%%%%:   90-block 215
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:   91:        }
+    %%%%%:   91-block 216
+call    0 never executed
+    $$$$$:   91-block 328
+call    1 never executed
+        -:   92:
+    #####:   93:        ImGui::Separator();
+    %%%%%:   93-block 218
+call    0 never executed
+        -:   94:
+    #####:   95:        if (ImGui::MenuItem("Run until here", "F6", false)) {
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:   96:            runUntilHere = true;
+    %%%%%:   96-block 221
+        -:   97:        }
+        -:   98:
+    #####:   99:        ImGui::Separator();
+    %%%%%:   99-block 222
+call    0 never executed
+    #####:  100:        if (!debugModeEnabled){
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  101:            if (ImGui::MenuItem("Run selected code", "F3", false)){
+    %%%%%:  101-block 224
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  102:                runSelectedCode = true;
+    %%%%%:  102-block 226
+        -:  103:            }
+        -:  104:        }
+        -:  105:
+    #####:  106:        if (ImGui::MenuItem("Go to definition", "F4")){
+    %%%%%:  106-block 227
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  107:            goToDefinition = true;
+    %%%%%:  107-block 229
+        -:  108:        }
+        -:  109:
+    #####:  110:        ImGui::EndPopup();
+    %%%%%:  110-block 230
+call    0 never executed
+        -:  111:    }
+        -:  112:
+     1077:  113:    ImGui::PopFont();
+     1077:  113-block 231
+call    0 returned 1077
+     1077:  114:    ImGui::End();
+call    0 returned 1077
+     1077:  115:}

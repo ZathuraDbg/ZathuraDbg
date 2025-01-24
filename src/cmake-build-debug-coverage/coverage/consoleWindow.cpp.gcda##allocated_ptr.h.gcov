@@ -1,0 +1,127 @@
+        -:    0:Source:/usr/include/c++/14.2.1/bits/allocated_ptr.h
+        -:    0:Graph:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/app/windows/consoleWindow.cpp.gcno
+        -:    0:Data:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/app/windows/consoleWindow.cpp.gcda
+        -:    0:Runs:1
+        -:    1:// Guarded Allocation -*- C++ -*-
+        -:    2:
+        -:    3:// Copyright (C) 2014-2024 Free Software Foundation, Inc.
+        -:    4://
+        -:    5:// This file is part of the GNU ISO C++ Library.  This library is free
+        -:    6:// software; you can redistribute it and/or modify it under the
+        -:    7:// terms of the GNU General Public License as published by the
+        -:    8:// Free Software Foundation; either version 3, or (at your option)
+        -:    9:// any later version.
+        -:   10:
+        -:   11:// This library is distributed in the hope that it will be useful,
+        -:   12:// but WITHOUT ANY WARRANTY; without even the implied warranty of
+        -:   13:// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+        -:   14:// GNU General Public License for more details.
+        -:   15:
+        -:   16:// Under Section 7 of GPL version 3, you are granted additional
+        -:   17:// permissions described in the GCC Runtime Library Exception, version
+        -:   18:// 3.1, as published by the Free Software Foundation.
+        -:   19:
+        -:   20:// You should have received a copy of the GNU General Public License and
+        -:   21:// a copy of the GCC Runtime Library Exception along with this program;
+        -:   22:// see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+        -:   23:// <http://www.gnu.org/licenses/>.
+        -:   24:
+        -:   25:/** @file bits/allocated_ptr.h
+        -:   26: *  This is an internal header file, included by other library headers.
+        -:   27: *  Do not attempt to use it directly. @headername{memory}
+        -:   28: */
+        -:   29:
+        -:   30:#ifndef _ALLOCATED_PTR_H
+        -:   31:#define _ALLOCATED_PTR_H 1
+        -:   32:
+        -:   33:#if __cplusplus < 201103L
+        -:   34:# include <bits/c++0xwarning.h>
+        -:   35:#else
+        -:   36:# include <type_traits>
+        -:   37:# include <bits/ptr_traits.h>
+        -:   38:# include <bits/alloc_traits.h>
+        -:   39:
+        -:   40:namespace std _GLIBCXX_VISIBILITY(default)
+        -:   41:{
+        -:   42:_GLIBCXX_BEGIN_NAMESPACE_VERSION
+        -:   43:/// @cond undocumented
+        -:   44:
+        -:   45:  /// Non-standard RAII type for managing pointers obtained from allocators.
+        -:   46:  template<typename _Alloc>
+        -:   47:    struct __allocated_ptr
+        -:   48:    {
+        -:   49:      using pointer = typename allocator_traits<_Alloc>::pointer;
+        -:   50:      using value_type = typename allocator_traits<_Alloc>::value_type;
+        -:   51:
+        -:   52:      /// Take ownership of __ptr
+function _ZNSt15__allocated_ptrISaISt23_Sp_counted_ptr_inplaceINSt8__detail4_NFAINSt7__cxx1112regex_traitsIcEEEESaIvELN9__gnu_cxx12_Lock_policyE2EEEEC2ERSB_PSA_ called 0 returned 0% blocks executed 0%
+    #####:   53:      __allocated_ptr(_Alloc& __a, pointer __ptr) noexcept
+    #####:   54:      : _M_alloc(std::__addressof(__a)), _M_ptr(__ptr)
+    %%%%%:   54-block 2
+call    0 never executed
+    #####:   55:      { }
+        -:   56:
+        -:   57:      /// Convert __ptr to allocator's pointer type and take ownership of it
+        -:   58:      template<typename _Ptr,
+        -:   59:	       typename _Req = _Require<is_same<_Ptr, value_type*>>>
+        -:   60:      __allocated_ptr(_Alloc& __a, _Ptr __ptr)
+        -:   61:      : _M_alloc(std::__addressof(__a)),
+        -:   62:	_M_ptr(pointer_traits<pointer>::pointer_to(*__ptr))
+        -:   63:      { }
+        -:   64:
+        -:   65:      /// Transfer ownership of the owned pointer
+        -:   66:      __allocated_ptr(__allocated_ptr&& __gd) noexcept
+        -:   67:      : _M_alloc(__gd._M_alloc), _M_ptr(__gd._M_ptr)
+        -:   68:      { __gd._M_ptr = nullptr; }
+        -:   69:
+        -:   70:      /// Deallocate the owned pointer
+function _ZNSt15__allocated_ptrISaISt23_Sp_counted_ptr_inplaceINSt8__detail4_NFAINSt7__cxx1112regex_traitsIcEEEESaIvELN9__gnu_cxx12_Lock_policyE2EEEED2Ev called 0 returned 0% blocks executed 0%
+    #####:   71:      ~__allocated_ptr()
+        -:   72:      {
+    #####:   73:	if (_M_ptr != nullptr)
+    %%%%%:   73-block 2
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:   74:	  std::allocator_traits<_Alloc>::deallocate(*_M_alloc, _M_ptr, 1);
+    %%%%%:   74-block 3
+    #####:   75:      }
+        -:   76:
+        -:   77:      /// Release ownership of the owned pointer
+        -:   78:      __allocated_ptr&
+function _ZNSt15__allocated_ptrISaISt23_Sp_counted_ptr_inplaceINSt8__detail4_NFAINSt7__cxx1112regex_traitsIcEEEESaIvELN9__gnu_cxx12_Lock_policyE2EEEEaSEDn called 0 returned 0% blocks executed 0%
+    #####:   79:      operator=(std::nullptr_t) noexcept
+        -:   80:      {
+    #####:   81:	_M_ptr = nullptr;
+    #####:   82:	return *this;
+    %%%%%:   82-block 2
+        -:   83:      }
+        -:   84:
+        -:   85:      /// Get the address that the owned pointer refers to.
+function _ZNSt15__allocated_ptrISaISt23_Sp_counted_ptr_inplaceINSt8__detail4_NFAINSt7__cxx1112regex_traitsIcEEEESaIvELN9__gnu_cxx12_Lock_policyE2EEEE3getEv called 0 returned 0% blocks executed 0%
+    #####:   86:      value_type* get() { return std::__to_address(_M_ptr); }
+    %%%%%:   86-block 2
+call    0 never executed
+        -:   87:
+        -:   88:    private:
+        -:   89:      _Alloc* _M_alloc;
+        -:   90:      pointer _M_ptr;
+        -:   91:    };
+        -:   92:
+        -:   93:  /// Allocate space for a single object using __a
+        -:   94:  template<typename _Alloc>
+        -:   95:    __allocated_ptr<_Alloc>
+function _ZSt18__allocate_guardedISaISt23_Sp_counted_ptr_inplaceINSt8__detail4_NFAINSt7__cxx1112regex_traitsIcEEEESaIvELN9__gnu_cxx12_Lock_policyE2EEEESt15__allocated_ptrIT_ERSD_ called 0 returned 0% blocks executed 0%
+    #####:   96:    __allocate_guarded(_Alloc& __a)
+    %%%%%:   96-block 2
+        -:   97:    {
+    #####:   98:      return { __a, std::allocator_traits<_Alloc>::allocate(__a, 1) };
+    %%%%%:   98-block 13
+call    0 never executed
+        -:   99:    }
+        -:  100:
+        -:  101:/// @endcond
+        -:  102:_GLIBCXX_END_NAMESPACE_VERSION
+        -:  103:} // namespace std
+        -:  104:
+        -:  105:#endif
+        -:  106:#endif

@@ -1,0 +1,181 @@
+        -:    0:Source:/home/rc/ZathuraDbg/vendor/ImGuiColorTextEdit/vendor/regex/include/boost/regex/v5/pattern_except.hpp
+        -:    0:Graph:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/home/rc/ZathuraDbg/vendor/ImGuiColorTextEdit/TextEditor.cpp.gcno
+        -:    0:Data:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/home/rc/ZathuraDbg/vendor/ImGuiColorTextEdit/TextEditor.cpp.gcda
+        -:    0:Runs:1
+        -:    1:/*
+        -:    2: *
+        -:    3: * Copyright (c) 1998-2002
+        -:    4: * John Maddock
+        -:    5: *
+        -:    6: * Use, modification and distribution are subject to the 
+        -:    7: * Boost Software License, Version 1.0. (See accompanying file 
+        -:    8: * LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+        -:    9: *
+        -:   10: */
+        -:   11: 
+        -:   12: /*
+        -:   13:  *   LOCATION:    see http://www.boost.org for most recent version.
+        -:   14:  *   FILE         pattern_except.hpp
+        -:   15:  *   VERSION      see <boost/version.hpp>
+        -:   16:  *   DESCRIPTION: Declares pattern-matching exception classes.
+        -:   17:  */
+        -:   18:
+        -:   19:#ifndef BOOST_RE_V5_PAT_EXCEPT_HPP
+        -:   20:#define BOOST_RE_V5_PAT_EXCEPT_HPP
+        -:   21:
+        -:   22:#ifndef BOOST_REGEX_CONFIG_HPP
+        -:   23:#include <boost/regex/config.hpp>
+        -:   24:#endif
+        -:   25:
+        -:   26:#include <cstddef>
+        -:   27:#include <stdexcept>
+        -:   28:#include <boost/regex/v5/error_type.hpp>
+        -:   29:#include <boost/regex/v5/regex_traits_defaults.hpp>
+        -:   30:
+        -:   31:namespace boost{
+        -:   32:
+        -:   33:#ifdef BOOST_REGEX_MSVC
+        -:   34:#pragma warning(push)
+        -:   35:#pragma warning(disable : 4275)
+        -:   36:#if BOOST_REGEX_MSVC >= 1800
+        -:   37:#pragma warning(disable : 26812 4459)
+        -:   38:#endif
+        -:   39:#endif
+        -:   40:class regex_error : public std::runtime_error
+        -:   41:{
+        -:   42:public:
+function _ZN5boost11regex_errorC2ERKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEENS_15regex_constants10error_typeEl called 0 returned 0% blocks executed 0%
+    #####:   43:   explicit regex_error(const std::string& s, regex_constants::error_type err = regex_constants::error_unknown, std::ptrdiff_t pos = 0)
+    #####:   44:      : std::runtime_error(s)
+    #####:   45:      , m_error_code(err)
+    #####:   46:      , m_position(pos)
+    %%%%%:   46-block 2
+call    0 never executed
+        -:   47:   {
+    #####:   48:   }
+        -:   49:   explicit regex_error(regex_constants::error_type err)
+        -:   50:      : std::runtime_error(::boost::BOOST_REGEX_DETAIL_NS::get_default_error_string(err))
+        -:   51:      , m_error_code(err)
+        -:   52:      , m_position(0)
+        -:   53:   {
+        -:   54:   }
+    #####:   55:   ~regex_error() noexcept override {}
+------------------
+_ZN5boost11regex_errorD0Ev:
+function _ZN5boost11regex_errorD0Ev called 0 returned 0% blocks executed 0%
+    #####:   55:   ~regex_error() noexcept override {}
+    %%%%%:   55-block 2
+call    0 never executed
+call    1 never executed
+------------------
+_ZN5boost11regex_errorD2Ev:
+function _ZN5boost11regex_errorD2Ev called 0 returned 0% blocks executed 0%
+    #####:   55:   ~regex_error() noexcept override {}
+    %%%%%:   55-block 2
+call    0 never executed
+------------------
+        -:   56:   regex_constants::error_type code()const
+        -:   57:   { return m_error_code; }
+        -:   58:   std::ptrdiff_t position()const
+        -:   59:   { return m_position; }
+function _ZNK5boost11regex_error5raiseEv called 0 returned 0% blocks executed 0%
+    #####:   60:   void raise()const 
+        -:   61:   {
+        -:   62:#ifndef BOOST_NO_EXCEPTIONS
+        -:   63:#ifndef BOOST_REGEX_STANDALONE
+        -:   64:      ::boost::throw_exception(*this);
+        -:   65:#else
+    #####:   66:      throw* this;
+    %%%%%:   66-block 2
+call    0 never executed
+call    1 never executed
+        -:   67:#endif
+        -:   68:#endif
+        -:   69:   }
+        -:   70:private:
+        -:   71:   regex_constants::error_type m_error_code;
+        -:   72:   std::ptrdiff_t m_position;
+        -:   73:};
+        -:   74:
+        -:   75:typedef regex_error bad_pattern;
+        -:   76:typedef regex_error bad_expression;
+        -:   77:
+        -:   78:namespace BOOST_REGEX_DETAIL_NS{
+        -:   79:
+        -:   80:template <class E>
+    #####:   81:inline void raise_runtime_error(const E& ex)
+        -:   82:{
+        -:   83:#ifndef BOOST_REGEX_STANDALONE
+        -:   84:   ::boost::throw_exception(ex);
+        -:   85:#else
+    #####:   86:   throw ex;
+        -:   87:#endif
+        -:   88:}
+------------------
+_ZN5boost13re_detail_50019raise_runtime_errorINS_11regex_errorEEEvRKT_:
+function _ZN5boost13re_detail_50019raise_runtime_errorINS_11regex_errorEEEvRKT_ called 0 returned 0% blocks executed 0%
+    #####:   81:inline void raise_runtime_error(const E& ex)
+        -:   82:{
+        -:   83:#ifndef BOOST_REGEX_STANDALONE
+        -:   84:   ::boost::throw_exception(ex);
+        -:   85:#else
+    #####:   86:   throw ex;
+    %%%%%:   86-block 2
+call    0 never executed
+call    1 never executed
+        -:   87:#endif
+        -:   88:}
+------------------
+_ZN5boost13re_detail_50019raise_runtime_errorISt13runtime_errorEEvRKT_:
+function _ZN5boost13re_detail_50019raise_runtime_errorISt13runtime_errorEEvRKT_ called 0 returned 0% blocks executed 0%
+    #####:   81:inline void raise_runtime_error(const E& ex)
+        -:   82:{
+        -:   83:#ifndef BOOST_REGEX_STANDALONE
+        -:   84:   ::boost::throw_exception(ex);
+        -:   85:#else
+    #####:   86:   throw ex;
+    %%%%%:   86-block 2
+call    0 never executed
+call    1 never executed
+        -:   87:#endif
+        -:   88:}
+------------------
+        -:   89:
+        -:   90:template <class traits>
+function _ZN5boost13re_detail_50011raise_errorINS_20regex_traits_wrapperINS_12regex_traitsIcNS_16cpp_regex_traitsIcEEEEEEEEvRKT_NS_15regex_constants10error_typeE called 0 returned 0% blocks executed 0%
+    #####:   91:void raise_error(const traits& t, regex_constants::error_type code)
+        -:   92:{
+        -:   93:   (void)t;  // warning suppression
+    #####:   94:   regex_error e(t.error_string(code), code, 0);
+    %%%%%:   94-block 2
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:   94-block 3
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    %%%%%:   94-block 4
+call    6 never executed
+    $$$$$:   94-block 8
+call    7 never executed
+    $$$$$:   94-block 10
+    #####:   95:   ::boost::BOOST_REGEX_DETAIL_NS::raise_runtime_error(e);
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:   96:}
+    %%%%%:   96-block 6
+call    0 never executed
+    $$$$$:   96-block 11
+call    1 never executed
+        -:   97:
+        -:   98:}
+        -:   99:
+        -:  100:#ifdef BOOST_REGEX_MSVC
+        -:  101:#pragma warning(pop)
+        -:  102:#endif
+        -:  103:
+        -:  104:} // namespace boost
+        -:  105:
+        -:  106:#endif

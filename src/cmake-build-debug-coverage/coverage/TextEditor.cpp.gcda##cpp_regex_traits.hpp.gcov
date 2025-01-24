@@ -1,0 +1,2159 @@
+        -:    0:Source:/home/rc/ZathuraDbg/vendor/ImGuiColorTextEdit/vendor/regex/include/boost/regex/v5/cpp_regex_traits.hpp
+        -:    0:Graph:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/home/rc/ZathuraDbg/vendor/ImGuiColorTextEdit/TextEditor.cpp.gcno
+        -:    0:Data:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/home/rc/ZathuraDbg/vendor/ImGuiColorTextEdit/TextEditor.cpp.gcda
+        -:    0:Runs:1
+        -:    1:/*
+        -:    2: *
+        -:    3: * Copyright (c) 2004 John Maddock
+        -:    4: * Copyright 2011 Garmin Ltd. or its subsidiaries
+        -:    5: *
+        -:    6: * Use, modification and distribution are subject to the 
+        -:    7: * Boost Software License, Version 1.0. (See accompanying file 
+        -:    8: * LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+        -:    9: *
+        -:   10: */
+        -:   11: 
+        -:   12: /*
+        -:   13:  *   LOCATION:    see http://www.boost.org for most recent version.
+        -:   14:  *   FILE         cpp_regex_traits.hpp
+        -:   15:  *   VERSION      see <boost/version.hpp>
+        -:   16:  *   DESCRIPTION: Declares regular expression traits class cpp_regex_traits.
+        -:   17:  */
+        -:   18:
+        -:   19:#ifndef BOOST_CPP_REGEX_TRAITS_HPP_INCLUDED
+        -:   20:#define BOOST_CPP_REGEX_TRAITS_HPP_INCLUDED
+        -:   21:
+        -:   22:#include <boost/regex/config.hpp>
+        -:   23:#include <cstdint>
+        -:   24:#include <locale>
+        -:   25:#include <type_traits>
+        -:   26:
+        -:   27:#include <boost/regex/pattern_except.hpp>
+        -:   28:#include <boost/regex/v5/regex_traits_defaults.hpp>
+        -:   29:
+        -:   30:#ifdef BOOST_HAS_THREADS
+        -:   31:#include <mutex>
+        -:   32:#endif
+        -:   33:#include <boost/regex/v5/primary_transform.hpp>
+        -:   34:#include <boost/regex/v5/object_cache.hpp>
+        -:   35:
+        -:   36:#include <climits>
+        -:   37:#include <ios>
+        -:   38:#include <istream>
+        -:   39:
+        -:   40:#ifdef BOOST_REGEX_MSVC
+        -:   41:#pragma warning(push)
+        -:   42:#pragma warning(disable:4786 4251)
+        -:   43:#endif
+        -:   44:
+        -:   45:namespace boost{ 
+        -:   46:
+        -:   47://
+        -:   48:// forward declaration is needed by some compilers:
+        -:   49://
+        -:   50:template <class charT>
+        -:   51:class cpp_regex_traits;
+        -:   52:   
+        -:   53:namespace BOOST_REGEX_DETAIL_NS{
+        -:   54:
+        -:   55://
+        -:   56:// class parser_buf:
+        -:   57:// acts as a stream buffer which wraps around a pair of pointers:
+        -:   58://
+        -:   59:template <class charT,
+        -:   60:          class traits = ::std::char_traits<charT> >
+        -:   61:class parser_buf : public ::std::basic_streambuf<charT, traits>
+        -:   62:{
+        -:   63:   typedef ::std::basic_streambuf<charT, traits> base_type;
+        -:   64:   typedef typename base_type::int_type int_type;
+        -:   65:   typedef typename base_type::char_type char_type;
+        -:   66:   typedef typename base_type::pos_type pos_type;
+        -:   67:   typedef ::std::streamsize streamsize;
+        -:   68:   typedef typename base_type::off_type off_type;
+        -:   69:public:
+function _ZN5boost13re_detail_50010parser_bufIcSt11char_traitsIcEEC2Ev called 3 returned 100% blocks executed 80%
+        3:   70:   parser_buf() : base_type() { setbuf(0, 0); }
+        3:   70-block 2
+call    0 returned 3
+call    1 returned 3
+branch  2 taken 3 (fallthrough)
+branch  3 taken 0 (throw)
+        3:   70-block 4
+    $$$$$:   70-block 5
+call    4 never executed
+        -:   71:   const charT* getnext() { return this->gptr(); }
+        -:   72:protected:
+        -:   73:   std::basic_streambuf<charT, traits>* setbuf(char_type* s, streamsize n) override;
+        -:   74:   typename parser_buf<charT, traits>::pos_type seekpos(pos_type sp, ::std::ios_base::openmode which) override;
+        -:   75:   typename parser_buf<charT, traits>::pos_type seekoff(off_type off, ::std::ios_base::seekdir way, ::std::ios_base::openmode which) override;
+        -:   76:private:
+        -:   77:   parser_buf& operator=(const parser_buf&);
+        -:   78:   parser_buf(const parser_buf&);
+        -:   79:};
+        -:   80:
+        -:   81:template<class charT, class traits>
+        -:   82:std::basic_streambuf<charT, traits>*
+function _ZN5boost13re_detail_50010parser_bufIcSt11char_traitsIcEE6setbufEPcl called 6 returned 100% blocks executed 100%
+        6:   83:parser_buf<charT, traits>::setbuf(char_type* s, streamsize n)
+        -:   84:{
+        6:   85:   this->setg(s, s, s + n);
+        6:   85-block 2
+call    0 returned 6
+        6:   86:   return this;
+        -:   87:}
+        -:   88:
+        -:   89:template<class charT, class traits>
+        -:   90:typename parser_buf<charT, traits>::pos_type
+function _ZN5boost13re_detail_50010parser_bufIcSt11char_traitsIcEE7seekoffElSt12_Ios_SeekdirSt13_Ios_Openmode called 0 returned 0% blocks executed 0%
+    #####:   91:parser_buf<charT, traits>::seekoff(off_type off, ::std::ios_base::seekdir way, ::std::ios_base::openmode which)
+        -:   92:{
+    #####:   93:   if(which & ::std::ios_base::out)
+    %%%%%:   93-block 2
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:   94:      return pos_type(off_type(-1));
+    %%%%%:   94-block 4
+call    0 never executed
+    %%%%%:   94-block 6
+    #####:   95:   std::ptrdiff_t size = this->egptr() - this->eback();
+    %%%%%:   95-block 7
+call    0 never executed
+call    1 never executed
+    #####:   96:   std::ptrdiff_t pos = this->gptr() - this->eback();
+call    0 never executed
+call    1 never executed
+    #####:   97:   charT* g = this->eback();
+call    0 never executed
+    #####:   98:   switch(static_cast<std::intmax_t>(way))
+branch  0 never executed
+branch  1 never executed
+branch  2 never executed
+branch  3 never executed
+        -:   99:   {
+    #####:  100:   case ::std::ios_base::beg:
+    #####:  101:      if((off < 0) || (off > size))
+    %%%%%:  101-block 13
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  101-block 14
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    #####:  102:         return pos_type(off_type(-1));
+    %%%%%:  102-block 15
+call    0 never executed
+    %%%%%:  102-block 17
+        -:  103:      else
+    #####:  104:         this->setg(g, g + off, g + size);
+    %%%%%:  104-block 18
+call    0 never executed
+    #####:  105:      break;
+    #####:  106:   case ::std::ios_base::end:
+    #####:  107:      if((off < 0) || (off > size))
+    %%%%%:  107-block 20
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  107-block 21
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    #####:  108:         return pos_type(off_type(-1));
+    %%%%%:  108-block 22
+call    0 never executed
+    %%%%%:  108-block 24
+        -:  109:      else
+    #####:  110:         this->setg(g, g + size - off, g + size);
+    %%%%%:  110-block 25
+call    0 never executed
+    #####:  111:      break;
+    #####:  112:   case ::std::ios_base::cur:
+        -:  113:   {
+    #####:  114:      std::ptrdiff_t newpos = static_cast<std::ptrdiff_t>(pos + off);
+    #####:  115:      if((newpos < 0) || (newpos > size))
+    %%%%%:  115-block 27
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  115-block 28
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    #####:  116:         return pos_type(off_type(-1));
+    %%%%%:  116-block 29
+call    0 never executed
+    %%%%%:  116-block 31
+        -:  117:      else
+    #####:  118:         this->setg(g, g + newpos, g + size);
+    %%%%%:  118-block 32
+call    0 never executed
+    #####:  119:      break;
+        -:  120:   }
+    #####:  121:   default: ;
+        -:  122:   }
+        -:  123:#ifdef BOOST_REGEX_MSVC
+        -:  124:#pragma warning(push)
+        -:  125:#pragma warning(disable:4244)
+        -:  126:#endif
+    #####:  127:   return static_cast<pos_type>(this->gptr() - this->eback());
+    %%%%%:  127-block 34
+call    0 never executed
+call    1 never executed
+call    2 never executed
+    %%%%%:  127-block 38
+        -:  128:#ifdef BOOST_REGEX_MSVC
+        -:  129:#pragma warning(pop)
+        -:  130:#endif
+        -:  131:}
+        -:  132:
+        -:  133:template<class charT, class traits>
+        -:  134:typename parser_buf<charT, traits>::pos_type
+function _ZN5boost13re_detail_50010parser_bufIcSt11char_traitsIcEE7seekposESt4fposI11__mbstate_tESt13_Ios_Openmode called 0 returned 0% blocks executed 0%
+    #####:  135:parser_buf<charT, traits>::seekpos(pos_type sp, ::std::ios_base::openmode which)
+        -:  136:{
+    #####:  137:   if(which & ::std::ios_base::out)
+    %%%%%:  137-block 2
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  138:      return pos_type(off_type(-1));
+    %%%%%:  138-block 4
+call    0 never executed
+    %%%%%:  138-block 6
+    #####:  139:   off_type size = static_cast<off_type>(this->egptr() - this->eback());
+    %%%%%:  139-block 7
+call    0 never executed
+call    1 never executed
+    #####:  140:   charT* g = this->eback();
+call    0 never executed
+    #####:  141:   if(off_type(sp) <= size)
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+        -:  142:   {
+    #####:  143:      this->setg(g, g + off_type(sp), g + size);
+    %%%%%:  143-block 12
+call    0 never executed
+call    1 never executed
+        -:  144:   }
+    #####:  145:   return pos_type(off_type(-1));
+    %%%%%:  145-block 14
+call    0 never executed
+    %%%%%:  145-block 16
+        -:  146:}
+        -:  147:
+        -:  148://
+        -:  149:// class cpp_regex_traits_base:
+        -:  150:// acts as a container for locale and the facets we are using.
+        -:  151://
+        -:  152:template <class charT>
+        -:  153:struct cpp_regex_traits_base
+        -:  154:{
+function _ZN5boost13re_detail_50021cpp_regex_traits_baseIcEC2ERKSt6locale called 1 returned 100% blocks executed 71%
+        1:  155:   cpp_regex_traits_base(const std::locale& l)
+        1:  156:   { (void)imbue(l); }
+        1:  156-block 2
+call    0 returned 1
+call    1 returned 1
+branch  2 taken 1 (fallthrough)
+branch  3 taken 0 (throw)
+        1:  156-block 4
+call    4 returned 1
+    $$$$$:  156-block 6
+    $$$$$:  156-block 7
+call    5 never executed
+        -:  157:   std::locale imbue(const std::locale& l);
+        -:  158:
+        -:  159:   std::locale m_locale;
+        -:  160:   std::ctype<charT> const* m_pctype;
+        -:  161:   std::messages<charT> const* m_pmessages;
+        -:  162:   std::collate<charT> const* m_pcollate;
+        -:  163:
+function _ZNK5boost13re_detail_50021cpp_regex_traits_baseIcEltERKS2_ called 8 returned 100% blocks executed 67%
+        8:  164:   bool operator<(const cpp_regex_traits_base& b)const
+        -:  165:   {
+        8:  166:      if(m_pctype == b.m_pctype)
+        8:  166-block 2
+branch  0 taken 8 (fallthrough)
+branch  1 taken 0
+        -:  167:      {
+        8:  168:         if(m_pmessages == b.m_pmessages)
+        8:  168-block 3
+branch  0 taken 8 (fallthrough)
+branch  1 taken 0
+        -:  169:         {
+        8:  170:            return m_pcollate < b.m_pcollate;
+        8:  170-block 4
+        -:  171:         }
+    #####:  172:         return m_pmessages < b.m_pmessages;
+    %%%%%:  172-block 5
+        -:  173:      }
+    #####:  174:      return m_pctype < b.m_pctype;
+    %%%%%:  174-block 6
+        -:  175:   }
+function _ZNK5boost13re_detail_50021cpp_regex_traits_baseIcEeqERKS2_ called 1 returned 100% blocks executed 86%
+        1:  176:   bool operator==(const cpp_regex_traits_base& b)const
+        -:  177:   {
+        1:  178:      return (m_pctype == b.m_pctype) 
+        1:  179:         && (m_pmessages == b.m_pmessages) 
+        1:  179-block 3
+branch  0 taken 1 (fallthrough)
+branch  1 taken 0
+       2*:  180:         && (m_pcollate == b.m_pcollate);
+        1:  180-block 2
+branch  0 taken 1 (fallthrough)
+branch  1 taken 0
+        1:  180-block 4
+branch  2 taken 1 (fallthrough)
+branch  3 taken 0
+        1:  180-block 5
+    %%%%%:  180-block 6
+        1:  180-block 7
+        -:  181:   }
+        -:  182:};
+        -:  183:
+        -:  184:template <class charT>
+function _ZN5boost13re_detail_50021cpp_regex_traits_baseIcE5imbueERKSt6locale called 1 returned 100% blocks executed 85%
+        1:  185:std::locale cpp_regex_traits_base<charT>::imbue(const std::locale& l)
+        -:  186:{
+        1:  187:   std::locale result(m_locale);
+        1:  187-block 2
+call    0 returned 1
+        1:  188:   m_locale = l;
+call    0 returned 1
+        1:  189:   m_pctype = &std::use_facet<std::ctype<charT>>(l);
+call    0 returned 1
+branch  1 taken 1 (fallthrough)
+branch  2 taken 0 (throw)
+       1*:  190:   m_pmessages = std::has_facet<std::messages<charT> >(l) ? &std::use_facet<std::messages<charT> >(l) : 0;
+        1:  190-block 5
+call    0 returned 1
+branch  1 taken 1 (fallthrough)
+branch  2 taken 0
+        1:  190-block 7
+call    3 returned 1
+branch  4 taken 1 (fallthrough)
+branch  5 taken 0 (throw)
+        1:  190-block 8
+    %%%%%:  190-block 9
+        1:  191:   m_pcollate = &std::use_facet<std::collate<charT> >(l);
+        1:  191-block 10
+call    0 returned 1
+branch  1 taken 1 (fallthrough)
+branch  2 taken 0 (throw)
+        1:  192:   return result;
+        1:  192-block 11
+        1:  192-block 12
+    =====:  193:}
+    $$$$$:  193-block 13
+call    0 never executed
+        -:  194:
+        -:  195://
+        -:  196:// class cpp_regex_traits_char_layer:
+        -:  197:// implements methods that require specialization for narrow characters:
+        -:  198://
+        -:  199:template <class charT>
+        -:  200:class cpp_regex_traits_char_layer : public cpp_regex_traits_base<charT>
+        -:  201:{
+        -:  202:   typedef std::basic_string<charT> string_type;
+        -:  203:   typedef std::map<charT, regex_constants::syntax_type> map_type;
+        -:  204:   typedef typename map_type::const_iterator map_iterator_type;
+        -:  205:public:
+        -:  206:   cpp_regex_traits_char_layer(const std::locale& l)
+        -:  207:      : cpp_regex_traits_base<charT>(l)
+        -:  208:   {
+        -:  209:      init();
+        -:  210:   }
+        -:  211:   cpp_regex_traits_char_layer(const cpp_regex_traits_base<charT>& b)
+        -:  212:      : cpp_regex_traits_base<charT>(b)
+        -:  213:   {
+        -:  214:      init();
+        -:  215:   }
+        -:  216:   void init();
+        -:  217:
+        -:  218:   regex_constants::syntax_type syntax_type(charT c)const
+        -:  219:   {
+        -:  220:      map_iterator_type i = m_char_map.find(c);
+        -:  221:      return ((i == m_char_map.end()) ? 0 : i->second);
+        -:  222:   }
+        -:  223:   regex_constants::escape_syntax_type escape_syntax_type(charT c) const
+        -:  224:   {
+        -:  225:      map_iterator_type i = m_char_map.find(c);
+        -:  226:      if(i == m_char_map.end())
+        -:  227:      {
+        -:  228:         if(this->m_pctype->is(std::ctype_base::lower, c)) return regex_constants::escape_type_class;
+        -:  229:         if(this->m_pctype->is(std::ctype_base::upper, c)) return regex_constants::escape_type_not_class;
+        -:  230:         return 0;
+        -:  231:      }
+        -:  232:      return i->second;
+        -:  233:   }
+        -:  234:
+        -:  235:private:
+        -:  236:   string_type get_default_message(regex_constants::syntax_type);
+        -:  237:   // TODO: use a hash table when available!
+        -:  238:   map_type m_char_map;
+        -:  239:};
+        -:  240:
+        -:  241:template <class charT>
+        -:  242:void cpp_regex_traits_char_layer<charT>::init()
+        -:  243:{
+        -:  244:   // we need to start by initialising our syntax map so we know which
+        -:  245:   // character is used for which purpose:
+        -:  246:#ifndef __IBMCPP__
+        -:  247:   typename std::messages<charT>::catalog cat = static_cast<std::messages<char>::catalog>(-1);
+        -:  248:#else
+        -:  249:   typename std::messages<charT>::catalog cat = reinterpret_cast<std::messages<char>::catalog>(-1);
+        -:  250:#endif
+        -:  251:   std::string cat_name(cpp_regex_traits<charT>::get_catalog_name());
+        -:  252:   if((!cat_name.empty()) && (this->m_pmessages != 0))
+        -:  253:   {
+        -:  254:      cat = this->m_pmessages->open(
+        -:  255:         cat_name, 
+        -:  256:         this->m_locale);
+        -:  257:      if((int)cat < 0)
+        -:  258:      {
+        -:  259:         std::string m("Unable to open message catalog: ");
+        -:  260:         std::runtime_error err(m + cat_name);
+        -:  261:         boost::BOOST_REGEX_DETAIL_NS::raise_runtime_error(err);
+        -:  262:      }
+        -:  263:   }
+        -:  264:   //
+        -:  265:   // if we have a valid catalog then load our messages:
+        -:  266:   //
+        -:  267:   if((int)cat >= 0)
+        -:  268:   {
+        -:  269:#ifndef BOOST_NO_EXCEPTIONS
+        -:  270:      try{
+        -:  271:#endif
+        -:  272:         for(regex_constants::syntax_type i = 1; i < regex_constants::syntax_max; ++i)
+        -:  273:         {
+        -:  274:            string_type mss = this->m_pmessages->get(cat, 0, i, get_default_message(i));
+        -:  275:            for(typename string_type::size_type j = 0; j < mss.size(); ++j)
+        -:  276:            {
+        -:  277:               m_char_map[mss[j]] = i;
+        -:  278:            }
+        -:  279:         }
+        -:  280:         this->m_pmessages->close(cat);
+        -:  281:#ifndef BOOST_NO_EXCEPTIONS
+        -:  282:      }
+        -:  283:      catch(...)
+        -:  284:      {
+        -:  285:         if(this->m_pmessages)
+        -:  286:            this->m_pmessages->close(cat);
+        -:  287:         throw;
+        -:  288:      }
+        -:  289:#endif
+        -:  290:   }
+        -:  291:   else
+        -:  292:   {
+        -:  293:      for(regex_constants::syntax_type i = 1; i < regex_constants::syntax_max; ++i)
+        -:  294:      {
+        -:  295:         const char* ptr = get_default_syntax(i);
+        -:  296:         while(ptr && *ptr)
+        -:  297:         {
+        -:  298:            m_char_map[this->m_pctype->widen(*ptr)] = i;
+        -:  299:            ++ptr;
+        -:  300:         }
+        -:  301:      }
+        -:  302:   }
+        -:  303:}
+        -:  304:
+        -:  305:template <class charT>
+        -:  306:typename cpp_regex_traits_char_layer<charT>::string_type 
+        -:  307:   cpp_regex_traits_char_layer<charT>::get_default_message(regex_constants::syntax_type i)
+        -:  308:{
+        -:  309:   const char* ptr = get_default_syntax(i);
+        -:  310:   string_type result;
+        -:  311:   while(ptr && *ptr)
+        -:  312:   {
+        -:  313:      result.append(1, this->m_pctype->widen(*ptr));
+        -:  314:      ++ptr;
+        -:  315:   }
+        -:  316:   return result;
+        -:  317:}
+        -:  318:
+        -:  319://
+        -:  320:// specialized version for narrow characters:
+        -:  321://
+        -:  322:template <>
+        -:  323:class cpp_regex_traits_char_layer<char> : public cpp_regex_traits_base<char>
+        -:  324:{
+        -:  325:   typedef std::string string_type;
+        -:  326:public:
+        -:  327:   cpp_regex_traits_char_layer(const std::locale& l)
+        -:  328:   : cpp_regex_traits_base<char>(l)
+        -:  329:   {
+        -:  330:      init();
+        -:  331:   }
+function _ZN5boost13re_detail_50027cpp_regex_traits_char_layerIcEC2ERKNS0_21cpp_regex_traits_baseIcEE called 1 returned 100% blocks executed 80%
+        1:  332:   cpp_regex_traits_char_layer(const cpp_regex_traits_base<char>& l)
+        1:  333:   : cpp_regex_traits_base<char>(l)
+        1:  333-block 2
+call    0 returned 1
+        -:  334:   {
+        1:  335:      init();
+call    0 returned 1
+branch  1 taken 1 (fallthrough)
+branch  2 taken 0 (throw)
+        1:  336:   }
+        1:  336-block 4
+    $$$$$:  336-block 5
+call    0 never executed
+        -:  337:
+function _ZNK5boost13re_detail_50027cpp_regex_traits_char_layerIcE11syntax_typeEc called 51 returned 100% blocks executed 100%
+       51:  338:   regex_constants::syntax_type syntax_type(char c)const
+        -:  339:   {
+       51:  340:      return m_char_map[static_cast<unsigned char>(c)];
+       51:  340-block 2
+        -:  341:   }
+function _ZNK5boost13re_detail_50027cpp_regex_traits_char_layerIcE18escape_syntax_typeEc called 0 returned 0% blocks executed 0%
+    #####:  342:   regex_constants::escape_syntax_type escape_syntax_type(char c) const
+        -:  343:   {
+    #####:  344:      return m_char_map[static_cast<unsigned char>(c)];
+    %%%%%:  344-block 2
+        -:  345:   }
+        -:  346:
+        -:  347:private:
+        -:  348:   regex_constants::syntax_type m_char_map[1u << CHAR_BIT];
+        -:  349:   void init();
+        -:  350:};
+        -:  351:
+        -:  352://
+        -:  353:// class cpp_regex_traits_implementation:
+        -:  354:// provides pimpl implementation for cpp_regex_traits.
+        -:  355://
+        -:  356:template <class charT>
+        -:  357:class cpp_regex_traits_implementation : public cpp_regex_traits_char_layer<charT>
+        -:  358:{
+        -:  359:public:
+        -:  360:   typedef typename cpp_regex_traits<charT>::char_class_type      char_class_type;
+        -:  361:   typedef typename std::ctype<charT>::mask                       native_mask_type;
+        -:  362:   typedef typename std::make_unsigned<native_mask_type>::type    unsigned_native_mask_type;
+        -:  363:   static const char_class_type mask_blank = 1u << 24;
+        -:  364:   static const char_class_type mask_word = 1u << 25;
+        -:  365:   static const char_class_type mask_unicode = 1u << 26;
+        -:  366:   static const char_class_type mask_horizontal = 1u << 27;
+        -:  367:   static const char_class_type mask_vertical = 1u << 28;
+        -:  368:
+        -:  369:   typedef std::basic_string<charT> string_type;
+        -:  370:   typedef charT char_type;
+        -:  371:   //cpp_regex_traits_implementation();
+        -:  372:   cpp_regex_traits_implementation(const std::locale& l)
+        -:  373:      : cpp_regex_traits_char_layer<charT>(l)
+        -:  374:   {
+        -:  375:      init();
+        -:  376:   }
+function _ZN5boost13re_detail_50031cpp_regex_traits_implementationIcEC2ERKNS0_21cpp_regex_traits_baseIcEE called 1 returned 100% blocks executed 50%
+        1:  377:   cpp_regex_traits_implementation(const cpp_regex_traits_base<charT>& l)
+        1:  378:      : cpp_regex_traits_char_layer<charT>(l)
+        1:  378-block 2
+call    0 returned 1
+call    1 returned 1
+call    2 returned 1
+call    3 returned 1
+        -:  379:   {
+        1:  380:      init();
+call    0 returned 1
+branch  1 taken 1 (fallthrough)
+branch  2 taken 0 (throw)
+        1:  381:   }
+        1:  381-block 7
+    $$$$$:  381-block 8
+call    0 never executed
+    $$$$$:  381-block 10
+call    1 never executed
+    $$$$$:  381-block 12
+call    2 never executed
+    $$$$$:  381-block 14
+call    3 never executed
+function _ZNK5boost13re_detail_50031cpp_regex_traits_implementationIcE12error_stringB5cxx11ENS_15regex_constants10error_typeE called 0 returned 0% blocks executed 0%
+    #####:  382:   std::string error_string(regex_constants::error_type n) const
+        -:  383:   {
+    #####:  384:      if(!m_error_strings.empty())
+    %%%%%:  384-block 2
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+        -:  385:      {
+    #####:  386:         std::map<int, std::string>::const_iterator p = m_error_strings.find(n);
+    %%%%%:  386-block 4
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    $$$$$:  386-block 27
+    #####:  387:         return (p == m_error_strings.end()) ? std::string(get_default_error_string(n)) : p->second;
+    %%%%%:  387-block 5
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    %%%%%:  387-block 10
+call    4 never executed
+call    5 never executed
+branch  6 never executed (fallthrough)
+branch  7 never executed (throw)
+    %%%%%:  387-block 12
+call    8 never executed
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+    %%%%%:  387-block 14
+    %%%%%:  387-block 15
+branch 12 never executed (fallthrough)
+branch 13 never executed
+    %%%%%:  387-block 18
+    $$$$$:  387-block 28
+branch 14 never executed (fallthrough)
+branch 15 never executed
+    $$$$$:  387-block 32
+    $$$$$:  387-block 33
+        -:  388:      }
+    #####:  389:      return get_default_error_string(n);
+    %%%%%:  389-block 21
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+    %%%%%:  389-block 23
+    %%%%%:  389-block 25
+        -:  390:   }
+function _ZNK5boost13re_detail_50031cpp_regex_traits_implementationIcE16lookup_classnameEPKcS4_ called 5 returned 100% blocks executed 16%
+        5:  391:   char_class_type lookup_classname(const charT* p1, const charT* p2) const
+        -:  392:   {
+        5:  393:      char_class_type result = lookup_classname_imp(p1, p2);
+        5:  393-block 2
+call    0 returned 5
+        5:  394:      if(result == 0)
+branch  0 taken 0 (fallthrough)
+branch  1 taken 5
+        -:  395:      {
+    #####:  396:         string_type temp(p1, p2);
+    %%%%%:  396-block 6
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    $$$$$:  396-block 26
+    #####:  397:         this->m_pctype->tolower(&*temp.begin(), &*temp.begin() + temp.size());
+    %%%%%:  397-block 8
+call    0 never executed
+call    1 never executed
+call    2 never executed
+call    3 never executed
+call    4 never executed
+call    5 never executed
+branch  6 never executed (fallthrough)
+branch  7 never executed (throw)
+    $$$$$:  397-block 27
+    $$$$$:  397-block 28
+    #####:  398:         result = lookup_classname_imp(&*temp.begin(), &*temp.begin() + temp.size());
+    %%%%%:  398-block 14
+call    0 never executed
+call    1 never executed
+call    2 never executed
+call    3 never executed
+call    4 never executed
+call    5 never executed
+branch  6 never executed (fallthrough)
+branch  7 never executed (throw)
+    $$$$$:  398-block 29
+    $$$$$:  398-block 30
+    #####:  399:      }
+    %%%%%:  399-block 20
+call    0 never executed
+    $$$$$:  399-block 31
+call    1 never executed
+        5:  400:      return result;
+        5:  400-block 22
+        5:  400-block 23
+        -:  401:   }
+        -:  402:   string_type lookup_collatename(const charT* p1, const charT* p2) const;
+        -:  403:   string_type transform_primary(const charT* p1, const charT* p2) const;
+        -:  404:   string_type transform(const charT* p1, const charT* p2) const;
+        -:  405:private:
+        -:  406:   std::map<int, std::string>     m_error_strings;   // error messages indexed by numberic ID
+        -:  407:   std::map<string_type, char_class_type>  m_custom_class_names; // character class names
+        -:  408:   std::map<string_type, string_type>      m_custom_collate_names; // collating element names
+        -:  409:   unsigned                       m_collate_type;    // the form of the collation string
+        -:  410:   charT                          m_collate_delim;   // the collation group delimiter
+        -:  411:   //
+        -:  412:   // helpers:
+        -:  413:   //
+        -:  414:   char_class_type lookup_classname_imp(const charT* p1, const charT* p2) const;
+        -:  415:   void init();
+        -:  416:};
+        -:  417:
+        -:  418:template <class charT>
+        -:  419:typename cpp_regex_traits_implementation<charT>::char_class_type const cpp_regex_traits_implementation<charT>::mask_blank;
+        -:  420:template <class charT>
+        -:  421:typename cpp_regex_traits_implementation<charT>::char_class_type const cpp_regex_traits_implementation<charT>::mask_word;
+        -:  422:template <class charT>
+        -:  423:typename cpp_regex_traits_implementation<charT>::char_class_type const cpp_regex_traits_implementation<charT>::mask_unicode;
+        -:  424:template <class charT>
+        -:  425:typename cpp_regex_traits_implementation<charT>::char_class_type const cpp_regex_traits_implementation<charT>::mask_vertical;
+        -:  426:template <class charT>
+        -:  427:typename cpp_regex_traits_implementation<charT>::char_class_type const cpp_regex_traits_implementation<charT>::mask_horizontal;
+        -:  428:
+        -:  429:template <class charT>
+        -:  430:typename cpp_regex_traits_implementation<charT>::string_type 
+function _ZNK5boost13re_detail_50031cpp_regex_traits_implementationIcE17transform_primaryB5cxx11EPKcS4_ called 0 returned 0% blocks executed 0%
+    #####:  431:   cpp_regex_traits_implementation<charT>::transform_primary(const charT* p1, const charT* p2) const
+        -:  432:{
+        -:  433:   //
+        -:  434:   // PRECONDITIONS:
+        -:  435:   //
+        -:  436:   // A bug in gcc 3.2 (and maybe other versions as well) treats
+        -:  437:   // p1 as a null terminated string, for efficiency reasons 
+        -:  438:   // we work around this elsewhere, but just assert here that
+        -:  439:   // we adhere to gcc's (buggy) preconditions...
+        -:  440:   //
+    #####:  441:   BOOST_REGEX_ASSERT(*p2 == 0);
+    %%%%%:  441-block 2
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  441-block 3
+call    2 never executed
+    #####:  442:   string_type result;
+    %%%%%:  442-block 4
+call    0 never executed
+        -:  443:#if defined(_CPPLIB_VER)
+        -:  444:   //
+        -:  445:   // A bug in VC11 and 12 causes the program to hang if we pass a null-string
+        -:  446:   // to std::collate::transform, but only for certain locales :-(
+        -:  447:   // Probably effects Intel and Clang or any compiler using the VC std library (Dinkumware).
+        -:  448:   //
+        -:  449:   if(*p1 == 0)
+        -:  450:   {
+        -:  451:      return string_type(1, charT(0));
+        -:  452:   }
+        -:  453:#endif
+        -:  454:   //
+        -:  455:   // swallowing all exceptions here is a bad idea
+        -:  456:   // however at least one std lib will always throw
+        -:  457:   // std::bad_alloc for certain arguments...
+        -:  458:   //
+        -:  459:#ifndef BOOST_NO_EXCEPTIONS
+        -:  460:   try{
+        -:  461:#endif
+        -:  462:      //
+        -:  463:      // What we do here depends upon the format of the sort key returned by
+        -:  464:      // sort key returned by this->transform:
+        -:  465:      //
+    #####:  466:      switch(m_collate_type)
+branch  0 never executed
+branch  1 never executed
+branch  2 never executed
+branch  3 never executed
+        -:  467:      {
+    #####:  468:      case sort_C:
+        -:  469:      case sort_unknown:
+        -:  470:         // the best we can do is translate to lower case, then get a regular sort key:
+        -:  471:         {
+    #####:  472:            result.assign(p1, p2);
+    %%%%%:  472-block 6
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  473:            this->m_pctype->tolower(&*result.begin(), &*result.begin() + result.size());
+    %%%%%:  473-block 7
+call    0 never executed
+call    1 never executed
+call    2 never executed
+call    3 never executed
+call    4 never executed
+call    5 never executed
+branch  6 never executed (fallthrough)
+branch  7 never executed (throw)
+    $$$$$:  473-block 61
+    $$$$$:  473-block 62
+    #####:  474:            result = this->m_pcollate->transform(&*result.begin(), &*result.begin() + result.size());
+    %%%%%:  474-block 13
+call    0 never executed
+call    1 never executed
+call    2 never executed
+call    3 never executed
+call    4 never executed
+call    5 never executed
+branch  6 never executed (fallthrough)
+branch  7 never executed (throw)
+    %%%%%:  474-block 19
+call    8 never executed
+call    9 never executed
+    $$$$$:  474-block 63
+    $$$$$:  474-block 64
+    $$$$$:  474-block 65
+    #####:  475:            break;
+        -:  476:         }
+    #####:  477:      case sort_fixed:
+        -:  478:         {
+        -:  479:            // get a regular sort key, and then truncate it:
+    #####:  480:            result.assign(this->m_pcollate->transform(p1, p2));
+    %%%%%:  480-block 22
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  480-block 23
+call    3 never executed
+call    4 never executed
+    $$$$$:  480-block 66
+    #####:  481:            result.erase(this->m_collate_delim);
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  482:            break;
+    %%%%%:  482-block 26
+        -:  483:         }
+    #####:  484:      case sort_delim:
+        -:  485:            // get a regular sort key, and then truncate everything after the delim:
+    #####:  486:            result.assign(this->m_pcollate->transform(p1, p2));
+    %%%%%:  486-block 27
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  486-block 28
+call    3 never executed
+call    4 never executed
+    $$$$$:  486-block 67
+        -:  487:            std::size_t i;
+    #####:  488:            for(i = 0; i < result.size(); ++i)
+    %%%%%:  488-block 34
+    %%%%%:  488-block 35
+call    0 never executed
+branch  1 never executed
+branch  2 never executed (fallthrough)
+        -:  489:            {
+    #####:  490:               if(result[i] == m_collate_delim)
+    %%%%%:  490-block 31
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  491:                  break;
+    %%%%%:  491-block 33
+        -:  492:            }
+    #####:  493:            result.erase(i);
+    %%%%%:  493-block 37
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  494:            break;
+    %%%%%:  494-block 38
+        -:  495:      }
+        -:  496:#ifndef BOOST_NO_EXCEPTIONS
+    =====:  497:   }catch(...){}
+    $$$$$:  497-block 68
+    $$$$$:  497-block 69
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+        -:  498:#endif
+    #####:  499:   while((!result.empty()) && (charT(0) == *result.rbegin()))
+    %%%%%:  499-block 39
+    %%%%%:  499-block 42
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:  499-block 44
+call    3 never executed
+call    4 never executed
+branch  5 never executed (fallthrough)
+branch  6 never executed
+    %%%%%:  499-block 47
+    %%%%%:  499-block 48
+    %%%%%:  499-block 49
+branch  7 never executed
+branch  8 never executed (fallthrough)
+    #####:  500:      result.erase(result.size() - 1);
+    %%%%%:  500-block 40
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+    #####:  501:   if(result.empty())
+    %%%%%:  501-block 50
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+        -:  502:   {
+        -:  503:      // character is ignorable at the primary level:
+    #####:  504:      result = string_type(1, charT(0));
+    %%%%%:  504-block 54
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  504-block 55
+call    3 never executed
+call    4 never executed
+    %%%%%:  504-block 58
+    $$$$$:  504-block 73
+    $$$$$:  504-block 74
+        -:  505:   }
+    #####:  506:   return result;
+    %%%%%:  506-block 59
+    %%%%%:  506-block 60
+    =====:  507:}
+    $$$$$:  507-block 75
+call    0 never executed
+        -:  508:
+        -:  509:template <class charT>
+        -:  510:typename cpp_regex_traits_implementation<charT>::string_type 
+function _ZNK5boost13re_detail_50031cpp_regex_traits_implementationIcE9transformB5cxx11EPKcS4_ called 3 returned 100% blocks executed 66%
+        3:  511:   cpp_regex_traits_implementation<charT>::transform(const charT* p1, const charT* p2) const
+        -:  512:{
+        -:  513:   //
+        -:  514:   // PRECONDITIONS:
+        -:  515:   //
+        -:  516:   // A bug in gcc 3.2 (and maybe other versions as well) treats
+        -:  517:   // p1 as a null terminated string, for efficiency reasons 
+        -:  518:   // we work around this elsewhere, but just assert here that
+        -:  519:   // we adhere to gcc's (buggy) preconditions...
+        -:  520:   //
+       3*:  521:   BOOST_REGEX_ASSERT(*p2 == 0);
+        3:  521-block 2
+branch  0 taken 0 (fallthrough)
+branch  1 taken 3
+    %%%%%:  521-block 3
+call    2 never executed
+        -:  522:   //
+        -:  523:   // swallowing all exceptions here is a bad idea
+        -:  524:   // however at least one std lib will always throw
+        -:  525:   // std::bad_alloc for certain arguments...
+        -:  526:   //
+        3:  527:   string_type result, result2;
+        3:  527-block 4
+call    0 returned 3
+call    1 returned 3
+        -:  528:#if defined(_CPPLIB_VER)
+        -:  529:   //
+        -:  530:   // A bug in VC11 and 12 causes the program to hang if we pass a null-string
+        -:  531:   // to std::collate::transform, but only for certain locales :-(
+        -:  532:   // Probably effects Intel and Clang or any compiler using the VC std library (Dinkumware).
+        -:  533:   //
+        -:  534:   if(*p1 == 0)
+        -:  535:   {
+        -:  536:      return result;
+        -:  537:   }
+        -:  538:#endif
+        -:  539:#ifndef BOOST_NO_EXCEPTIONS
+        -:  540:   try{
+        -:  541:#endif
+        3:  542:      result = this->m_pcollate->transform(p1, p2);
+call    0 returned 3
+branch  1 taken 3 (fallthrough)
+branch  2 taken 0 (throw)
+        3:  542-block 7
+call    3 returned 3
+call    4 returned 3
+    $$$$$:  542-block 46
+        -:  543:      //
+        -:  544:      // some implementations (Dinkumware) append unnecessary trailing \0's:
+       3*:  545:      while((!result.empty()) && (charT(0) == *result.rbegin()))
+        3:  545-block 12
+call    0 returned 3
+branch  1 taken 3 (fallthrough)
+branch  2 taken 0
+        3:  545-block 14
+call    3 returned 3
+call    4 returned 3
+branch  5 taken 0 (fallthrough)
+branch  6 taken 3
+    %%%%%:  545-block 17
+        3:  545-block 18
+        3:  545-block 19
+branch  7 taken 0
+branch  8 taken 3 (fallthrough)
+    #####:  546:         result.erase(result.size() - 1);
+    %%%%%:  546-block 10
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+        -:  547:      //
+        -:  548:      // We may have NULL's used as separators between sections of the collate string,
+        -:  549:      // an example would be Boost.Locale.  We have no way to detect this case via
+        -:  550:      // #defines since this can be used with any compiler/platform combination.
+        -:  551:      // Unfortunately our state machine (which was devised when all implementations
+        -:  552:      // used underlying C language API's) can't cope with that case.  One workaround
+        -:  553:      // is to replace each character with 2, fortunately this code isn't used that
+        -:  554:      // much as this is now slower than before :-(
+        -:  555:      //
+        -:  556:      typedef typename std::make_unsigned<charT>::type uchar_type;
+        3:  557:      result2.reserve(result.size() * 2 + 2);
+        3:  557-block 20
+call    0 returned 3
+call    1 returned 3
+branch  2 taken 3 (fallthrough)
+branch  3 taken 0 (throw)
+        6:  558:      for(unsigned i = 0; i < result.size(); ++i)
+        3:  558-block 22
+        3:  558-block 32
+        6:  558-block 33
+call    0 returned 6
+branch  1 taken 3
+branch  2 taken 3 (fallthrough)
+        -:  559:      {
+        3:  560:         if(static_cast<uchar_type>(result[i]) == (std::numeric_limits<uchar_type>::max)())
+        3:  560-block 23
+call    0 returned 3
+call    1 returned 3
+branch  2 taken 0 (fallthrough)
+branch  3 taken 3
+        -:  561:         {
+    #####:  562:            result2.append(1, charT((std::numeric_limits<uchar_type>::max)())).append(1, charT('b'));
+    %%%%%:  562-block 26
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+    %%%%%:  562-block 28
+call    4 never executed
+branch  5 never executed (fallthrough)
+branch  6 never executed (throw)
+        -:  563:         }
+        -:  564:         else
+        -:  565:         {
+        3:  566:            result2.append(1, static_cast<charT>(1 + static_cast<uchar_type>(result[i]))).append(1, charT('b') - 1);
+        3:  566-block 29
+call    0 returned 3
+call    1 returned 3
+branch  2 taken 3 (fallthrough)
+branch  3 taken 0 (throw)
+        3:  566-block 31
+call    4 returned 3
+branch  5 taken 3 (fallthrough)
+branch  6 taken 0 (throw)
+        -:  567:         }
+        -:  568:      }
+       3*:  569:      BOOST_REGEX_ASSERT(std::find(result2.begin(), result2.end(), charT(0)) == result2.end());
+        3:  569-block 35
+call    0 returned 3
+call    1 returned 3
+call    2 returned 3
+call    3 returned 3
+branch  4 taken 3 (fallthrough)
+branch  5 taken 0 (throw)
+        3:  569-block 39
+call    6 returned 3
+branch  7 taken 0 (fallthrough)
+branch  8 taken 3
+    %%%%%:  569-block 41
+call    9 never executed
+        3:  569-block 42
+    $$$$$:  569-block 47
+    $$$$$:  569-block 48
+    $$$$$:  569-block 49
+        -:  570:#ifndef BOOST_NO_EXCEPTIONS
+        -:  571:   }
+    =====:  572:   catch(...)
+    $$$$$:  572-block 50
+    $$$$$:  572-block 51
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+        -:  573:   {
+        -:  574:   }
+        -:  575:#endif
+        3:  576:   return result2;
+        3:  576-block 45
+        3:  577:}
+        3:  577-block 43
+call    0 returned 3
+    $$$$$:  577-block 53
+call    1 never executed
+    $$$$$:  577-block 55
+call    2 never executed
+        -:  578:
+        -:  579:
+        -:  580:template <class charT>
+        -:  581:typename cpp_regex_traits_implementation<charT>::string_type 
+function _ZNK5boost13re_detail_50031cpp_regex_traits_implementationIcE18lookup_collatenameB5cxx11EPKcS4_ called 0 returned 0% blocks executed 0%
+    #####:  582:   cpp_regex_traits_implementation<charT>::lookup_collatename(const charT* p1, const charT* p2) const
+        -:  583:{
+        -:  584:   typedef typename std::map<string_type, string_type>::const_iterator iter_type;
+    #####:  585:   if(!m_custom_collate_names.empty())
+    %%%%%:  585-block 2
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+        -:  586:   {
+    #####:  587:      iter_type pos = m_custom_collate_names.find(string_type(p1, p2));
+    %%%%%:  587-block 4
+    %%%%%:  587-block 6
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  587-block 7
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    %%%%%:  587-block 8
+call    6 never executed
+    $$$$$:  587-block 45
+call    7 never executed
+    $$$$$:  587-block 49
+    $$$$$:  587-block 50
+    #####:  588:      if(pos != m_custom_collate_names.end())
+    %%%%%:  588-block 10
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    #####:  589:         return pos->second;
+    %%%%%:  589-block 13
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+    %%%%%:  589-block 15
+        -:  590:   }
+    #####:  591:   std::string name(p1, p2);
+    %%%%%:  591-block 19
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    $$$$$:  591-block 54
+    #####:  592:   name = lookup_default_collate_name(name);
+    %%%%%:  592-block 21
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  592-block 22
+call    3 never executed
+call    4 never executed
+    $$$$$:  592-block 55
+    #####:  593:   if(!name.empty())
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  594:      return string_type(name.begin(), name.end());
+    %%%%%:  594-block 28
+call    0 never executed
+call    1 never executed
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed (throw)
+    %%%%%:  594-block 31
+    %%%%%:  594-block 33
+    $$$$$:  594-block 58
+    #####:  595:   if(p2 - p1 == 1)
+    %%%%%:  595-block 34
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  596:      return string_type(1, *p1);
+    %%%%%:  596-block 37
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  596-block 38
+    %%%%%:  596-block 40
+    $$$$$:  596-block 61
+    #####:  597:   return string_type();
+    %%%%%:  597-block 41
+call    0 never executed
+    #####:  598:}
+    %%%%%:  598-block 42
+call    0 never executed
+    $$$$$:  598-block 62
+call    1 never executed
+        -:  599:
+        -:  600:template <class charT>
+function _ZN5boost13re_detail_50031cpp_regex_traits_implementationIcE4initEv called 1 returned 100% blocks executed 11%
+        1:  601:void cpp_regex_traits_implementation<charT>::init()
+        -:  602:{
+        -:  603:#ifndef __IBMCPP__
+        1:  604:   typename std::messages<charT>::catalog cat = static_cast<std::messages<char>::catalog>(-1);
+        -:  605:#else
+        -:  606:   typename std::messages<charT>::catalog cat = reinterpret_cast<std::messages<char>::catalog>(-1);
+        -:  607:#endif
+        1:  608:   std::string cat_name(cpp_regex_traits<charT>::get_catalog_name());
+        1:  608-block 2
+call    0 returned 1
+branch  1 taken 1 (fallthrough)
+branch  2 taken 0 (throw)
+       1*:  609:   if((!cat_name.empty()) && (this->m_pmessages != 0))
+        1:  609-block 3
+call    0 returned 1
+branch  1 taken 0 (fallthrough)
+branch  2 taken 1
+    %%%%%:  609-block 5
+branch  3 never executed (fallthrough)
+branch  4 never executed
+    %%%%%:  609-block 6
+        1:  609-block 7
+        1:  609-block 8
+branch  5 taken 0 (fallthrough)
+branch  6 taken 1
+        -:  610:   {
+    #####:  611:      cat = this->m_pmessages->open(
+        -:  612:         cat_name, 
+    #####:  613:         this->m_locale);
+    %%%%%:  613-block 9
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  614:      if((int)cat < 0)
+    %%%%%:  614-block 10
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  615:      {
+    #####:  616:         std::string m("Unable to open message catalog: ");
+    %%%%%:  616-block 13
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    $$$$$:  616-block 66
+    #####:  617:         std::runtime_error err(m + cat_name);
+    %%%%%:  617-block 15
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  617-block 16
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    %%%%%:  617-block 17
+call    6 never executed
+    $$$$$:  617-block 67
+call    7 never executed
+    $$$$$:  617-block 69
+    #####:  618:         boost::BOOST_REGEX_DETAIL_NS::raise_runtime_error(err);
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  619:      }
+    %%%%%:  619-block 19
+call    0 never executed
+call    1 never executed
+    $$$$$:  619-block 70
+call    2 never executed
+    $$$$$:  619-block 72
+call    3 never executed
+        -:  620:   }
+        -:  621:   //
+        -:  622:   // if we have a valid catalog then load our messages:
+        -:  623:   //
+        1:  624:   if((int)cat >= 0)
+        1:  624-block 22
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+        -:  625:   {
+        -:  626:      //
+        -:  627:      // Error messages:
+        -:  628:      //
+    #####:  629:      for(boost::regex_constants::error_type i = static_cast<boost::regex_constants::error_type>(0); 
+    %%%%%:  629-block 23
+call    0 never executed
+call    1 never executed
+    $$$$$:  629-block 76
+call    2 never executed
+    $$$$$:  629-block 78
+call    3 never executed
+    $$$$$:  629-block 80
+call    4 never executed
+    #####:  630:         i <= boost::regex_constants::error_unknown; 
+    %%%%%:  630-block 46
+branch  0 never executed
+branch  1 never executed (fallthrough)
+    #####:  631:         i = static_cast<boost::regex_constants::error_type>(i + 1))
+        -:  632:      {
+    #####:  633:         const char* p = get_default_error_string(i);
+    %%%%%:  633-block 24
+call    0 never executed
+    #####:  634:         string_type default_message;
+call    0 never executed
+    #####:  635:         while(*p)
+    %%%%%:  635-block 30
+branch  0 never executed
+branch  1 never executed (fallthrough)
+        -:  636:         {
+    #####:  637:            default_message.append(1, this->m_pctype->widen(*p));
+    %%%%%:  637-block 27
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  637-block 28
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    #####:  638:            ++p;
+    %%%%%:  638-block 29
+        -:  639:         }
+    #####:  640:         string_type s = this->m_pmessages->get(cat, 0, i+200, default_message);
+    %%%%%:  640-block 31
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  641:         std::string result;
+    %%%%%:  641-block 32
+call    0 never executed
+    #####:  642:         for(std::string::size_type j = 0; j < s.size(); ++j)
+    %%%%%:  642-block 37
+    %%%%%:  642-block 38
+call    0 never executed
+branch  1 never executed
+branch  2 never executed (fallthrough)
+        -:  643:         {
+    #####:  644:            result.append(1, this->m_pctype->narrow(s[j], 0));
+    %%%%%:  644-block 34
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+    %%%%%:  644-block 36
+call    4 never executed
+branch  5 never executed (fallthrough)
+branch  6 never executed (throw)
+        -:  645:         }
+    #####:  646:         m_error_strings[i] = result;
+    %%%%%:  646-block 40
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  646-block 41
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    %%%%%:  646-block 42
+call    6 never executed
+    $$$$$:  646-block 75
+        -:  647:      }
+        -:  648:      //
+        -:  649:      // Custom class names:
+        -:  650:      //
+        -:  651:      static const char_class_type masks[16] = 
+        -:  652:      {
+        -:  653:         static_cast<unsigned_native_mask_type>(std::ctype<charT>::alnum),
+        -:  654:         static_cast<unsigned_native_mask_type>(std::ctype<charT>::alpha),
+        -:  655:         static_cast<unsigned_native_mask_type>(std::ctype<charT>::cntrl),
+        -:  656:         static_cast<unsigned_native_mask_type>(std::ctype<charT>::digit),
+        -:  657:         static_cast<unsigned_native_mask_type>(std::ctype<charT>::graph),
+        -:  658:         cpp_regex_traits_implementation<charT>::mask_horizontal,
+        -:  659:         static_cast<unsigned_native_mask_type>(std::ctype<charT>::lower),
+        -:  660:         static_cast<unsigned_native_mask_type>(std::ctype<charT>::print),
+        -:  661:         static_cast<unsigned_native_mask_type>(std::ctype<charT>::punct),
+        -:  662:         static_cast<unsigned_native_mask_type>(std::ctype<charT>::space),
+        -:  663:         static_cast<unsigned_native_mask_type>(std::ctype<charT>::upper),
+        -:  664:         cpp_regex_traits_implementation<charT>::mask_vertical,
+        -:  665:         static_cast<unsigned_native_mask_type>(std::ctype<charT>::xdigit),
+        -:  666:         cpp_regex_traits_implementation<charT>::mask_blank,
+        -:  667:         cpp_regex_traits_implementation<charT>::mask_word,
+        -:  668:         cpp_regex_traits_implementation<charT>::mask_unicode,
+        -:  669:      };
+    #####:  670:      static const string_type null_string;
+    %%%%%:  670-block 47
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  670-block 48
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed
+    %%%%%:  670-block 50
+call    5 never executed
+call    6 never executed
+    #####:  671:      for(unsigned int j = 0; j <= 13; ++j)
+    %%%%%:  671-block 52
+    %%%%%:  671-block 58
+call    0 never executed
+    %%%%%:  671-block 60
+branch  1 never executed
+branch  2 never executed (fallthrough)
+    $$$$$:  671-block 83
+call    3 never executed
+        -:  672:      {
+    #####:  673:         string_type s(this->m_pmessages->get(cat, 0, j+300, null_string));
+    %%%%%:  673-block 53
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  674:         if(!s.empty())
+    %%%%%:  674-block 54
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  675:            this->m_custom_class_names[s] = masks[j];
+    %%%%%:  675-block 56
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  675-block 57
+        -:  676:      }
+        -:  677:   }
+        -:  678:   //
+        -:  679:   // get the collation format used by m_pcollate:
+        -:  680:   //
+        1:  681:   m_collate_type = BOOST_REGEX_DETAIL_NS::find_sort_syntax(this, &m_collate_delim);
+        1:  681-block 61
+call    0 returned 1
+branch  1 taken 1 (fallthrough)
+branch  2 taken 0 (throw)
+        1:  682:}
+        1:  682-block 62
+call    0 returned 1
+    $$$$$:  682-block 86
+call    1 never executed
+        -:  683:
+        -:  684:template <class charT>
+        -:  685:typename cpp_regex_traits_implementation<charT>::char_class_type 
+function _ZNK5boost13re_detail_50031cpp_regex_traits_implementationIcE20lookup_classname_impEPKcS4_ called 5 returned 100% blocks executed 26%
+        5:  686:   cpp_regex_traits_implementation<charT>::lookup_classname_imp(const charT* p1, const charT* p2) const
+        -:  687:{
+        -:  688:   static const char_class_type masks[22] = 
+        -:  689:   {
+        -:  690:      0,
+        -:  691:      static_cast<unsigned_native_mask_type>(std::ctype<char>::alnum),
+        -:  692:      static_cast<unsigned_native_mask_type>(std::ctype<char>::alpha),
+        -:  693:      cpp_regex_traits_implementation<charT>::mask_blank,
+        -:  694:      static_cast<unsigned_native_mask_type>(std::ctype<char>::cntrl),
+        -:  695:      static_cast<unsigned_native_mask_type>(std::ctype<char>::digit),
+        -:  696:      static_cast<unsigned_native_mask_type>(std::ctype<char>::digit),
+        -:  697:      static_cast<unsigned_native_mask_type>(std::ctype<char>::graph),
+        -:  698:      cpp_regex_traits_implementation<charT>::mask_horizontal,
+        -:  699:      static_cast<unsigned_native_mask_type>(std::ctype<char>::lower),
+        -:  700:      static_cast<unsigned_native_mask_type>(std::ctype<char>::lower),
+        -:  701:      static_cast<unsigned_native_mask_type>(std::ctype<char>::print),
+        -:  702:      static_cast<unsigned_native_mask_type>(std::ctype<char>::punct),
+        -:  703:      static_cast<unsigned_native_mask_type>(std::ctype<char>::space),
+        -:  704:      static_cast<unsigned_native_mask_type>(std::ctype<char>::space),
+        -:  705:      static_cast<unsigned_native_mask_type>(std::ctype<char>::upper),
+        -:  706:      cpp_regex_traits_implementation<charT>::mask_unicode,
+        -:  707:      static_cast<unsigned_native_mask_type>(std::ctype<char>::upper),
+        -:  708:      cpp_regex_traits_implementation<charT>::mask_vertical,
+        -:  709:      static_cast<unsigned_native_mask_type>(std::ctype<char>::alnum) | cpp_regex_traits_implementation<charT>::mask_word, 
+        -:  710:      static_cast<unsigned_native_mask_type>(std::ctype<char>::alnum) | cpp_regex_traits_implementation<charT>::mask_word, 
+        -:  711:      static_cast<unsigned_native_mask_type>(std::ctype<char>::xdigit),
+        -:  712:   };
+        5:  713:   if(!m_custom_class_names.empty())
+        5:  713-block 2
+call    0 returned 5
+branch  1 taken 0 (fallthrough)
+branch  2 taken 5
+        -:  714:   {
+        -:  715:      typedef typename std::map<std::basic_string<charT>, char_class_type>::const_iterator map_iter;
+    #####:  716:      map_iter pos = m_custom_class_names.find(string_type(p1, p2));
+    %%%%%:  716-block 4
+    %%%%%:  716-block 6
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  716-block 7
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    %%%%%:  716-block 8
+call    6 never executed
+    $$$$$:  716-block 22
+call    7 never executed
+    $$$$$:  716-block 26
+    $$$$$:  716-block 27
+    #####:  717:      if(pos != m_custom_class_names.end())
+    %%%%%:  717-block 10
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    #####:  718:         return pos->second;
+    %%%%%:  718-block 13
+call    0 never executed
+    %%%%%:  718-block 16
+        -:  719:   }
+        5:  720:   std::size_t state_id = 1 + BOOST_REGEX_DETAIL_NS::get_default_class_id(p1, p2);
+        5:  720-block 17
+call    0 returned 5
+       5*:  721:   BOOST_REGEX_ASSERT(state_id < sizeof(masks) / sizeof(masks[0]));
+branch  0 taken 0 (fallthrough)
+branch  1 taken 5
+    %%%%%:  721-block 19
+call    2 never executed
+        5:  722:   return masks[state_id];
+        5:  722-block 20
+        -:  723:}
+        -:  724:
+        -:  725:template <class charT>
+function _ZN5boost13re_detail_50023create_cpp_regex_traitsIcEESt10shared_ptrIKNS0_31cpp_regex_traits_implementationIT_EEERKSt6locale called 1 returned 100% blocks executed 78%
+        1:  726:inline std::shared_ptr<const cpp_regex_traits_implementation<charT> > create_cpp_regex_traits(const std::locale& l)
+        -:  727:{
+        1:  728:   cpp_regex_traits_base<charT> key(l);
+        1:  728-block 2
+call    0 returned 1
+branch  1 taken 1 (fallthrough)
+branch  2 taken 0 (throw)
+        2:  729:   return ::boost::object_cache<cpp_regex_traits_base<charT>, cpp_regex_traits_implementation<charT> >::get(key, 5);
+        1:  729-block 3
+call    0 returned 1
+branch  1 taken 1 (fallthrough)
+branch  2 taken 0 (throw)
+        1:  729-block 7
+        1:  730:}
+        1:  730-block 5
+call    0 returned 1
+    $$$$$:  730-block 8
+call    1 never executed
+        -:  731:
+        -:  732:} // BOOST_REGEX_DETAIL_NS
+        -:  733:
+        -:  734:template <class charT>
+        -:  735:class cpp_regex_traits
+        -:  736:{
+        -:  737:private:
+        -:  738:   typedef std::ctype<charT>            ctype_type;
+        -:  739:public:
+        -:  740:   typedef charT                        char_type;
+        -:  741:   typedef std::size_t                  size_type;
+        -:  742:   typedef std::basic_string<char_type> string_type;
+        -:  743:   typedef std::locale                  locale_type;
+        -:  744:   typedef std::uint_least32_t          char_class_type;
+        -:  745:
+        -:  746:   struct boost_extensions_tag{};
+        -:  747:
+function _ZN5boost16cpp_regex_traitsIcEC2Ev called 1 returned 100% blocks executed 71%
+        1:  748:   cpp_regex_traits()
+        1:  749:      : m_pimpl(BOOST_REGEX_DETAIL_NS::create_cpp_regex_traits<charT>(std::locale()))
+        1:  749-block 2
+call    0 returned 1
+call    1 returned 1
+branch  2 taken 1 (fallthrough)
+branch  3 taken 0 (throw)
+        1:  749-block 4
+call    4 returned 1
+    $$$$$:  749-block 6
+call    5 never executed
+        1:  750:   { }
+function _ZN5boost16cpp_regex_traitsIcE6lengthEPKc called 0 returned 0% blocks executed 0%
+    #####:  751:   static size_type length(const char_type* p)
+        -:  752:   {
+    #####:  753:      return std::char_traits<charT>::length(p);
+    %%%%%:  753-block 2
+call    0 never executed
+        -:  754:   }
+function _ZNK5boost16cpp_regex_traitsIcE11syntax_typeEc called 51 returned 100% blocks executed 100%
+       51:  755:   regex_constants::syntax_type syntax_type(charT c)const
+        -:  756:   {
+       51:  757:      return m_pimpl->syntax_type(c);
+       51:  757-block 2
+call    0 returned 51
+call    1 returned 51
+        -:  758:   }
+function _ZNK5boost16cpp_regex_traitsIcE18escape_syntax_typeEc called 0 returned 0% blocks executed 0%
+    #####:  759:   regex_constants::escape_syntax_type escape_syntax_type(charT c) const
+        -:  760:   {
+    #####:  761:      return m_pimpl->escape_syntax_type(c);
+    %%%%%:  761-block 2
+call    0 never executed
+call    1 never executed
+        -:  762:   }
+        -:  763:   charT translate(charT c) const
+        -:  764:   {
+        -:  765:      return c;
+        -:  766:   }
+        -:  767:   charT translate_nocase(charT c) const
+        -:  768:   {
+        -:  769:      return m_pimpl->m_pctype->tolower(c);
+        -:  770:   }
+function _ZNK5boost16cpp_regex_traitsIcE9translateEcb called 1803 returned 100% blocks executed 57%
+     1803:  771:   charT translate(charT c, bool icase) const
+        -:  772:   {
+    1803*:  773:      return icase ? m_pimpl->m_pctype->tolower(c) : c;
+     1803:  773-block 2
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1803
+    %%%%%:  773-block 3
+call    2 never executed
+call    3 never executed
+     1803:  773-block 6
+     1803:  773-block 7
+        -:  774:   }
+        -:  775:   charT tolower(charT c) const
+        -:  776:   {
+        -:  777:      return m_pimpl->m_pctype->tolower(c);
+        -:  778:   }
+        -:  779:   charT toupper(charT c) const
+        -:  780:   {
+        -:  781:      return m_pimpl->m_pctype->toupper(c);
+        -:  782:   }
+function _ZNK5boost16cpp_regex_traitsIcE9transformB5cxx11EPKcS3_ called 0 returned 0% blocks executed 0%
+    #####:  783:   string_type transform(const charT* p1, const charT* p2) const
+        -:  784:   {
+    #####:  785:      return m_pimpl->transform(p1, p2);
+    %%%%%:  785-block 2
+call    0 never executed
+call    1 never executed
+        -:  786:   }
+function _ZNK5boost16cpp_regex_traitsIcE17transform_primaryB5cxx11EPKcS3_ called 0 returned 0% blocks executed 0%
+    #####:  787:   string_type transform_primary(const charT* p1, const charT* p2) const
+        -:  788:   {
+    #####:  789:      return m_pimpl->transform_primary(p1, p2);
+    %%%%%:  789-block 2
+call    0 never executed
+call    1 never executed
+        -:  790:   }
+function _ZNK5boost16cpp_regex_traitsIcE16lookup_classnameEPKcS3_ called 5 returned 100% blocks executed 100%
+        5:  791:   char_class_type lookup_classname(const charT* p1, const charT* p2) const
+        -:  792:   {
+        5:  793:      return m_pimpl->lookup_classname(p1, p2);
+        5:  793-block 2
+call    0 returned 5
+call    1 returned 5
+        -:  794:   }
+function _ZNK5boost16cpp_regex_traitsIcE18lookup_collatenameB5cxx11EPKcS3_ called 0 returned 0% blocks executed 0%
+    #####:  795:   string_type lookup_collatename(const charT* p1, const charT* p2) const
+        -:  796:   {
+    #####:  797:      return m_pimpl->lookup_collatename(p1, p2);
+    %%%%%:  797-block 2
+call    0 never executed
+call    1 never executed
+        -:  798:   }
+function _ZNK5boost16cpp_regex_traitsIcE7isctypeEcj called 7 returned 100% blocks executed 45%
+        7:  799:   bool isctype(charT c, char_class_type f) const
+        -:  800:   {
+        -:  801:      typedef typename std::ctype<charT>::mask ctype_mask;
+        -:  802:
+        -:  803:      static const ctype_mask mask_base = 
+        -:  804:         static_cast<ctype_mask>(
+        -:  805:            std::ctype<charT>::alnum 
+        -:  806:            | std::ctype<charT>::alpha
+        -:  807:            | std::ctype<charT>::cntrl
+        -:  808:            | std::ctype<charT>::digit
+        -:  809:            | std::ctype<charT>::graph
+        -:  810:            | std::ctype<charT>::lower
+        -:  811:            | std::ctype<charT>::print
+        -:  812:            | std::ctype<charT>::punct
+        -:  813:            | std::ctype<charT>::space
+        -:  814:            | std::ctype<charT>::upper
+        -:  815:            | std::ctype<charT>::xdigit);
+        -:  816:
+       14:  817:      if((f & mask_base) 
+      14*:  818:         && (m_pimpl->m_pctype->is(
+        7:  818-block 2
+branch  0 taken 7 (fallthrough)
+branch  1 taken 0
+        7:  818-block 3
+call    2 returned 7
+branch  3 taken 0 (fallthrough)
+branch  4 taken 7
+    %%%%%:  818-block 6
+        7:  818-block 7
+        7:  818-block 8
+branch  5 taken 0 (fallthrough)
+branch  6 taken 7
+        7:  819:            static_cast<ctype_mask>(f & mask_base), c)))
+call    0 returned 7
+    #####:  820:         return true;
+    %%%%%:  820-block 9
+       7*:  821:      else if((f & BOOST_REGEX_DETAIL_NS::cpp_regex_traits_implementation<charT>::mask_unicode) && BOOST_REGEX_DETAIL_NS::is_extended(c))
+        7:  821-block 10
+branch  0 taken 0 (fallthrough)
+branch  1 taken 7
+    %%%%%:  821-block 11
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed
+    %%%%%:  821-block 13
+        7:  821-block 14
+        7:  821-block 15
+branch  5 taken 0 (fallthrough)
+branch  6 taken 7
+    #####:  822:         return true;
+    %%%%%:  822-block 16
+       7*:  823:      else if((f & BOOST_REGEX_DETAIL_NS::cpp_regex_traits_implementation<charT>::mask_word) && (c == '_'))
+        7:  823-block 17
+branch  0 taken 0 (fallthrough)
+branch  1 taken 7
+    %%%%%:  823-block 18
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    #####:  824:         return true;
+    %%%%%:  824-block 19
+       14:  825:      else if((f & BOOST_REGEX_DETAIL_NS::cpp_regex_traits_implementation<charT>::mask_blank) 
+    #####:  826:         && m_pimpl->m_pctype->is(std::ctype<charT>::space, c)
+    %%%%%:  826-block 21
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed
+       7*:  827:         && !BOOST_REGEX_DETAIL_NS::is_separator(c))
+        7:  827-block 20
+branch  0 taken 0 (fallthrough)
+branch  1 taken 7
+    %%%%%:  827-block 24
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed
+    %%%%%:  827-block 26
+        7:  827-block 27
+        7:  827-block 28
+branch  5 taken 0 (fallthrough)
+branch  6 taken 7
+    #####:  828:         return true;
+    %%%%%:  828-block 29
+       14:  829:      else if((f & BOOST_REGEX_DETAIL_NS::cpp_regex_traits_implementation<charT>::mask_vertical) 
+       7*:  830:         && (::boost::BOOST_REGEX_DETAIL_NS::is_separator(c) || (c == '\v')))
+        7:  830-block 30
+branch  0 taken 0 (fallthrough)
+branch  1 taken 7
+    %%%%%:  830-block 31
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed
+    %%%%%:  830-block 33
+branch  5 never executed (fallthrough)
+branch  6 never executed
+    %%%%%:  830-block 34
+        7:  830-block 35
+        7:  830-block 36
+branch  7 taken 0 (fallthrough)
+branch  8 taken 7
+    #####:  831:         return true;
+    %%%%%:  831-block 37
+       14:  832:      else if((f & BOOST_REGEX_DETAIL_NS::cpp_regex_traits_implementation<charT>::mask_horizontal) 
+       7*:  833:         && this->isctype(c, std::ctype<charT>::space) && !this->isctype(c, BOOST_REGEX_DETAIL_NS::cpp_regex_traits_implementation<charT>::mask_vertical))
+        7:  833-block 38
+branch  0 taken 0 (fallthrough)
+branch  1 taken 7
+    %%%%%:  833-block 39
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed
+    %%%%%:  833-block 41
+call    5 never executed
+branch  6 never executed (fallthrough)
+branch  7 never executed
+    %%%%%:  833-block 43
+        7:  833-block 44
+        7:  833-block 45
+branch  8 taken 0 (fallthrough)
+branch  9 taken 7
+    #####:  834:         return true;
+    %%%%%:  834-block 46
+        -:  835:#ifdef __CYGWIN__
+        -:  836:      //
+        -:  837:      // Cygwin has a buggy ctype facet, see https://www.cygwin.com/ml/cygwin/2012-08/msg00178.html:
+        -:  838:      //
+        -:  839:      else if((f & std::ctype<charT>::xdigit) == std::ctype<charT>::xdigit)
+        -:  840:      {
+        -:  841:         if((c >= 'a') && (c <= 'f'))
+        -:  842:            return true;
+        -:  843:         if((c >= 'A') && (c <= 'F'))
+        -:  844:            return true;
+        -:  845:      }
+        -:  846:#endif
+        7:  847:      return false;
+        7:  847-block 47
+        -:  848:   }
+        -:  849:   std::intmax_t toi(const charT*& p1, const charT* p2, int radix)const;
+        -:  850:   int value(charT c, int radix)const
+        -:  851:   {
+        -:  852:      const charT* pc = &c;
+        -:  853:      return (int)toi(pc, pc + 1, radix);
+        -:  854:   }
+        -:  855:   locale_type imbue(locale_type l)
+        -:  856:   {
+        -:  857:      std::locale result(getloc());
+        -:  858:      m_pimpl = BOOST_REGEX_DETAIL_NS::create_cpp_regex_traits<charT>(l);
+        -:  859:      return result;
+        -:  860:   }
+        -:  861:   locale_type getloc()const
+        -:  862:   {
+        -:  863:      return m_pimpl->m_locale;
+        -:  864:   }
+function _ZNK5boost16cpp_regex_traitsIcE12error_stringB5cxx11ENS_15regex_constants10error_typeE called 0 returned 0% blocks executed 0%
+    #####:  865:   std::string error_string(regex_constants::error_type n) const
+        -:  866:   {
+    #####:  867:      return m_pimpl->error_string(n);
+    %%%%%:  867-block 2
+call    0 never executed
+call    1 never executed
+        -:  868:   }
+        -:  869:
+        -:  870:   //
+        -:  871:   // extension:
+        -:  872:   // set the name of the message catalog in use (defaults to "boost_regex").
+        -:  873:   //
+        -:  874:   static std::string catalog_name(const std::string& name);
+        -:  875:   static std::string get_catalog_name();
+        -:  876:
+        -:  877:private:
+        -:  878:   std::shared_ptr<const BOOST_REGEX_DETAIL_NS::cpp_regex_traits_implementation<charT> > m_pimpl;
+        -:  879:   //
+        -:  880:   // catalog name handler:
+        -:  881:   //
+        -:  882:   static std::string& get_catalog_name_inst();
+        -:  883:
+        -:  884:#ifdef BOOST_HAS_THREADS
+        -:  885:   static std::mutex& get_mutex_inst();
+        -:  886:#endif
+        -:  887:};
+        -:  888:
+        -:  889:
+        -:  890:template <class charT>
+function _ZNK5boost16cpp_regex_traitsIcE3toiERPKcS3_i called 3 returned 100% blocks executed 70%
+        3:  891:std::intmax_t cpp_regex_traits<charT>::toi(const charT*& first, const charT* last, int radix)const
+        -:  892:{
+        3:  893:   BOOST_REGEX_DETAIL_NS::parser_buf<charT>   sbuf;            // buffer for parsing numbers.
+        3:  893-block 2
+call    0 returned 3
+branch  1 taken 3 (fallthrough)
+branch  2 taken 0 (throw)
+        3:  894:   std::basic_istream<charT>      is(&sbuf);       // stream for parsing numbers.
+        3:  894-block 3
+call    0 returned 3
+branch  1 taken 3 (fallthrough)
+branch  2 taken 0 (throw)
+        -:  895:
+        -:  896:   // we do NOT want to parse any thousands separators inside the stream:
+        3:  897:   last = std::find(first, last, std::use_facet<std::numpunct<charT>>(is.getloc()).thousands_sep());
+        3:  897-block 4
+call    0 returned 3
+call    1 returned 3
+branch  2 taken 3 (fallthrough)
+branch  3 taken 0 (throw)
+        3:  897-block 6
+call    4 returned 3
+branch  5 taken 3 (fallthrough)
+branch  6 taken 0 (throw)
+        3:  897-block 7
+call    7 returned 3
+branch  8 taken 3 (fallthrough)
+branch  9 taken 0 (throw)
+        3:  897-block 8
+call   10 returned 3
+    $$$$$:  897-block 26
+call   11 never executed
+    $$$$$:  897-block 28
+    $$$$$:  897-block 29
+        -:  898:
+        3:  899:   sbuf.pubsetbuf(const_cast<charT*>(static_cast<const charT*>(first)), static_cast<std::streamsize>(last-first));
+call    0 returned 3
+branch  1 taken 3 (fallthrough)
+branch  2 taken 0 (throw)
+        3:  900:   is.clear();
+        3:  900-block 10
+call    0 returned 3
+branch  1 taken 3 (fallthrough)
+branch  2 taken 0 (throw)
+       3*:  901:   if(std::abs(radix) == 16) is >> std::hex;
+        3:  901-block 11
+branch  0 taken 0 (fallthrough)
+branch  1 taken 3
+    %%%%%:  901-block 12
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed (throw)
+       3*:  902:   else if(std::abs(radix) == 8) is >> std::oct;
+        3:  902-block 13
+branch  0 taken 0 (fallthrough)
+branch  1 taken 3
+    %%%%%:  902-block 14
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed (throw)
+        3:  903:   else is >> std::dec;
+        3:  903-block 15
+call    0 returned 3
+branch  1 taken 3 (fallthrough)
+branch  2 taken 0 (throw)
+        -:  904:   std::intmax_t val;
+        3:  905:   if(is >> val)
+        3:  905-block 16
+call    0 returned 3
+branch  1 taken 3 (fallthrough)
+branch  2 taken 0 (throw)
+        3:  905-block 17
+call    3 returned 3
+branch  4 taken 3 (fallthrough)
+branch  5 taken 0 (throw)
+        3:  905-block 18
+branch  6 taken 2 (fallthrough)
+branch  7 taken 1
+        -:  906:   {
+        2:  907:      first = first + ((last - first) - sbuf.in_avail());
+        2:  907-block 19
+call    0 returned 2
+branch  1 taken 2 (fallthrough)
+branch  2 taken 0 (throw)
+        2:  908:      return val;
+        2:  908-block 20
+        -:  909:   }
+        -:  910:   else
+        1:  911:      return -1;
+        1:  911-block 21
+        3:  912:}
+        3:  912-block 22
+call    0 returned 3
+call    1 returned 3
+    $$$$$:  912-block 30
+call    2 never executed
+    $$$$$:  912-block 32
+call    3 never executed
+        -:  913:
+        -:  914:template <class charT>
+        -:  915:std::string cpp_regex_traits<charT>::catalog_name(const std::string& name)
+        -:  916:{
+        -:  917:#ifdef BOOST_HAS_THREADS
+        -:  918:   std::lock_guard<std::mutex> lk(get_mutex_inst());
+        -:  919:#endif
+        -:  920:   std::string result(get_catalog_name_inst());
+        -:  921:   get_catalog_name_inst() = name;
+        -:  922:   return result;
+        -:  923:}
+        -:  924:
+        -:  925:template <class charT>
+function _ZN5boost16cpp_regex_traitsIcE21get_catalog_name_instB5cxx11Ev called 2 returned 100% blocks executed 100%
+        2:  926:std::string& cpp_regex_traits<charT>::get_catalog_name_inst()
+        -:  927:{
+        2:  928:   static std::string s_name;
+        2:  928-block 2
+branch  0 taken 1 (fallthrough)
+branch  1 taken 1
+        1:  928-block 3
+call    2 returned 1
+branch  3 taken 1 (fallthrough)
+branch  4 taken 0
+        1:  928-block 5
+call    5 returned 1
+call    6 returned 1
+        2:  929:   return s_name;
+        2:  929-block 7
+        -:  930:}
+        -:  931:
+        -:  932:template <class charT>
+function _ZN5boost16cpp_regex_traitsIcE16get_catalog_nameB5cxx11Ev called 2 returned 100% blocks executed 100%
+        2:  933:std::string cpp_regex_traits<charT>::get_catalog_name()
+        -:  934:{
+        -:  935:#ifdef BOOST_HAS_THREADS
+        -:  936:   std::lock_guard<std::mutex> lk(get_mutex_inst());
+        -:  937:#endif
+        2:  938:   std::string result(get_catalog_name_inst());
+        2:  938-block 2
+call    0 returned 2
+call    1 returned 2
+        2:  939:   return result;
+        -:  940:}
+        -:  941:
+        -:  942:#ifdef BOOST_HAS_THREADS
+        -:  943:template <class charT>
+        -:  944:std::mutex& cpp_regex_traits<charT>::get_mutex_inst()
+        -:  945:{
+        -:  946:   static std::mutex s_mutex;
+        -:  947:   return s_mutex;
+        -:  948:}
+        -:  949:#endif
+        -:  950:
+        -:  951:namespace BOOST_REGEX_DETAIL_NS {
+        -:  952:
+function _ZN5boost13re_detail_50027cpp_regex_traits_char_layerIcE4initEv called 1 returned 100% blocks executed 31%
+        1:  953:   inline void cpp_regex_traits_char_layer<char>::init()
+        -:  954:   {
+        -:  955:      // we need to start by initialising our syntax map so we know which
+        -:  956:      // character is used for which purpose:
+        1:  957:      std::memset(m_char_map, 0, sizeof(m_char_map));
+        -:  958:#ifndef __IBMCPP__
+        1:  959:      std::messages<char>::catalog cat = static_cast<std::messages<char>::catalog>(-1);
+        -:  960:#else
+        -:  961:      std::messages<char>::catalog cat = reinterpret_cast<std::messages<char>::catalog>(-1);
+        -:  962:#endif
+        1:  963:      std::string cat_name(cpp_regex_traits<char>::get_catalog_name());
+        1:  963-block 2
+call    0 returned 1
+branch  1 taken 1 (fallthrough)
+branch  2 taken 0 (throw)
+       1*:  964:      if ((!cat_name.empty()) && (m_pmessages != 0))
+        1:  964-block 3
+call    0 returned 1
+branch  1 taken 0 (fallthrough)
+branch  2 taken 1
+    %%%%%:  964-block 5
+branch  3 never executed (fallthrough)
+branch  4 never executed
+    %%%%%:  964-block 6
+        1:  964-block 7
+        1:  964-block 8
+branch  5 taken 0 (fallthrough)
+branch  6 taken 1
+        -:  965:      {
+    #####:  966:         cat = this->m_pmessages->open(
+        -:  967:            cat_name,
+    #####:  968:            this->m_locale);
+    %%%%%:  968-block 9
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  969:         if ((int)cat < 0)
+    %%%%%:  969-block 10
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  970:         {
+    #####:  971:            std::string m("Unable to open message catalog: ");
+    %%%%%:  971-block 13
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    $$$$$:  971-block 61
+    #####:  972:            std::runtime_error err(m + cat_name);
+    %%%%%:  972-block 15
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  972-block 16
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    %%%%%:  972-block 17
+call    6 never executed
+    $$$$$:  972-block 62
+call    7 never executed
+    $$$$$:  972-block 64
+    #####:  973:            boost::BOOST_REGEX_DETAIL_NS::raise_runtime_error(err);
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  974:         }
+    %%%%%:  974-block 19
+call    0 never executed
+call    1 never executed
+    $$$$$:  974-block 65
+call    2 never executed
+    $$$$$:  974-block 67
+call    3 never executed
+        -:  975:      }
+        -:  976:      //
+        -:  977:      // if we have a valid catalog then load our messages:
+        -:  978:      //
+        1:  979:      if ((int)cat >= 0)
+        1:  979-block 22
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+        -:  980:      {
+        -:  981:#ifndef BOOST_NO_EXCEPTIONS
+        -:  982:         try {
+        -:  983:#endif
+    #####:  984:            for (regex_constants::syntax_type i = 1; i < regex_constants::syntax_max; ++i)
+    %%%%%:  984-block 23
+    %%%%%:  984-block 38
+branch  0 never executed
+branch  1 never executed (fallthrough)
+        -:  985:            {
+    #####:  986:               string_type mss = this->m_pmessages->get(cat, 0, i, get_default_syntax(i));
+    %%%%%:  986-block 24
+    %%%%%:  986-block 26
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+    %%%%%:  986-block 28
+call    4 never executed
+branch  5 never executed (fallthrough)
+branch  6 never executed (throw)
+    %%%%%:  986-block 29
+call    7 never executed
+    $$$$$:  986-block 70
+call    8 never executed
+    $$$$$:  986-block 74
+    $$$$$:  986-block 75
+    #####:  987:               for (string_type::size_type j = 0; j < mss.size(); ++j)
+    %%%%%:  987-block 31
+    %%%%%:  987-block 34
+call    0 never executed
+branch  1 never executed
+branch  2 never executed (fallthrough)
+        -:  988:               {
+    #####:  989:                  m_char_map[static_cast<unsigned char>(mss[j])] = i;
+    %%%%%:  989-block 32
+call    0 never executed
+        -:  990:               }
+    #####:  991:            }
+    %%%%%:  991-block 36
+call    0 never executed
+    #####:  992:            this->m_pmessages->close(cat);
+    %%%%%:  992-block 39
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:  993:#ifndef BOOST_NO_EXCEPTIONS
+        -:  994:         }
+    =====:  995:         catch (...)
+    $$$$$:  995-block 77
+    $$$$$:  995-block 78
+call    0 never executed
+        -:  996:         {
+    =====:  997:            this->m_pmessages->close(cat);
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    =====:  998:            throw;
+    $$$$$:  998-block 80
+call    0 never executed
+    =====:  999:         }
+    $$$$$:  999-block 81
+call    0 never executed
+        -: 1000:#endif
+        -: 1001:      }
+        -: 1002:      else
+        -: 1003:      {
+       60: 1004:         for (regex_constants::syntax_type j = 1; j < regex_constants::syntax_max; ++j)
+        1: 1004-block 40
+       59: 1004-block 46
+       60: 1004-block 47
+branch  0 taken 59
+branch  1 taken 1 (fallthrough)
+        -: 1005:         {
+       59: 1006:            const char* ptr = get_default_syntax(j);
+       59: 1006-block 41
+call    0 returned 59
+      120: 1007:            while (ptr && *ptr)
+      120: 1007-block 44
+branch  0 taken 120 (fallthrough)
+branch  1 taken 0
+      120: 1007-block 45
+branch  2 taken 61
+branch  3 taken 59 (fallthrough)
+        -: 1008:            {
+       61: 1009:               m_char_map[static_cast<unsigned char>(*ptr)] = j;
+       61: 1010:               ++ptr;
+       61: 1010-block 43
+        -: 1011:            }
+        -: 1012:         }
+        -: 1013:      }
+        -: 1014:      //
+        -: 1015:      // finish off by calculating our escape types:
+        -: 1016:      //
+        1: 1017:      unsigned char i = 'A';
+        1: 1017-block 48
+        -: 1018:      do
+        -: 1019:      {
+      191: 1020:         if (m_char_map[i] == 0)
+      191: 1020-block 49
+branch  0 taken 157 (fallthrough)
+branch  1 taken 34
+        -: 1021:         {
+      157: 1022:            if (this->m_pctype->is(std::ctype_base::lower, i))
+      157: 1022-block 50
+call    0 returned 157
+branch  1 taken 12 (fallthrough)
+branch  2 taken 145
+       12: 1023:               m_char_map[i] = regex_constants::escape_type_class;
+       12: 1023-block 52
+      145: 1024:            else if (this->m_pctype->is(std::ctype_base::upper, i))
+      145: 1024-block 53
+call    0 returned 145
+branch  1 taken 14 (fallthrough)
+branch  2 taken 131
+       14: 1025:               m_char_map[i] = regex_constants::escape_type_not_class;
+       14: 1025-block 55
+        -: 1026:         }
+      191: 1027:      } while (0xFF != i++);
+      191: 1027-block 56
+branch  0 taken 190
+branch  1 taken 1 (fallthrough)
+        1: 1028:   }
+        1: 1028-block 57
+call    0 returned 1
+    $$$$$: 1028-block 83
+call    1 never executed
+        -: 1029:
+        -: 1030:} // namespace detail
+        -: 1031:
+        -: 1032:
+        -: 1033:} // boost
+        -: 1034:
+        -: 1035:#ifdef BOOST_REGEX_MSVC
+        -: 1036:#pragma warning(pop)
+        -: 1037:#endif
+        -: 1038:
+        -: 1039:
+        -: 1040:#endif

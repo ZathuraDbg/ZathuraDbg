@@ -1,0 +1,2504 @@
+        -:    0:Source:/home/rc/ZathuraDbg/src/app/windows/consoleWindow.cpp
+        -:    0:Graph:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/app/windows/consoleWindow.cpp.gcno
+        -:    0:Data:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/app/windows/consoleWindow.cpp.gcda
+        -:    0:Runs:1
+        -:    1:#include "windows.hpp"
+        -:    2:std::vector<std::string> output = {};
+        -:    3:
+function _Z9convToDecRKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE called 0 returned 0% blocks executed 0%
+    #####:    4:std::string convToDec(const std::string& str){
+    #####:    5:    std::string outStr;
+    %%%%%:    5-block 2
+call    0 never executed
+    #####:    6:    bool foundHexStr = false;
+        -:    7:
+    #####:    8:    for (int i = 0; i < str.length(); i++){
+    %%%%%:    8-block 29
+    %%%%%:    8-block 30
+call    0 never executed
+branch  1 never executed
+branch  2 never executed (fallthrough)
+    #####:    9:        if (str[i] == '0' && (str[i+1] == 'x' || str[i+1] == 'X' )){
+    %%%%%:    9-block 4
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:    9-block 6
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:    9-block 8
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed
+    %%%%%:    9-block 10
+    %%%%%:    9-block 11
+    %%%%%:    9-block 12
+branch  9 never executed (fallthrough)
+branch 10 never executed
+    #####:   10:            i++;
+    #####:   11:            foundHexStr = true;
+    #####:   12:            continue;
+    %%%%%:   12-block 13
+        -:   13:        }
+        -:   14:
+    #####:   15:        if (foundHexStr){
+    %%%%%:   15-block 14
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:   16:            char* endptr = nullptr;
+    #####:   17:            auto convVal = strtoul(str.substr(i).c_str(), &endptr, 16);
+    %%%%%:   17-block 15
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:   17-block 16
+call    3 never executed
+call    4 never executed
+call    5 never executed
+    $$$$$:   17-block 34
+    #####:   18:            size_t diff = endptr - str.substr(i).c_str() - 1;
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:   18-block 20
+call    3 never executed
+call    4 never executed
+    $$$$$:   18-block 35
+    #####:   19:            outStr += std::to_string(convVal);
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:   19-block 23
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    %%%%%:   19-block 24
+call    6 never executed
+    $$$$$:   19-block 36
+call    7 never executed
+    $$$$$:   19-block 38
+    #####:   20:            i += diff;
+    #####:   21:            foundHexStr = false;
+    #####:   22:            continue;
+    #####:   23:        }
+        -:   24:
+    #####:   25:        outStr += str[i];
+    %%%%%:   25-block 27
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+        -:   26:    }
+    #####:   27:    return outStr;
+    %%%%%:   27-block 32
+    %%%%%:   27-block 33
+    =====:   28:}
+    $$$$$:   28-block 40
+call    0 never executed
+        -:   29:
+function _Z14doubleToUint64d called 0 returned 0% blocks executed 0%
+    #####:   30:uint64_t doubleToUint64(double d) {
+    #####:   31:    double rounded = std::round(d);
+        -:   32:
+    #####:   33:    if (rounded < 0 || rounded > static_cast<double>(std::numeric_limits<uint64_t>::max())) {
+    %%%%%:   33-block 2
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:   33-block 3
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed
+    %%%%%:   33-block 5
+    %%%%%:   33-block 6
+    %%%%%:   33-block 7
+branch  5 never executed (fallthrough)
+branch  6 never executed
+    #####:   34:        return 0;
+    %%%%%:   34-block 8
+        -:   35:    }
+        -:   36:
+    #####:   37:    return static_cast<uint64_t>(rounded);
+    %%%%%:   37-block 9
+        -:   38:}
+        -:   39:
+function _Z9parseValsNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE called 0 returned 0% blocks executed 0%
+    #####:   40:std::string parseVals(std::string val){
+    #####:   41:    std::string result;
+    %%%%%:   41-block 2
+call    0 never executed
+    #####:   42:    std::string regName;
+call    0 never executed
+    #####:   43:    std::vector<std::string> regNames = {};
+    #####:   44:    bool foundReg = false;
+    #####:   45:    bool foundValidReg = false;
+    #####:   46:    auto len = val.length();
+call    0 never executed
+        -:   47:
+    #####:   48:    size_t i = 0;
+    #####:   49:    val = toUpperCase(val);
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:   49-block 6
+call    3 never executed
+call    4 never executed
+    $$$$$:   49-block 87
+    #####:   50:    val += " ";
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:   51:    for (auto& c: val){
+    %%%%%:   51-block 9
+call    0 never executed
+call    1 never executed
+    %%%%%:   51-block 11
+call    2 never executed
+    %%%%%:   51-block 72
+call    3 never executed
+    %%%%%:   51-block 73
+call    4 never executed
+branch  5 never executed
+branch  6 never executed (fallthrough)
+    #####:   52:        if (isRegisterValid(regName, codeInformation.mode) && (!foundValidReg)){
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:   52-block 13
+branch  3 never executed (fallthrough)
+branch  4 never executed
+    %%%%%:   52-block 14
+branch  5 never executed (fallthrough)
+branch  6 never executed
+    %%%%%:   52-block 15
+    %%%%%:   52-block 16
+    %%%%%:   52-block 17
+branch  7 never executed (fallthrough)
+branch  8 never executed
+    #####:   53:            foundValidReg = true;
+    %%%%%:   53-block 18
+        -:   54:        }
+        -:   55:
+    #####:   56:        if (foundValidReg){
+    %%%%%:   56-block 19
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:   57:            if (c == ' ' || c == '$' || c == '+' || c =='-' || c == '/' || c == '*' || (i == len)){
+    %%%%%:   57-block 20
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:   57-block 21
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    %%%%%:   57-block 22
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:   57-block 23
+branch  6 never executed (fallthrough)
+branch  7 never executed
+    %%%%%:   57-block 24
+branch  8 never executed (fallthrough)
+branch  9 never executed
+    %%%%%:   57-block 25
+branch 10 never executed (fallthrough)
+branch 11 never executed
+    %%%%%:   57-block 26
+branch 12 never executed (fallthrough)
+branch 13 never executed
+    #####:   58:                foundReg = false;
+    #####:   59:                foundValidReg = false;
+    #####:   60:                regNames.push_back(regName);
+    %%%%%:   60-block 27
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:   61:                std::string registerValue;
+    %%%%%:   61-block 28
+call    0 never executed
+    #####:   62:                if (!codeHasRun){
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:   63:                    registerValue = tempRegisterValueMap[regName];
+    %%%%%:   63-block 30
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:   63-block 31
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+        -:   64:                }
+        -:   65:                else{
+    #####:   66:                    if (regInfoMap[regName].first <= 64){
+    %%%%%:   66-block 32
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:   66-block 33
+branch  3 never executed (fallthrough)
+branch  4 never executed
+    #####:   67:                        registerValue = std::to_string(getRegisterValue(regName, (tempContext != nullptr) ? true : false).eightByteVal);
+    %%%%%:   67-block 34
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:   67-block 35
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    %%%%%:   67-block 36
+call    6 never executed
+call    7 never executed
+    $$$$$:   67-block 88
+    $$$$$:   67-block 89
+        -:   68:                    }
+    #####:   69:                    else if (regInfoMap[regName].first == 128){
+    %%%%%:   69-block 39
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:   69-block 40
+branch  3 never executed (fallthrough)
+branch  4 never executed
+    #####:   70:                        registerValue = std::to_string(getRegisterValue(regName, (tempContext != nullptr) ? true : false).floatVal);
+    %%%%%:   70-block 41
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:   70-block 42
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    %%%%%:   70-block 43
+call    6 never executed
+call    7 never executed
+    $$$$$:   70-block 90
+    $$$$$:   70-block 91
+        -:   71:                    }
+        -:   72:                }
+        -:   73:
+    #####:   74:                if (registerValue.starts_with("0x")){
+    %%%%%:   74-block 46
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:   75:                     result += std::to_string(hexStrToInt(registerValue));
+    %%%%%:   75-block 48
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:   75-block 49
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    %%%%%:   75-block 50
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:   75-block 51
+call    9 never executed
+    $$$$$:   75-block 92
+call   10 never executed
+    $$$$$:   75-block 94
+        -:   76:                }
+        -:   77:                else{
+    #####:   78:                    result += registerValue;
+    %%%%%:   78-block 53
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:   79:                }
+        -:   80:
+    #####:   81:                if (result.empty()){
+    %%%%%:   81-block 54
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:   82:                    result += "0";
+    %%%%%:   82-block 56
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:   83:                }
+        -:   84:
+    #####:   85:                if (c!=' '){
+    %%%%%:   85-block 57
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:   86:                    result += c;
+    %%%%%:   86-block 58
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:   87:                }
+        -:   88:
+    #####:   89:                regName.clear();
+    %%%%%:   89-block 59
+call    0 never executed
+    #####:   90:                i++;
+    #####:   91:                continue;
+    #####:   92:            }
+    %%%%%:   92-block 61
+call    0 never executed
+    $$$$$:   92-block 95
+call    1 never executed
+        -:   93:            else{
+    #####:   94:                regName.clear();
+    %%%%%:   94-block 63
+call    0 never executed
+        -:   95:            }
+        -:   96:        }
+        -:   97:
+    #####:   98:        if (c == '$'){
+    %%%%%:   98-block 64
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:   99:            foundReg = true;
+    #####:  100:            i++;
+    #####:  101:            continue;
+    %%%%%:  101-block 65
+        -:  102:        }
+        -:  103:
+    #####:  104:        if (foundReg){
+    %%%%%:  104-block 66
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  105:            regName += c;
+    %%%%%:  105-block 67
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:  106:        }
+        -:  107:
+    #####:  108:        if (c != ' ' && (!foundReg)){
+    %%%%%:  108-block 68
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  108-block 69
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    #####:  109:            result += c;
+    %%%%%:  109-block 70
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:  110:        }
+        -:  111:
+    #####:  112:        i++;
+    %%%%%:  112-block 71
+        -:  113:    }
+        -:  114:
+    #####:  115:    return std::to_string(doubleToUint64(te_interp(convToDec(result).data(), nullptr)));
+    %%%%%:  115-block 75
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  115-block 76
+call    3 never executed
+call    4 never executed
+branch  5 never executed (fallthrough)
+branch  6 never executed (throw)
+    %%%%%:  115-block 78
+call    7 never executed
+call    8 never executed
+branch  9 never executed (fallthrough)
+branch 10 never executed (throw)
+    %%%%%:  115-block 80
+    %%%%%:  115-block 81
+call   11 never executed
+    %%%%%:  115-block 86
+    $$$$$:  115-block 99
+call   12 never executed
+    $$$$$:  115-block 101
+    #####:  116:}
+call    0 never executed
+call    1 never executed
+call    2 never executed
+    $$$$$:  116-block 102
+call    3 never executed
+    $$$$$:  116-block 104
+call    4 never executed
+    $$$$$:  116-block 106
+call    5 never executed
+        -:  117:
+function _Z22splitStringExpressionsNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEERSt6vectorIS4_SaIS4_EE called 0 returned 0% blocks executed 0%
+    #####:  118:void splitStringExpressions(std::string stringToSplit,std::vector<std::string>& stringVec){
+    #####:  119:    std::string strToPush{};
+    %%%%%:  119-block 2
+call    0 never executed
+    #####:  120:    stringToSplit+=' ';
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  121:    for (int j = 0; j < stringToSplit.length(); j++){
+    %%%%%:  121-block 4
+    %%%%%:  121-block 30
+    %%%%%:  121-block 31
+call    0 never executed
+branch  1 never executed
+branch  2 never executed (fallthrough)
+    #####:  122:        char i = stringToSplit[j];
+    %%%%%:  122-block 5
+call    0 never executed
+        -:  123:
+    #####:  124:        if (i == '+' || i == '-' || i == '*' || i == '/'){
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  124-block 7
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    %%%%%:  124-block 8
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:  124-block 9
+branch  6 never executed (fallthrough)
+branch  7 never executed
+    #####:  125:            if (!strToPush.empty()){
+    %%%%%:  125-block 10
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  126:                stringVec.emplace_back(strToPush);
+    %%%%%:  126-block 12
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  127:                strToPush.clear();
+    %%%%%:  127-block 13
+call    0 never executed
+    #####:  128:                strToPush = "";
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:  129:            }
+    #####:  130:            stringVec.emplace_back(std::string(1, i));
+    %%%%%:  130-block 17
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  130-block 18
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    %%%%%:  130-block 19
+call    6 never executed
+    $$$$$:  130-block 35
+call    7 never executed
+    $$$$$:  130-block 39
+    $$$$$:  130-block 40
+    #####:  131:            continue;
+    %%%%%:  131-block 21
+        -:  132:        }
+        -:  133:
+    #####:  134:        if (i == ' '){
+    %%%%%:  134-block 22
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  135:            if (!strToPush.empty()){
+    %%%%%:  135-block 23
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  136:                stringVec.emplace_back(strToPush);
+    %%%%%:  136-block 25
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  137:                strToPush.clear();
+    %%%%%:  137-block 26
+call    0 never executed
+    #####:  138:                strToPush = "";
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:  139:            }
+    #####:  140:            continue;
+    %%%%%:  140-block 28
+        -:  141:        }
+        -:  142:
+    #####:  143:        strToPush += i;
+    %%%%%:  143-block 29
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:  144:    }
+    #####:  145:}
+    %%%%%:  145-block 33
+call    0 never executed
+    $$$$$:  145-block 41
+call    1 never executed
+        -:  146:
+function _Z20getAddressFromLineNoB5cxx11i called 0 returned 0% blocks executed 0%
+    #####:  147:std::string getAddressFromLineNo(int lineNo){
+    #####:  148:    for (auto &[fst, snd]: addressLineNoMap){
+    %%%%%:  148-block 2
+call    0 never executed
+call    1 never executed
+    %%%%%:  148-block 4
+call    2 never executed
+call    3 never executed
+call    4 never executed
+    %%%%%:  148-block 25
+call    5 never executed
+    %%%%%:  148-block 26
+call    6 never executed
+branch  7 never executed
+branch  8 never executed (fallthrough)
+    #####:  149:        if (snd == std::to_string(lineNo)){
+call    0 never executed
+call    1 never executed
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed
+    #####:  150:            const auto s (std::strtoul(fst.c_str(), nullptr, 10));
+    %%%%%:  150-block 11
+call    0 never executed
+call    1 never executed
+    #####:  151:            std::stringstream result;
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  152:            result << "0x" << std::setfill('0') << std::hex << s;
+    %%%%%:  152-block 14
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  152-block 15
+call    3 never executed
+call    4 never executed
+branch  5 never executed (fallthrough)
+branch  6 never executed (throw)
+    %%%%%:  152-block 17
+call    7 never executed
+branch  8 never executed (fallthrough)
+branch  9 never executed (throw)
+    %%%%%:  152-block 18
+call   10 never executed
+branch 11 never executed (fallthrough)
+branch 12 never executed (throw)
+    #####:  153:            return " at " + result.str();
+    %%%%%:  153-block 19
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  153-block 20
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    %%%%%:  153-block 21
+    %%%%%:  153-block 22
+call    6 never executed
+    $$$$$:  153-block 34
+call    7 never executed
+    $$$$$:  153-block 36
+    #####:  154:        }
+call    0 never executed
+    $$$$$:  154-block 37
+call    1 never executed
+        -:  155:    }
+    #####:  156:    return "";
+    %%%%%:  156-block 30
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  156-block 32
+        -:  157:}
+        -:  158:
+function _Z19parseBreakpointArgsRSt6vectorINSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEESaIS5_EERKS5_RS5_ called 0 returned 0% blocks executed 0%
+    #####:  159:int parseBreakpointArgs(std::vector<std::string>& arguments, const std::string& argument, std::string &outStr){
+    #####:  160:    const std::regex labelPattern("^[a-zA-Z_][a-zA-Z0-9_]*$");
+    %%%%%:  160-block 2
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  161:    int lineNo = 0;
+    #####:  162:    if (arguments[0].starts_with("0x") || arguments[0].starts_with('$')){
+    %%%%%:  162-block 3
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    %%%%%:  162-block 6
+call    4 never executed
+call    5 never executed
+branch  6 never executed (fallthrough)
+branch  7 never executed
+    %%%%%:  162-block 9
+    %%%%%:  162-block 10
+    %%%%%:  162-block 11
+branch  8 never executed (fallthrough)
+branch  9 never executed
+    #####:  163:        lineNo = std::atoi(addressLineNoMap[parseVals(argument)].c_str());
+    %%%%%:  163-block 12
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  163-block 13
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    %%%%%:  163-block 14
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:  163-block 15
+call    9 never executed
+call   10 never executed
+call   11 never executed
+    $$$$$:  163-block 68
+call   12 never executed
+    $$$$$:  163-block 70
+call   13 never executed
+    $$$$$:  163-block 72
+    $$$$$:  163-block 73
+    #####:  164:        outStr += "address " + std::to_string(lineNo);
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+    %%%%%:  164-block 20
+call    4 never executed
+branch  5 never executed (fallthrough)
+branch  6 never executed (throw)
+    %%%%%:  164-block 21
+call    7 never executed
+call    8 never executed
+    $$$$$:  164-block 74
+call    9 never executed
+    $$$$$:  164-block 76
+call   10 never executed
+    $$$$$:  164-block 78
+    $$$$$:  164-block 79
+        -:  165:    }
+    #####:  166:    else if (std::regex_match(arguments[0], labelPattern)){
+    %%%%%:  166-block 24
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+    %%%%%:  166-block 26
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    #####:  167:        if (labelLineNoMapInternal.count(arguments[0]) != 0){
+    %%%%%:  167-block 27
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+    %%%%%:  167-block 29
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    #####:  168:            lineNo = labelLineNoMapInternal[arguments[0]] + 1;
+    %%%%%:  168-block 30
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+    %%%%%:  168-block 32
+        -:  169:        }
+        -:  170:
+    #####:  171:        outStr += "label " + arguments[0] + " at line no. " + std::to_string(lineNo);
+    %%%%%:  171-block 33
+call    0 never executed
+call    1 never executed
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed (throw)
+    %%%%%:  171-block 36
+call    5 never executed
+branch  6 never executed (fallthrough)
+branch  7 never executed (throw)
+    %%%%%:  171-block 37
+call    8 never executed
+branch  9 never executed (fallthrough)
+branch 10 never executed (throw)
+    %%%%%:  171-block 38
+call   11 never executed
+branch 12 never executed (fallthrough)
+branch 13 never executed (throw)
+    %%%%%:  171-block 39
+call   14 never executed
+call   15 never executed
+call   16 never executed
+call   17 never executed
+    $$$$$:  171-block 80
+call   18 never executed
+    $$$$$:  171-block 82
+call   19 never executed
+    $$$$$:  171-block 84
+call   20 never executed
+    $$$$$:  171-block 86
+    $$$$$:  171-block 87
+    $$$$$:  171-block 88
+call   21 never executed
+    $$$$$:  171-block 90
+    $$$$$:  171-block 91
+        -:  172:    }
+    #####:  173:    else if (std::all_of(arguments[0].begin(), arguments[0].end(), ::isdigit)){
+    %%%%%:  173-block 44
+call    0 never executed
+call    1 never executed
+call    2 never executed
+call    3 never executed
+call    4 never executed
+branch  5 never executed (fallthrough)
+branch  6 never executed (throw)
+    %%%%%:  173-block 49
+branch  7 never executed (fallthrough)
+branch  8 never executed
+    #####:  174:        lineNo = std::atoi(parseVals(argument).c_str());
+    %%%%%:  174-block 50
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  174-block 51
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    %%%%%:  174-block 52
+call    6 never executed
+call    7 never executed
+call    8 never executed
+    $$$$$:  174-block 92
+call    9 never executed
+    $$$$$:  174-block 94
+    $$$$$:  174-block 95
+    #####:  175:        outStr += "line number " + std::to_string(lineNo) + getAddressFromLineNo(lineNo);
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  175-block 56
+call    3 never executed
+call    4 never executed
+branch  5 never executed (fallthrough)
+branch  6 never executed (throw)
+    %%%%%:  175-block 58
+call    7 never executed
+branch  8 never executed (fallthrough)
+branch  9 never executed (throw)
+    %%%%%:  175-block 59
+call   10 never executed
+branch 11 never executed (fallthrough)
+branch 12 never executed (throw)
+    %%%%%:  175-block 60
+call   13 never executed
+call   14 never executed
+call   15 never executed
+call   16 never executed
+    $$$$$:  175-block 96
+call   17 never executed
+    $$$$$:  175-block 98
+call   18 never executed
+    $$$$$:  175-block 100
+call   19 never executed
+    $$$$$:  175-block 102
+    $$$$$:  175-block 103
+    $$$$$:  175-block 104
+call   20 never executed
+    $$$$$:  175-block 106
+    $$$$$:  175-block 107
+        -:  176:    }
+        -:  177:
+    #####:  178:    return lineNo;
+    %%%%%:  178-block 67
+    #####:  179:}
+    %%%%%:  179-block 65
+call    0 never executed
+    $$$$$:  179-block 108
+call    1 never executed
+        -:  180:
+function _Z13parseCommandsRKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE called 0 returned 0% blocks executed 0%
+    #####:  181:void parseCommands(const std::string& commandIn){
+    #####:  182:    std::string command = toLowerCase(commandIn);
+    %%%%%:  182-block 2
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  183:    std::vector<std::string> arguments;
+    #####:  184:    std::string argument;
+    %%%%%:  184-block 3
+call    0 never executed
+        -:  185:
+        -:  186:
+    #####:  187:    auto idx = command.find_first_of(' ');
+call    0 never executed
+    #####:  188:    if (idx != std::string::npos) {
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  189:        argument = command.substr(idx);
+    %%%%%:  189-block 6
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  189-block 7
+call    3 never executed
+call    4 never executed
+    $$$$$:  189-block 439
+        -:  190:    }
+        -:  191:
+    #####:  192:    splitStringExpressions(argument, arguments);
+    %%%%%:  192-block 10
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  192-block 11
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    %%%%%:  192-block 12
+call    6 never executed
+    $$$$$:  192-block 440
+call    7 never executed
+    $$$$$:  192-block 442
+function _ZZ13parseCommandsRKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEENKUliS6_iE_clEiS6_i called 0 returned 0% blocks executed 0%
+    #####:  193:    auto getSpace = [](const int base, const std::string& str, const int subNum){
+    #####:  194:        int len = subNum - (str.length());
+    %%%%%:  194-block 2
+call    0 never executed
+        -:  195:
+    #####:  196:        if (len < 0){
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  197:            len = 0;
+    %%%%%:  197-block 4
+        -:  198:        }
+        -:  199:
+    #####:  200:        return std::string(base + (len), ' ');
+    %%%%%:  200-block 7
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  200-block 9
+    %%%%%:  200-block 10
+        -:  201:    };
+        -:  202:
+    #####:  203:    if (command.starts_with("breakpoint") || command.starts_with("b")
+call    0 never executed
+    %%%%%:  203-block 15
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    #####:  204:        || command[0]=='d' || command.starts_with("delete"))
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  204-block 17
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed
+    %%%%%:  204-block 19
+call    5 never executed
+branch  6 never executed (fallthrough)
+branch  7 never executed
+    %%%%%:  204-block 21
+    %%%%%:  204-block 22
+    %%%%%:  204-block 23
+branch  8 never executed (fallthrough)
+branch  9 never executed
+        -:  205:    {
+    #####:  206:        bool removeBP = command[0]=='d' || command.starts_with("delete");
+    %%%%%:  206-block 24
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:  206-block 26
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:  206-block 28
+    %%%%%:  206-block 29
+    #####:  207:        std::string outStr{};
+    %%%%%:  207-block 30
+call    0 never executed
+        -:  208:
+    #####:  209:        if (!arguments.empty()){
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  210:            int lineNo = 0;
+    #####:  211:            lineNo = parseBreakpointArgs(arguments, argument, outStr);
+    %%%%%:  211-block 33
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:  212:
+    #####:  213:            if (removeBP){
+    %%%%%:  213-block 34
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  214:                if (debugRemoveBreakpoint(lineNo - 1)){
+    %%%%%:  214-block 35
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  214-block 36
+branch  3 never executed (fallthrough)
+branch  4 never executed
+    #####:  215:                    output.emplace_back("Deleted breakpoint at line " + outStr);
+    %%%%%:  215-block 37
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  215-block 38
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    %%%%%:  215-block 39
+call    6 never executed
+    $$$$$:  215-block 443
+call    7 never executed
+    $$$$$:  215-block 445
+        -:  216:                }
+        -:  217:                else{
+    #####:  218:                    output.emplace_back("No breakpoint at " + outStr);
+    %%%%%:  218-block 41
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  218-block 42
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    %%%%%:  218-block 43
+call    6 never executed
+    $$$$$:  218-block 446
+call    7 never executed
+    $$$$$:  218-block 448
+        -:  219:                }
+        -:  220:            }
+        -:  221:            else{
+    #####:  222:                if (debugAddBreakpoint(lineNo - 1)){
+    %%%%%:  222-block 45
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  222-block 46
+branch  3 never executed (fallthrough)
+branch  4 never executed
+    #####:  223:                    output.emplace_back("Added breakpoint at " + outStr);
+    %%%%%:  223-block 47
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  223-block 48
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    %%%%%:  223-block 49
+call    6 never executed
+    $$$$$:  223-block 449
+call    7 never executed
+    $$$$$:  223-block 451
+        -:  224:                }
+        -:  225:                else{
+    #####:  226:                    output.emplace_back("Breakpoint at " + outStr + " already exists!");
+    %%%%%:  226-block 51
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  226-block 52
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    %%%%%:  226-block 53
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:  226-block 54
+call    9 never executed
+call   10 never executed
+    $$$$$:  226-block 452
+call   11 never executed
+    $$$$$:  226-block 454
+call   12 never executed
+    $$$$$:  226-block 456
+    $$$$$:  226-block 457
+        -:  227:                }
+        -:  228:            }
+        -:  229:        }
+    #####:  230:    }
+    %%%%%:  230-block 57
+call    0 never executed
+    $$$$$:  230-block 458
+call    1 never executed
+    #####:  231:    else if (command[0] == 'i' || command.starts_with("info")){
+    %%%%%:  231-block 59
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:  231-block 61
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:  231-block 63
+    %%%%%:  231-block 64
+    %%%%%:  231-block 65
+branch  6 never executed (fallthrough)
+branch  7 never executed
+    #####:  232:        if (arguments[0] == "b" || arguments[0] == "breakpoints"){
+    %%%%%:  232-block 66
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+    %%%%%:  232-block 68
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:  232-block 69
+call    6 never executed
+call    7 never executed
+branch  8 never executed (fallthrough)
+branch  9 never executed (throw)
+    %%%%%:  232-block 71
+branch 10 never executed (fallthrough)
+branch 11 never executed
+    %%%%%:  232-block 72
+    %%%%%:  232-block 73
+    %%%%%:  232-block 74
+branch 12 never executed (fallthrough)
+branch 13 never executed
+    #####:  233:            if (breakpointLines.empty()){
+    %%%%%:  233-block 75
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  234:                output.emplace_back("No breakpoints found.");
+    %%%%%:  234-block 77
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  235:                output.emplace_back("Set a new one with the b/breakpoint command!");
+    %%%%%:  235-block 78
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:  236:            }
+        -:  237:            else{
+    #####:  238:                std::string s = "Num\t\tLine\t\tAddress";
+    %%%%%:  238-block 81
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    $$$$$:  238-block 463
+    #####:  239:                output.emplace_back(s);
+    %%%%%:  239-block 83
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  240:                int j = 0;
+    #####:  241:                for (auto &i: breakpointLines){
+    %%%%%:  241-block 84
+call    0 never executed
+call    1 never executed
+    %%%%%:  241-block 86
+call    2 never executed
+    %%%%%:  241-block 107
+call    3 never executed
+branch  4 never executed
+branch  5 never executed (fallthrough)
+    #####:  242:                    output.emplace_back(std::to_string(j) + getSpace(10, std::to_string(i), 4) + std::to_string(i) + "       " + getAddressFromLineNo(i));
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  242-block 88
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    %%%%%:  242-block 89
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:  242-block 90
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+    %%%%%:  242-block 91
+call   12 never executed
+call   13 never executed
+branch 14 never executed (fallthrough)
+branch 15 never executed (throw)
+    %%%%%:  242-block 93
+call   16 never executed
+branch 17 never executed (fallthrough)
+branch 18 never executed (throw)
+    %%%%%:  242-block 94
+call   19 never executed
+branch 20 never executed (fallthrough)
+branch 21 never executed (throw)
+    %%%%%:  242-block 95
+call   22 never executed
+branch 23 never executed (fallthrough)
+branch 24 never executed (throw)
+    %%%%%:  242-block 96
+call   25 never executed
+branch 26 never executed (fallthrough)
+branch 27 never executed (throw)
+    %%%%%:  242-block 97
+call   28 never executed
+call   29 never executed
+call   30 never executed
+call   31 never executed
+call   32 never executed
+call   33 never executed
+call   34 never executed
+call   35 never executed
+call   36 never executed
+    $$$$$:  242-block 464
+call   37 never executed
+    $$$$$:  242-block 466
+call   38 never executed
+    $$$$$:  242-block 468
+call   39 never executed
+    $$$$$:  242-block 470
+call   40 never executed
+    $$$$$:  242-block 472
+call   41 never executed
+    $$$$$:  242-block 474
+    $$$$$:  242-block 475
+call   42 never executed
+    $$$$$:  242-block 477
+call   43 never executed
+    $$$$$:  242-block 479
+    $$$$$:  242-block 480
+    $$$$$:  242-block 481
+    $$$$$:  242-block 482
+call   44 never executed
+    $$$$$:  242-block 484
+    $$$$$:  242-block 485
+    $$$$$:  242-block 486
+    $$$$$:  242-block 487
+call   45 never executed
+    $$$$$:  242-block 489
+    $$$$$:  242-block 490
+    #####:  243:                    j++;
+call    0 never executed
+        -:  244:                }
+    #####:  245:            }
+    %%%%%:  245-block 109
+call    0 never executed
+    $$$$$:  245-block 492
+call    1 never executed
+        -:  246:        }
+    #####:  247:        else if (arguments[0] == "r" || arguments[0] == "registers"){
+    %%%%%:  247-block 111
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+    %%%%%:  247-block 113
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:  247-block 114
+call    6 never executed
+call    7 never executed
+branch  8 never executed (fallthrough)
+branch  9 never executed (throw)
+    %%%%%:  247-block 116
+branch 10 never executed (fallthrough)
+branch 11 never executed
+    %%%%%:  247-block 117
+    %%%%%:  247-block 118
+    %%%%%:  247-block 119
+branch 12 never executed (fallthrough)
+branch 13 never executed
+    #####:  248:            std::string s = "Register\t\t\t\t\t\tHex";
+    %%%%%:  248-block 122
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    $$$$$:  248-block 497
+        -:  249:
+    #####:  250:            if (arguments.size() > 1){
+    %%%%%:  250-block 124
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  251:                if (isRegisterValid(toUpperCase(arguments[1]), codeInformation.mode)){
+    %%%%%:  251-block 126
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+    %%%%%:  251-block 128
+call    4 never executed
+branch  5 never executed (fallthrough)
+branch  6 never executed (throw)
+    %%%%%:  251-block 129
+call    7 never executed
+branch  8 never executed (fallthrough)
+branch  9 never executed
+    $$$$$:  251-block 498
+call   10 never executed
+    $$$$$:  251-block 500
+    #####:  252:                    if (std::string regName = toUpperCase(arguments[1]); registerValueMap.contains(regName)){
+    %%%%%:  252-block 131
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+    %%%%%:  252-block 133
+call    4 never executed
+branch  5 never executed (fallthrough)
+branch  6 never executed (throw)
+    %%%%%:  252-block 134
+branch  7 never executed (fallthrough)
+branch  8 never executed
+    #####:  253:                        output.emplace_back(s);
+    %%%%%:  253-block 135
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  254:                        output.emplace_back(regName + getSpace(12, regName, 4) + registerValueMap[regName]);
+    %%%%%:  254-block 136
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  254-block 137
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    %%%%%:  254-block 138
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:  254-block 139
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+    %%%%%:  254-block 140
+call   12 never executed
+branch 13 never executed (fallthrough)
+branch 14 never executed (throw)
+    %%%%%:  254-block 141
+call   15 never executed
+call   16 never executed
+call   17 never executed
+    $$$$$:  254-block 501
+call   18 never executed
+    $$$$$:  254-block 503
+call   19 never executed
+    $$$$$:  254-block 505
+call   20 never executed
+    $$$$$:  254-block 507
+    $$$$$:  254-block 508
+    $$$$$:  254-block 509
+        -:  255:                    }
+        -:  256:                    else{
+    #####:  257:                        if (!getRegisterValue(regName, false).info.is256bit && (!getRegisterValue(regName, false).info.is128bit)){
+    %%%%%:  257-block 145
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  257-block 146
+branch  3 never executed (fallthrough)
+branch  4 never executed
+    %%%%%:  257-block 147
+call    5 never executed
+branch  6 never executed (fallthrough)
+branch  7 never executed (throw)
+    %%%%%:  257-block 148
+branch  8 never executed (fallthrough)
+branch  9 never executed
+    %%%%%:  257-block 149
+    %%%%%:  257-block 150
+    %%%%%:  257-block 151
+branch 10 never executed (fallthrough)
+branch 11 never executed
+    $$$$$:  257-block 510
+    $$$$$:  257-block 511
+    #####:  258:                            output.emplace_back(s);
+    %%%%%:  258-block 152
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  259:                            output.emplace_back(regName + getSpace(12, regName, 4) + std::to_string(getRegisterValue(regName, false).eightByteVal));
+    %%%%%:  259-block 153
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  259-block 154
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    %%%%%:  259-block 155
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:  259-block 156
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+    %%%%%:  259-block 157
+call   12 never executed
+branch 13 never executed (fallthrough)
+branch 14 never executed (throw)
+    %%%%%:  259-block 158
+call   15 never executed
+branch 16 never executed (fallthrough)
+branch 17 never executed (throw)
+    %%%%%:  259-block 159
+call   18 never executed
+call   19 never executed
+call   20 never executed
+call   21 never executed
+    $$$$$:  259-block 512
+call   22 never executed
+    $$$$$:  259-block 514
+call   23 never executed
+    $$$$$:  259-block 516
+call   24 never executed
+    $$$$$:  259-block 518
+    $$$$$:  259-block 519
+    $$$$$:  259-block 520
+call   25 never executed
+    $$$$$:  259-block 522
+    $$$$$:  259-block 523
+    $$$$$:  259-block 524
+        -:  260:                        }
+        -:  261:                        else{
+    #####:  262:                           if (getRegisterValue(regName, false).info.is128bit){
+    %%%%%:  262-block 164
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  262-block 165
+branch  3 never executed (fallthrough)
+branch  4 never executed
+    $$$$$:  262-block 525
+    #####:  263:                               output.emplace_back(s);
+    %%%%%:  263-block 166
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  264:                               if (use32BitLanes){
+    %%%%%:  264-block 167
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  265:                                   int firstLaneNum = 0;
+    #####:  266:                                   std::string outStr;
+    %%%%%:  266-block 168
+call    0 never executed
+    #####:  267:                                   for (int i = 0; i < 4; i++){
+    %%%%%:  267-block 193
+    %%%%%:  267-block 194
+branch  0 never executed
+branch  1 never executed (fallthrough)
+    #####:  268:                                       outStr += regName + "[";
+    %%%%%:  268-block 170
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  268-block 171
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    %%%%%:  268-block 172
+call    6 never executed
+    $$$$$:  268-block 526
+call    7 never executed
+    $$$$$:  268-block 528
+    #####:  269:                                       outStr += std::to_string(firstLaneNum);
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+    %%%%%:  269-block 175
+call    4 never executed
+    $$$$$:  269-block 529
+call    5 never executed
+    $$$$$:  269-block 531
+    #####:  270:                                       outStr += ":";
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  271:                                       firstLaneNum = (32 + 32 * i);
+    #####:  272:                                       outStr += std::to_string(firstLaneNum - 1);
+    %%%%%:  272-block 177
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+    %%%%%:  272-block 179
+call    4 never executed
+    $$$$$:  272-block 532
+call    5 never executed
+    $$$$$:  272-block 534
+    #####:  273:                                       outStr += "]";
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  274:                                       output.emplace_back(outStr + getSpace(20, outStr, 12) + std::to_string(getRegisterValue(regName, false).info.arrays.floatArray[i]));
+    %%%%%:  274-block 181
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  274-block 182
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    %%%%%:  274-block 183
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:  274-block 184
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+    %%%%%:  274-block 185
+call   12 never executed
+branch 13 never executed (fallthrough)
+branch 14 never executed (throw)
+    %%%%%:  274-block 186
+call   15 never executed
+branch 16 never executed (fallthrough)
+branch 17 never executed (throw)
+    %%%%%:  274-block 187
+call   18 never executed
+call   19 never executed
+call   20 never executed
+call   21 never executed
+    $$$$$:  274-block 535
+call   22 never executed
+    $$$$$:  274-block 537
+call   23 never executed
+    $$$$$:  274-block 539
+call   24 never executed
+    $$$$$:  274-block 541
+    $$$$$:  274-block 542
+    $$$$$:  274-block 543
+call   25 never executed
+    $$$$$:  274-block 545
+    $$$$$:  274-block 546
+    $$$$$:  274-block 547
+    #####:  275:                                       outStr.clear();
+call    0 never executed
+    #####:  276:                                       outStr = "";
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:  277:                                   }
+    #####:  278:                               }
+    %%%%%:  278-block 195
+call    0 never executed
+    $$$$$:  278-block 548
+call    1 never executed
+        -:  279:                               else{
+    #####:  280:                                   int firstLaneNum = 0;
+    #####:  281:                                   std::string outStr;
+    %%%%%:  281-block 197
+call    0 never executed
+        -:  282:
+    #####:  283:                                   for (int i = 0; i < 2; i++){
+    %%%%%:  283-block 222
+    %%%%%:  283-block 223
+branch  0 never executed
+branch  1 never executed (fallthrough)
+    #####:  284:                                          outStr += regName + "[";
+    %%%%%:  284-block 199
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  284-block 200
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    %%%%%:  284-block 201
+call    6 never executed
+    $$$$$:  284-block 551
+call    7 never executed
+    $$$$$:  284-block 553
+    #####:  285:                                           outStr += std::to_string(firstLaneNum);
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+    %%%%%:  285-block 204
+call    4 never executed
+    $$$$$:  285-block 554
+call    5 never executed
+    $$$$$:  285-block 556
+    #####:  286:                                           outStr += ":";
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  287:                                           firstLaneNum = (64 + 64 * i);
+    #####:  288:                                           outStr += std::to_string(firstLaneNum - 1);
+    %%%%%:  288-block 206
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+    %%%%%:  288-block 208
+call    4 never executed
+    $$$$$:  288-block 557
+call    5 never executed
+    $$$$$:  288-block 559
+    #####:  289:                                           outStr += "]";
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  290:                                           output.emplace_back(outStr + getSpace(20, outStr, 12) + std::to_string(getRegisterValue(regName, false).info.arrays.doubleArray[i]));
+    %%%%%:  290-block 210
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  290-block 211
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    %%%%%:  290-block 212
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:  290-block 213
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+    %%%%%:  290-block 214
+call   12 never executed
+branch 13 never executed (fallthrough)
+branch 14 never executed (throw)
+    %%%%%:  290-block 215
+call   15 never executed
+branch 16 never executed (fallthrough)
+branch 17 never executed (throw)
+    %%%%%:  290-block 216
+call   18 never executed
+call   19 never executed
+call   20 never executed
+call   21 never executed
+    $$$$$:  290-block 560
+call   22 never executed
+    $$$$$:  290-block 562
+call   23 never executed
+    $$$$$:  290-block 564
+call   24 never executed
+    $$$$$:  290-block 566
+    $$$$$:  290-block 567
+    $$$$$:  290-block 568
+call   25 never executed
+    $$$$$:  290-block 570
+    $$$$$:  290-block 571
+    $$$$$:  290-block 572
+    #####:  291:                                           outStr.clear();
+call    0 never executed
+    #####:  292:                                           outStr = "";
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:  293:                                       }
+    #####:  294:                               }
+    %%%%%:  294-block 224
+call    0 never executed
+    $$$$$:  294-block 573
+call    1 never executed
+        -:  295:                           }
+        -:  296:                           else{
+    #####:  297:                               s = "Register\t\t\t\t\t\t Hex";
+    %%%%%:  297-block 226
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:  298:
+    #####:  299:                               output.emplace_back(s);
+    %%%%%:  299-block 227
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  300:                               if (use32BitLanes){
+    %%%%%:  300-block 228
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  301:                                   int firstLaneNum = 0;
+    #####:  302:                                   std::string outStr;
+    %%%%%:  302-block 229
+call    0 never executed
+    #####:  303:                                   for (int i = 0; i < 8; i++){
+    %%%%%:  303-block 254
+    %%%%%:  303-block 255
+branch  0 never executed
+branch  1 never executed (fallthrough)
+    #####:  304:                                       outStr += regName + "[";
+    %%%%%:  304-block 231
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  304-block 232
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    %%%%%:  304-block 233
+call    6 never executed
+    $$$$$:  304-block 576
+call    7 never executed
+    $$$$$:  304-block 578
+    #####:  305:                                       outStr += std::to_string(firstLaneNum);
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+    %%%%%:  305-block 236
+call    4 never executed
+    $$$$$:  305-block 579
+call    5 never executed
+    $$$$$:  305-block 581
+    #####:  306:                                       outStr += ":";
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  307:                                       firstLaneNum = (32 + 32 * i);
+    #####:  308:                                       outStr += std::to_string(firstLaneNum - 1);
+    %%%%%:  308-block 238
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+    %%%%%:  308-block 240
+call    4 never executed
+    $$$$$:  308-block 582
+call    5 never executed
+    $$$$$:  308-block 584
+    #####:  309:                                       outStr += "]";
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  310:                                       output.emplace_back(outStr + getSpace(20, outStr, 13) + std::to_string(getRegisterValue(regName, false).info.arrays.floatArray[i]));
+    %%%%%:  310-block 242
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  310-block 243
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    %%%%%:  310-block 244
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:  310-block 245
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+    %%%%%:  310-block 246
+call   12 never executed
+branch 13 never executed (fallthrough)
+branch 14 never executed (throw)
+    %%%%%:  310-block 247
+call   15 never executed
+branch 16 never executed (fallthrough)
+branch 17 never executed (throw)
+    %%%%%:  310-block 248
+call   18 never executed
+call   19 never executed
+call   20 never executed
+call   21 never executed
+    $$$$$:  310-block 585
+call   22 never executed
+    $$$$$:  310-block 587
+call   23 never executed
+    $$$$$:  310-block 589
+call   24 never executed
+    $$$$$:  310-block 591
+    $$$$$:  310-block 592
+    $$$$$:  310-block 593
+call   25 never executed
+    $$$$$:  310-block 595
+    $$$$$:  310-block 596
+    $$$$$:  310-block 597
+    #####:  311:                                       outStr.clear();
+call    0 never executed
+    #####:  312:                                       outStr = "";
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:  313:                                   }
+    #####:  314:                               }
+    %%%%%:  314-block 256
+call    0 never executed
+    $$$$$:  314-block 598
+call    1 never executed
+        -:  315:                               else{
+    #####:  316:                                   int firstLaneNum = 0;
+    #####:  317:                                   std::string outStr;
+    %%%%%:  317-block 258
+call    0 never executed
+    #####:  318:                                   for (int i = 0; i < 4; i++){
+    %%%%%:  318-block 283
+    %%%%%:  318-block 284
+branch  0 never executed
+branch  1 never executed (fallthrough)
+    #####:  319:                                       outStr += regName + "[";
+    %%%%%:  319-block 260
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  319-block 261
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    %%%%%:  319-block 262
+call    6 never executed
+    $$$$$:  319-block 601
+call    7 never executed
+    $$$$$:  319-block 603
+    #####:  320:                                       outStr += std::to_string(firstLaneNum);
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+    %%%%%:  320-block 265
+call    4 never executed
+    $$$$$:  320-block 604
+call    5 never executed
+    $$$$$:  320-block 606
+    #####:  321:                                       outStr += ":";
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  322:                                       firstLaneNum = (64 + 64 * i);
+    #####:  323:                                       outStr += std::to_string(firstLaneNum - 1);
+    %%%%%:  323-block 267
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+    %%%%%:  323-block 269
+call    4 never executed
+    $$$$$:  323-block 607
+call    5 never executed
+    $$$$$:  323-block 609
+    #####:  324:                                       outStr += "]";
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  325:                                       output.emplace_back(outStr + getSpace(20, outStr, 13) + std::to_string(getRegisterValue(regName, false).info.arrays.doubleArray[i]));
+    %%%%%:  325-block 271
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  325-block 272
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    %%%%%:  325-block 273
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:  325-block 274
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+    %%%%%:  325-block 275
+call   12 never executed
+branch 13 never executed (fallthrough)
+branch 14 never executed (throw)
+    %%%%%:  325-block 276
+call   15 never executed
+branch 16 never executed (fallthrough)
+branch 17 never executed (throw)
+    %%%%%:  325-block 277
+call   18 never executed
+call   19 never executed
+call   20 never executed
+call   21 never executed
+    $$$$$:  325-block 610
+call   22 never executed
+    $$$$$:  325-block 612
+call   23 never executed
+    $$$$$:  325-block 614
+call   24 never executed
+    $$$$$:  325-block 616
+    $$$$$:  325-block 617
+    $$$$$:  325-block 618
+call   25 never executed
+    $$$$$:  325-block 620
+    $$$$$:  325-block 621
+    $$$$$:  325-block 622
+    #####:  326:                                       outStr.clear();
+call    0 never executed
+    #####:  327:                                       outStr = "";
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:  328:                                   }
+    #####:  329:                               }
+    %%%%%:  329-block 285
+call    0 never executed
+    $$$$$:  329-block 623
+call    1 never executed
+        -:  330:                           }
+        -:  331:                        }
+    #####:  332:                    }
+    %%%%%:  332-block 287
+call    0 never executed
+    $$$$$:  332-block 626
+call    1 never executed
+    #####:  333:                    return;
+        -:  334:                }
+        -:  335:            }
+        -:  336:
+    #####:  337:            s = "Register\t\tHex";
+    %%%%%:  337-block 289
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  338:            output.emplace_back(s);
+    %%%%%:  338-block 290
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  339:            for (const auto&[registerName, value]: registerValueMap){
+    %%%%%:  339-block 291
+call    0 never executed
+call    1 never executed
+    %%%%%:  339-block 293
+call    2 never executed
+call    3 never executed
+call    4 never executed
+    %%%%%:  339-block 303
+call    5 never executed
+branch  6 never executed
+branch  7 never executed (fallthrough)
+    #####:  340:                output.emplace_back(registerName + getSpace(12, registerName, 4) += value);
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  340-block 297
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    %%%%%:  340-block 298
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:  340-block 299
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+    %%%%%:  340-block 300
+call   12 never executed
+call   13 never executed
+call   14 never executed
+    $$$$$:  340-block 629
+call   15 never executed
+    $$$$$:  340-block 631
+call   16 never executed
+    $$$$$:  340-block 633
+    $$$$$:  340-block 634
+        -:  341:            }
+    #####:  342:        }
+    %%%%%:  342-block 305
+    %%%%%:  342-block 306
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    $$$$$:  342-block 636
+call    3 never executed
+    #####:  343:        else if (arguments[0] == "l" || arguments[0].starts_with("labels")){
+    %%%%%:  343-block 311
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+    %%%%%:  343-block 313
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:  343-block 314
+call    6 never executed
+call    7 never executed
+branch  8 never executed (fallthrough)
+branch  9 never executed
+    %%%%%:  343-block 317
+    %%%%%:  343-block 318
+    %%%%%:  343-block 319
+branch 10 never executed (fallthrough)
+branch 11 never executed
+    #####:  344:            auto s = "Num\t Name\t\t\t\tLine\t\tAddress";
+    #####:  345:            output.emplace_back(s);
+    %%%%%:  345-block 320
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  346:            std::string outStr;
+    %%%%%:  346-block 321
+call    0 never executed
+    #####:  347:            int j = 1;
+    #####:  348:            for (auto& i: labelLineNoMapInternal){
+call    0 never executed
+call    1 never executed
+    %%%%%:  348-block 324
+call    2 never executed
+call    3 never executed
+    %%%%%:  348-block 349
+call    4 never executed
+branch  5 never executed
+branch  6 never executed (fallthrough)
+    #####:  349:                outStr = std::to_string(j);
+call    0 never executed
+call    1 never executed
+call    2 never executed
+    #####:  350:                outStr += getSpace(7, i.first, 4);
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  350-block 329
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    %%%%%:  350-block 330
+call    6 never executed
+    $$$$$:  350-block 639
+call    7 never executed
+    $$$$$:  350-block 641
+    #####:  351:                outStr += i.first;
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  352:                outStr += getSpace(4, (i.first), 16);
+    %%%%%:  352-block 332
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  352-block 333
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    %%%%%:  352-block 334
+call    6 never executed
+    $$$$$:  352-block 642
+call    7 never executed
+    $$$$$:  352-block 644
+    #####:  353:                outStr += std::to_string(i.second);
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+    %%%%%:  353-block 337
+call    4 never executed
+    $$$$$:  353-block 645
+call    5 never executed
+    $$$$$:  353-block 647
+    #####:  354:                outStr += getSpace(4, std::to_string(i.second), 7);
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+    %%%%%:  354-block 340
+call    4 never executed
+branch  5 never executed (fallthrough)
+branch  6 never executed (throw)
+    %%%%%:  354-block 341
+call    7 never executed
+call    8 never executed
+    $$$$$:  354-block 648
+call    9 never executed
+    $$$$$:  354-block 650
+call   10 never executed
+    $$$$$:  354-block 652
+    $$$$$:  354-block 653
+    #####:  355:                outStr += getAddressFromLineNo(i.second+1);
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  355-block 344
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    %%%%%:  355-block 345
+call    6 never executed
+    $$$$$:  355-block 654
+call    7 never executed
+    $$$$$:  355-block 656
+    #####:  356:                output.push_back(outStr);
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  357:                j++;
+    #####:  358:                outStr.clear();
+    %%%%%:  358-block 347
+call    0 never executed
+        -:  359:            }
+    #####:  360:        }
+    %%%%%:  360-block 351
+call    0 never executed
+    $$$$$:  360-block 658
+call    1 never executed
+        -:  361:    }
+    #####:  362:    else if ((command[0] == 's' && command.length() == 1) || command == "step"){
+    %%%%%:  362-block 353
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:  362-block 355
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:  362-block 357
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:  362-block 358
+branch  9 never executed (fallthrough)
+branch 10 never executed
+    %%%%%:  362-block 359
+    %%%%%:  362-block 360
+    %%%%%:  362-block 361
+branch 11 never executed (fallthrough)
+branch 12 never executed
+    #####:  363:        debugStepIn = true;
+    %%%%%:  363-block 362
+        -:  364:    }
+    #####:  365:    else if ((command[0] == 'n' && command.length() == 1) || command == "next"){
+    %%%%%:  365-block 363
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:  365-block 365
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:  365-block 367
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:  365-block 368
+branch  9 never executed (fallthrough)
+branch 10 never executed
+    %%%%%:  365-block 369
+    %%%%%:  365-block 370
+    %%%%%:  365-block 371
+branch 11 never executed (fallthrough)
+branch 12 never executed
+    #####:  366:        debugStepOver = true;
+    %%%%%:  366-block 372
+        -:  367:    }
+    #####:  368:    else if ((command[0] == 'r' && command.length() == 1 )|| command == "run"){
+    %%%%%:  368-block 373
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:  368-block 375
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:  368-block 377
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:  368-block 378
+branch  9 never executed (fallthrough)
+branch 10 never executed
+    %%%%%:  368-block 379
+    %%%%%:  368-block 380
+    %%%%%:  368-block 381
+branch 11 never executed (fallthrough)
+branch 12 never executed
+    #####:  369:        debugRun = true;
+    %%%%%:  369-block 382
+        -:  370:    }
+    #####:  371:    else if (command == "start"){
+    %%%%%:  371-block 383
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  371-block 384
+branch  3 never executed (fallthrough)
+branch  4 never executed
+    #####:  372:        enableDebugMode = true;
+    %%%%%:  372-block 385
+        -:  373:    }
+    #####:  374:    else if (command == "restart" || command == "re"){
+    %%%%%:  374-block 386
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  374-block 387
+branch  3 never executed (fallthrough)
+branch  4 never executed
+    %%%%%:  374-block 388
+call    5 never executed
+branch  6 never executed (fallthrough)
+branch  7 never executed (throw)
+    %%%%%:  374-block 389
+branch  8 never executed (fallthrough)
+branch  9 never executed
+    %%%%%:  374-block 390
+    %%%%%:  374-block 391
+    %%%%%:  374-block 392
+branch 10 never executed (fallthrough)
+branch 11 never executed
+    #####:  375:        debugRestart = true;
+    %%%%%:  375-block 393
+        -:  376:    }
+    #####:  377:    else if (command == "pause"){
+    %%%%%:  377-block 394
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  377-block 395
+branch  3 never executed (fallthrough)
+branch  4 never executed
+    #####:  378:        debugPause = true;
+    %%%%%:  378-block 396
+        -:  379:    }
+    #####:  380:    else if (command == "continue"){
+    %%%%%:  380-block 397
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  380-block 398
+branch  3 never executed (fallthrough)
+branch  4 never executed
+    #####:  381:        debugContinue = true;
+    %%%%%:  381-block 399
+        -:  382:    }
+    #####:  383:    else if (command == "stop"){
+    %%%%%:  383-block 400
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  383-block 401
+branch  3 never executed (fallthrough)
+branch  4 never executed
+    #####:  384:        debugStop = true;
+    %%%%%:  384-block 402
+        -:  385:    }
+    #####:  386:    else if (command.starts_with("help")) {
+    %%%%%:  386-block 403
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  387:        output.emplace_back( "List of commands:\n");
+    %%%%%:  387-block 405
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  388:        output.emplace_back("help:  Show this message.\n");
+    %%%%%:  388-block 406
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  389:        output.emplace_back("run, r:  Runs the assembly code.\n");
+    %%%%%:  389-block 407
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  390:        output.emplace_back("start:  Starts the debug mode.\n");
+    %%%%%:  390-block 408
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  391:        output.emplace_back("restart:  Restarts the debugging mode.\n");
+    %%%%%:  391-block 409
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  392:        output.emplace_back("pause:  Pauses the debug mode.\n");
+    %%%%%:  392-block 410
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  393:        output.emplace_back("continue:  Continue debugging.\n");
+    %%%%%:  393-block 411
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  394:        output.emplace_back("stop:  Stops the debug mode.\n");
+    %%%%%:  394-block 412
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  395:        output.emplace_back("next, n:  Performs step over one line.\n");
+    %%%%%:  395-block 413
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  396:        output.emplace_back("step, s:  Performs step in into next line.\n");
+    %%%%%:  396-block 414
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  397:        output.emplace_back("pause:  Pauses the debug mode.\n");
+    %%%%%:  397-block 415
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  398:        output.emplace_back("labels, l: List all the labels in the program.\n");
+    %%%%%:  398-block 416
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  399:        output.emplace_back("info, i: Shows information of the program state.\n");
+    %%%%%:  399-block 417
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  400:        output.emplace_back("\tregisters, r: Show values of all shown registers.\n");
+    %%%%%:  400-block 418
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  401:        output.emplace_back("\tregisters, r <regName>: Show the value of the register regName.\n");
+    %%%%%:  401-block 419
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  402:        output.emplace_back("\tbreakpoint, b: Show all the currently set breakpoints.\n");
+    %%%%%:  402-block 420
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  403:        output.emplace_back("breakpoint, b <n>: Set a breakpoint on the line n.\n");
+    %%%%%:  403-block 421
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  404:        output.emplace_back("delete, d <n>: Delete breakpoint on the line n.\n");
+    %%%%%:  404-block 422
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:  405:    }
+        -:  406:    else {
+    #####:  407:        return;
+    %%%%%:  407-block 423
+        -:  408:    }
+    #####:  409:}
+    %%%%%:  409-block 424
+    %%%%%:  409-block 425
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:  409-block 427
+    %%%%%:  409-block 429
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:  409-block 431
+    %%%%%:  409-block 433
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed
+    $$$$$:  409-block 661
+call    9 never executed
+    $$$$$:  409-block 663
+call   10 never executed
+    $$$$$:  409-block 665
+call   11 never executed
+        -:  410:
+function _Z13consoleWindowv called 1077 returned 100% blocks executed 57%
+     1077:  411:void consoleWindow()
+        -:  412:{
+        -:  413:    static bool isDefaultMessageShown = false;
+     1077:  414:    ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[JetBrainsMono20]);
+     1077:  414-block 2
+call    0 returned 1077
+call    1 returned 1077
+call    2 returned 1077
+     1077:  415:    const float footerHeightToReserve = ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
+call    0 returned 1077
+call    1 returned 1077
+     1077:  416:    ImGui::BeginChild("ScrollingRegion", ImVec2(0, -footerHeightToReserve), ImGuiChildFlags_None, ImGuiWindowFlags_HorizontalScrollbar);
+call    0 returned 1077
+call    1 returned 1077
+branch  2 taken 1077 (fallthrough)
+branch  3 taken 0 (throw)
+    $$$$$:  416-block 73
+call    4 never executed
+        -:  417:
+     1077:  418:    if (!isDefaultMessageShown) {
+     1077:  418-block 9
+branch  0 taken 1 (fallthrough)
+branch  1 taken 1076
+        1:  419:        output.emplace_back(">>> Type help to get the list of all the commands that you can use!");
+        1:  419-block 10
+call    0 returned 1
+        1:  420:        output.emplace_back(">>> Commands are at very early stage so quality and accuracy is not guaranteed.");
+call    0 returned 1
+        1:  421:        isDefaultMessageShown = true;
+        -:  422:    }
+        -:  423:
+     1077:  424:    int i = 1;
+     3231:  425:    for (auto &t : output) {
+     1077:  425-block 13
+call    0 returned 1077
+call    1 returned 1077
+     2154:  425-block 15
+call    2 returned 2154
+     2154:  425-block 35
+call    3 returned 2154
+     3231:  425-block 36
+call    4 returned 3231
+branch  5 taken 2154
+branch  6 taken 1077 (fallthrough)
+     2154:  426:        ImGui::PushStyleColor(ImGuiCol_FrameBg, ImColor(24, 25, 38, 255).Value);
+call    0 returned 2154
+call    1 returned 2154
+branch  2 taken 2154 (fallthrough)
+branch  3 taken 0 (throw)
+    $$$$$:  426-block 74
+     2154:  427:        ImGui::PushID(("id" + std::to_string(i)).c_str());
+     2154:  427-block 18
+call    0 returned 2154
+call    1 returned 2154
+branch  2 taken 2154 (fallthrough)
+branch  3 taken 0 (throw)
+     2154:  427-block 20
+call    4 returned 2154
+call    5 returned 2154
+branch  6 taken 2154 (fallthrough)
+branch  7 taken 0 (throw)
+     2154:  427-block 22
+call    8 returned 2154
+call    9 returned 2154
+    $$$$$:  427-block 75
+call   10 never executed
+    $$$$$:  427-block 77
+call   11 never executed
+    $$$$$:  427-block 79
+    $$$$$:  427-block 80
+     2154:  428:        ImVec2 textSize = ImGui::CalcTextSize(t.c_str());
+call    0 returned 2154
+call    1 returned 2154
+branch  2 taken 2154 (fallthrough)
+branch  3 taken 0 (throw)
+     2154:  429:        textSize.y += 5;
+     2154:  430:        textSize.x += 7;
+     2154:  431:        ImGui::InputTextEx("##TextSelection", nullptr, t.data(), t.length(), textSize, ImGuiInputTextFlags_ReadOnly, nullptr, nullptr);
+     2154:  431-block 26
+call    0 returned 2154
+call    1 returned 2154
+call    2 returned 2154
+branch  3 taken 2154 (fallthrough)
+branch  4 taken 0 (throw)
+     2154:  432:        ImGui::PopID();
+     2154:  432-block 29
+call    0 returned 2154
+branch  1 taken 2154 (fallthrough)
+branch  2 taken 0 (throw)
+     2154:  433:        i++;
+     2154:  434:        ImGui::PopStyleColor();
+     2154:  434-block 30
+call    0 returned 2154
+branch  1 taken 2154 (fallthrough)
+branch  2 taken 0 (throw)
+     2154:  435:    if (ImGui::GetScrollY() >= ImGui::GetScrollMaxY())
+     2154:  435-block 31
+call    0 returned 2154
+branch  1 taken 2154 (fallthrough)
+branch  2 taken 0 (throw)
+     2154:  435-block 32
+call    3 returned 2154
+branch  4 taken 2154 (fallthrough)
+branch  5 taken 0 (throw)
+     2154:  435-block 33
+branch  6 taken 2154 (fallthrough)
+branch  7 taken 0
+     2154:  436:        ImGui::SetScrollHereY(1.0f);
+     2154:  436-block 34
+call    0 returned 2154
+branch  1 taken 2154 (fallthrough)
+branch  2 taken 0 (throw)
+        -:  437:    }
+        -:  438:
+     1077:  439:    if (ImGui::GetScrollY() >= ImGui::GetScrollMaxY())
+     1077:  439-block 38
+call    0 returned 1077
+call    1 returned 1077
+branch  2 taken 1077 (fallthrough)
+branch  3 taken 0
+     1077:  440:        ImGui::SetScrollHereY(1.0f);
+     1077:  440-block 41
+call    0 returned 1077
+        -:  441:
+     1077:  442:    ImGui::EndChild();
+     1077:  442-block 42
+call    0 returned 1077
+     1077:  443:    ImGui::Separator();
+call    0 returned 1077
+     1077:  444:    ImGui::BeginChild("FixedInputRegion", ImVec2(0, footerHeightToReserve), ImGuiChildFlags_None, ImGuiWindowFlags_NoScrollbar);
+call    0 returned 1077
+call    1 returned 1077
+branch  2 taken 1077 (fallthrough)
+branch  3 taken 0 (throw)
+    $$$$$:  444-block 83
+call    4 never executed
+        -:  445:
+        -:  446:    static char input[500]{};
+        -:  447:    static bool reclaimFocus = false;
+        -:  448:
+     1077:  449:    ImGui::PushItemWidth(-1);
+     1077:  449-block 46
+call    0 returned 1077
+     1077:  450:    if (ImGui::InputText("##Command", input, IM_ARRAYSIZE(input),
+call    0 returned 1077
+branch  1 taken 0 (fallthrough)
+branch  2 taken 1077
+        -:  451:                         ImGuiInputTextFlags_EnterReturnsTrue))
+        -:  452:    {
+    #####:  453:        output.emplace_back(">>> " + static_cast<const std::string>(input));
+    %%%%%:  453-block 51
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  453-block 52
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    %%%%%:  453-block 53
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:  453-block 54
+call    9 never executed
+call   10 never executed
+    %%%%%:  453-block 57
+    $$$$$:  453-block 84
+call   11 never executed
+    $$$$$:  453-block 86
+call   12 never executed
+    $$$$$:  453-block 90
+    $$$$$:  453-block 91
+    $$$$$:  453-block 92
+call   13 never executed
+    #####:  454:        parseCommands(input);
+    %%%%%:  454-block 59
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  454-block 60
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    %%%%%:  454-block 61
+call    6 never executed
+    $$$$$:  454-block 93
+call    7 never executed
+    $$$$$:  454-block 97
+    #####:  455:        input[0] = '\0';
+    #####:  456:        reclaimFocus = true;
+    %%%%%:  456-block 63
+        -:  457:    }
+        -:  458:
+     1077:  459:    ImGui::SetItemDefaultFocus();
+     1077:  459-block 64
+call    0 returned 1077
+     1077:  460:    if (reclaimFocus)
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1077
+        -:  461:    {
+    #####:  462:        ImGui::SetKeyboardFocusHere(-1);
+    %%%%%:  462-block 66
+call    0 never executed
+    #####:  463:        reclaimFocus = false;
+        -:  464:    }
+        -:  465:
+     1077:  466:    ImGui::PopItemWidth();
+     1077:  466-block 68
+call    0 returned 1077
+     1077:  467:    ImGui::EndChild();
+call    0 returned 1077
+     1077:  468:    ImGui::PopFont();
+call    0 returned 1077
+     1077:  469:    ImGui::End();
+call    0 returned 1077
+     1077:  470:}

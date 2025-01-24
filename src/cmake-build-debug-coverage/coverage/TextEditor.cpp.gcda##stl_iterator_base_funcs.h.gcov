@@ -1,0 +1,504 @@
+        -:    0:Source:/usr/include/c++/14.2.1/bits/stl_iterator_base_funcs.h
+        -:    0:Graph:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/home/rc/ZathuraDbg/vendor/ImGuiColorTextEdit/TextEditor.cpp.gcno
+        -:    0:Data:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/home/rc/ZathuraDbg/vendor/ImGuiColorTextEdit/TextEditor.cpp.gcda
+        -:    0:Runs:1
+        -:    1:// Functions used by iterators -*- C++ -*-
+        -:    2:
+        -:    3:// Copyright (C) 2001-2024 Free Software Foundation, Inc.
+        -:    4://
+        -:    5:// This file is part of the GNU ISO C++ Library.  This library is free
+        -:    6:// software; you can redistribute it and/or modify it under the
+        -:    7:// terms of the GNU General Public License as published by the
+        -:    8:// Free Software Foundation; either version 3, or (at your option)
+        -:    9:// any later version.
+        -:   10:
+        -:   11:// This library is distributed in the hope that it will be useful,
+        -:   12:// but WITHOUT ANY WARRANTY; without even the implied warranty of
+        -:   13:// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+        -:   14:// GNU General Public License for more details.
+        -:   15:
+        -:   16:// Under Section 7 of GPL version 3, you are granted additional
+        -:   17:// permissions described in the GCC Runtime Library Exception, version
+        -:   18:// 3.1, as published by the Free Software Foundation.
+        -:   19:
+        -:   20:// You should have received a copy of the GNU General Public License and
+        -:   21:// a copy of the GCC Runtime Library Exception along with this program;
+        -:   22:// see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+        -:   23:// <http://www.gnu.org/licenses/>.
+        -:   24:
+        -:   25:/*
+        -:   26: *
+        -:   27: * Copyright (c) 1994
+        -:   28: * Hewlett-Packard Company
+        -:   29: *
+        -:   30: * Permission to use, copy, modify, distribute and sell this software
+        -:   31: * and its documentation for any purpose is hereby granted without fee,
+        -:   32: * provided that the above copyright notice appear in all copies and
+        -:   33: * that both that copyright notice and this permission notice appear
+        -:   34: * in supporting documentation.  Hewlett-Packard Company makes no
+        -:   35: * representations about the suitability of this software for any
+        -:   36: * purpose.  It is provided "as is" without express or implied warranty.
+        -:   37: *
+        -:   38: *
+        -:   39: * Copyright (c) 1996-1998
+        -:   40: * Silicon Graphics Computer Systems, Inc.
+        -:   41: *
+        -:   42: * Permission to use, copy, modify, distribute and sell this software
+        -:   43: * and its documentation for any purpose is hereby granted without fee,
+        -:   44: * provided that the above copyright notice appear in all copies and
+        -:   45: * that both that copyright notice and this permission notice appear
+        -:   46: * in supporting documentation.  Silicon Graphics makes no
+        -:   47: * representations about the suitability of this software for any
+        -:   48: * purpose.  It is provided "as is" without express or implied warranty.
+        -:   49: */
+        -:   50:
+        -:   51:/** @file bits/stl_iterator_base_funcs.h
+        -:   52: *  This is an internal header file, included by other library headers.
+        -:   53: *  Do not attempt to use it directly. @headername{iterator}
+        -:   54: *
+        -:   55: *  This file contains all of the general iterator-related utility
+        -:   56: *  functions, such as distance() and advance().
+        -:   57: */
+        -:   58:
+        -:   59:#ifndef _STL_ITERATOR_BASE_FUNCS_H
+        -:   60:#define _STL_ITERATOR_BASE_FUNCS_H 1
+        -:   61:
+        -:   62:#pragma GCC system_header
+        -:   63:
+        -:   64:#include <bits/concept_check.h>
+        -:   65:#include <debug/assertions.h>
+        -:   66:#include <bits/stl_iterator_base_types.h>
+        -:   67:
+        -:   68:namespace std _GLIBCXX_VISIBILITY(default)
+        -:   69:{
+        -:   70:_GLIBCXX_BEGIN_NAMESPACE_VERSION
+        -:   71:
+        -:   72:_GLIBCXX_BEGIN_NAMESPACE_CONTAINER
+        -:   73:  // Forward declaration for the overloads of __distance.
+        -:   74:  template <typename> struct _List_iterator;
+        -:   75:  template <typename> struct _List_const_iterator;
+        -:   76:_GLIBCXX_END_NAMESPACE_CONTAINER
+        -:   77:
+        -:   78:  template<typename _InputIterator>
+        -:   79:    inline _GLIBCXX14_CONSTEXPR
+        -:   80:    typename iterator_traits<_InputIterator>::difference_type
+function _ZSt10__distanceISt23_Rb_tree_const_iteratorIN5boost13re_detail_5007digraphIcEEEENSt15iterator_traitsIT_E15difference_typeES7_S7_St18input_iterator_tag called 0 returned 0% blocks executed 0%
+    #####:   81:    __distance(_InputIterator __first, _InputIterator __last,
+        -:   82:               input_iterator_tag)
+        -:   83:    {
+        -:   84:      // concept requirements
+        -:   85:      __glibcxx_function_requires(_InputIteratorConcept<_InputIterator>)
+        -:   86:
+    #####:   87:      typename iterator_traits<_InputIterator>::difference_type __n = 0;
+    #####:   88:      while (__first != __last)
+    %%%%%:   88-block 2
+    %%%%%:   88-block 5
+call    0 never executed
+branch  1 never executed
+branch  2 never executed (fallthrough)
+        -:   89:	{
+    #####:   90:	  ++__first;
+    %%%%%:   90-block 3
+call    0 never executed
+    #####:   91:	  ++__n;
+        -:   92:	}
+    #####:   93:      return __n;
+    %%%%%:   93-block 7
+        -:   94:    }
+        -:   95:
+        -:   96:  template<typename _RandomAccessIterator>
+        -:   97:    __attribute__((__always_inline__))
+        -:   98:    inline _GLIBCXX14_CONSTEXPR
+        -:   99:    typename iterator_traits<_RandomAccessIterator>::difference_type
+        -:  100:    __distance(_RandomAccessIterator __first, _RandomAccessIterator __last,
+        -:  101:               random_access_iterator_tag)
+        -:  102:    {
+        -:  103:      // concept requirements
+        -:  104:      __glibcxx_function_requires(_RandomAccessIteratorConcept<
+        -:  105:				  _RandomAccessIterator>)
+    #####:  106:      return __last - __first;
+        -:  107:    }
+        -:  108:
+        -:  109:#if _GLIBCXX_USE_CXX11_ABI
+        -:  110:  // Forward declaration because of the qualified call in distance.
+        -:  111:  template<typename _Tp>
+        -:  112:    ptrdiff_t
+        -:  113:    __distance(_GLIBCXX_STD_C::_List_iterator<_Tp>,
+        -:  114:	       _GLIBCXX_STD_C::_List_iterator<_Tp>,
+        -:  115:	       input_iterator_tag);
+        -:  116:
+        -:  117:  template<typename _Tp>
+        -:  118:    ptrdiff_t
+        -:  119:    __distance(_GLIBCXX_STD_C::_List_const_iterator<_Tp>,
+        -:  120:	       _GLIBCXX_STD_C::_List_const_iterator<_Tp>,
+        -:  121:	       input_iterator_tag);
+        -:  122:#endif
+        -:  123:
+        -:  124:#if __cplusplus >= 201103L
+        -:  125:  // Give better error if std::distance called with a non-Cpp17InputIterator.
+        -:  126:  template<typename _OutputIterator>
+        -:  127:    void
+        -:  128:    __distance(_OutputIterator, _OutputIterator, output_iterator_tag) = delete;
+        -:  129:#endif
+        -:  130:
+        -:  131:  /**
+        -:  132:   *  @brief A generalization of pointer arithmetic.
+        -:  133:   *  @param  __first  An input iterator.
+        -:  134:   *  @param  __last  An input iterator.
+        -:  135:   *  @return  The distance between them.
+        -:  136:   *
+        -:  137:   *  Returns @c n such that __first + n == __last.  This requires
+        -:  138:   *  that @p __last must be reachable from @p __first.  Note that @c
+        -:  139:   *  n may be negative.
+        -:  140:   *
+        -:  141:   *  For random access iterators, this uses their @c + and @c - operations
+        -:  142:   *  and are constant time.  For other %iterator classes they are linear time.
+        -:  143:  */
+        -:  144:  template<typename _InputIterator>
+        -:  145:    _GLIBCXX_NODISCARD __attribute__((__always_inline__))
+        -:  146:    inline _GLIBCXX17_CONSTEXPR
+        -:  147:    typename iterator_traits<_InputIterator>::difference_type
+        -:  148:    distance(_InputIterator __first, _InputIterator __last)
+        -:  149:    {
+        -:  150:      // concept requirements -- taken care of in __distance
+      32*:  151:      return std::__distance(__first, __last,
+      32*:  152:			     std::__iterator_category(__first));
+    %%%%%:  152-block 4
+call    0 never executed
+    %%%%%:  152-block 6
+    %%%%%:  152-block 7
+    %%%%%:  152-block 7
+call    1 never executed
+    %%%%%:  152-block 9
+    %%%%%:  152-block 10
+    %%%%%:  152-block 15
+call    2 never executed
+    %%%%%:  152-block 17
+    %%%%%:  152-block 18
+    %%%%%:  152-block 23
+call    3 never executed
+    %%%%%:  152-block 25
+    %%%%%:  152-block 26
+    %%%%%:  152-block 104
+    %%%%%:  152-block 106
+    %%%%%:  152-block 107
+    %%%%%:  152-block 354
+    %%%%%:  152-block 356
+    %%%%%:  152-block 357
+    %%%%%:  152-block 483
+    %%%%%:  152-block 485
+    %%%%%:  152-block 486
+    %%%%%:  152-block 580
+    %%%%%:  152-block 582
+    %%%%%:  152-block 583
+    %%%%%:  152-block 20
+    %%%%%:  152-block 22
+    %%%%%:  152-block 23
+    %%%%%:  152-block 42
+    %%%%%:  152-block 44
+    %%%%%:  152-block 45
+    %%%%%:  152-block 26
+    %%%%%:  152-block 28
+    %%%%%:  152-block 29
+    %%%%%:  152-block 50
+    %%%%%:  152-block 52
+    %%%%%:  152-block 53
+    %%%%%:  152-block 67
+    %%%%%:  152-block 69
+    %%%%%:  152-block 70
+    %%%%%:  152-block 5
+    %%%%%:  152-block 7
+    %%%%%:  152-block 8
+    %%%%%:  152-block 16
+    %%%%%:  152-block 18
+    %%%%%:  152-block 19
+    %%%%%:  152-block 40
+    %%%%%:  152-block 42
+    %%%%%:  152-block 43
+    %%%%%:  152-block 16
+    %%%%%:  152-block 18
+    %%%%%:  152-block 19
+    %%%%%:  152-block 39
+    %%%%%:  152-block 41
+    %%%%%:  152-block 42
+    %%%%%:  152-block 18
+    %%%%%:  152-block 20
+    %%%%%:  152-block 21
+    %%%%%:  152-block 41
+    %%%%%:  152-block 43
+    %%%%%:  152-block 44
+    %%%%%:  152-block 5
+    %%%%%:  152-block 7
+    %%%%%:  152-block 8
+    %%%%%:  152-block 43
+    %%%%%:  152-block 45
+    %%%%%:  152-block 46
+    %%%%%:  152-block 50
+    %%%%%:  152-block 52
+    %%%%%:  152-block 53
+    %%%%%:  152-block 66
+    %%%%%:  152-block 68
+    %%%%%:  152-block 69
+    %%%%%:  152-block 74
+    %%%%%:  152-block 76
+    %%%%%:  152-block 77
+    %%%%%:  152-block 30
+    %%%%%:  152-block 32
+    %%%%%:  152-block 33
+    %%%%%:  152-block 46
+    %%%%%:  152-block 48
+    %%%%%:  152-block 49
+    %%%%%:  152-block 4
+    %%%%%:  152-block 6
+    %%%%%:  152-block 7
+        5:  152-block 6
+        5:  152-block 8
+        5:  152-block 9
+        5:  152-block 12
+        5:  152-block 14
+        5:  152-block 15
+    %%%%%:  152-block 4
+call    4 never executed
+    %%%%%:  152-block 6
+    %%%%%:  152-block 7
+        5:  152-block 4
+        5:  152-block 6
+        5:  152-block 7
+    %%%%%:  152-block 6
+call    5 never executed
+    %%%%%:  152-block 8
+    %%%%%:  152-block 9
+        1:  152-block 4
+        1:  152-block 6
+        1:  152-block 7
+    %%%%%:  152-block 4
+call    6 never executed
+    %%%%%:  152-block 6
+    %%%%%:  152-block 7
+    %%%%%:  152-block 4
+call    7 never executed
+    %%%%%:  152-block 6
+    %%%%%:  152-block 7
+    %%%%%:  152-block 4
+    %%%%%:  152-block 6
+    %%%%%:  152-block 7
+    %%%%%:  152-block 4
+    %%%%%:  152-block 6
+    %%%%%:  152-block 7
+    %%%%%:  152-block 5
+call    8 never executed
+    %%%%%:  152-block 7
+    %%%%%:  152-block 8
+        -:  153:    }
+        -:  154:
+        -:  155:  template<typename _InputIterator, typename _Distance>
+        -:  156:    inline _GLIBCXX14_CONSTEXPR void
+        -:  157:    __advance(_InputIterator& __i, _Distance __n, input_iterator_tag)
+        -:  158:    {
+        -:  159:      // concept requirements
+        -:  160:      __glibcxx_function_requires(_InputIteratorConcept<_InputIterator>)
+        -:  161:      __glibcxx_assert(__n >= 0);
+        -:  162:      while (__n--)
+        -:  163:	++__i;
+        -:  164:    }
+        -:  165:
+        -:  166:  template<typename _BidirectionalIterator, typename _Distance>
+        -:  167:    inline _GLIBCXX14_CONSTEXPR void
+        -:  168:    __advance(_BidirectionalIterator& __i, _Distance __n,
+        -:  169:	      bidirectional_iterator_tag)
+        -:  170:    {
+        -:  171:      // concept requirements
+        -:  172:      __glibcxx_function_requires(_BidirectionalIteratorConcept<
+        -:  173:				  _BidirectionalIterator>)
+        -:  174:      if (__n > 0)
+        -:  175:        while (__n--)
+        -:  176:	  ++__i;
+        -:  177:      else
+        -:  178:        while (__n++)
+        -:  179:	  --__i;
+        -:  180:    }
+        -:  181:
+        -:  182:  template<typename _RandomAccessIterator, typename _Distance>
+        -:  183:    inline _GLIBCXX14_CONSTEXPR void
+      23*:  184:    __advance(_RandomAccessIterator& __i, _Distance __n,
+        -:  185:              random_access_iterator_tag)
+        -:  186:    {
+        -:  187:      // concept requirements
+        -:  188:      __glibcxx_function_requires(_RandomAccessIteratorConcept<
+        -:  189:				  _RandomAccessIterator>)
+        -:  190:      if (__builtin_constant_p(__n) && __n == 1)
+        -:  191:	++__i;
+        -:  192:      else if (__builtin_constant_p(__n) && __n == -1)
+        -:  193:	--__i;
+        -:  194:      else
+      23*:  195:	__i += __n;
+      23*:  196:    }
+------------------
+_ZSt9__advanceIPKclEvRT_T0_St26random_access_iterator_tag:
+function _ZSt9__advanceIPKclEvRT_T0_St26random_access_iterator_tag called 0 returned 0% blocks executed 0%
+    #####:  184:    __advance(_RandomAccessIterator& __i, _Distance __n,
+    %%%%%:  184-block 2
+        -:  185:              random_access_iterator_tag)
+        -:  186:    {
+        -:  187:      // concept requirements
+        -:  188:      __glibcxx_function_requires(_RandomAccessIteratorConcept<
+        -:  189:				  _RandomAccessIterator>)
+        -:  190:      if (__builtin_constant_p(__n) && __n == 1)
+        -:  191:	++__i;
+        -:  192:      else if (__builtin_constant_p(__n) && __n == -1)
+        -:  193:	--__i;
+        -:  194:      else
+    #####:  195:	__i += __n;
+    #####:  196:    }
+------------------
+_ZSt9__advanceIPKN5boost13re_detail_50023character_pointer_rangeIcEElEvRT_T0_St26random_access_iterator_tag:
+function _ZSt9__advanceIPKN5boost13re_detail_50023character_pointer_rangeIcEElEvRT_T0_St26random_access_iterator_tag called 23 returned 100% blocks executed 100%
+       23:  184:    __advance(_RandomAccessIterator& __i, _Distance __n,
+       23:  184-block 2
+        -:  185:              random_access_iterator_tag)
+        -:  186:    {
+        -:  187:      // concept requirements
+        -:  188:      __glibcxx_function_requires(_RandomAccessIteratorConcept<
+        -:  189:				  _RandomAccessIterator>)
+        -:  190:      if (__builtin_constant_p(__n) && __n == 1)
+        -:  191:	++__i;
+        -:  192:      else if (__builtin_constant_p(__n) && __n == -1)
+        -:  193:	--__i;
+        -:  194:      else
+       23:  195:	__i += __n;
+       23:  196:    }
+------------------
+_ZSt9__advanceIN9__gnu_cxx17__normal_iteratorIPN10TextEditor5GlyphESt6vectorIS3_SaIS3_EEEElEvRT_T0_St26random_access_iterator_tag:
+function _ZSt9__advanceIN9__gnu_cxx17__normal_iteratorIPN10TextEditor5GlyphESt6vectorIS3_SaIS3_EEEElEvRT_T0_St26random_access_iterator_tag called 0 returned 0% blocks executed 0%
+    #####:  184:    __advance(_RandomAccessIterator& __i, _Distance __n,
+    %%%%%:  184-block 2
+        -:  185:              random_access_iterator_tag)
+        -:  186:    {
+        -:  187:      // concept requirements
+        -:  188:      __glibcxx_function_requires(_RandomAccessIteratorConcept<
+        -:  189:				  _RandomAccessIterator>)
+        -:  190:      if (__builtin_constant_p(__n) && __n == 1)
+        -:  191:	++__i;
+        -:  192:      else if (__builtin_constant_p(__n) && __n == -1)
+        -:  193:	--__i;
+        -:  194:      else
+    #####:  195:	__i += __n;
+    %%%%%:  195-block 3
+call    0 never executed
+    #####:  196:    }
+------------------
+_ZSt9__advanceIN9__gnu_cxx17__normal_iteratorIPKN5boost13re_detail_50020named_subexpressions4nameESt6vectorIS5_SaIS5_EEEElEvRT_T0_St26random_access_iterator_tag:
+function _ZSt9__advanceIN9__gnu_cxx17__normal_iteratorIPKN5boost13re_detail_50020named_subexpressions4nameESt6vectorIS5_SaIS5_EEEElEvRT_T0_St26random_access_iterator_tag called 0 returned 0% blocks executed 0%
+    #####:  184:    __advance(_RandomAccessIterator& __i, _Distance __n,
+    %%%%%:  184-block 2
+        -:  185:              random_access_iterator_tag)
+        -:  186:    {
+        -:  187:      // concept requirements
+        -:  188:      __glibcxx_function_requires(_RandomAccessIteratorConcept<
+        -:  189:				  _RandomAccessIterator>)
+        -:  190:      if (__builtin_constant_p(__n) && __n == 1)
+        -:  191:	++__i;
+        -:  192:      else if (__builtin_constant_p(__n) && __n == -1)
+        -:  193:	--__i;
+        -:  194:      else
+    #####:  195:	__i += __n;
+    %%%%%:  195-block 3
+call    0 never executed
+    #####:  196:    }
+------------------
+        -:  197:
+        -:  198:#if __cplusplus >= 201103L
+        -:  199:  // Give better error if std::advance called with a non-Cpp17InputIterator.
+        -:  200:  template<typename _OutputIterator, typename _Distance>
+        -:  201:    void
+        -:  202:    __advance(_OutputIterator&, _Distance, output_iterator_tag) = delete;
+        -:  203:#endif
+        -:  204:
+        -:  205:  /**
+        -:  206:   *  @brief A generalization of pointer arithmetic.
+        -:  207:   *  @param  __i  An input iterator.
+        -:  208:   *  @param  __n  The @a delta by which to change @p __i.
+        -:  209:   *  @return  Nothing.
+        -:  210:   *
+        -:  211:   *  This increments @p i by @p n.  For bidirectional and random access
+        -:  212:   *  iterators, @p __n may be negative, in which case @p __i is decremented.
+        -:  213:   *
+        -:  214:   *  For random access iterators, this uses their @c + and @c - operations
+        -:  215:   *  and are constant time.  For other %iterator classes they are linear time.
+        -:  216:  */
+        -:  217:  template<typename _InputIterator, typename _Distance>
+        -:  218:    __attribute__((__always_inline__))
+        -:  219:    inline _GLIBCXX17_CONSTEXPR void
+        -:  220:    advance(_InputIterator& __i, _Distance __n)
+        -:  221:    {
+        -:  222:      // concept requirements -- taken care of in __advance
+      23*:  223:      typename iterator_traits<_InputIterator>::difference_type __d = __n;
+    %%%%%:  223-block 27
+    %%%%%:  223-block 11
+    %%%%%:  223-block 24
+    %%%%%:  223-block 24
+    %%%%%:  223-block 26
+    %%%%%:  223-block 9
+       23:  223-block 9
+    %%%%%:  223-block 19
+    %%%%%:  223-block 9
+    %%%%%:  223-block 21
+    %%%%%:  223-block 9
+      23*:  224:      std::__advance(__i, __d, std::__iterator_category(__i));
+    %%%%%:  224-block 29
+call    0 never executed
+    %%%%%:  224-block 13
+call    1 never executed
+    %%%%%:  224-block 26
+call    2 never executed
+    %%%%%:  224-block 26
+call    3 never executed
+    %%%%%:  224-block 28
+call    4 never executed
+    %%%%%:  224-block 11
+call    5 never executed
+       23:  224-block 11
+call    6 returned 23
+    %%%%%:  224-block 21
+call    7 never executed
+    %%%%%:  224-block 11
+call    8 never executed
+    %%%%%:  224-block 23
+call    9 never executed
+    %%%%%:  224-block 11
+call   10 never executed
+      23*:  225:    }
+        -:  226:
+        -:  227:#if __cplusplus >= 201103L
+        -:  228:
+        -:  229:  template<typename _InputIterator>
+        -:  230:    _GLIBCXX_NODISCARD [[__gnu__::__always_inline__]]
+        -:  231:    inline _GLIBCXX17_CONSTEXPR _InputIterator
+        -:  232:    next(_InputIterator __x, typename
+        -:  233:	 iterator_traits<_InputIterator>::difference_type __n = 1)
+        -:  234:    {
+        -:  235:      // concept requirements
+        -:  236:      __glibcxx_function_requires(_InputIteratorConcept<_InputIterator>)
+        -:  237:      std::advance(__x, __n);
+        -:  238:      return __x;
+        -:  239:    }
+        -:  240:
+        -:  241:  template<typename _BidirectionalIterator>
+        -:  242:    _GLIBCXX_NODISCARD [[__gnu__::__always_inline__]]
+        -:  243:    inline _GLIBCXX17_CONSTEXPR _BidirectionalIterator
+        -:  244:    prev(_BidirectionalIterator __x, typename
+        -:  245:	 iterator_traits<_BidirectionalIterator>::difference_type __n = 1) 
+        -:  246:    {
+        -:  247:      // concept requirements
+        -:  248:      __glibcxx_function_requires(_BidirectionalIteratorConcept<
+        -:  249:				  _BidirectionalIterator>)
+        -:  250:      std::advance(__x, -__n);
+        -:  251:      return __x;
+        -:  252:    }
+        -:  253:
+        -:  254:#endif // C++11
+        -:  255:
+        -:  256:_GLIBCXX_END_NAMESPACE_VERSION
+        -:  257:} // namespace
+        -:  258:
+        -:  259:#endif /* _STL_ITERATOR_BASE_FUNCS_H */

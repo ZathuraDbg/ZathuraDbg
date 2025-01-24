@@ -1,0 +1,878 @@
+        -:    0:Source:/home/rc/ZathuraDbg/src/app/app.cpp
+        -:    0:Graph:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/app/app.cpp.gcno
+        -:    0:Data:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/app/app.cpp.gcda
+        -:    0:Runs:1
+        -:    1:#include "app.hpp"
+        -:    2:#include "tasks/editorTasks.hpp"
+        -:    3:bool toggleBreakpoint = false;
+        -:    4:bool runUntilHere = false;
+        -:    5:bool isRunning = true;
+        -:    6:bool lineNumbersShown = true;
+        -:    7:bool runSelectedCode = false;
+        -:    8:bool goToDefinition = false;
+        -:    9:std::string executablePath;
+        -:   10:#include "codeContextMenu.hpp"
+        -:   11:
+function _Z11setupEditorv called 1 returned 100% blocks executed 57%
+        1:   12:void setupEditor() {
+        3:   13:    LOG_INFO("Setting up the editor...");
+        1:   13-block 2
+call    0 returned 1
+branch  1 taken 1 (fallthrough)
+branch  2 taken 0
+        1:   13-block 4
+call    3 returned 1
+branch  4 taken 1 (fallthrough)
+branch  5 taken 0
+        1:   13-block 6
+call    6 returned 1
+branch  7 taken 1 (fallthrough)
+branch  8 taken 0 (throw)
+        1:   13-block 7
+call    9 returned 1
+branch 10 taken 1 (fallthrough)
+branch 11 taken 0 (throw)
+        1:   13-block 8
+call   12 returned 1
+call   13 returned 1
+call   14 returned 1
+branch 15 taken 1 (fallthrough)
+branch 16 taken 0 (throw)
+        1:   13-block 11
+call   17 returned 1
+branch 18 taken 1 (fallthrough)
+branch 19 taken 0 (throw)
+        1:   13-block 12
+        1:   13-block 14
+call   20 returned 1
+branch 21 taken 1 (fallthrough)
+branch 22 taken 0 (throw)
+        1:   13-block 15
+call   23 returned 1
+branch 24 taken 1 (fallthrough)
+branch 25 taken 0 (throw)
+        1:   13-block 16
+call   26 returned 1
+branch 27 taken 1 (fallthrough)
+branch 28 taken 0 (throw)
+        1:   13-block 17
+call   29 returned 1
+branch 30 taken 1 (fallthrough)
+branch 31 taken 0 (throw)
+        1:   13-block 18
+call   32 returned 1
+branch 33 taken 1 (fallthrough)
+branch 34 taken 0 (throw)
+        1:   13-block 19
+call   35 returned 1
+branch 36 taken 1 (fallthrough)
+branch 37 taken 0 (throw)
+        1:   13-block 20
+call   38 returned 1
+call   39 returned 1
+        1:   13-block 23
+call   40 returned 1
+call   41 returned 1
+        1:   13-block 26
+call   42 returned 1
+branch 43 taken 0
+branch 44 taken 1 (fallthrough)
+    $$$$$:   13-block 84
+call   45 never executed
+    $$$$$:   13-block 86
+call   46 never executed
+    $$$$$:   13-block 90
+    $$$$$:   13-block 91
+    $$$$$:   13-block 92
+    $$$$$:   13-block 93
+call   47 never executed
+    $$$$$:   13-block 95
+    $$$$$:   13-block 96
+call   48 never executed
+    $$$$$:   13-block 98
+        1:   14:    auto selectedFileStream = std::ifstream(selectedFile);
+        1:   14-block 28
+call    0 returned 1
+branch  1 taken 1 (fallthrough)
+branch  2 taken 0 (throw)
+        -:   15:
+        -:   16:
+        1:   17:    editor = new TextEditor();
+        1:   17-block 29
+call    0 returned 1
+branch  1 taken 1 (fallthrough)
+branch  2 taken 0 (throw)
+        1:   17-block 30
+call    3 returned 1
+branch  4 taken 1 (fallthrough)
+branch  5 taken 0 (throw)
+    $$$$$:   17-block 99
+branch  6 never executed (fallthrough)
+branch  7 never executed
+    $$$$$:   17-block 100
+call    8 never executed
+        1:   18:    editor->SetLanguageDefinition(TextEditor::LanguageDefinitionId::Asmx86_64);
+        1:   18-block 31
+call    0 returned 1
+branch  1 taken 1 (fallthrough)
+branch  2 taken 0 (throw)
+        1:   19:    editor->SetPalette(TextEditor::PaletteId::Catppuccin);
+        1:   19-block 32
+call    0 returned 1
+branch  1 taken 1 (fallthrough)
+branch  2 taken 0 (throw)
+        1:   20:    editor->SetShowWhitespacesEnabled(false);
+        1:   20-block 33
+call    0 returned 1
+        1:   21:    editor->SetReadOnlyEnabled(false);
+call    0 returned 1
+        1:   22:    editor->SetTabSize(4);
+call    0 returned 1
+branch  1 taken 1 (fallthrough)
+branch  2 taken 0 (throw)
+        -:   23:
+        1:   24:    if (!selectedFileStream.good()) {
+        1:   24-block 36
+call    0 returned 1
+branch  1 taken 0 (fallthrough)
+branch  2 taken 1
+    #####:   25:        selectedFile = "";
+    %%%%%:   25-block 38
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:   26:        editor->SetText("; Press CTRL + O to open a file...");
+    %%%%%:   26-block 39
+    %%%%%:   26-block 41
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:   26-block 42
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    %%%%%:   26-block 43
+call    6 never executed
+    %%%%%:   26-block 45
+    $$$$$:   26-block 102
+call    7 never executed
+    $$$$$:   26-block 106
+    $$$$$:   26-block 107
+        -:   27:    }
+        -:   28:    else
+        -:   29:    {
+        1:   30:        std::string str((std::istreambuf_iterator<char>(selectedFileStream)), std::istreambuf_iterator<char>());
+        1:   30-block 48
+call    0 returned 1
+call    1 returned 1
+call    2 returned 1
+branch  3 taken 1 (fallthrough)
+branch  4 taken 0 (throw)
+        1:   30-block 51
+    $$$$$:   30-block 108
+    $$$$$:   30-block 109
+    $$$$$:   30-block 112
+        1:   31:        editor->SetText(str);
+        1:   31-block 52
+call    0 returned 1
+branch  1 taken 1 (fallthrough)
+branch  2 taken 0 (throw)
+        1:   32:    }
+        1:   32-block 53
+call    0 returned 1
+    $$$$$:   32-block 113
+call    1 never executed
+        -:   33:
+        3:   34:    LOG_INFO("Editor setup complete!");
+        1:   34-block 56
+call    0 returned 1
+branch  1 taken 1 (fallthrough)
+branch  2 taken 0
+        1:   34-block 58
+call    3 returned 1
+branch  4 taken 1 (fallthrough)
+branch  5 taken 0
+        1:   34-block 60
+call    6 returned 1
+branch  7 taken 1 (fallthrough)
+branch  8 taken 0 (throw)
+        1:   34-block 61
+call    9 returned 1
+branch 10 taken 1 (fallthrough)
+branch 11 taken 0 (throw)
+        1:   34-block 62
+call   12 returned 1
+call   13 returned 1
+call   14 returned 1
+branch 15 taken 1 (fallthrough)
+branch 16 taken 0 (throw)
+        1:   34-block 65
+call   17 returned 1
+branch 18 taken 1 (fallthrough)
+branch 19 taken 0 (throw)
+        1:   34-block 66
+        1:   34-block 68
+call   20 returned 1
+branch 21 taken 1 (fallthrough)
+branch 22 taken 0 (throw)
+        1:   34-block 69
+call   23 returned 1
+branch 24 taken 1 (fallthrough)
+branch 25 taken 0 (throw)
+        1:   34-block 70
+call   26 returned 1
+branch 27 taken 1 (fallthrough)
+branch 28 taken 0 (throw)
+        1:   34-block 71
+call   29 returned 1
+branch 30 taken 1 (fallthrough)
+branch 31 taken 0 (throw)
+        1:   34-block 72
+call   32 returned 1
+branch 33 taken 1 (fallthrough)
+branch 34 taken 0 (throw)
+        1:   34-block 73
+call   35 returned 1
+branch 36 taken 1 (fallthrough)
+branch 37 taken 0 (throw)
+        1:   34-block 74
+call   38 returned 1
+call   39 returned 1
+        1:   34-block 77
+call   40 returned 1
+call   41 returned 1
+        1:   34-block 80
+call   42 returned 1
+branch 43 taken 0
+branch 44 taken 1 (fallthrough)
+    $$$$$:   34-block 116
+call   45 never executed
+    $$$$$:   34-block 118
+call   46 never executed
+    $$$$$:   34-block 122
+    $$$$$:   34-block 123
+    $$$$$:   34-block 124
+    $$$$$:   34-block 125
+call   47 never executed
+    $$$$$:   34-block 127
+    $$$$$:   34-block 128
+call   48 never executed
+    $$$$$:   34-block 130
+        1:   35:}
+        1:   35-block 82
+call    0 returned 1
+    $$$$$:   35-block 131
+call    1 never executed
+        -:   36:
+function _Z13setupViewPortv called 1077 returned 100% blocks executed 83%
+     1077:   37:void setupViewPort() {
+        -:   38:    // set the position of the window just next to the menu bar (top left) using docking
+     1077:   39:    const ImGuiViewport *viewport = ImGui::GetMainViewport();
+     1077:   39-block 2
+call    0 returned 1077
+     1077:   40:    ImGui::SetNextWindowPos(ImVec2(viewport->Pos.x, viewport->Pos.y + ImGui::GetFrameHeight()));
+call    0 returned 1077
+call    1 returned 1077
+branch  2 taken 1077 (fallthrough)
+branch  3 taken 0 (throw)
+     1077:   40-block 5
+call    4 returned 1077
+call    5 returned 1077
+branch  6 taken 1077 (fallthrough)
+branch  7 taken 0 (throw)
+    $$$$$:   40-block 11
+    $$$$$:   40-block 12
+call    8 never executed
+     1077:   41:    ImGui::SetNextWindowSize(ImVec2(500, 600));
+     1077:   41-block 7
+call    0 returned 1077
+call    1 returned 1077
+branch  2 taken 1077 (fallthrough)
+branch  3 taken 0 (throw)
+     1077:   42:    ImGui::SetNextWindowViewport(viewport->ID);
+     1077:   42-block 9
+call    0 returned 1077
+     1077:   43:}
+        -:   44:
+        -:   45:
+function _Z11loadIniFilev called 1 returned 100% blocks executed 62%
+        1:   46:void loadIniFile() {
+        1:   47:    std::string filename = relativeToRealPath(executablePath, "config.zlyt");
+        1:   47-block 2
+call    0 returned 1
+branch  1 taken 1 (fallthrough)
+branch  2 taken 0 (throw)
+        1:   48:    const std::filesystem::path dir(filename);
+        1:   48-block 3
+call    0 returned 1
+branch  1 taken 1 (fallthrough)
+branch  2 taken 0 (throw)
+        1:   49:    ImGui::LoadIniSettingsFromDisk(dir.string().c_str());
+        1:   49-block 4
+call    0 returned 1
+branch  1 taken 1 (fallthrough)
+branch  2 taken 0 (throw)
+        1:   49-block 5
+call    3 returned 1
+call    4 returned 1
+branch  5 taken 1 (fallthrough)
+branch  6 taken 0 (throw)
+        1:   49-block 7
+call    7 returned 1
+    $$$$$:   49-block 41
+call    8 never executed
+    $$$$$:   49-block 43
+        3:   50:    LOG_DEBUG("Loaded config file from " << dir.string());
+        1:   50-block 9
+call    0 returned 1
+branch  1 taken 1 (fallthrough)
+branch  2 taken 0
+        1:   50-block 11
+call    3 returned 1
+branch  4 taken 1 (fallthrough)
+branch  5 taken 0
+        1:   50-block 13
+call    6 returned 1
+branch  7 taken 1 (fallthrough)
+branch  8 taken 0 (throw)
+        1:   50-block 14
+call    9 returned 1
+branch 10 taken 1 (fallthrough)
+branch 11 taken 0 (throw)
+        1:   50-block 15
+call   12 returned 1
+call   13 returned 1
+call   14 returned 1
+branch 15 taken 1 (fallthrough)
+branch 16 taken 0 (throw)
+        1:   50-block 18
+call   17 returned 1
+branch 18 taken 1 (fallthrough)
+branch 19 taken 0 (throw)
+        1:   50-block 19
+        1:   50-block 21
+call   20 returned 1
+branch 21 taken 1 (fallthrough)
+branch 22 taken 0 (throw)
+        1:   50-block 22
+call   23 returned 1
+branch 24 taken 1 (fallthrough)
+branch 25 taken 0 (throw)
+        1:   50-block 23
+call   26 returned 1
+branch 27 taken 1 (fallthrough)
+branch 28 taken 0 (throw)
+        1:   50-block 24
+call   29 returned 1
+branch 30 taken 1 (fallthrough)
+branch 31 taken 0 (throw)
+        1:   50-block 25
+call   32 returned 1
+branch 33 taken 1 (fallthrough)
+branch 34 taken 0 (throw)
+        1:   50-block 26
+call   35 returned 1
+branch 36 taken 1 (fallthrough)
+branch 37 taken 0 (throw)
+        1:   50-block 27
+call   38 returned 1
+branch 39 taken 1 (fallthrough)
+branch 40 taken 0 (throw)
+        1:   50-block 28
+call   41 returned 1
+branch 42 taken 1 (fallthrough)
+branch 43 taken 0 (throw)
+        1:   50-block 29
+call   44 returned 1
+call   45 returned 1
+call   46 returned 1
+        1:   50-block 33
+call   47 returned 1
+call   48 returned 1
+        1:   50-block 36
+call   49 returned 1
+branch 50 taken 0
+branch 51 taken 1 (fallthrough)
+    $$$$$:   50-block 44
+call   52 never executed
+    $$$$$:   50-block 46
+    $$$$$:   50-block 47
+call   53 never executed
+    $$$$$:   50-block 49
+call   54 never executed
+    $$$$$:   50-block 53
+    $$$$$:   50-block 54
+    $$$$$:   50-block 55
+    $$$$$:   50-block 56
+call   55 never executed
+    $$$$$:   50-block 58
+    $$$$$:   50-block 59
+call   56 never executed
+    $$$$$:   50-block 61
+        1:   51:}
+        1:   51-block 38
+call    0 returned 1
+call    1 returned 1
+    $$$$$:   51-block 62
+call    2 never executed
+    $$$$$:   51-block 64
+call    3 never executed
+        -:   52:
+function _Z13getDataToCopyRNSt7__cxx1118basic_stringstreamIcSt11char_traitsIcESaIcEEEb called 0 returned 0% blocks executed 0%
+    #####:   53:std::string getDataToCopy(std::stringstream &selectedAsmText, const bool asArray) {
+    %%%%%:   53-block 2
+    #####:   54:    LOG_INFO("Getting data to copy...");
+    %%%%%:   54-block 3
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:   54-block 5
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:   54-block 7
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:   54-block 8
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+    %%%%%:   54-block 9
+call   12 never executed
+call   13 never executed
+call   14 never executed
+branch 15 never executed (fallthrough)
+branch 16 never executed (throw)
+    %%%%%:   54-block 12
+call   17 never executed
+branch 18 never executed (fallthrough)
+branch 19 never executed (throw)
+    %%%%%:   54-block 13
+    %%%%%:   54-block 15
+call   20 never executed
+branch 21 never executed (fallthrough)
+branch 22 never executed (throw)
+    %%%%%:   54-block 16
+call   23 never executed
+branch 24 never executed (fallthrough)
+branch 25 never executed (throw)
+    %%%%%:   54-block 17
+call   26 never executed
+branch 27 never executed (fallthrough)
+branch 28 never executed (throw)
+    %%%%%:   54-block 18
+call   29 never executed
+branch 30 never executed (fallthrough)
+branch 31 never executed (throw)
+    %%%%%:   54-block 19
+call   32 never executed
+branch 33 never executed (fallthrough)
+branch 34 never executed (throw)
+    %%%%%:   54-block 20
+call   35 never executed
+branch 36 never executed (fallthrough)
+branch 37 never executed (throw)
+    %%%%%:   54-block 21
+call   38 never executed
+call   39 never executed
+    %%%%%:   54-block 24
+call   40 never executed
+call   41 never executed
+    %%%%%:   54-block 27
+call   42 never executed
+branch 43 never executed
+branch 44 never executed (fallthrough)
+    $$$$$:   54-block 101
+call   45 never executed
+    $$$$$:   54-block 103
+call   46 never executed
+    $$$$$:   54-block 107
+    $$$$$:   54-block 108
+    $$$$$:   54-block 109
+    $$$$$:   54-block 110
+call   47 never executed
+    $$$$$:   54-block 112
+    $$$$$:   54-block 113
+call   48 never executed
+    $$$$$:   54-block 115
+    #####:   55:    const std::string bytes = getBytes(selectedAsmText);
+    %%%%%:   55-block 29
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:   56:    std::string dataToCopy;
+    %%%%%:   56-block 30
+call    0 never executed
+    #####:   57:    std::stringstream hexStream;
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:   58:    hexStream << std::hex << std::uppercase << std::setfill('0');
+    %%%%%:   58-block 32
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:   58-block 33
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    %%%%%:   58-block 34
+call    6 never executed
+call    7 never executed
+branch  8 never executed (fallthrough)
+branch  9 never executed (throw)
+        -:   59:
+    #####:   60:    if (asArray){
+    %%%%%:   60-block 36
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:   61:        if (!bytes.empty()) {
+    %%%%%:   61-block 37
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+        -:   62:
+    #####:   63:            hexStream << "{";
+    %%%%%:   63-block 39
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:   64:            for (size_t i = 0; i < bytes.length(); ++i) {
+    %%%%%:   64-block 40
+    %%%%%:   64-block 47
+    %%%%%:   64-block 48
+call    0 never executed
+branch  1 never executed
+branch  2 never executed (fallthrough)
+    #####:   65:                hexStream << "0x" << std::setw(2) << (static_cast<unsigned int>(bytes[i]) & 0xFF);
+    %%%%%:   65-block 41
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:   65-block 42
+call    3 never executed
+call    4 never executed
+call    5 never executed
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    #####:   66:                hexStream << ", ";
+    %%%%%:   66-block 46
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:   67:            }
+    #####:   68:            dataToCopy = hexStream.str().erase(hexStream.str().length() - 2, 2);
+    %%%%%:   68-block 50
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:   68-block 51
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    %%%%%:   68-block 52
+call    6 never executed
+call    7 never executed
+branch  8 never executed (fallthrough)
+branch  9 never executed (throw)
+    %%%%%:   68-block 54
+call   10 never executed
+branch 11 never executed (fallthrough)
+branch 12 never executed (throw)
+    %%%%%:   68-block 55
+call   13 never executed
+call   14 never executed
+    $$$$$:   68-block 116
+call   15 never executed
+    $$$$$:   68-block 118
+    $$$$$:   68-block 119
+call   16 never executed
+    $$$$$:   68-block 121
+    #####:   69:            dataToCopy.append("}");
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:   70:        }
+        -:   71:    }
+        -:   72:    else{
+    #####:   73:        for (size_t i = 0; i < bytes.length(); ++i) {
+    %%%%%:   73-block 58
+    %%%%%:   73-block 68
+call    0 never executed
+branch  1 never executed
+branch  2 never executed (fallthrough)
+    #####:   74:            hexStream << "\\x" << std::setw(2) << (static_cast<unsigned int>(bytes[i]) & 0xFF);
+    %%%%%:   74-block 59
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:   74-block 60
+call    3 never executed
+call    4 never executed
+call    5 never executed
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    #####:   75:            dataToCopy = hexStream.str();
+    %%%%%:   75-block 64
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:   75-block 65
+call    3 never executed
+call    4 never executed
+    $$$$$:   75-block 122
+        -:   76:        }
+        -:   77:    }
+        -:   78:
+    #####:   79:    LOG_INFO("Data acquired. Returning...");
+    %%%%%:   79-block 71
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:   79-block 73
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:   79-block 75
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:   79-block 76
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+    %%%%%:   79-block 77
+call   12 never executed
+call   13 never executed
+call   14 never executed
+branch 15 never executed (fallthrough)
+branch 16 never executed (throw)
+    %%%%%:   79-block 80
+call   17 never executed
+branch 18 never executed (fallthrough)
+branch 19 never executed (throw)
+    %%%%%:   79-block 81
+    %%%%%:   79-block 83
+call   20 never executed
+branch 21 never executed (fallthrough)
+branch 22 never executed (throw)
+    %%%%%:   79-block 84
+call   23 never executed
+branch 24 never executed (fallthrough)
+branch 25 never executed (throw)
+    %%%%%:   79-block 85
+call   26 never executed
+branch 27 never executed (fallthrough)
+branch 28 never executed (throw)
+    %%%%%:   79-block 86
+call   29 never executed
+branch 30 never executed (fallthrough)
+branch 31 never executed (throw)
+    %%%%%:   79-block 87
+call   32 never executed
+branch 33 never executed (fallthrough)
+branch 34 never executed (throw)
+    %%%%%:   79-block 88
+call   35 never executed
+branch 36 never executed (fallthrough)
+branch 37 never executed (throw)
+    %%%%%:   79-block 89
+call   38 never executed
+call   39 never executed
+    %%%%%:   79-block 92
+call   40 never executed
+call   41 never executed
+    %%%%%:   79-block 95
+call   42 never executed
+branch 43 never executed
+branch 44 never executed (fallthrough)
+    $$$$$:   79-block 123
+call   45 never executed
+    $$$$$:   79-block 125
+call   46 never executed
+    $$$$$:   79-block 129
+    $$$$$:   79-block 130
+    $$$$$:   79-block 131
+    $$$$$:   79-block 132
+call   47 never executed
+    $$$$$:   79-block 134
+    $$$$$:   79-block 135
+call   48 never executed
+    $$$$$:   79-block 137
+    #####:   80:    return dataToCopy;
+    %%%%%:   80-block 100
+    #####:   81:}
+    %%%%%:   81-block 97
+call    0 never executed
+call    1 never executed
+    $$$$$:   81-block 138
+call    2 never executed
+    $$$$$:   81-block 140
+call    3 never executed
+    $$$$$:   81-block 142
+call    4 never executed
+        -:   82:
+function _Z8pushFontv called 0 returned 0% blocks executed 0%
+    #####:   83:void pushFont(){
+    #####:   84:    const ImGuiIO &io = ImGui::GetIO();
+    %%%%%:   84-block 2
+call    0 never executed
+    #####:   85:    ImGui::PushFont(io.Fonts->Fonts[SatoshiBold18]);
+call    0 never executed
+call    1 never executed
+    #####:   86:}
+        -:   87:
+function _Z10mainWindowv called 1077 returned 100% blocks executed 97%
+     1077:   88:void mainWindow() {
+     1077:   89:    const ImGuiIO &io = ImGui::GetIO();
+     1077:   89-block 2
+call    0 returned 1077
+branch  1 taken 1077 (fallthrough)
+branch  2 taken 0 (throw)
+     1077:   90:    bool keepWindow = true;
+        -:   91:
+     1077:   92:    setupAppStyle();
+     1077:   92-block 3
+call    0 returned 1077
+branch  1 taken 1077 (fallthrough)
+branch  2 taken 0 (throw)
+     1077:   93:    ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport());
+     1077:   93-block 4
+call    0 returned 1077
+branch  1 taken 1077 (fallthrough)
+branch  2 taken 0 (throw)
+     1077:   93-block 5
+call    3 returned 1077
+branch  4 taken 1077 (fallthrough)
+branch  5 taken 0 (throw)
+        -:   94:
+     1077:   95:    appMenuBar();
+     1077:   95-block 6
+call    0 returned 1077
+branch  1 taken 1077 (fallthrough)
+branch  2 taken 0 (throw)
+     1077:   96:    setupViewPort();
+     1077:   96-block 7
+call    0 returned 1077
+branch  1 taken 1077 (fallthrough)
+branch  2 taken 0 (throw)
+        -:   97:
+     1077:   98:    ImGui::Begin("Code", &keepWindow, ImGuiWindowFlags_NoCollapse);
+     1077:   98-block 8
+call    0 returned 1077
+branch  1 taken 1077 (fallthrough)
+branch  2 taken 0 (throw)
+        -:   99:
+     1077:  100:    setupButtons();
+     1077:  100-block 9
+call    0 returned 1077
+branch  1 taken 1077 (fallthrough)
+branch  2 taken 0 (throw)
+        -:  101:
+     1077:  102:    if (!editor->FontInit){
+     1077:  102-block 10
+branch  0 taken 1 (fallthrough)
+branch  1 taken 1076
+        1:  103:        editor->FontInit = pushFont;
+        1:  104:        editor->CreateLabelLineMap = createLabelLineMapCallback;
+        1:  105:        editor->ParseStrIntoCoordinates = parseStrIntoCoordinates;
+        1:  106:        editor->CompletionCallback = reinterpret_cast<ImGuiInputTextCallback (*)(
+        -:  107:                ImGuiInputTextCallbackData *)>(labelCompletionCallback);
+        1:  108:        editor->PasteCallback = pasteCallback;
+        1:  108-block 11
+        -:  109:    }
+        -:  110:
+     1077:  111:    ImGui::PushFont(io.Fonts->Fonts[JetBrainsMono24]);
+     1077:  111-block 12
+call    0 returned 1077
+call    1 returned 1077
+branch  2 taken 1077 (fallthrough)
+branch  3 taken 0 (throw)
+     1077:  112:    editor->Render("Editor");
+     1077:  112-block 14
+call    0 returned 1077
+call    1 returned 1077
+branch  2 taken 1077 (fallthrough)
+branch  3 taken 0 (throw)
+    $$$$$:  112-block 31
+     1077:  113:    ImGui::PopFont();
+     1077:  113-block 16
+call    0 returned 1077
+branch  1 taken 1077 (fallthrough)
+branch  2 taken 0 (throw)
+     1077:  114:    contextMenu();
+     1077:  114-block 17
+call    0 returned 1077
+branch  1 taken 1077 (fallthrough)
+branch  2 taken 0 (throw)
+        -:  115:
+     1077:  116:    ImGui::Begin("Register Values", &keepWindow, ImGuiWindowFlags_NoCollapse);
+     1077:  116-block 18
+call    0 returned 1077
+branch  1 taken 1077 (fallthrough)
+branch  2 taken 0 (throw)
+     1077:  117:    registerWindow();
+     1077:  117-block 19
+call    0 returned 1077
+branch  1 taken 1077 (fallthrough)
+branch  2 taken 0 (throw)
+        -:  118:
+     1077:  119:    ImGui::Begin("Console", &keepWindow, ImGuiWindowFlags_NoCollapse);
+     1077:  119-block 20
+call    0 returned 1077
+branch  1 taken 1077 (fallthrough)
+branch  2 taken 0 (throw)
+     1077:  120:    consoleWindow();
+     1077:  120-block 21
+call    0 returned 1077
+branch  1 taken 1077 (fallthrough)
+branch  2 taken 0 (throw)
+        -:  121:
+     1077:  122:    ImGui::End();
+     1077:  122-block 22
+call    0 returned 1077
+branch  1 taken 1077 (fallthrough)
+branch  2 taken 0 (throw)
+     1077:  123:    hexEditorWindow();
+     1077:  123-block 23
+call    0 returned 1077
+branch  1 taken 1077 (fallthrough)
+branch  2 taken 0 (throw)
+        -:  124:
+     1077:  125:    ImGui::Begin("Stack", &keepWindow, ImGuiWindowFlags_NoCollapse);
+     1077:  125-block 24
+call    0 returned 1077
+branch  1 taken 1077 (fallthrough)
+branch  2 taken 0 (throw)
+     1077:  126:    stackEditorWindow();
+     1077:  126-block 25
+call    0 returned 1077
+branch  1 taken 1077 (fallthrough)
+branch  2 taken 0 (throw)
+     1077:  127:    ImGui::End();
+     1077:  127-block 26
+call    0 returned 1077
+branch  1 taken 1077 (fallthrough)
+branch  2 taken 0 (throw)
+        -:  128:
+     1077:  129:    manageShortcuts();
+     1077:  129-block 27
+call    0 returned 1077
+branch  1 taken 1077 (fallthrough)
+branch  2 taken 0 (throw)
+     1077:  130:    runActions();
+     1077:  130-block 28
+call    0 returned 1077
+branch  1 taken 1077 (fallthrough)
+branch  2 taken 0 (throw)
+        -:  131:    //    Utils::LayoutManager::save(CONFIG_NAME);
+     1077:  132:    ImGui::Render();
+     1077:  132-block 29
+call    0 returned 1077
+branch  1 taken 1077 (fallthrough)
+branch  2 taken 0 (throw)
+     1077:  133:}
+     1077:  133-block 30

@@ -1,0 +1,865 @@
+        -:    0:Source:/home/rc/ZathuraDbg/vendor/log/clue.hpp
+        -:    0:Graph:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/app/integration/interpreter/errorHandler.cpp.gcno
+        -:    0:Data:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/app/integration/interpreter/errorHandler.cpp.gcda
+        -:    0:Runs:1
+        -:    1:// Copyright 2014, 2021 by Martin Moene
+        -:    2://
+        -:    3:// clue is based on ideas by Mark Nelson, see article at
+        -:    4:// http://www.drdobbs.com/cpp/blundering-into-the-one-definition-rule/240166489
+        -:    5://
+        -:    6:// Distributed under the Boost Software License, Version 1.0. (See accompanying
+        -:    7:// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+        -:    8:
+        -:    9:#ifndef CLUE_CLUE_H_INCLUDED
+        -:   10:#define CLUE_CLUE_H_INCLUDED
+        -:   11:
+        -:   12:#define clue_MAJOR  1
+        -:   13:#define clue_MINOR  0
+        -:   14:#define clue_PATCH  0
+        -:   15:
+        -:   16:#define clue_VERSION  clue_STRINGIFY(clue_MAJOR) "." clue_STRINGIFY(clue_MINOR) "." clue_STRINGIFY(clue_PATCH)
+        -:   17:
+        -:   18:#define clue_STRINGIFY(  x )  clue_STRINGIFY_( x )
+        -:   19:#define clue_STRINGIFY_( x )  #x
+        -:   20:
+        -:   21:#include <iomanip>
+        -:   22:#include <sstream>
+        -:   23:#include <cassert>
+        -:   24:
+        -:   25:#if defined( _MSC_VER )
+        -:   26:# define clue_COMPILER_IS_MSVC
+        -:   27:# if ( _MSC_VER >= 1200 ) && ( _MSC_VER < 1300 )
+        -:   28:#  define clue_COMPILER_IS_MSVC6
+        -:   29:# endif
+        -:   30:#endif
+        -:   31:
+        -:   32:#ifdef clue_COMPILER_IS_MSVC
+        -:   33:# pragma warning( push )
+        -:   34:# pragma warning( disable : 4996 ) // _CRT_SECURE_NO_WARNINGS
+        -:   35:#endif
+        -:   36:
+        -:   37:#ifndef clue_NO_SHORT_NAMES
+        -:   38:
+        -:   39:# ifdef  LOG_MODULE_NAME
+        -:   40:#  define clue_LOG_MODULE_NAME  LOG_MODULE_NAME
+        -:   41:# endif
+        -:   42:
+        -:   43:# ifdef  LOG_LEVEL
+        -:   44:#  define clue_LOG_LEVEL        LOG_LEVEL
+        -:   45:# endif
+        -:   46:
+        -:   47:# ifdef  LOG_LEVEL_BUILD
+        -:   48:#  define clue_LOG_LEVEL_BUILD  LOG_LEVEL_BUILD
+        -:   49:# endif
+        -:   50:
+        -:   51:# ifdef  LOG_TO_CONSOLE
+        -:   52:#  define clue_LOG_TO_CONSOLE   LOG_TO_CONSOLE
+        -:   53:# endif
+        -:   54:
+        -:   55:# ifdef  LOG_TO_FILE
+        -:   56:#  define clue_LOG_TO_FILE      LOG_TO_FILE
+        -:   57:# endif
+        -:   58:
+        -:   59:# ifdef  LOG_TO_DEBUGGER
+        -:   60:#  define clue_LOG_TO_DEBUGGER  LOG_TO_DEBUGGER
+        -:   61:# endif
+        -:   62:
+        -:   63:# ifdef  LOG_TO_DEBUGGER_WINDOWS
+        -:   64:#  define clue_LOG_TO_DEBUGGER_WINDOWS  LOG_TO_DEBUGGER_WINDOWS
+        -:   65:# endif
+        -:   66:
+        -:   67:# ifdef  LOG_TO_EVENTLOG
+        -:   68:#  define clue_LOG_TO_EVENTLOG  LOG_TO_EVENTLOG
+        -:   69:# endif
+        -:   70:
+        -:   71:# ifdef  LOG_TO_STRING
+        -:   72:#  define clue_LOG_TO_STRING    LOG_TO_STRING
+        -:   73:# endif
+        -:   74:
+        -:   75:# ifdef  LOG_TO_SYSLOG
+        -:   76:#  define clue_LOG_TO_SYSLOG    LOG_TO_SYSLOG
+        -:   77:# endif
+        -:   78:
+        -:   79:# ifdef  LOG_EXPRESSION
+        -:   80:#  define clue_LOG_EXPRESSION   LOG_EXPRESSIONLOG_TO_SYSLOG
+        -:   81:# endif
+        -:   82:
+        -:   83:#endif // clue_NO_SHORT_NAMES
+        -:   84:
+        -:   85:// now we can determine if we must guess a destination:
+        -:   86:
+        -:   87:#ifndef clue_OMIT_UNUSED_LOG_EXPRESSION
+        -:   88:# define clue_OMIT_UNUSED_LOG_EXPRESSION 0
+        -:   89:#endif
+        -:   90:
+        -:   91:
+        -:   92:#if !defined( clue_LOG_TO_CONSOLE  ) && \
+        -:   93:    !defined( clue_LOG_TO_FILE     ) && \
+        -:   94:    !defined( clue_LOG_TO_STRING   ) && \
+        -:   95:    !defined( clue_LOG_TO_DEBUGGER ) && \
+        -:   96:    !defined( clue_LOG_TO_EVENTLOG ) && \
+        -:   97:    !defined( clue_LOG_TO_SYSLOG   )
+        -:   98:# if defined( _WINDOWS )
+        -:   99:#  define clue_LOG_TO_DEBUGGER
+        -:  100:#elif defined( NTS_TO_BE_DETERMINED_UNIX )
+        -:  101:#  define clue_LOG_TO_SYSLOG
+        -:  102:# else
+        -:  103:#  define clue_LOG_TO_CONSOLE
+        -:  104:# endif
+        -:  105:#endif
+        -:  106:
+        -:  107:#if defined( clue_LOG_TO_CONSOLE  ) + \
+        -:  108:    defined( clue_LOG_TO_FILE     ) + \
+        -:  109:    defined( clue_LOG_TO_STRING   ) + \
+        -:  110:    defined( clue_LOG_TO_DEBUGGER ) + \
+        -:  111:    defined( clue_LOG_TO_EVENTLOG ) + \
+        -:  112:    defined( clue_LOG_TO_SYSLOG   ) > 1
+        -:  113:# error Please specify one, or none of [clue_]LOG_TO_CONSOLE, [clue_]LOG_TO_FILE, [clue_]LOG_TO_STRING, [clue_]LOG_TO_DEBUGGER [clue_]LOG_TO_EVENTLOG and [clue_]LOG_TO_SYSLOG
+        -:  114:#endif
+        -:  115:
+        -:  116:// NTS: add UNIX
+        -:  117:#ifdef clue_LOG_TO_DEBUGGER
+        -:  118:# define clue_LOG_TO_DEBUGGER_WINDOWS
+        -:  119:#endif
+        -:  120:
+        -:  121:#ifndef clue_NO_SHORT_NAMES
+        -:  122:
+        -:  123:# define LOG_SEV_NONE       clue_LOG_SEV_NONE
+        -:  124:# define LOG_SEV_EMERGENCY  clue_LOG_SEV_EMERGENCY
+        -:  125:# define LOG_SEV_ALERT      clue_LOG_SEV_ALERT
+        -:  126:# define LOG_SEV_CRITICAL   clue_LOG_SEV_CRITICAL
+        -:  127:# define LOG_SEV_ERROR      clue_LOG_SEV_ERROR
+        -:  128:# define LOG_SEV_WARNING    clue_LOG_SEV_WARNING
+        -:  129:# define LOG_SEV_NOTICE     clue_LOG_SEV_NOTICE
+        -:  130:# define LOG_SEV_INFO       clue_LOG_SEV_INFO
+        -:  131:# define LOG_SEV_DEBUG      clue_LOG_SEV_DEBUG
+        -:  132:# define LOG_SEV_MAX        clue_LOG_SEV_MAX
+        -:  133:
+        -:  134:# ifndef clue_LOG_TO_SYSLOG
+        -:  135:#  define LOG_EMERGENCY     clue_LOG_EMERGENCY
+        -:  136:#  define LOG_ALERT         clue_LOG_ALERT
+        -:  137:#  define LOG_CRITICAL      clue_LOG_CRITICAL
+        -:  138:#  define LOG_ERROR         clue_LOG_ERROR
+        -:  139:#  define LOG_WARNING       clue_LOG_WARNING
+        -:  140:#  define LOG_NOTICE        clue_LOG_NOTICE
+        -:  141:#  define LOG_INFO          clue_LOG_INFO
+        -:  142:#  define LOG_DEBUG         clue_LOG_DEBUG
+        -:  143:# endif
+        -:  144:
+        -:  145:# define LOG_LOGGED_SEVERITIES   clue_LOG_LOGGED_SEVERITIES
+        -:  146:# define LOG_EXPRESSION     clue_LOG_EXPRESSION
+        -:  147:
+        -:  148:#endif // clue_NO_SHORT_NAMES
+        -:  149:
+        -:  150:#ifdef clue_LOG_TO_CONSOLE
+        -:  151:# include <iostream>
+        -:  152:#endif
+        -:  153:
+        -:  154:#ifdef clue_LOG_TO_FILE
+        -:  155:# include <fstream>
+        -:  156:#endif
+        -:  157:
+        -:  158:#ifdef clue_LOG_TO_DEBUGGER_WINDOWS
+        -:  159:# include <windows.h>
+        -:  160:#endif
+        -:  161:
+        -:  162:#ifdef clue_LOG_TO_DEBUGGER_UNIX
+        -:  163:# error log to debugger under Unix not implemented
+        -:  164:#endif
+        -:  165:
+        -:  166:#ifdef clue_LOG_TO_EVENTLOG
+        -:  167:# include <windows.h>
+        -:  168:#endif
+        -:  169:
+        -:  170:#ifdef clue_LOG_TO_SYSLOG
+        -:  171:# include <syslog.h>
+        -:  172:#endif
+        -:  173:
+        -:  174:#define clue_LOG_SEV_NONE      -1
+        -:  175:#define clue_LOG_SEV_EMERGENCY  0
+        -:  176:#define clue_LOG_SEV_ALERT      1
+        -:  177:#define clue_LOG_SEV_CRITICAL   2
+        -:  178:#define clue_LOG_SEV_ERROR      3
+        -:  179:#define clue_LOG_SEV_WARNING    4
+        -:  180:#define clue_LOG_SEV_NOTICE     5
+        -:  181:#define clue_LOG_SEV_INFO       6
+        -:  182:#define clue_LOG_SEV_DEBUG      7
+        -:  183:#define clue_LOG_SEV_MAX        7
+        -:  184:
+        -:  185:#ifndef  clue_LOG_LEVEL
+        -:  186:# define clue_LOG_LEVEL         clue_LOG_SEV_DEBUG
+        -:  187:#endif
+        -:  188:
+        -:  189:#ifndef  clue_LOG_LEVEL_BUILD
+        -:  190:# define clue_LOG_LEVEL_BUILD   clue_LOG_SEV_DEBUG
+        -:  191:#endif
+        -:  192:
+        -:  193:#define clue_LOG_SEV_NONE_TEXT       "[clue]"
+        -:  194:#define clue_LOG_SEV_EMERGENCY_TEXT  "Emergency"
+        -:  195:#define clue_LOG_SEV_ALERT_TEXT      "Alert"
+        -:  196:#define clue_LOG_SEV_CRITICAL_TEXT   "Critical"
+        -:  197:#define clue_LOG_SEV_ERROR_TEXT      "Error"
+        -:  198:#define clue_LOG_SEV_WARNING_TEXT    "Warning"
+        -:  199:#define clue_LOG_SEV_NOTICE_TEXT     "Notice"
+        -:  200:#define clue_LOG_SEV_INFO_TEXT       "Info"
+        -:  201:#define clue_LOG_SEV_DEBUG_TEXT      "Debug"
+        -:  202:
+        -:  203:#ifndef  clue_LOG_MODULE_NAME
+        -:  204:# define clue_LOG_MODULE_NAME ""
+        -:  205:#endif
+        -:  206:
+        -:  207:#ifndef  clue_LOG_PREFIX_WIDTH
+        -:  208:# define clue_LOG_PREFIX_WIDTH      sizeof( clue_LOG_SEV_EMERGENCY_TEXT )
+        -:  209:#endif
+        -:  210:
+        -:  211:#define clue_is_active( severity ) \
+        -:  212:    clue::is_true( severity <= clue_LOG_LEVEL )
+        -:  213:
+        -:  214:#define clue_is_active_build( severity ) \
+        -:  215:    clue::is_true( clue_IS_ACTIVE_BUILD( severity ) )
+        -:  216:
+        -:  217:#define clue_IS_ACTIVE_BUILD( severity ) \
+        -:  218:    ( severity <= clue_LOG_LEVEL_BUILD )
+        -:  219:
+        -:  220:#define clue_LOG_LOGGED_SEVERITIES() \
+        -:  221:    clue_LOG_EXPRESSION( clue_LOG_SEV_NONE, clue::to_severities_text( clue_LOG_LEVEL_BUILD ) )
+        -:  222:
+        -:  223:#define clue_LOG_NO_EXPRESSION() \
+        -:  224:    do {} while( clue::is_true(false) )
+        -:  225:
+        -:  226:#define clue_IS_ACTIVE( severity ) \
+        -:  227:    ( clue_IS_ACTIVE_BUILD( severity )  ||  !clue_OMIT_UNUSED_LOG_EXPRESSION )
+        -:  228:
+        -:  229:#if clue_IS_ACTIVE( clue_LOG_SEV_EMERGENCY )
+        -:  230:# define clue_LOG_EMERGENCY( expr ) clue_LOG_EXPRESSION( clue_LOG_SEV_EMERGENCY, expr )
+        -:  231:#else
+        -:  232:# define clue_LOG_EMERGENCY( expr ) clue_LOG_NO_EXPRESSION()
+        -:  233:#endif
+        -:  234:
+        -:  235:#if clue_IS_ACTIVE( clue_LOG_SEV_ALERT ) 
+        -:  236:# define clue_LOG_ALERT( expr ) clue_LOG_EXPRESSION( clue_LOG_SEV_ALERT, expr )
+        -:  237:#else
+        -:  238:# define clue_LOG_ALERT( expr ) clue_LOG_NO_EXPRESSION()
+        -:  239:#endif
+        -:  240:
+        -:  241:#if clue_IS_ACTIVE( clue_LOG_SEV_CRITICAL )
+        -:  242:# define clue_LOG_CRITICAL( expr ) clue_LOG_EXPRESSION( clue_LOG_SEV_CRITICAL, expr )
+        -:  243:#else
+        -:  244:# define clue_LOG_CRITICAL( expr ) clue_LOG_NO_EXPRESSION()
+        -:  245:#endif
+        -:  246:
+        -:  247:#if clue_IS_ACTIVE( clue_LOG_SEV_ERROR )
+        -:  248:# define clue_LOG_ERROR( expr ) clue_LOG_EXPRESSION( clue_LOG_SEV_ERROR, expr )
+        -:  249:#else
+        -:  250:# define clue_LOG_ERROR( expr ) clue_LOG_NO_EXPRESSION()
+        -:  251:#endif
+        -:  252:
+        -:  253:#if clue_IS_ACTIVE( clue_LOG_SEV_WARNING )
+        -:  254:# define clue_LOG_WARNING( expr ) clue_LOG_EXPRESSION( clue_LOG_SEV_WARNING, expr )
+        -:  255:#else
+        -:  256:# define clue_LOG_WARNING( expr ) clue_LOG_NO_EXPRESSION()
+        -:  257:#endif
+        -:  258:
+        -:  259:#if clue_IS_ACTIVE( clue_LOG_SEV_NOTICE )
+        -:  260:# define clue_LOG_NOTICE( expr ) clue_LOG_EXPRESSION( clue_LOG_SEV_NOTICE, expr )
+        -:  261:#else
+        -:  262:# define clue_LOG_NOTICE( expr ) clue_LOG_NO_EXPRESSION()
+        -:  263:#endif
+        -:  264:
+        -:  265:#if clue_IS_ACTIVE( clue_LOG_SEV_INFO )
+        -:  266:# define clue_LOG_INFO( expr ) clue_LOG_EXPRESSION( clue_LOG_SEV_INFO, expr )
+        -:  267:#else
+        -:  268:# define clue_LOG_INFO( expr ) clue_LOG_NO_EXPRESSION()
+        -:  269:#endif
+        -:  270:
+        -:  271:#if clue_IS_ACTIVE( clue_LOG_SEV_DEBUG )  &&  !defined( NDEBUG )
+        -:  272:# define clue_LOG_DEBUG( expr ) clue_LOG_EXPRESSION( clue_LOG_SEV_DEBUG, expr )
+        -:  273:#else
+        -:  274:# define clue_LOG_DEBUG( expr ) clue_LOG_NO_EXPRESSION()
+        -:  275:#endif
+        -:  276:
+        -:  277:#if defined( clue_LOG_TO_CONSOLE ) && !defined( clue_LOG_EXPRESSION )
+        -:  278:# define clue_LOG_EXPRESSION( severity, expr ) \
+        -:  279:    do { \
+        -:  280:        if ( clue_is_active_build( severity ) ) { \
+        -:  281:            if ( clue_is_active( severity ) ) { \
+        -:  282:                std::clog << \
+        -:  283:                    clue::now_text() << std::setw( clue_LOG_PREFIX_WIDTH ) << \
+        -:  284:                    clue::to_severity_text(severity) << \
+        -:  285:                    clue::to_module_text(clue_LOG_MODULE_NAME) << ": " << expr << "\n"; \
+        -:  286:            } \
+        -:  287:        } \
+        -:  288:    } while( clue::is_true( false ) )
+        -:  289:#endif
+        -:  290:
+        -:  291:#if defined( clue_LOG_TO_FILE ) && !defined( clue_LOG_EXPRESSION )
+        -:  292:# define clue_LOG_EXPRESSION( severity, expr ) \
+        -:  293:    do { \
+        -:  294:        if ( clue_is_active_build( severity ) ) { \
+        -:  295:            if ( clue_is_active( severity ) ) { \
+        -:  296:                clue::filelog() << \
+        -:  297:                    clue::now_text() << std::setw( clue_LOG_PREFIX_WIDTH ) << \
+        -:  298:                    clue::to_severity_text(severity) << \
+        -:  299:                    clue::to_module_text(clue_LOG_MODULE_NAME) << ": " << expr << "\n"; \
+        -:  300:            } \
+        -:  301:        } \
+        -:  302:    } while( clue::is_true( false ) )
+        -:  303:#endif
+        -:  304:
+        -:  305:#if defined( clue_LOG_TO_STRING ) && !defined( clue_LOG_EXPRESSION )
+        -:  306:# define clue_LOG_EXPRESSION( sev, expr ) \
+        -:  307:    clue_LOG_STRING_EXPRESSION( the_log(), sev, expr )
+        -:  308:#endif 
+        -:  309:
+        -:  310:#if defined( clue_LOG_TO_STRING ) && !defined( clue_LOG_STRING_EXPRESSION )
+        -:  311:# define clue_LOG_STRING_EXPRESSION( log, sev, expr ) \
+        -:  312:    do { \
+        -:  313:        if ( clue_is_active_build( sev ) ) { \
+        -:  314:            if ( clue_is_active( sev ) ) { \
+        -:  315:                log.severity( sev ); \
+        -:  316:                log << \
+        -:  317:                    clue_LOG_MODULE_NAME << expr; \
+        -:  318:            } \
+        -:  319:        } \
+        -:  320:     } while( clue::is_true(false) )
+        -:  321:#endif 
+        -:  322:
+        -:  323:#if defined( clue_LOG_TO_DEBUGGER_WINDOWS ) && !defined( clue_LOG_EXPRESSION )
+        -:  324:# define clue_LOG_EXPRESSION( severity, expr ) \
+        -:  325:    do { \
+        -:  326:        if ( clue_is_active_build( severity ) ) { \
+        -:  327:            if ( clue_is_active( severity ) ) { \
+        -:  328:                clue::windbg() << \
+        -:  329:                    std::setw( clue_LOG_PREFIX_WIDTH ) << clue::to_severity_text( severity ) << \
+        -:  330:                    clue::to_module_text(clue_LOG_MODULE_NAME) << ": " << expr; \
+        -:  331:            } \
+        -:  332:        } \
+        -:  333:     } while( clue::is_true(false) )
+        -:  334:#endif 
+        -:  335:
+        -:  336:#if defined( clue_LOG_TO_EVENTLOG ) && !defined( clue_LOG_EXPRESSION )
+        -:  337:# define clue_LOG_EXPRESSION( severity, expr ) \
+        -:  338:    do { \
+        -:  339:        if ( clue_is_active_build( severity ) ) { \
+        -:  340:            if ( clue_is_active( severity ) ) { \
+        -:  341:                clue::evtlog( severity, clue_LOG_MODULE_NAME ) << \
+        -:  342:                    clue::text_with_or( "", clue_LOG_MODULE_NAME, ": ", "" ) << expr; \
+        -:  343:            } \
+        -:  344:        } \
+        -:  345:     } while( clue::is_true(false) )
+        -:  346:#endif
+        -:  347:
+        -:  348:#if defined( clue_LOG_TO_SYSLOG ) && !defined( clue_LOG_EXPRESSION )
+        -:  349:# define clue_LOG_EXPRESSION( severity, expr ) \
+        -:  350:    do { \
+        -:  351:        if ( clue_is_active_build( severity ) ) { \
+        -:  352:            if ( clue_is_active( severity ) ) { \
+        -:  353:                clue::syslog( severity ) << \
+        -:  354:                    clue_LOG_MODULE_NAME << ": " << expr; \
+        -:  355:            } \
+        -:  356:        } \
+        -:  357:     } while( clue::is_true(false) )
+        -:  358:#endif 
+        -:  359:
+        -:  360:namespace clue
+        -:  361:{
+        -:  362:
+function _ZN4clue7is_trueEb called 0 returned 0% blocks executed 0%
+    #####:  363:inline bool is_true( bool const on ) { return on; }
+    %%%%%:  363-block 2
+        -:  364:
+        -:  365:inline std::string text_or( std::string const & text, std::string const & or_text )
+        -:  366:{
+        -:  367:    return text.length() ? text : or_text;
+        -:  368:}
+        -:  369:
+function _ZN4clue12text_with_orERKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEES7_S7_S7_ called 0 returned 0% blocks executed 0%
+    #####:  370:inline std::string text_with_or( std::string const & prefix, std::string const & text, std::string const & postfix, std::string const & or_text )
+        -:  371:{
+    #####:  372:    return text.length() ? prefix + text + postfix: or_text;
+    %%%%%:  372-block 2
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:  372-block 4
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    %%%%%:  372-block 5
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:  372-block 6
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+    %%%%%:  372-block 7
+    %%%%%:  372-block 8
+branch 12 never executed (fallthrough)
+branch 13 never executed
+    %%%%%:  372-block 9
+call   14 never executed
+    %%%%%:  372-block 10
+    %%%%%:  372-block 11
+    $$$$$:  372-block 12
+branch 15 never executed (fallthrough)
+branch 16 never executed
+    $$$$$:  372-block 13
+call   17 never executed
+        -:  373:}
+        -:  374:
+function _ZN4clue14to_module_textERKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE called 0 returned 0% blocks executed 0%
+    #####:  375:inline std::string to_module_text( std::string const & module )
+    %%%%%:  375-block 2
+        -:  376:{
+    #####:  377:    return text_with_or( ": ", module, "", "" );
+    %%%%%:  377-block 4
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  377-block 7
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    %%%%%:  377-block 10
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:  377-block 11
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+    %%%%%:  377-block 12
+    %%%%%:  377-block 13
+call   12 never executed
+    %%%%%:  377-block 15
+call   13 never executed
+    %%%%%:  377-block 17
+call   14 never executed
+    %%%%%:  377-block 19
+    %%%%%:  377-block 20
+    $$$$$:  377-block 21
+call   15 never executed
+    $$$$$:  377-block 25
+    $$$$$:  377-block 26
+    $$$$$:  377-block 27
+call   16 never executed
+    $$$$$:  377-block 31
+    $$$$$:  377-block 32
+    $$$$$:  377-block 33
+call   17 never executed
+    $$$$$:  377-block 37
+        -:  378:}
+        -:  379:
+function _ZN4clue16to_severity_textB5cxx11Ei called 0 returned 0% blocks executed 0%
+    #####:  380:inline std::string to_severity_text( int const severity )
+        -:  381:{
+    #####:  382:    assert( clue_LOG_SEV_NONE <= severity && severity <= clue_LOG_SEV_MAX && "invalid severity" );
+    %%%%%:  382-block 2
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  382-block 3
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    %%%%%:  382-block 4
+    %%%%%:  382-block 5
+call    4 never executed
+        -:  383:
+    #####:  384:    if ( severity == clue_LOG_SEV_NONE )
+    %%%%%:  384-block 6
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  385:        return clue_LOG_SEV_NONE_TEXT;
+    %%%%%:  385-block 9
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  385-block 11
+    $$$$$:  385-block 36
+        -:  386:
+        -:  387:    assert( clue_LOG_SEV_EMERGENCY == 0 && "required by lookup table" );
+        -:  388:
+        -:  389:    std::string const cont[] =
+        -:  390:    {
+        -:  391:        clue_LOG_SEV_EMERGENCY_TEXT,
+        -:  392:        clue_LOG_SEV_ALERT_TEXT,
+        -:  393:        clue_LOG_SEV_CRITICAL_TEXT,
+        -:  394:        clue_LOG_SEV_ERROR_TEXT,
+        -:  395:        clue_LOG_SEV_WARNING_TEXT,
+        -:  396:        clue_LOG_SEV_NOTICE_TEXT,
+        -:  397:        clue_LOG_SEV_INFO_TEXT,
+        -:  398:        clue_LOG_SEV_DEBUG_TEXT,
+    #####:  399:    };
+    %%%%%:  399-block 12
+    %%%%%:  399-block 14
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  399-block 15
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    %%%%%:  399-block 16
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:  399-block 17
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+    %%%%%:  399-block 18
+call   12 never executed
+branch 13 never executed (fallthrough)
+branch 14 never executed (throw)
+    %%%%%:  399-block 19
+call   15 never executed
+branch 16 never executed (fallthrough)
+branch 17 never executed (throw)
+    %%%%%:  399-block 20
+call   18 never executed
+branch 19 never executed (fallthrough)
+branch 20 never executed (throw)
+    %%%%%:  399-block 21
+call   21 never executed
+branch 22 never executed (fallthrough)
+branch 23 never executed (throw)
+    %%%%%:  399-block 22
+    %%%%%:  399-block 25
+    %%%%%:  399-block 28
+call   24 never executed
+    $$$$$:  399-block 39
+    $$$$$:  399-block 40
+branch 25 never executed (fallthrough)
+branch 26 never executed
+    $$$$$:  399-block 41
+    $$$$$:  399-block 42
+branch 27 never executed (fallthrough)
+branch 28 never executed
+    $$$$$:  399-block 43
+call   29 never executed
+    $$$$$:  399-block 45
+    $$$$$:  399-block 48
+call   30 never executed
+    #####:  400:    return cont[ severity ];
+    %%%%%:  400-block 23
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  401:}
+    %%%%%:  401-block 26
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    $$$$$:  401-block 46
+branch  2 never executed (fallthrough)
+branch  3 never executed
+        -:  402:
+        -:  403:inline std::string to_severities_text( int const level, std::string const & postfix = ".", std::string const & result = "" )
+        -:  404:{
+        -:  405:    if ( level < 0 )
+        -:  406:        return result + postfix;
+        -:  407:
+        -:  408:    return to_severities_text( level - 1, postfix, to_severity_text( level ) + text_with_or( ", ", result, "", "" ) );
+        -:  409:}
+        -:  410:
+        -:  411:} // namespace clue
+        -:  412:
+        -:  413:#ifdef clue_NO_TIMESTAMP
+        -:  414:
+        -:  415:namespace clue {
+        -:  416:inline std::string now_text() { return ""; }
+        -:  417:}
+        -:  418:
+        -:  419:#else // clue_NO_TIMESTAMP
+        -:  420:
+        -:  421:# include <ctime>
+        -:  422:
+        -:  423:# ifdef clue_COMPILER_IS_MSVC6
+        -:  424:namespace std {
+        -:  425:using ::time_t; using ::time; using ::strftime; using ::localtime;
+        -:  426:}
+        -:  427:# endif
+        -:  428:
+        -:  429:namespace clue {
+        -:  430:
+function _ZN4clue8now_textB5cxx11Ev called 0 returned 0% blocks executed 0%
+    #####:  431:inline std::string now_text()
+        -:  432:{
+        -:  433:    char mbstr[100];
+    #####:  434:    const std::time_t now = std::time(NULL);
+    %%%%%:  434-block 2
+call    0 never executed
+        -:  435:
+        -:  436:    // ISO  ISO 8601 date and time format: C++11: %FT%T
+    #####:  437:    if ( std::strftime( mbstr, 100, "%Y-%m-%dT%H:%M:%S", std::localtime( &now ) ) )
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  438:        return mbstr;
+    %%%%%:  438-block 7
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  438-block 9
+    $$$$$:  438-block 19
+        -:  439:    else
+    #####:  440:        return "[time]";
+    %%%%%:  440-block 12
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  440-block 14
+    $$$$$:  440-block 22
+        -:  441:}
+        -:  442:} // namespace clue
+        -:  443:
+        -:  444:#endif // clue_NO_TIMESTAMP
+        -:  445:
+        -:  446:#ifdef clue_LOG_TO_FILE
+        -:  447:
+        -:  448:namespace clue {
+        -:  449:
+        -:  450:class filelog
+        -:  451:{
+        -:  452:public:
+        -:  453:    filelog()
+        -:  454:    : stream() {}
+        -:  455:
+        -:  456:    ~filelog()
+        -:  457:    {
+        -:  458:        // emit: program-name[pid]:
+        -:  459:        std::ofstream os( clue_LOG_TO_FILE, std::ios_base::app );
+        -:  460:        os << stream.str();
+        -:  461:    }
+        -:  462:
+        -:  463:    template<typename T>
+        -:  464:    filelog & operator<<( T const & that )
+        -:  465:    {
+        -:  466:        stream << that;
+        -:  467:        return *this;
+        -:  468:    }
+        -:  469:
+        -:  470:private:
+        -:  471:    std::ostringstream stream;
+        -:  472:};
+        -:  473:
+        -:  474:} // namespace clue
+        -:  475:
+        -:  476:#endif // clue_LOG_TO_FILE
+        -:  477:
+        -:  478:#ifdef clue_LOG_TO_STRING
+        -:  479:
+        -:  480:namespace clue {
+        -:  481:
+        -:  482:class strlog
+        -:  483:{
+        -:  484:public:
+        -:  485:    strlog()
+        -:  486:    : severity_( clue_LOG_SEV_NONE )
+        -:  487:    , stream() {}
+        -:  488:
+        -:  489:    void clear()
+        -:  490:    {
+        -:  491:        severity_ = clue_LOG_SEV_NONE ;
+        -:  492:        stream.str( std::string() );
+        -:  493:    }
+        -:  494:
+        -:  495:    void severity( int const sev ) 
+        -:  496:    {
+        -:  497:        severity_ = sev;
+        -:  498:    }
+        -:  499:
+        -:  500:    int severity() const
+        -:  501:    {
+        -:  502:        return severity_;
+        -:  503:    }
+        -:  504:
+        -:  505:    std::string text() const
+        -:  506:    {
+        -:  507:        return stream.str();
+        -:  508:    }
+        -:  509:
+        -:  510:    template<typename T>
+        -:  511:    strlog & operator<<( T const & that )
+        -:  512:    {
+        -:  513:        stream << that;
+        -:  514:        return *this;
+        -:  515:    }
+        -:  516:
+        -:  517:private:
+        -:  518:    int severity_;
+        -:  519:    std::ostringstream stream;
+        -:  520:};
+        -:  521:
+        -:  522:inline strlog & the_log()
+        -:  523:{
+        -:  524:    static strlog log;
+        -:  525:    return log;
+        -:  526:}
+        -:  527:
+        -:  528:} // namespace clue
+        -:  529:
+        -:  530:#endif // clue_LOG_TO_STRING
+        -:  531:
+        -:  532:#ifdef clue_LOG_TO_DEBUGGER_WINDOWS
+        -:  533:
+        -:  534:namespace clue
+        -:  535:{
+        -:  536:
+        -:  537:class windbg
+        -:  538:{
+        -:  539:public:
+        -:  540:    windbg() 
+        -:  541:    : stream() {}
+        -:  542:
+        -:  543:    ~windbg()
+        -:  544:    {
+        -:  545:        OutputDebugString( stream.str().c_str() );
+        -:  546:    }
+        -:  547:
+        -:  548:    template<typename T>
+        -:  549:    windbg & operator<<( T const & that )
+        -:  550:    {
+        -:  551:        stream << that;
+        -:  552:        return *this;
+        -:  553:    }
+        -:  554:
+        -:  555:private:
+        -:  556:    std::ostringstream stream;
+        -:  557:};
+        -:  558:
+        -:  559:} // namespace clue
+        -:  560:
+        -:  561:#endif // clue_LOG_TO_DEBUGGER_WINDOWS
+        -:  562:
+        -:  563:#ifdef clue_LOG_TO_EVENTLOG
+        -:  564:
+        -:  565:namespace clue
+        -:  566:{
+        -:  567:
+        -:  568:inline int to_eventlog_severity( int severity )
+        -:  569:{
+        -:  570:    assert( clue_LOG_SEV_NONE <= severity && severity <= clue_LOG_SEV_MAX && "invalid severity" );
+        -:  571:
+        -:  572:    switch( severity )
+        -:  573:    {
+        -:  574:        case clue_LOG_SEV_NONE:      return EVENTLOG_INFORMATION_TYPE;
+        -:  575:        case clue_LOG_SEV_EMERGENCY: return EVENTLOG_ERROR_TYPE;
+        -:  576:        case clue_LOG_SEV_ALERT:     return EVENTLOG_ERROR_TYPE;
+        -:  577:        case clue_LOG_SEV_CRITICAL:  return EVENTLOG_ERROR_TYPE;
+        -:  578:        case clue_LOG_SEV_ERROR:     return EVENTLOG_ERROR_TYPE;
+        -:  579:        case clue_LOG_SEV_WARNING:   return EVENTLOG_WARNING_TYPE;
+        -:  580:        case clue_LOG_SEV_NOTICE:    return EVENTLOG_INFORMATION_TYPE;
+        -:  581:        case clue_LOG_SEV_INFO:      return EVENTLOG_INFORMATION_TYPE;
+        -:  582:        default:
+        -:  583:        case clue_LOG_SEV_DEBUG:     return EVENTLOG_INFORMATION_TYPE;
+        -:  584:    }
+        -:  585:}
+        -:  586:
+        -:  587:class evtlog
+        -:  588:{
+        -:  589:public:
+        -:  590:    evtlog( int const severity, std::string const & module )
+        -:  591:    : severity( severity )
+        -:  592:    , module( module)
+        -:  593:    , stream() {}
+        -:  594:
+        -:  595:    ~evtlog()
+        -:  596:    {
+        -:  597:        // note string lifetime
+        -:  598:        const std::string text = stream.str();
+        -:  599:        const char *strings[]  = { text.c_str(), };
+        -:  600:
+        -:  601:        const ::HANDLE hlog = ::RegisterEventSource(
+        -:  602:            0, text_or( module, "[clue]" ).c_str() );
+        -:  603:
+        -:  604:        ::ReportEvent(
+        -:  605:            hlog          // HANDLE hEventLog,    // handle returned by RegisterEventSource
+        -:  606:            , to_eventlog_severity(severity)   // WORD wType, // event type to log
+        -:  607:            , 0           // WORD wCategory,      // event category
+        -:  608:            , 0           // DWORD dwEventID,     // event identifier
+        -:  609:            , 0           // PSID lpUserSid,      // user security identifier (optional)
+        -:  610:            , 1           // WORD wNumStrings,    // number of strings to merge with message
+        -:  611:            , 0           // DWORD dwDataSize,    // size of binary data, in bytes
+        -:  612:            , strings     // LPCTSTR *lpStrings,  // array of strings to merge with message
+        -:  613:            , 0           // LPVOID lpRawData     // address of binary data
+        -:  614:        );
+        -:  615:
+        -:  616:        ::DeregisterEventSource( hlog );
+        -:  617:    }
+        -:  618:
+        -:  619:    template<typename T>
+        -:  620:    evtlog & operator<<( T const & that )
+        -:  621:    {
+        -:  622:        stream << that;
+        -:  623:        return *this;
+        -:  624:    }
+        -:  625:
+        -:  626:private:
+        -:  627:    const int severity;
+        -:  628:    const std::string module;
+        -:  629:    std::ostringstream stream;
+        -:  630:};
+        -:  631:
+        -:  632:} // namespace clue
+        -:  633:
+        -:  634:#endif // clue_LOG_TO_DEBUGGER_WINDOWS
+        -:  635:
+        -:  636:#ifdef clue_LOG_TO_SYSLOG
+        -:  637:
+        -:  638:namespace clue {
+        -:  639:
+        -:  640:inline int to_syslog_severity( int severity )
+        -:  641:{
+        -:  642:    assert( clue_LOG_SEV_NONE <= severity && severity <= clue_LOG_SEV_MAX && "invalid severity" );
+        -:  643:
+        -:  644:    switch( severity )
+        -:  645:    {
+        -:  646:        case clue_LOG_SEV_NONE:      return LOG_INFO;
+        -:  647:        case clue_LOG_SEV_EMERGENCY: return LOG_EMERG;
+        -:  648:        case clue_LOG_SEV_ALERT:     return LOG_ALERT;
+        -:  649:        case clue_LOG_SEV_CRITICAL:  return LOG_CRIT;
+        -:  650:        case clue_LOG_SEV_ERROR:     return LOG_ERR;
+        -:  651:        case clue_LOG_SEV_WARNING:   return LOG_WARNING;
+        -:  652:        case clue_LOG_SEV_NOTICE:    return LOG_NOTICE;
+        -:  653:        case clue_LOG_SEV_INFO:      return LOG_INFO;    
+        -:  654:        default:
+        -:  655:        case clue_LOG_SEV_DEBUG:     return LOG_DEBUG;
+        -:  656:    }
+        -:  657:}
+        -:  658:
+        -:  659:class syslog
+        -:  660:{
+        -:  661:public:
+        -:  662:    syslog( int const severity )
+        -:  663:    : severity( severity )
+        -:  664:    , stream() {}
+        -:  665:
+        -:  666:    ~syslog()
+        -:  667:    {
+        -:  668:        // emit: program-name[pid]:
+        -:  669:        ::openlog( NULL, LOG_PID, LOG_USER );
+        -:  670:        ::syslog ( to_syslog_severity(severity), "%s", stream.str().c_str() );
+        -:  671:        ::closelog();
+        -:  672:    }
+        -:  673:
+        -:  674:    template<typename T>
+        -:  675:    syslog & operator<<( T const & that )
+        -:  676:    {
+        -:  677:        stream << that;
+        -:  678:        return *this;
+        -:  679:    }
+        -:  680:
+        -:  681:private:
+        -:  682:    const int severity;
+        -:  683:    std::ostringstream stream;
+        -:  684:};
+        -:  685:
+        -:  686:} // namespace clue
+        -:  687:
+        -:  688:#endif //clue_LOG_TO_SYSLOG
+        -:  689:
+        -:  690:#ifdef clue_COMPILER_IS_MSVC
+        -:  691:# pragma warning( pop ) 
+        -:  692:#endif
+        -:  693:
+        -:  694:#endif // CLUE_CLUE_H_INCLUDED

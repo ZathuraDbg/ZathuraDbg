@@ -1,0 +1,88 @@
+        -:    0:Source:/usr/include/c++/14.2.1/bits/exception.h
+        -:    0:Graph:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/app/windows/stackWindow.cpp.gcno
+        -:    0:Data:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/app/windows/stackWindow.cpp.gcda
+        -:    0:Runs:1
+        -:    1:// Exception Handling support header for -*- C++ -*-
+        -:    2:
+        -:    3:// Copyright (C) 2016-2024 Free Software Foundation, Inc.
+        -:    4://
+        -:    5:// This file is part of GCC.
+        -:    6://
+        -:    7:// GCC is free software; you can redistribute it and/or modify
+        -:    8:// it under the terms of the GNU General Public License as published by
+        -:    9:// the Free Software Foundation; either version 3, or (at your option)
+        -:   10:// any later version.
+        -:   11://
+        -:   12:// GCC is distributed in the hope that it will be useful,
+        -:   13:// but WITHOUT ANY WARRANTY; without even the implied warranty of
+        -:   14:// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+        -:   15:// GNU General Public License for more details.
+        -:   16://
+        -:   17:// Under Section 7 of GPL version 3, you are granted additional
+        -:   18:// permissions described in the GCC Runtime Library Exception, version
+        -:   19:// 3.1, as published by the Free Software Foundation.
+        -:   20:
+        -:   21:// You should have received a copy of the GNU General Public License and
+        -:   22:// a copy of the GCC Runtime Library Exception along with this program;
+        -:   23:// see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+        -:   24:// <http://www.gnu.org/licenses/>.
+        -:   25:
+        -:   26:/** @file bits/exception.h
+        -:   27: *  This is an internal header file, included by other library headers.
+        -:   28: *  Do not attempt to use it directly.
+        -:   29: */
+        -:   30:
+        -:   31:#ifndef __EXCEPTION_H
+        -:   32:#define __EXCEPTION_H 1
+        -:   33:
+        -:   34:#pragma GCC system_header
+        -:   35:
+        -:   36:#include <bits/c++config.h>
+        -:   37:
+        -:   38:extern "C++" {
+        -:   39:
+        -:   40:namespace std _GLIBCXX_VISIBILITY(default)
+        -:   41:{
+        -:   42:  /**
+        -:   43:   * @defgroup exceptions Exceptions
+        -:   44:   * @ingroup diagnostics
+        -:   45:   * @since C++98
+        -:   46:   *
+        -:   47:   * Classes and functions for reporting errors via exceptions.
+        -:   48:   * @{
+        -:   49:   */
+        -:   50:
+        -:   51:  /**
+        -:   52:   *  @brief Base class for all library exceptions.
+        -:   53:   *
+        -:   54:   *  This is the base class for all exceptions thrown by the standard
+        -:   55:   *  library, and by certain language expressions.  You are free to derive
+        -:   56:   *  your own %exception classes, or use a different hierarchy, or to
+        -:   57:   *  throw non-class data (e.g., fundamental types).
+        -:   58:   */
+        -:   59:  class exception
+        -:   60:  {
+        -:   61:  public:
+function _ZNSt9exceptionC2Ev called 0 returned 0% blocks executed 0%
+    #####:   62:    exception() _GLIBCXX_NOTHROW { }
+        -:   63:    virtual ~exception() _GLIBCXX_TXN_SAFE_DYN _GLIBCXX_NOTHROW;
+        -:   64:#if __cplusplus >= 201103L
+        -:   65:    exception(const exception&) = default;
+        -:   66:    exception& operator=(const exception&) = default;
+        -:   67:    exception(exception&&) = default;
+        -:   68:    exception& operator=(exception&&) = default;
+        -:   69:#endif
+        -:   70:
+        -:   71:    /** Returns a C-style character string describing the general cause
+        -:   72:     *  of the current error.  */
+        -:   73:    virtual const char*
+        -:   74:    what() const _GLIBCXX_TXN_SAFE_DYN _GLIBCXX_NOTHROW;
+        -:   75:  };
+        -:   76:
+        -:   77:  /// @}
+        -:   78:
+        -:   79:} // namespace std
+        -:   80:
+        -:   81:}
+        -:   82:
+        -:   83:#endif

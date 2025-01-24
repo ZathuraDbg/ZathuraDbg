@@ -1,0 +1,143 @@
+        -:    0:Source:/usr/include/c++/14.2.1/ext/string_conversions.h
+        -:    0:Graph:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/app/windows/registerWindow.cpp.gcno
+        -:    0:Data:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/app/windows/registerWindow.cpp.gcda
+        -:    0:Runs:1
+        -:    1:// String Conversions -*- C++ -*-
+        -:    2:
+        -:    3:// Copyright (C) 2008-2024 Free Software Foundation, Inc.
+        -:    4://
+        -:    5:// This file is part of the GNU ISO C++ Library.  This library is free
+        -:    6:// software; you can redistribute it and/or modify it under the
+        -:    7:// terms of the GNU General Public License as published by the
+        -:    8:// Free Software Foundation; either version 3, or (at your option)
+        -:    9:// any later version.
+        -:   10:
+        -:   11:// This library is distributed in the hope that it will be useful,
+        -:   12:// but WITHOUT ANY WARRANTY; without even the implied warranty of
+        -:   13:// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+        -:   14:// GNU General Public License for more details.
+        -:   15:
+        -:   16:// Under Section 7 of GPL version 3, you are granted additional
+        -:   17:// permissions described in the GCC Runtime Library Exception, version
+        -:   18:// 3.1, as published by the Free Software Foundation.
+        -:   19:
+        -:   20:// You should have received a copy of the GNU General Public License and
+        -:   21:// a copy of the GCC Runtime Library Exception along with this program;
+        -:   22:// see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+        -:   23:// <http://www.gnu.org/licenses/>.
+        -:   24:
+        -:   25:/** @file ext/string_conversions.h
+        -:   26: *  This file is a GNU extension to the Standard C++ Library.
+        -:   27: */
+        -:   28:
+        -:   29:#ifndef _STRING_CONVERSIONS_H
+        -:   30:#define _STRING_CONVERSIONS_H 1
+        -:   31:
+        -:   32:#pragma GCC system_header
+        -:   33:
+        -:   34:#include <bits/requires_hosted.h> // GNU extensions are currently omitted
+        -:   35:
+        -:   36:#if __cplusplus < 201103L
+        -:   37:# include <bits/c++0x_warning.h>
+        -:   38:#else
+        -:   39:
+        -:   40:#include <bits/c++config.h>
+        -:   41:#include <ext/numeric_traits.h>
+        -:   42:#include <bits/functexcept.h>
+        -:   43:#include <cstdlib>
+        -:   44:#include <cwchar>
+        -:   45:#include <cstdio>
+        -:   46:#include <cerrno>
+        -:   47:
+        -:   48:namespace __gnu_cxx _GLIBCXX_VISIBILITY(default)
+        -:   49:{
+        -:   50:_GLIBCXX_BEGIN_NAMESPACE_VERSION
+        -:   51:
+        -:   52:  // Helper for all the sto* functions.
+        -:   53:  template<typename _TRet, typename _Ret = _TRet, typename _CharT,
+        -:   54:	   typename... _Base>
+        -:   55:    _Ret
+        -:   56:    __stoa(_TRet (*__convf) (const _CharT*, _CharT**, _Base...),
+        -:   57:	   const char* __name, const _CharT* __str, std::size_t* __idx,
+        -:   58:	   _Base... __base)
+        -:   59:    {
+        -:   60:      _Ret __ret;
+        -:   61:
+        -:   62:      _CharT* __endptr;
+        -:   63:
+        -:   64:      struct _Save_errno {
+        -:   65:	_Save_errno() : _M_errno(errno) { errno = 0; }
+        -:   66:	~_Save_errno() { if (errno == 0) errno = _M_errno; }
+        -:   67:	int _M_errno;
+        -:   68:      } const __save_errno;
+        -:   69:
+        -:   70:      struct _Range_chk {
+        -:   71:	  static bool
+        -:   72:	  _S_chk(_TRet, std::false_type) { return false; }
+        -:   73:
+        -:   74:	  static bool
+        -:   75:	  _S_chk(_TRet __val, std::true_type) // only called when _Ret is int
+        -:   76:	  {
+        -:   77:	    return __val < _TRet(__numeric_traits<int>::__min)
+        -:   78:	      || __val > _TRet(__numeric_traits<int>::__max);
+        -:   79:	  }
+        -:   80:      };
+        -:   81:
+        -:   82:      const _TRet __tmp = __convf(__str, &__endptr, __base...);
+        -:   83:
+        -:   84:      if (__endptr == __str)
+        -:   85:	std::__throw_invalid_argument(__name);
+        -:   86:      else if (errno == ERANGE
+        -:   87:	  || _Range_chk::_S_chk(__tmp, std::is_same<_Ret, int>{}))
+        -:   88:	std::__throw_out_of_range(__name);
+        -:   89:      else
+        -:   90:	__ret = __tmp;
+        -:   91:
+        -:   92:      if (__idx)
+        -:   93:	*__idx = __endptr - __str;
+        -:   94:
+        -:   95:      return __ret;
+        -:   96:    }
+        -:   97:
+        -:   98:  // Helper for the to_string / to_wstring functions.
+        -:   99:  template<typename _String, typename _CharT = typename _String::value_type>
+        -:  100:    _String
+function _ZN9__gnu_cxx12__to_xstringINSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEcEET_PFiPT0_mPKS8_P13__va_list_tagEmSB_z called 0 returned 0% blocks executed 0%
+    #####:  101:    __to_xstring(int (*__convf) (_CharT*, std::size_t, const _CharT*,
+        -:  102:				 __builtin_va_list), std::size_t __n,
+        -:  103:		 const _CharT* __fmt, ...)
+        -:  104:    {
+        -:  105:      // XXX Eventually the result should be constructed in-place in
+        -:  106:      // the __cxx11 string, likely with the help of internal hooks.
+    #####:  107:      _CharT* __s = static_cast<_CharT*>(__builtin_alloca(sizeof(_CharT)
+        -:  108:							  * __n));
+        -:  109:
+        -:  110:      __builtin_va_list __args;
+    #####:  111:      __builtin_va_start(__args, __fmt);
+        -:  112:
+    #####:  113:      const int __len = __convf(__s, __n, __fmt, __args);
+    %%%%%:  113-block 2
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:  114:
+    #####:  115:      __builtin_va_end(__args);
+    %%%%%:  115-block 3
+        -:  116:
+    #####:  117:      return _String(__s, __s + __len);
+    %%%%%:  117-block 5
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  117-block 6
+    %%%%%:  117-block 8
+    %%%%%:  117-block 9
+    $$$$$:  117-block 12
+        -:  118:    }
+        -:  119:
+        -:  120:_GLIBCXX_END_NAMESPACE_VERSION
+        -:  121:} // namespace
+        -:  122:
+        -:  123:#endif // C++11
+        -:  124:
+        -:  125:#endif // _STRING_CONVERSIONS_H

@@ -1,0 +1,98 @@
+        -:    0:Source:/home/rc/ZathuraDbg/src/app/arch/arch.cpp
+        -:    0:Graph:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/app/arch/arch.cpp.gcno
+        -:    0:Data:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/app/arch/arch.cpp.gcda
+        -:    0:Runs:1
+        -:    1:#include "arch.hpp"
+        -:    2:codeInformationT codeInformation{.archUC=UC_ARCH_X86, .archKS = KS_ARCH_X86,  .archCS = CS_ARCH_X86, .mode=UC_MODE_64, .modeKS = KS_MODE_64,.modeCS = CS_MODE_64, .syntax = KS_OPT_SYNTAX_NASM};
+        -:    3:std::unordered_map<std::string, std::pair<size_t, int>> regInfoMap = {};
+        -:    4:std::string (*getArchIPStr)(uc_mode) = nullptr;
+        -:    5:std::pair<std::string, std::string> (*getArchSBPStr)(uc_mode) = nullptr;
+        -:    6:bool (*isRegisterValid)(const std::string&, uc_mode) = nullptr;
+        -:    7:void (*modeUpdateCallback)(uc_mode) = nullptr;
+        -:    8:std::vector<std::string> defaultShownRegs{};
+        -:    9:std::vector<std::string> archInstructions;
+        -:   10:
+function _Z12onArchChangev called 0 returned 0% blocks executed 0%
+    #####:   11:void onArchChange(){
+    #####:   12:    initArch();
+    %%%%%:   12-block 2
+call    0 never executed
+    #####:   13:    if (modeUpdateCallback != nullptr){
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:   14:        modeUpdateCallback(codeInformation.mode);
+    %%%%%:   14-block 4
+call    0 never executed
+    #####:   15:        defaultShownRegs = x86DefaultShownRegs;
+call    0 never executed
+        -:   16:    }
+    #####:   17:}
+        -:   18:
+function _Z8initArchv called 1 returned 100% blocks executed 60%
+        1:   19:bool initArch(){
+        1:   20:    switch (codeInformation.archUC) {
+        1:   20-block 2
+branch  0 taken 1
+branch  1 taken 0
+branch  2 taken 0
+branch  3 taken 0
+        1:   21:        case UC_ARCH_X86:
+        1:   22:            getArchIPStr = x86IPStr;
+        1:   23:            getArchSBPStr = x86SBPStr;
+        1:   24:            regInfoMap = x86RegInfoMap;
+        1:   24-block 3
+call    0 returned 1
+        1:   25:            defaultShownRegs = x86DefaultShownRegs;
+call    0 returned 1
+        1:   26:            isRegisterValid = x86IsRegisterValid;
+        1:   27:            modeUpdateCallback = x86ModeUpdateCallback;
+        1:   28:            archInstructions = x86ArchInstructions;
+call    0 returned 1
+        1:   29:            return true;
+    #####:   30:        case UC_ARCH_ARM:
+    #####:   31:            getArchIPStr = armIPStr;
+    #####:   32:            regInfoMap = armRegInfoMap;
+    %%%%%:   32-block 7
+call    0 never executed
+    #####:   33:            return true;
+    #####:   34:        case UC_ARCH_ARM64:
+    #####:   35:            getArchIPStr = arm64IPStr;
+    #####:   36:            return true;
+    %%%%%:   36-block 9
+    #####:   37:        default: ;
+        -:   38:    }
+        -:   39:
+    #####:   40:    return false;
+    %%%%%:   40-block 10
+        -:   41:}
+        -:   42:
+        -:   43:
+function _Z17regNameToConstantRKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE called 9 returned 100% blocks executed 32%
+        9:   44:int regNameToConstant(const std::string &name){
+        9:   45:    if (!regInfoMap.contains(name)){
+        9:   45-block 2
+call    0 returned 9
+branch  1 taken 0 (fallthrough)
+branch  2 taken 9
+    #####:   46:        return regInfoMap["INVALID"].second;
+    %%%%%:   46-block 6
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:   46-block 7
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    %%%%%:   46-block 8
+    %%%%%:   46-block 9
+call    6 never executed
+    %%%%%:   46-block 11
+    $$$$$:   46-block 15
+call    7 never executed
+    $$$$$:   46-block 19
+        -:   47:    }
+        -:   48:
+        9:   49:    return regInfoMap[name].second;
+        9:   49-block 12
+call    0 returned 9
+        -:   50:}

@@ -1,0 +1,403 @@
+        -:    0:Source:/home/rc/ZathuraDbg/src/app/shortcuts.cpp
+        -:    0:Graph:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/app/shortcuts.cpp.gcno
+        -:    0:Data:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/app/shortcuts.cpp.gcda
+        -:    0:Runs:1
+        -:    1:#include "shortcuts.hpp"
+        -:    2:
+function _Z15manageShortcutsv called 1077 returned 100% blocks executed 41%
+     1077:    3:void manageShortcuts(){
+        -:    4:    using namespace ImGui;
+     1077:    5:    ImGuiIO& io = ImGui::GetIO();
+     1077:    5-block 2
+call    0 returned 1077
+     1077:    6:    const auto isOSX = io.ConfigMacOSXBehaviors;
+     1077:    7:    const auto alt = io.KeyAlt;
+     1077:    8:    const auto ctrl = io.KeyCtrl;
+     1077:    9:    const auto shift = io.KeyShift;
+     1077:   10:    const auto super = io.KeySuper;
+        -:   11:
+    1077*:   12:    const auto isCtrlShortcut = (isOSX ? (super && !ctrl) : (ctrl && !super)) && !alt && !shift;
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1077
+    %%%%%:   12-block 4
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    %%%%%:   12-block 5
+branch  4 never executed
+branch  5 never executed
+     1077:   12-block 6
+branch  6 taken 0 (fallthrough)
+branch  7 taken 1077
+    %%%%%:   12-block 7
+branch  8 never executed (fallthrough)
+branch  9 never executed
+    %%%%%:   12-block 8
+branch 10 never executed (fallthrough)
+branch 11 never executed
+    %%%%%:   12-block 9
+branch 12 never executed (fallthrough)
+branch 13 never executed
+    %%%%%:   12-block 10
+     1077:   12-block 11
+    1077*:   13:    const auto isCtrlShiftShortcut = (isOSX ? (super && !ctrl) : (ctrl && !super)) && shift && !alt;
+     1077:   13-block 12
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1077
+    %%%%%:   13-block 13
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    %%%%%:   13-block 14
+branch  4 never executed
+branch  5 never executed
+     1077:   13-block 15
+branch  6 taken 0 (fallthrough)
+branch  7 taken 1077
+    %%%%%:   13-block 16
+branch  8 never executed (fallthrough)
+branch  9 never executed
+    %%%%%:   13-block 17
+branch 10 never executed (fallthrough)
+branch 11 never executed
+    %%%%%:   13-block 18
+branch 12 never executed (fallthrough)
+branch 13 never executed
+    %%%%%:   13-block 19
+     1077:   13-block 20
+    1077*:   14:    const auto isWordMoveKey = isOSX ? alt : ctrl;
+     1077:   14-block 21
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1077
+    %%%%%:   14-block 22
+     1077:   14-block 23
+    1077*:   15:    const auto isAltOnly = alt && !ctrl && !shift && !super;
+     1077:   15-block 24
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1077
+    %%%%%:   15-block 25
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    %%%%%:   15-block 26
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:   15-block 27
+branch  6 never executed (fallthrough)
+branch  7 never executed
+    %%%%%:   15-block 28
+     1077:   15-block 29
+    1077*:   16:    const auto isCtrlOnly = ctrl && !alt && !shift && !super;
+     1077:   16-block 30
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1077
+    %%%%%:   16-block 31
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    %%%%%:   16-block 32
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:   16-block 33
+branch  6 never executed (fallthrough)
+branch  7 never executed
+    %%%%%:   16-block 34
+     1077:   16-block 35
+    1077*:   17:    const auto isShiftOnly = shift && !alt && !ctrl && !super;
+     1077:   17-block 36
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1077
+    %%%%%:   17-block 37
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    %%%%%:   17-block 38
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:   17-block 39
+branch  6 never executed (fallthrough)
+branch  7 never executed
+    %%%%%:   17-block 40
+     1077:   17-block 41
+        -:   18:
+     1077:   19:    io.WantCaptureKeyboard = true;
+     1077:   20:    io.WantTextInput = true;
+        -:   21:
+    1077*:   22:    if (isCtrlShortcut && (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_S)))){
+     1077:   22-block 42
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1077
+    %%%%%:   22-block 43
+call    2 never executed
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:   22-block 46
+     1077:   22-block 47
+     1077:   22-block 48
+branch  6 taken 0 (fallthrough)
+branch  7 taken 1077
+    #####:   23:        saveFile = true;
+    %%%%%:   23-block 49
+        -:   24:    }
+    1077*:   25:    if (isCtrlShiftShortcut && (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_S)))){
+     1077:   25-block 50
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1077
+    %%%%%:   25-block 51
+call    2 never executed
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:   25-block 54
+     1077:   25-block 55
+     1077:   25-block 56
+branch  6 taken 0 (fallthrough)
+branch  7 taken 1077
+    #####:   26:        saveFileAs = true;
+    %%%%%:   26-block 57
+        -:   27:    }
+    1077*:   28:    if (isCtrlShortcut && (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_O)))){
+     1077:   28-block 58
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1077
+    %%%%%:   28-block 59
+call    2 never executed
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:   28-block 62
+     1077:   28-block 63
+     1077:   28-block 64
+branch  6 taken 0 (fallthrough)
+branch  7 taken 1077
+    #####:   29:        openFile = true;
+    %%%%%:   29-block 65
+        -:   30:    }
+    1077*:   31:    if (isCtrlShortcut && (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Period)))){
+     1077:   31-block 66
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1077
+    %%%%%:   31-block 67
+call    2 never executed
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:   31-block 70
+     1077:   31-block 71
+     1077:   31-block 72
+branch  6 taken 0 (fallthrough)
+branch  7 taken 1077
+    #####:   32:        changeEmulationSettingsOpt = true;
+    %%%%%:   32-block 73
+        -:   33:    }
+    1077*:   34:    if (isCtrlShortcut && (ImGui::IsKeyDown(ImGui::GetKeyIndex(ImGuiKey_F7))))
+     1077:   34-block 74
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1077
+    %%%%%:   34-block 75
+call    2 never executed
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:   34-block 78
+     1077:   34-block 79
+     1077:   34-block 80
+branch  6 taken 0 (fallthrough)
+branch  7 taken 1077
+        -:   35:    {
+    #####:   36:        memoryMapsUI = true;
+    %%%%%:   36-block 81
+        -:   37:    }
+    1077*:   38:    if (isCtrlShiftShortcut && (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_M)))){
+     1077:   38-block 82
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1077
+    %%%%%:   38-block 83
+call    2 never executed
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:   38-block 86
+     1077:   38-block 87
+     1077:   38-block 88
+branch  6 taken 0 (fallthrough)
+branch  7 taken 1077
+    #####:   39:       saveContextToFile = true;
+    %%%%%:   39-block 89
+        -:   40:    }
+    1077*:   41:    if (isCtrlShiftShortcut && (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_O)))){
+     1077:   41-block 90
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1077
+    %%%%%:   41-block 91
+call    2 never executed
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:   41-block 94
+     1077:   41-block 95
+     1077:   41-block 96
+branch  6 taken 0 (fallthrough)
+branch  7 taken 1077
+    #####:   42:        fileLoadContext = true;
+    %%%%%:   42-block 97
+        -:   43:    }
+    1077*:   44:    if (isCtrlOnly && IsKeyPressed(GetKeyIndex(ImGuiKey_GraveAccent))){
+     1077:   44-block 98
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1077
+    %%%%%:   44-block 99
+call    2 never executed
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:   44-block 102
+     1077:   44-block 103
+     1077:   44-block 104
+branch  6 taken 0 (fallthrough)
+branch  7 taken 1077
+    #####:   45:        use32BitLanes = !use32BitLanes;
+    #####:   46:        updateRegistersOnLaneChange();
+    %%%%%:   46-block 105
+call    0 never executed
+        -:   47:    }
+    1077*:   48:    if (isShiftOnly && (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_F5)))){
+     1077:   48-block 106
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1077
+    %%%%%:   48-block 107
+call    2 never executed
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:   48-block 110
+     1077:   48-block 111
+     1077:   48-block 112
+branch  6 taken 0 (fallthrough)
+branch  7 taken 1077
+    #####:   49:        if (debugModeEnabled){
+    %%%%%:   49-block 113
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:   50:            debugStop = true;
+    %%%%%:   50-block 114
+        -:   51:        }
+    #####:   52:        return;
+    %%%%%:   52-block 115
+        -:   53:    }
+     1077:   54:    else if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_F5))){
+     1077:   54-block 116
+call    0 returned 1077
+call    1 returned 1077
+branch  2 taken 0 (fallthrough)
+branch  3 taken 1077
+    #####:   55:        if (!debugModeEnabled){
+    %%%%%:   55-block 119
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:   56:            enableDebugMode = true;
+    %%%%%:   56-block 120
+        -:   57:        }
+    #####:   58:        else if ((isCtrlShortcut) &&ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_F5))){
+    %%%%%:   58-block 121
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:   58-block 122
+call    2 never executed
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:   58-block 125
+    %%%%%:   58-block 126
+    %%%%%:   58-block 127
+branch  6 never executed (fallthrough)
+branch  7 never executed
+    #####:   59:            debugRestart = true;
+    %%%%%:   59-block 128
+        -:   60:        }
+        -:   61:        else{
+    #####:   62:            debugContinue = true;
+    %%%%%:   62-block 129
+        -:   63:        }
+        -:   64:    }
+     1077:   65:    if (debugModeEnabled){
+     1077:   65-block 130
+branch  0 taken 250 (fallthrough)
+branch  1 taken 827
+     250*:   66:        if (isCtrlShortcut && (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_J)))){
+      250:   66-block 131
+branch  0 taken 0 (fallthrough)
+branch  1 taken 250
+    %%%%%:   66-block 132
+call    2 never executed
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:   66-block 135
+      250:   66-block 136
+      250:   66-block 137
+branch  6 taken 0 (fallthrough)
+branch  7 taken 250
+    #####:   67:            debugStepIn = true;
+    %%%%%:   67-block 138
+        -:   68:        }
+     250*:   69:        if (isCtrlShortcut && (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_K)))){
+      250:   69-block 139
+branch  0 taken 0 (fallthrough)
+branch  1 taken 250
+    %%%%%:   69-block 140
+call    2 never executed
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:   69-block 143
+      250:   69-block 144
+      250:   69-block 145
+branch  6 taken 0 (fallthrough)
+branch  7 taken 250
+    #####:   70:            debugStepOver = true;
+    %%%%%:   70-block 146
+        -:   71:        }
+        -:   72:    }
+     1077:   73:    if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_F9))){
+     1077:   73-block 147
+call    0 returned 1077
+call    1 returned 1077
+branch  2 taken 0 (fallthrough)
+branch  3 taken 1077
+    #####:   74:        toggleBreakpoint = true;
+    %%%%%:   74-block 150
+        -:   75:    }
+     1077:   76:    if (IsKeyPressed(GetKeyIndex(ImGuiKey_F3))){
+     1077:   76-block 151
+call    0 returned 1077
+call    1 returned 1077
+branch  2 taken 0 (fallthrough)
+branch  3 taken 1077
+    #####:   77:        runSelectedCode = true;
+    %%%%%:   77-block 154
+        -:   78:    }
+     1077:   79:    if (IsKeyPressed(GetKeyIndex(ImGuiKey_F4))){
+     1077:   79-block 155
+call    0 returned 1077
+call    1 returned 1077
+branch  2 taken 0 (fallthrough)
+branch  3 taken 1077
+    #####:   80:        goToDefinition = true;
+    %%%%%:   80-block 158
+        -:   81:    }
+     1077:   82:    if (IsKeyPressed(GetKeyIndex(ImGuiKey_F6))){
+     1077:   82-block 159
+call    0 returned 1077
+call    1 returned 1077
+branch  2 taken 0 (fallthrough)
+branch  3 taken 1077
+    #####:   83:        debugPause = true;
+    %%%%%:   83-block 162
+        -:   84:    }
+     1077:   85:    if (IsKeyPressed(GetKeyIndex(ImGuiKey_F10))){
+     1077:   85-block 163
+call    0 returned 1077
+call    1 returned 1077
+branch  2 taken 0 (fallthrough)
+branch  3 taken 1077
+    #####:   86:        debugRun = true;
+    %%%%%:   86-block 166
+        -:   87:    }
+        -:   88:}

@@ -1,0 +1,291 @@
+        -:    0:Source:/usr/include/c++/14.2.1/bits/utility.h
+        -:    0:Graph:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/app/windows/stackWindow.cpp.gcno
+        -:    0:Data:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/app/windows/stackWindow.cpp.gcda
+        -:    0:Runs:1
+        -:    1:// Utilities used throughout the library -*- C++ -*-
+        -:    2:
+        -:    3:// Copyright (C) 2004-2024 Free Software Foundation, Inc.
+        -:    4://
+        -:    5:// This file is part of the GNU ISO C++ Library.  This library is free
+        -:    6:// software; you can redistribute it and/or modify it under the
+        -:    7:// terms of the GNU General Public License as published by the
+        -:    8:// Free Software Foundation; either version 3, or (at your option)
+        -:    9:// any later version.
+        -:   10:
+        -:   11:// This library is distributed in the hope that it will be useful,
+        -:   12:// but WITHOUT ANY WARRANTY; without even the implied warranty of
+        -:   13:// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+        -:   14:// GNU General Public License for more details.
+        -:   15:
+        -:   16:// Under Section 7 of GPL version 3, you are granted additional
+        -:   17:// permissions described in the GCC Runtime Library Exception, version
+        -:   18:// 3.1, as published by the Free Software Foundation.
+        -:   19:
+        -:   20:// You should have received a copy of the GNU General Public License and
+        -:   21:// a copy of the GCC Runtime Library Exception along with this program;
+        -:   22:// see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+        -:   23:// <http://www.gnu.org/licenses/>.
+        -:   24:
+        -:   25:/** @file include/bits/utility.h
+        -:   26: *  This is an internal header file, included by other library headers.
+        -:   27: *  Do not attempt to use it directly. @headername{utility}
+        -:   28: *
+        -:   29: *  This file contains the parts of `<utility>` needed by other headers,
+        -:   30: *  so they don't need to include the whole of `<utility>`.
+        -:   31: */
+        -:   32:
+        -:   33:#ifndef _GLIBCXX_UTILITY_H
+        -:   34:#define _GLIBCXX_UTILITY_H 1
+        -:   35:
+        -:   36:#pragma GCC system_header
+        -:   37:
+        -:   38:#if __cplusplus >= 201103L
+        -:   39:
+        -:   40:#include <type_traits>
+        -:   41:#include <bits/move.h>
+        -:   42:
+        -:   43:namespace std _GLIBCXX_VISIBILITY(default)
+        -:   44:{
+        -:   45:_GLIBCXX_BEGIN_NAMESPACE_VERSION
+        -:   46:
+        -:   47:  /// Finds the size of a given tuple type.
+        -:   48:  template<typename _Tp>
+        -:   49:    struct tuple_size;
+        -:   50:
+        -:   51:  // _GLIBCXX_RESOLVE_LIB_DEFECTS
+        -:   52:  // 2313. tuple_size should always derive from integral_constant<size_t, N>
+        -:   53:  // 2770. tuple_size<const T> specialization is not SFINAE compatible
+        -:   54:
+        -:   55:  template<typename _Tp,
+        -:   56:	   typename _Up = typename remove_cv<_Tp>::type,
+        -:   57:	   typename = typename enable_if<is_same<_Tp, _Up>::value>::type,
+        -:   58:	   size_t = tuple_size<_Tp>::value>
+        -:   59:    using __enable_if_has_tuple_size = _Tp;
+        -:   60:
+        -:   61:  template<typename _Tp>
+        -:   62:    struct tuple_size<const __enable_if_has_tuple_size<_Tp>>
+        -:   63:    : public tuple_size<_Tp> { };
+        -:   64:
+        -:   65:  template<typename _Tp>
+        -:   66:    struct tuple_size<volatile __enable_if_has_tuple_size<_Tp>>
+        -:   67:    : public tuple_size<_Tp> { };
+        -:   68:
+        -:   69:  template<typename _Tp>
+        -:   70:    struct tuple_size<const volatile __enable_if_has_tuple_size<_Tp>>
+        -:   71:    : public tuple_size<_Tp> { };
+        -:   72:
+        -:   73:#if __cplusplus >= 201703L
+        -:   74:  template<typename _Tp>
+        -:   75:    inline constexpr size_t tuple_size_v = tuple_size<_Tp>::value;
+        -:   76:#endif
+        -:   77:
+        -:   78:  /// Gives the type of the ith element of a given tuple type.
+        -:   79:  template<size_t __i, typename _Tp>
+        -:   80:    struct tuple_element;
+        -:   81:
+        -:   82:  // Duplicate of C++14's tuple_element_t for internal use in C++11 mode
+        -:   83:  template<size_t __i, typename _Tp>
+        -:   84:    using __tuple_element_t = typename tuple_element<__i, _Tp>::type;
+        -:   85:
+        -:   86:  template<size_t __i, typename _Tp>
+        -:   87:    struct tuple_element<__i, const _Tp>
+        -:   88:    {
+        -:   89:      using type = const __tuple_element_t<__i, _Tp>;
+        -:   90:    };
+        -:   91:
+        -:   92:  template<size_t __i, typename _Tp>
+        -:   93:    struct tuple_element<__i, volatile _Tp>
+        -:   94:    {
+        -:   95:      using type = volatile __tuple_element_t<__i, _Tp>;
+        -:   96:    };
+        -:   97:
+        -:   98:  template<size_t __i, typename _Tp>
+        -:   99:    struct tuple_element<__i, const volatile _Tp>
+        -:  100:    {
+        -:  101:      using type = const volatile __tuple_element_t<__i, _Tp>;
+        -:  102:    };
+        -:  103:
+        -:  104:#if __cplusplus >= 201402L
+        -:  105:
+        -:  106:  // Return the index of _Tp in _Types, if it occurs exactly once.
+        -:  107:  // Otherwise, return sizeof...(_Types).
+        -:  108:  template<typename _Tp, typename... _Types>
+        -:  109:    constexpr size_t
+    #####:  110:    __find_uniq_type_in_pack()
+        -:  111:    {
+    #####:  112:      constexpr size_t __sz = sizeof...(_Types);
+    #####:  113:      constexpr bool __found[__sz] = { __is_same(_Tp, _Types) ... };
+    #####:  114:      size_t __n = __sz;
+    #####:  115:      for (size_t __i = 0; __i < __sz; ++__i)
+        -:  116:	{
+    #####:  117:	  if (__found[__i])
+        -:  118:	    {
+    #####:  119:	      if (__n < __sz) // more than one _Tp found
+    #####:  120:		return __sz;
+    #####:  121:	      __n = __i;
+        -:  122:	    }
+        -:  123:	}
+    #####:  124:      return __n;
+        -:  125:    }
+        -:  126:#endif // C++14
+        -:  127:
+        -:  128:// The standard says this macro and alias template should be in <tuple> but we
+        -:  129:// define them here, to be available in <array>, <utility> and <ranges> too.
+        -:  130:// _GLIBCXX_RESOLVE_LIB_DEFECTS
+        -:  131:// 3378. tuple_size_v/tuple_element_t should be available when
+        -:  132://       tuple_size/tuple_element are
+        -:  133:#ifdef __glibcxx_tuple_element_t // C++ >= 14
+        -:  134:  template<size_t __i, typename _Tp>
+        -:  135:    using tuple_element_t = typename tuple_element<__i, _Tp>::type;
+        -:  136:#endif
+        -:  137:
+        -:  138:  // Stores a tuple of indices.  Used by tuple and pair, and by bind() to
+        -:  139:  // extract the elements in a tuple.
+        -:  140:  template<size_t... _Indexes> struct _Index_tuple { };
+        -:  141:
+        -:  142:  // Builds an _Index_tuple<0, 1, 2, ..., _Num-1>.
+        -:  143:  template<size_t _Num>
+        -:  144:    struct _Build_index_tuple
+        -:  145:    {
+        -:  146:#if __has_builtin(__make_integer_seq)
+        -:  147:      template<typename, size_t... _Indices>
+        -:  148:	using _IdxTuple = _Index_tuple<_Indices...>;
+        -:  149:
+        -:  150:      // Clang defines __make_integer_seq for this purpose.
+        -:  151:      using __type = __make_integer_seq<_IdxTuple, size_t, _Num>;
+        -:  152:#else
+        -:  153:      // For GCC and other compilers, use __integer_pack instead.
+        -:  154:      using __type = _Index_tuple<__integer_pack(_Num)...>;
+        -:  155:#endif
+        -:  156:    };
+        -:  157:
+        -:  158:#ifdef __glibcxx_integer_sequence // C++ >= 14
+        -:  159:
+        -:  160:  /// Class template integer_sequence
+        -:  161:  template<typename _Tp, _Tp... _Idx>
+        -:  162:    struct integer_sequence
+        -:  163:    {
+        -:  164:#if __cplusplus >= 202002L
+        -:  165:      static_assert(is_integral_v<_Tp>);
+        -:  166:#endif
+        -:  167:      typedef _Tp value_type;
+        -:  168:      static constexpr size_t size() noexcept { return sizeof...(_Idx); }
+        -:  169:    };
+        -:  170:
+        -:  171:  /// Alias template make_integer_sequence
+        -:  172:  template<typename _Tp, _Tp _Num>
+        -:  173:    using make_integer_sequence
+        -:  174:#if __has_builtin(__make_integer_seq)
+        -:  175:      = __make_integer_seq<integer_sequence, _Tp, _Num>;
+        -:  176:#else
+        -:  177:      = integer_sequence<_Tp, __integer_pack(_Num)...>;
+        -:  178:#endif
+        -:  179:
+        -:  180:  /// Alias template index_sequence
+        -:  181:  template<size_t... _Idx>
+        -:  182:    using index_sequence = integer_sequence<size_t, _Idx...>;
+        -:  183:
+        -:  184:  /// Alias template make_index_sequence
+        -:  185:  template<size_t _Num>
+        -:  186:    using make_index_sequence = make_integer_sequence<size_t, _Num>;
+        -:  187:
+        -:  188:  /// Alias template index_sequence_for
+        -:  189:  template<typename... _Types>
+        -:  190:    using index_sequence_for = make_index_sequence<sizeof...(_Types)>;
+        -:  191:#endif // __glibcxx_integer_sequence
+        -:  192:
+        -:  193:#if __cplusplus >= 201703L
+        -:  194:
+        -:  195:  struct in_place_t {
+        -:  196:    explicit in_place_t() = default;
+        -:  197:  };
+        -:  198:
+        -:  199:  inline constexpr in_place_t in_place{};
+        -:  200:
+        -:  201:  template<typename _Tp> struct in_place_type_t
+        -:  202:  {
+        -:  203:    explicit in_place_type_t() = default;
+        -:  204:  };
+        -:  205:
+        -:  206:  template<typename _Tp>
+        -:  207:    inline constexpr in_place_type_t<_Tp> in_place_type{};
+        -:  208:
+        -:  209:  template<size_t _Idx> struct in_place_index_t
+        -:  210:  {
+        -:  211:    explicit in_place_index_t() = default;
+        -:  212:  };
+        -:  213:
+        -:  214:  template<size_t _Idx>
+        -:  215:    inline constexpr in_place_index_t<_Idx> in_place_index{};
+        -:  216:
+        -:  217:  template<typename>
+        -:  218:    inline constexpr bool __is_in_place_type_v = false;
+        -:  219:
+        -:  220:  template<typename _Tp>
+        -:  221:    inline constexpr bool __is_in_place_type_v<in_place_type_t<_Tp>> = true;
+        -:  222:
+        -:  223:  template<typename _Tp>
+        -:  224:    using __is_in_place_type = bool_constant<__is_in_place_type_v<_Tp>>;
+        -:  225:
+        -:  226:  template<typename>
+        -:  227:    inline constexpr bool __is_in_place_index_v = false;
+        -:  228:
+        -:  229:  template<size_t _Nm>
+        -:  230:    inline constexpr bool __is_in_place_index_v<in_place_index_t<_Nm>> = true;
+        -:  231:
+        -:  232:#endif // C++17
+        -:  233:
+        -:  234:#if _GLIBCXX_USE_BUILTIN_TRAIT(__type_pack_element)
+        -:  235:  template<size_t _Np, typename... _Types>
+        -:  236:    struct _Nth_type
+        -:  237:    { using type = __type_pack_element<_Np, _Types...>; };
+        -:  238:#else
+        -:  239:  template<size_t _Np, typename... _Types>
+        -:  240:    struct _Nth_type
+        -:  241:    { };
+        -:  242:
+        -:  243:  template<typename _Tp0, typename... _Rest>
+        -:  244:    struct _Nth_type<0, _Tp0, _Rest...>
+        -:  245:    { using type = _Tp0; };
+        -:  246:
+        -:  247:  template<typename _Tp0, typename _Tp1, typename... _Rest>
+        -:  248:    struct _Nth_type<1, _Tp0, _Tp1, _Rest...>
+        -:  249:    { using type = _Tp1; };
+        -:  250:
+        -:  251:  template<typename _Tp0, typename _Tp1, typename _Tp2, typename... _Rest>
+        -:  252:    struct _Nth_type<2, _Tp0, _Tp1, _Tp2, _Rest...>
+        -:  253:    { using type = _Tp2; };
+        -:  254:
+        -:  255:  template<size_t _Np, typename _Tp0, typename _Tp1, typename _Tp2,
+        -:  256:	   typename... _Rest>
+        -:  257:#if __cpp_concepts
+        -:  258:    requires (_Np >= 3)
+        -:  259:#endif
+        -:  260:    struct _Nth_type<_Np, _Tp0, _Tp1, _Tp2, _Rest...>
+        -:  261:    : _Nth_type<_Np - 3, _Rest...>
+        -:  262:    { };
+        -:  263:
+        -:  264:#if ! __cpp_concepts // Need additional specializations to avoid ambiguities.
+        -:  265:  template<typename _Tp0, typename _Tp1, typename _Tp2, typename... _Rest>
+        -:  266:    struct _Nth_type<0, _Tp0, _Tp1, _Tp2, _Rest...>
+        -:  267:    { using type = _Tp0; };
+        -:  268:
+        -:  269:  template<typename _Tp0, typename _Tp1, typename _Tp2, typename... _Rest>
+        -:  270:    struct _Nth_type<1, _Tp0, _Tp1, _Tp2, _Rest...>
+        -:  271:    { using type = _Tp1; };
+        -:  272:#endif
+        -:  273:#endif
+        -:  274:
+        -:  275:#if __glibcxx_ranges
+        -:  276:  namespace ranges::__detail
+        -:  277:  {
+        -:  278:    template<typename _Range>
+        -:  279:      inline constexpr bool __is_subrange = false;
+        -:  280:  } // namespace __detail
+        -:  281:#endif
+        -:  282:
+        -:  283:_GLIBCXX_END_NAMESPACE_VERSION
+        -:  284:} // namespace
+        -:  285:
+        -:  286:#endif // C++11
+        -:  287:#endif /* _GLIBCXX_UTILITY_H */

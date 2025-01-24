@@ -37,9 +37,7 @@ bool expandMemoryRegion(uc_engine* uc, const uint64_t startAddr, uint64_t oldEnd
 {
     if (!(perms & UC_PROT_READ && perms & UC_PROT_WRITE))
     {
-        LOG_ERROR(
-            "The memory region expansion process could not be completed because the memory region does not have read and write permissions.")
-        ;
+        LOG_ERROR("The memory region expansion process could not be completed because the memory region does not have read and write permissions.");
         return false;
     }
 
@@ -132,12 +130,13 @@ void memoryMapWindow()
 {
     auto memInfo = getMemoryMapping(uc);
     auto [x, y] = ImGui::GetWindowSize();
-    ImGui::SetNextWindowSize({x - 230, (y - 125 + (25 * memInfo.size()))});
+    ImGui::SetNextWindowSize({x - 230, (y - 125 + (52 * memInfo.size()))});
 
     if (ImGui::Begin("Memory Mappings"))
     {
         bool tableSizeInc = false;
         bool tableUpdated = false;
+        bool mapped = true;
         ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[JetBrainsMono20]);
         if (ImGui::BeginTable("memoryMapTable", 4,
                               ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_Resizable))
@@ -159,6 +158,7 @@ void memoryMapWindow()
             bool write;
             bool execute;
             bool permsChanged = false;
+            bool mappingChanged = true;
             bool endAddrChanged = false;
 
             float posX{};
@@ -186,6 +186,7 @@ void memoryMapWindow()
                 ImGui::SetNextItemWidth(-FLT_MIN);
                 ImGui::TableSetColumnIndex(0);
 
+
                 ImGui::PushID(("first" + std::to_string(i + 1)).c_str());
                 posY = ImGui::GetCursorPosY();
                 posY += 2.5;
@@ -205,8 +206,18 @@ void memoryMapWindow()
                 posX += 2;
 
                 ImGui::SetCursorPosY(posY);
-                ImGui::SetCursorPosX(posX);
-                ImGui::Text("0x%x", memInfo[i].start);
+                std::stringstream ss;
+                ss << "0x" << std::setfill('0') << std::hex << memInfo[i].start;
+                ImGui::PushStyleColor(ImGuiCol_TextLink, ImColor(138, 173, 244).Value);
+                if (ImGui::TextLink(ss.str().c_str()))
+                {
+                    memoryEditorWindow.OptShowAddWindowButton = false;
+                    newMemEditWindowsInfo memWindowInfo = {memoryEditorWindow, memInfo[i].start, memInfo[i].end - memInfo[i].start + 1};
+                    newMemEditWindows.push_back(memWindowInfo);
+                }
+                ImGui::PopStyleColor();
+                ss.clear();
+                ss.str("");
                 ImGui::PopID();
                 ImGui::TableSetColumnIndex(2);
                 ImGui::PushID(("third" + std::to_string(i)).c_str());
@@ -234,6 +245,9 @@ void memoryMapWindow()
                 ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[6]);
                 ImGui::SameLine();
                 ImGui::PushID((i + 5) * 3);
+                posX = ImGui::GetCursorPosX();
+                posX += 6;
+                ImGui::SetCursorPosX(posX);
                 ImGui::Checkbox("##check_read", &read);
 
                 if (ImGui::IsItemHovered() && ImGui::IsMouseReleased(0))
@@ -257,7 +271,7 @@ void memoryMapWindow()
                     write = !write;
                     permsChanged = true;
                 }
-
+                ImGui::GetStyle();
                 ImGui::PopID();
                 ImGui::SameLine();
                 ImGui::Dummy({2, 2});
@@ -275,7 +289,25 @@ void memoryMapWindow()
                 }
 
                 ImGui::PopID();
-                ImGui::PopFont();
+
+                posX = ImGui::GetCursorPosX() + 2;
+
+                ImGui::SetCursorPosX(posX);
+                ImGui::Selectable("Mapped: ");
+                ImGui::SameLine();
+
+                ImGui::Checkbox("###Check4_", &mapped);
+                if (ImGui::IsItemHovered() && ImGui::IsMouseReleased(0))
+                {
+                    bool unmap = tinyfd_messageBox("Confirmation required!", "Are you sure you want to unmap it?", "okcancel", "error", 0);
+
+                    if (unmap)
+                    {
+                        uc_mem_unmap(uc, memInfo[i].start, memInfo[i].end - memInfo[i].start + 1);
+                    }
+                }
+
+                ImGui::PopFont ();
                 ImGui::TableNextRow();
                 ImGui::PopID();
                 ImGui::PopStyleColor();
@@ -334,7 +366,7 @@ void memoryMapWindow()
         ImVec2 contentRegion = ImGui::GetContentRegionAvail();
 
         const ImVec2 widgetSize = ImGui::CalcTextSize("Add");
-        ImGui::SetCursorPos(ImVec2(windowSize.x - padding.x - widgetSize.x - 8,
+        ImGui::SetCursorPos(ImVec2(windowSize.x - padding.x - widgetSize.x,
                                    windowSize.y - padding.y - widgetSize.y + 16 - ImGui::GetFrameHeight()));
         if (ImGui::Button("OK"))
         {

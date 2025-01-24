@@ -13,6 +13,7 @@ void hexWriteFunc(ImU8* data, size_t off, ImU8 d){
         sprintf(static_cast<char *>(hex), "Data change: %x", d);
         LOG_ERROR(hex);
         tinyfd_messageBox("ERROR!", "Failed to write to the memory address!!", "ok", "error", 0);
+        free(hex);
     }
 }
 
@@ -322,8 +323,6 @@ void MemoryEditor::GoToPopup(){
 bool createNewWindow(){
     auto [address, size] = infoPopup("New Memory Editor Window");
     if (address && size){
-        MemoryEditor memEdit;
-
         memoryEditorWindow.HighlightColor = ImColor(59, 60, 79);
 
        /*
@@ -335,7 +334,7 @@ bool createNewWindow(){
        */
 
         memoryEditorWindow.OptShowAddWindowButton = false;
-//        memoryEditorWindow.NewWindowInfoFn = createNewWindow;
+        memoryEditorWindow.NewWindowInfoFn = createNewWindow;
         newMemEditWindowsInfo memWindowInfo = {memoryEditorWindow, address, size};
         newMemEditWindows.push_back(memWindowInfo);
 

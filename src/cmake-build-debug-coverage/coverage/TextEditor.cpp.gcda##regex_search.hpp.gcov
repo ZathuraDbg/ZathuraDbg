@@ -1,0 +1,132 @@
+        -:    0:Source:/home/rc/ZathuraDbg/vendor/ImGuiColorTextEdit/vendor/regex/include/boost/regex/v5/regex_search.hpp
+        -:    0:Graph:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/home/rc/ZathuraDbg/vendor/ImGuiColorTextEdit/TextEditor.cpp.gcno
+        -:    0:Data:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/home/rc/ZathuraDbg/vendor/ImGuiColorTextEdit/TextEditor.cpp.gcda
+        -:    0:Runs:1
+        -:    1:/*
+        -:    2: *
+        -:    3: * Copyright (c) 1998-2002
+        -:    4: * John Maddock
+        -:    5: *
+        -:    6: * Use, modification and distribution are subject to the 
+        -:    7: * Boost Software License, Version 1.0. (See accompanying file 
+        -:    8: * LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+        -:    9: *
+        -:   10: */
+        -:   11:
+        -:   12: /*
+        -:   13:  *   LOCATION:    see http://www.boost.org for most recent version.
+        -:   14:  *   FILE         regex_search.hpp
+        -:   15:  *   VERSION      see <boost/version.hpp>
+        -:   16:  *   DESCRIPTION: Provides regex_search implementation.
+        -:   17:  */
+        -:   18:
+        -:   19:#ifndef BOOST_REGEX_V5_REGEX_SEARCH_HPP
+        -:   20:#define BOOST_REGEX_V5_REGEX_SEARCH_HPP
+        -:   21:
+        -:   22:
+        -:   23:namespace boost{
+        -:   24:
+        -:   25:template <class BidiIterator, class Allocator, class charT, class traits>
+function _ZN5boost12regex_searchIPKcSaINS_9sub_matchIS2_EEEcNS_12regex_traitsIcNS_16cpp_regex_traitsIcEEEEEEbT_SA_RNS_13match_resultsISA_T0_EERKNS_11basic_regexIT1_T2_EENS_15regex_constants12_match_flagsE called 0 returned 0% blocks executed 0%
+    #####:   26:bool regex_search(BidiIterator first, BidiIterator last, 
+        -:   27:                  match_results<BidiIterator, Allocator>& m, 
+        -:   28:                  const basic_regex<charT, traits>& e, 
+        -:   29:                  match_flag_type flags = match_default)
+        -:   30:{
+    #####:   31:   return regex_search(first, last, m, e, flags, first);
+    %%%%%:   31-block 2
+call    0 never executed
+        -:   32:}
+        -:   33:
+        -:   34:template <class BidiIterator, class Allocator, class charT, class traits>
+function _ZN5boost12regex_searchIPKcSaINS_9sub_matchIS2_EEEcNS_12regex_traitsIcNS_16cpp_regex_traitsIcEEEEEEbT_SA_RNS_13match_resultsISA_T0_EERKNS_11basic_regexIT1_T2_EENS_15regex_constants12_match_flagsESA_ called 0 returned 0% blocks executed 0%
+    #####:   35:bool regex_search(BidiIterator first, BidiIterator last, 
+        -:   36:                  match_results<BidiIterator, Allocator>& m, 
+        -:   37:                  const basic_regex<charT, traits>& e, 
+        -:   38:                  match_flag_type flags,
+        -:   39:                  BidiIterator base)
+        -:   40:{
+    #####:   41:   if(e.flags() & regex_constants::failbit)
+    %%%%%:   41-block 2
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:   41-block 3
+branch  3 never executed (fallthrough)
+branch  4 never executed
+    #####:   42:      return false;
+    %%%%%:   42-block 4
+        -:   43:
+    #####:   44:   BOOST_REGEX_DETAIL_NS::perl_matcher<BidiIterator, Allocator, traits> matcher(first, last, m, e, flags, base);
+    %%%%%:   44-block 5
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:   45:   return matcher.find();
+    %%%%%:   45-block 6
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:   45-block 7
+    #####:   46:}
+    %%%%%:   46-block 8
+call    0 never executed
+    $$$$$:   46-block 11
+call    1 never executed
+        -:   47:
+        -:   48://
+        -:   49:// regex_search convenience interfaces:
+        -:   50://
+        -:   51:template <class charT, class Allocator, class traits>
+        -:   52:inline bool regex_search(const charT* str, 
+        -:   53:                        match_results<const charT*, Allocator>& m, 
+        -:   54:                        const basic_regex<charT, traits>& e, 
+        -:   55:                        match_flag_type flags = match_default)
+        -:   56:{
+        -:   57:   return regex_search(str, str + traits::length(str), m, e, flags);
+        -:   58:}
+        -:   59:
+        -:   60:template <class ST, class SA, class Allocator, class charT, class traits>
+        -:   61:inline bool regex_search(const std::basic_string<charT, ST, SA>& s, 
+        -:   62:                 match_results<typename std::basic_string<charT, ST, SA>::const_iterator, Allocator>& m, 
+        -:   63:                 const basic_regex<charT, traits>& e, 
+        -:   64:                 match_flag_type flags = match_default)
+        -:   65:{
+        -:   66:   return regex_search(s.begin(), s.end(), m, e, flags);
+        -:   67:}
+        -:   68:
+        -:   69:template <class BidiIterator, class charT, class traits>
+        -:   70:bool regex_search(BidiIterator first, BidiIterator last, 
+        -:   71:                  const basic_regex<charT, traits>& e, 
+        -:   72:                  match_flag_type flags = match_default)
+        -:   73:{
+        -:   74:   if(e.flags() & regex_constants::failbit)
+        -:   75:      return false;
+        -:   76:
+        -:   77:   match_results<BidiIterator> m;
+        -:   78:   typedef typename match_results<BidiIterator>::allocator_type match_alloc_type;
+        -:   79:   BOOST_REGEX_DETAIL_NS::perl_matcher<BidiIterator, match_alloc_type, traits> matcher(first, last, m, e, flags | regex_constants::match_any, first);
+        -:   80:   return matcher.find();
+        -:   81:}
+        -:   82:
+        -:   83:template <class charT, class traits>
+        -:   84:inline bool regex_search(const charT* str, 
+        -:   85:                        const basic_regex<charT, traits>& e, 
+        -:   86:                        match_flag_type flags = match_default)
+        -:   87:{
+        -:   88:   return regex_search(str, str + traits::length(str), e, flags);
+        -:   89:}
+        -:   90:
+        -:   91:template <class ST, class SA, class charT, class traits>
+        -:   92:inline bool regex_search(const std::basic_string<charT, ST, SA>& s, 
+        -:   93:                 const basic_regex<charT, traits>& e, 
+        -:   94:                 match_flag_type flags = match_default)
+        -:   95:{
+        -:   96:   return regex_search(s.begin(), s.end(), e, flags);
+        -:   97:}
+        -:   98:
+        -:   99:} // namespace boost
+        -:  100:
+        -:  101:#endif  // BOOST_REGEX_V5_REGEX_SEARCH_HPP
+        -:  102:
+        -:  103:

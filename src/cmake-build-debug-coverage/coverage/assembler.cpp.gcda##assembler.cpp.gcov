@@ -1,0 +1,2540 @@
+        -:    0:Source:/home/rc/ZathuraDbg/src/app/integration/keystone/assembler.cpp
+        -:    0:Graph:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/app/integration/keystone/assembler.cpp.gcno
+        -:    0:Data:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/app/integration/keystone/assembler.cpp.gcda
+        -:    0:Runs:1
+        -:    1:#include "assembler.hpp"
+        -:    2:#include "../interpreter/interpreter.hpp"
+        -:    3:#include <capstone/capstone.h>
+        -:    4:
+        -:    5:ks_engine *ks = nullptr;
+        -:    6:uint64_t codeFinalLen = 0;
+        -:    7:uint64_t totalInstructions = 0;
+        -:    8:std::stringstream assembly;
+        -:    9:std::vector<std::string> labels;
+        -:   10:uint64_t tempTotalIns = 0;
+        -:   11:
+        -:   12:std::map<std::string, std::string> addressLineNoMap{};
+        -:   13:std::map<std::string, int> labelLineNoMapInternal{};
+        -:   14:tsl::ordered_map<std::string, std::pair<uint64_t, uint64_t>> labelLineNoRange{};
+        -:   15:std::vector<uint16_t> instructionSizes{};
+        -:   16:std::vector<uint64_t> emptyLineNumbers{};
+        -:   17:
+function _Z8assembleRKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEERK16keystoneSettings called 4 returned 100% blocks executed 33%
+        4:   18:std::pair<std::string, std::size_t> assemble(const std::string& assemblyString, const keystoneSettings& ksSettings) {
+       12:   19:    LOG_INFO("Assembling code...");
+        4:   19-block 2
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0
+        4:   19-block 4
+call    3 returned 4
+branch  4 taken 4 (fallthrough)
+branch  5 taken 0
+        4:   19-block 6
+call    6 returned 4
+branch  7 taken 4 (fallthrough)
+branch  8 taken 0 (throw)
+        4:   19-block 7
+call    9 returned 4
+branch 10 taken 4 (fallthrough)
+branch 11 taken 0 (throw)
+        4:   19-block 8
+call   12 returned 4
+call   13 returned 4
+call   14 returned 4
+branch 15 taken 4 (fallthrough)
+branch 16 taken 0 (throw)
+        4:   19-block 11
+call   17 returned 4
+branch 18 taken 4 (fallthrough)
+branch 19 taken 0 (throw)
+        4:   19-block 12
+        4:   19-block 14
+call   20 returned 4
+branch 21 taken 4 (fallthrough)
+branch 22 taken 0 (throw)
+        4:   19-block 15
+call   23 returned 4
+branch 24 taken 4 (fallthrough)
+branch 25 taken 0 (throw)
+        4:   19-block 16
+call   26 returned 4
+branch 27 taken 4 (fallthrough)
+branch 28 taken 0 (throw)
+        4:   19-block 17
+call   29 returned 4
+branch 30 taken 4 (fallthrough)
+branch 31 taken 0 (throw)
+        4:   19-block 18
+call   32 returned 4
+branch 33 taken 4 (fallthrough)
+branch 34 taken 0 (throw)
+        4:   19-block 19
+call   35 returned 4
+branch 36 taken 4 (fallthrough)
+branch 37 taken 0 (throw)
+        4:   19-block 20
+call   38 returned 4
+call   39 returned 4
+        4:   19-block 23
+call   40 returned 4
+call   41 returned 4
+        4:   19-block 26
+call   42 returned 4
+branch 43 taken 0
+branch 44 taken 4 (fallthrough)
+    $$$$$:   19-block 311
+call   45 never executed
+    $$$$$:   19-block 313
+call   46 never executed
+    $$$$$:   19-block 317
+    $$$$$:   19-block 318
+    $$$$$:   19-block 319
+    $$$$$:   19-block 320
+call   47 never executed
+    $$$$$:   19-block 322
+    $$$$$:   19-block 323
+call   48 never executed
+    $$$$$:   19-block 325
+        -:   20:    ks_err err;
+        -:   21:    size_t size;
+        -:   22:    size_t count;
+        -:   23:    unsigned char *encode;
+        -:   24:
+        4:   25:    if (ks == nullptr){
+        4:   25-block 28
+branch  0 taken 4 (fallthrough)
+branch  1 taken 0
+       12:   26:        LOG_INFO("Keystone object doesn't exists, creating...");
+        4:   26-block 29
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0
+        4:   26-block 31
+call    3 returned 4
+branch  4 taken 4 (fallthrough)
+branch  5 taken 0
+        4:   26-block 33
+call    6 returned 4
+branch  7 taken 4 (fallthrough)
+branch  8 taken 0 (throw)
+        4:   26-block 34
+call    9 returned 4
+branch 10 taken 4 (fallthrough)
+branch 11 taken 0 (throw)
+        4:   26-block 35
+call   12 returned 4
+call   13 returned 4
+call   14 returned 4
+branch 15 taken 4 (fallthrough)
+branch 16 taken 0 (throw)
+        4:   26-block 38
+call   17 returned 4
+branch 18 taken 4 (fallthrough)
+branch 19 taken 0 (throw)
+        4:   26-block 39
+        4:   26-block 41
+call   20 returned 4
+branch 21 taken 4 (fallthrough)
+branch 22 taken 0 (throw)
+        4:   26-block 42
+call   23 returned 4
+branch 24 taken 4 (fallthrough)
+branch 25 taken 0 (throw)
+        4:   26-block 43
+call   26 returned 4
+branch 27 taken 4 (fallthrough)
+branch 28 taken 0 (throw)
+        4:   26-block 44
+call   29 returned 4
+branch 30 taken 4 (fallthrough)
+branch 31 taken 0 (throw)
+        4:   26-block 45
+call   32 returned 4
+branch 33 taken 4 (fallthrough)
+branch 34 taken 0 (throw)
+        4:   26-block 46
+call   35 returned 4
+branch 36 taken 4 (fallthrough)
+branch 37 taken 0 (throw)
+        4:   26-block 47
+call   38 returned 4
+call   39 returned 4
+        4:   26-block 50
+call   40 returned 4
+call   41 returned 4
+        4:   26-block 53
+call   42 returned 4
+branch 43 taken 0
+branch 44 taken 4 (fallthrough)
+    $$$$$:   26-block 326
+call   45 never executed
+    $$$$$:   26-block 328
+call   46 never executed
+    $$$$$:   26-block 332
+    $$$$$:   26-block 333
+    $$$$$:   26-block 334
+    $$$$$:   26-block 335
+call   47 never executed
+    $$$$$:   26-block 337
+    $$$$$:   26-block 338
+call   48 never executed
+    $$$$$:   26-block 340
+        4:   27:        err = ks_open(ksSettings.arch, ksSettings.mode, &ks);
+        4:   27-block 55
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0 (throw)
+        -:   28:
+        4:   29:        if (err != KS_ERR_OK) {
+        4:   29-block 56
+branch  0 taken 0 (fallthrough)
+branch  1 taken 4
+    #####:   30:            LOG_ERROR("Failed to initialize Keystone engine: " << ks_strerror(err));
+    %%%%%:   30-block 57
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:   30-block 59
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:   30-block 61
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:   30-block 62
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+    %%%%%:   30-block 63
+call   12 never executed
+call   13 never executed
+call   14 never executed
+branch 15 never executed (fallthrough)
+branch 16 never executed (throw)
+    %%%%%:   30-block 66
+call   17 never executed
+branch 18 never executed (fallthrough)
+branch 19 never executed (throw)
+    %%%%%:   30-block 67
+    %%%%%:   30-block 69
+call   20 never executed
+branch 21 never executed (fallthrough)
+branch 22 never executed (throw)
+    %%%%%:   30-block 70
+call   23 never executed
+branch 24 never executed (fallthrough)
+branch 25 never executed (throw)
+    %%%%%:   30-block 71
+call   26 never executed
+branch 27 never executed (fallthrough)
+branch 28 never executed (throw)
+    %%%%%:   30-block 72
+call   29 never executed
+branch 30 never executed (fallthrough)
+branch 31 never executed (throw)
+    %%%%%:   30-block 73
+call   32 never executed
+branch 33 never executed (fallthrough)
+branch 34 never executed (throw)
+    %%%%%:   30-block 74
+call   35 never executed
+branch 36 never executed (fallthrough)
+branch 37 never executed (throw)
+    %%%%%:   30-block 75
+call   38 never executed
+branch 39 never executed (fallthrough)
+branch 40 never executed (throw)
+    %%%%%:   30-block 76
+call   41 never executed
+branch 42 never executed (fallthrough)
+branch 43 never executed (throw)
+    %%%%%:   30-block 77
+call   44 never executed
+call   45 never executed
+    %%%%%:   30-block 80
+call   46 never executed
+call   47 never executed
+    %%%%%:   30-block 83
+call   48 never executed
+branch 49 never executed
+branch 50 never executed (fallthrough)
+    $$$$$:   30-block 341
+call   51 never executed
+    $$$$$:   30-block 343
+call   52 never executed
+    $$$$$:   30-block 347
+    $$$$$:   30-block 348
+    $$$$$:   30-block 349
+    $$$$$:   30-block 350
+call   53 never executed
+    $$$$$:   30-block 352
+    $$$$$:   30-block 353
+call   54 never executed
+    $$$$$:   30-block 355
+    #####:   31:            tinyfd_messageBox("ERROR!","Failed to initialize Keystone engine!", "ok", "error", 0);
+    %%%%%:   31-block 85
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:   32:            return {"", 0};
+    %%%%%:   32-block 86
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:   32-block 88
+    $$$$$:   32-block 356
+        -:   33:        }
+        -:   34:
+        4:   35:        if (ksSettings.optionType){
+        4:   35-block 89
+branch  0 taken 4 (fallthrough)
+branch  1 taken 0
+        4:   36:            ks_option(ks, ksSettings.optionType, ksSettings.optionValue);
+        4:   36-block 90
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0 (throw)
+        -:   37:        }
+        -:   38:
+       12:   39:        LOG_INFO("Keystone object initialised.");
+        4:   39-block 92
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0
+        4:   39-block 94
+call    3 returned 4
+branch  4 taken 4 (fallthrough)
+branch  5 taken 0
+        4:   39-block 96
+call    6 returned 4
+branch  7 taken 4 (fallthrough)
+branch  8 taken 0 (throw)
+        4:   39-block 97
+call    9 returned 4
+branch 10 taken 4 (fallthrough)
+branch 11 taken 0 (throw)
+        4:   39-block 98
+call   12 returned 4
+call   13 returned 4
+call   14 returned 4
+branch 15 taken 4 (fallthrough)
+branch 16 taken 0 (throw)
+        4:   39-block 101
+call   17 returned 4
+branch 18 taken 4 (fallthrough)
+branch 19 taken 0 (throw)
+        4:   39-block 102
+        4:   39-block 104
+call   20 returned 4
+branch 21 taken 4 (fallthrough)
+branch 22 taken 0 (throw)
+        4:   39-block 105
+call   23 returned 4
+branch 24 taken 4 (fallthrough)
+branch 25 taken 0 (throw)
+        4:   39-block 106
+call   26 returned 4
+branch 27 taken 4 (fallthrough)
+branch 28 taken 0 (throw)
+        4:   39-block 107
+call   29 returned 4
+branch 30 taken 4 (fallthrough)
+branch 31 taken 0 (throw)
+        4:   39-block 108
+call   32 returned 4
+branch 33 taken 4 (fallthrough)
+branch 34 taken 0 (throw)
+        4:   39-block 109
+call   35 returned 4
+branch 36 taken 4 (fallthrough)
+branch 37 taken 0 (throw)
+        4:   39-block 110
+call   38 returned 4
+call   39 returned 4
+        4:   39-block 113
+call   40 returned 4
+call   41 returned 4
+        4:   39-block 116
+call   42 returned 4
+branch 43 taken 0
+branch 44 taken 4
+    $$$$$:   39-block 357
+call   45 never executed
+    $$$$$:   39-block 359
+call   46 never executed
+    $$$$$:   39-block 363
+    $$$$$:   39-block 364
+    $$$$$:   39-block 365
+    $$$$$:   39-block 366
+call   47 never executed
+    $$$$$:   39-block 368
+    $$$$$:   39-block 369
+call   48 never executed
+    $$$$$:   39-block 371
+        -:   40:    }
+        -:   41:    else{
+    #####:   42:        LOG_DEBUG("Keystone object already exists. Using that instead.");
+    %%%%%:   42-block 118
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:   42-block 120
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:   42-block 122
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:   42-block 123
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+    %%%%%:   42-block 124
+call   12 never executed
+call   13 never executed
+call   14 never executed
+branch 15 never executed (fallthrough)
+branch 16 never executed (throw)
+    %%%%%:   42-block 127
+call   17 never executed
+branch 18 never executed (fallthrough)
+branch 19 never executed (throw)
+    %%%%%:   42-block 128
+    %%%%%:   42-block 130
+call   20 never executed
+branch 21 never executed (fallthrough)
+branch 22 never executed (throw)
+    %%%%%:   42-block 131
+call   23 never executed
+branch 24 never executed (fallthrough)
+branch 25 never executed (throw)
+    %%%%%:   42-block 132
+call   26 never executed
+branch 27 never executed (fallthrough)
+branch 28 never executed (throw)
+    %%%%%:   42-block 133
+call   29 never executed
+branch 30 never executed (fallthrough)
+branch 31 never executed (throw)
+    %%%%%:   42-block 134
+call   32 never executed
+branch 33 never executed (fallthrough)
+branch 34 never executed (throw)
+    %%%%%:   42-block 135
+call   35 never executed
+branch 36 never executed (fallthrough)
+branch 37 never executed (throw)
+    %%%%%:   42-block 136
+call   38 never executed
+call   39 never executed
+    %%%%%:   42-block 139
+call   40 never executed
+call   41 never executed
+    %%%%%:   42-block 142
+call   42 never executed
+branch 43 never executed
+branch 44 never executed (fallthrough)
+    $$$$$:   42-block 372
+call   45 never executed
+    $$$$$:   42-block 374
+call   46 never executed
+    $$$$$:   42-block 378
+    $$$$$:   42-block 379
+    $$$$$:   42-block 380
+    $$$$$:   42-block 381
+call   47 never executed
+    $$$$$:   42-block 383
+    $$$$$:   42-block 384
+call   48 never executed
+    $$$$$:   42-block 386
+        -:   43:    }
+        -:   44:
+        4:   45:    if (ks_asm(ks, assemblyString.data(), 0, &encode, &size, &count)) {
+        4:   45-block 144
+call    0 returned 4
+call    1 returned 4
+branch  2 taken 4 (fallthrough)
+branch  3 taken 0 (throw)
+        4:   45-block 146
+branch  4 taken 0 (fallthrough)
+branch  5 taken 4
+    #####:   46:        err = ks_errno(ks);
+    %%%%%:   46-block 147
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:   46-block 148
+    #####:   47:        std::string error(ks_strerror(err));
+    %%%%%:   47-block 150
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:   47-block 151
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    $$$$$:   47-block 389
+    #####:   48:        if (err == KS_ERR_ASM_INVALIDOPERAND){
+    %%%%%:   48-block 153
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:   49:            LOG_ERROR("Wrong architecture error!: " << error);
+    %%%%%:   49-block 154
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:   49-block 156
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:   49-block 158
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:   49-block 159
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+    %%%%%:   49-block 160
+call   12 never executed
+call   13 never executed
+call   14 never executed
+branch 15 never executed (fallthrough)
+branch 16 never executed (throw)
+    %%%%%:   49-block 163
+call   17 never executed
+branch 18 never executed (fallthrough)
+branch 19 never executed (throw)
+    %%%%%:   49-block 164
+    %%%%%:   49-block 166
+call   20 never executed
+branch 21 never executed (fallthrough)
+branch 22 never executed (throw)
+    %%%%%:   49-block 167
+call   23 never executed
+branch 24 never executed (fallthrough)
+branch 25 never executed (throw)
+    %%%%%:   49-block 168
+call   26 never executed
+branch 27 never executed (fallthrough)
+branch 28 never executed (throw)
+    %%%%%:   49-block 169
+call   29 never executed
+branch 30 never executed (fallthrough)
+branch 31 never executed (throw)
+    %%%%%:   49-block 170
+call   32 never executed
+branch 33 never executed (fallthrough)
+branch 34 never executed (throw)
+    %%%%%:   49-block 171
+call   35 never executed
+branch 36 never executed (fallthrough)
+branch 37 never executed (throw)
+    %%%%%:   49-block 172
+call   38 never executed
+branch 39 never executed (fallthrough)
+branch 40 never executed (throw)
+    %%%%%:   49-block 173
+call   41 never executed
+call   42 never executed
+    %%%%%:   49-block 176
+call   43 never executed
+call   44 never executed
+    %%%%%:   49-block 179
+call   45 never executed
+branch 46 never executed
+branch 47 never executed (fallthrough)
+    $$$$$:   49-block 390
+call   48 never executed
+    $$$$$:   49-block 392
+call   49 never executed
+    $$$$$:   49-block 396
+    $$$$$:   49-block 397
+    $$$$$:   49-block 398
+    $$$$$:   49-block 399
+call   50 never executed
+    $$$$$:   49-block 401
+    $$$$$:   49-block 402
+call   51 never executed
+    $$$$$:   49-block 404
+    #####:   50:            tinyfd_messageBox("Assembly syntax error!", "The code does not belong to the currently selected architecture!"
+    %%%%%:   50-block 181
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:   51:                                    "\nPlease change the architecture in the settings.", "ok", "error", 0);
+        -:   52:        }
+    #####:   53:        else if (err >= KS_ERR_ASM){
+    %%%%%:   53-block 182
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:   54:            LOG_ERROR("Assembly syntax error: " << error);
+    %%%%%:   54-block 183
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:   54-block 185
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:   54-block 187
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:   54-block 188
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+    %%%%%:   54-block 189
+call   12 never executed
+call   13 never executed
+call   14 never executed
+branch 15 never executed (fallthrough)
+branch 16 never executed (throw)
+    %%%%%:   54-block 192
+call   17 never executed
+branch 18 never executed (fallthrough)
+branch 19 never executed (throw)
+    %%%%%:   54-block 193
+    %%%%%:   54-block 195
+call   20 never executed
+branch 21 never executed (fallthrough)
+branch 22 never executed (throw)
+    %%%%%:   54-block 196
+call   23 never executed
+branch 24 never executed (fallthrough)
+branch 25 never executed (throw)
+    %%%%%:   54-block 197
+call   26 never executed
+branch 27 never executed (fallthrough)
+branch 28 never executed (throw)
+    %%%%%:   54-block 198
+call   29 never executed
+branch 30 never executed (fallthrough)
+branch 31 never executed (throw)
+    %%%%%:   54-block 199
+call   32 never executed
+branch 33 never executed (fallthrough)
+branch 34 never executed (throw)
+    %%%%%:   54-block 200
+call   35 never executed
+branch 36 never executed (fallthrough)
+branch 37 never executed (throw)
+    %%%%%:   54-block 201
+call   38 never executed
+branch 39 never executed (fallthrough)
+branch 40 never executed (throw)
+    %%%%%:   54-block 202
+call   41 never executed
+call   42 never executed
+    %%%%%:   54-block 205
+call   43 never executed
+call   44 never executed
+    %%%%%:   54-block 208
+call   45 never executed
+branch 46 never executed
+branch 47 never executed (fallthrough)
+    $$$$$:   54-block 405
+call   48 never executed
+    $$$$$:   54-block 407
+call   49 never executed
+    $$$$$:   54-block 411
+    $$$$$:   54-block 412
+    $$$$$:   54-block 413
+    $$$$$:   54-block 414
+call   50 never executed
+    $$$$$:   54-block 416
+    $$$$$:   54-block 417
+call   51 never executed
+    $$$$$:   54-block 419
+    #####:   55:            tinyfd_messageBox("Assembly syntax error!", error.c_str(), "ok", "error", 0);
+    %%%%%:   55-block 210
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+        -:   56:        }
+        -:   57:
+    #####:   58:        LOG_ERROR(error);
+    %%%%%:   58-block 213
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:   58-block 215
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:   58-block 217
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:   58-block 218
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+    %%%%%:   58-block 219
+call   12 never executed
+call   13 never executed
+call   14 never executed
+branch 15 never executed (fallthrough)
+branch 16 never executed (throw)
+    %%%%%:   58-block 222
+call   17 never executed
+branch 18 never executed (fallthrough)
+branch 19 never executed (throw)
+    %%%%%:   58-block 223
+    %%%%%:   58-block 225
+call   20 never executed
+branch 21 never executed (fallthrough)
+branch 22 never executed (throw)
+    %%%%%:   58-block 226
+call   23 never executed
+branch 24 never executed (fallthrough)
+branch 25 never executed (throw)
+    %%%%%:   58-block 227
+call   26 never executed
+branch 27 never executed (fallthrough)
+branch 28 never executed (throw)
+    %%%%%:   58-block 228
+call   29 never executed
+branch 30 never executed (fallthrough)
+branch 31 never executed (throw)
+    %%%%%:   58-block 229
+call   32 never executed
+branch 33 never executed (fallthrough)
+branch 34 never executed (throw)
+    %%%%%:   58-block 230
+call   35 never executed
+branch 36 never executed (fallthrough)
+branch 37 never executed (throw)
+    %%%%%:   58-block 231
+call   38 never executed
+call   39 never executed
+    %%%%%:   58-block 234
+call   40 never executed
+call   41 never executed
+    %%%%%:   58-block 237
+call   42 never executed
+branch 43 never executed
+branch 44 never executed (fallthrough)
+    $$$$$:   58-block 420
+call   45 never executed
+    $$$$$:   58-block 422
+call   46 never executed
+    $$$$$:   58-block 426
+    $$$$$:   58-block 427
+    $$$$$:   58-block 428
+    $$$$$:   58-block 429
+call   47 never executed
+    $$$$$:   58-block 431
+    $$$$$:   58-block 432
+call   48 never executed
+    $$$$$:   58-block 434
+    #####:   59:        ks_close(ks);
+    %%%%%:   59-block 239
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:   60:        ks = nullptr;
+    #####:   61:        return {"", 0};
+    %%%%%:   61-block 240
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    $$$$$:   61-block 435
+    #####:   62:    }
+    %%%%%:   62-block 242
+call    0 never executed
+    $$$$$:   62-block 436
+call    1 never executed
+        -:   63:    else {
+       12:   64:        LOG_INFO("Assembly compiled successfully.");
+        4:   64-block 244
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0
+        4:   64-block 246
+call    3 returned 4
+branch  4 taken 4 (fallthrough)
+branch  5 taken 0
+        4:   64-block 248
+call    6 returned 4
+branch  7 taken 4 (fallthrough)
+branch  8 taken 0 (throw)
+        4:   64-block 249
+call    9 returned 4
+branch 10 taken 4 (fallthrough)
+branch 11 taken 0 (throw)
+        4:   64-block 250
+call   12 returned 4
+call   13 returned 4
+call   14 returned 4
+branch 15 taken 4 (fallthrough)
+branch 16 taken 0 (throw)
+        4:   64-block 253
+call   17 returned 4
+branch 18 taken 4 (fallthrough)
+branch 19 taken 0 (throw)
+        4:   64-block 254
+        4:   64-block 256
+call   20 returned 4
+branch 21 taken 4 (fallthrough)
+branch 22 taken 0 (throw)
+        4:   64-block 257
+call   23 returned 4
+branch 24 taken 4 (fallthrough)
+branch 25 taken 0 (throw)
+        4:   64-block 258
+call   26 returned 4
+branch 27 taken 4 (fallthrough)
+branch 28 taken 0 (throw)
+        4:   64-block 259
+call   29 returned 4
+branch 30 taken 4 (fallthrough)
+branch 31 taken 0 (throw)
+        4:   64-block 260
+call   32 returned 4
+branch 33 taken 4 (fallthrough)
+branch 34 taken 0 (throw)
+        4:   64-block 261
+call   35 returned 4
+branch 36 taken 4 (fallthrough)
+branch 37 taken 0 (throw)
+        4:   64-block 262
+call   38 returned 4
+call   39 returned 4
+        4:   64-block 265
+call   40 returned 4
+call   41 returned 4
+        4:   64-block 268
+call   42 returned 4
+branch 43 taken 0
+branch 44 taken 4 (fallthrough)
+    $$$$$:   64-block 439
+call   45 never executed
+    $$$$$:   64-block 441
+call   46 never executed
+    $$$$$:   64-block 445
+    $$$$$:   64-block 446
+    $$$$$:   64-block 447
+    $$$$$:   64-block 448
+call   47 never executed
+    $$$$$:   64-block 450
+    $$$$$:   64-block 451
+call   48 never executed
+    $$$$$:   64-block 453
+        -:   65:    }
+        -:   66:
+        4:   67:    std::pair<std::string, std::size_t> assembled = {std::string(reinterpret_cast<const char *>(encode), size), size};
+        4:   67-block 272
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0 (throw)
+        4:   67-block 273
+call    3 returned 4
+call    4 returned 4
+    $$$$$:   67-block 456
+    $$$$$:   67-block 457
+        -:   68:
+        4:   69:    ks_free(encode);
+        4:   69-block 276
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0 (throw)
+        4:   70:    ks_close(ks);
+        4:   70-block 277
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0 (throw)
+        4:   71:    ks = nullptr;
+        -:   72:
+        4:   73:    codeFinalLen = size;
+        4:   73-block 278
+       12:   74:    LOG_DEBUG("Assembled: " << size << " bytes");
+        4:   74-block 279
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0
+        4:   74-block 281
+call    3 returned 4
+branch  4 taken 4 (fallthrough)
+branch  5 taken 0
+        4:   74-block 283
+call    6 returned 4
+branch  7 taken 4 (fallthrough)
+branch  8 taken 0 (throw)
+        4:   74-block 284
+call    9 returned 4
+branch 10 taken 4 (fallthrough)
+branch 11 taken 0 (throw)
+        4:   74-block 285
+call   12 returned 4
+call   13 returned 4
+call   14 returned 4
+branch 15 taken 4 (fallthrough)
+branch 16 taken 0 (throw)
+        4:   74-block 288
+call   17 returned 4
+branch 18 taken 4 (fallthrough)
+branch 19 taken 0 (throw)
+        4:   74-block 289
+        4:   74-block 291
+call   20 returned 4
+branch 21 taken 4 (fallthrough)
+branch 22 taken 0 (throw)
+        4:   74-block 292
+call   23 returned 4
+branch 24 taken 4 (fallthrough)
+branch 25 taken 0 (throw)
+        4:   74-block 293
+call   26 returned 4
+branch 27 taken 4 (fallthrough)
+branch 28 taken 0 (throw)
+        4:   74-block 294
+call   29 returned 4
+branch 30 taken 4 (fallthrough)
+branch 31 taken 0 (throw)
+        4:   74-block 295
+call   32 returned 4
+branch 33 taken 4 (fallthrough)
+branch 34 taken 0 (throw)
+        4:   74-block 296
+call   35 returned 4
+branch 36 taken 4 (fallthrough)
+branch 37 taken 0 (throw)
+        4:   74-block 297
+call   38 returned 4
+branch 39 taken 4 (fallthrough)
+branch 40 taken 0 (throw)
+        4:   74-block 298
+call   41 returned 4
+branch 42 taken 4 (fallthrough)
+branch 43 taken 0 (throw)
+        4:   74-block 299
+call   44 returned 4
+call   45 returned 4
+        4:   74-block 302
+call   46 returned 4
+call   47 returned 4
+        4:   74-block 305
+call   48 returned 4
+branch 49 taken 0
+branch 50 taken 4 (fallthrough)
+    $$$$$:   74-block 458
+call   51 never executed
+    $$$$$:   74-block 460
+call   52 never executed
+    $$$$$:   74-block 464
+    $$$$$:   74-block 465
+    $$$$$:   74-block 466
+    $$$$$:   74-block 467
+call   53 never executed
+    $$$$$:   74-block 469
+    $$$$$:   74-block 470
+call   54 never executed
+    $$$$$:   74-block 472
+        4:   75:    return assembled;
+        4:   75-block 307
+call    0 returned 4
+        4:   76:}
+call    0 returned 4
+    $$$$$:   76-block 473
+call    1 never executed
+        -:   77:
+        -:   78:uint64_t lastInstructionLineNo = 0;
+function _Z18initInsSizeInfoMapv called 4 returned 100% blocks executed 57%
+        4:   79:void initInsSizeInfoMap(){
+       12:   80:    LOG_INFO("Upding instruction sizes info map...");
+        4:   80-block 2
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0
+        4:   80-block 4
+call    3 returned 4
+branch  4 taken 4 (fallthrough)
+branch  5 taken 0
+        4:   80-block 6
+call    6 returned 4
+branch  7 taken 4 (fallthrough)
+branch  8 taken 0 (throw)
+        4:   80-block 7
+call    9 returned 4
+branch 10 taken 4 (fallthrough)
+branch 11 taken 0 (throw)
+        4:   80-block 8
+call   12 returned 4
+call   13 returned 4
+call   14 returned 4
+branch 15 taken 4 (fallthrough)
+branch 16 taken 0 (throw)
+        4:   80-block 11
+call   17 returned 4
+branch 18 taken 4 (fallthrough)
+branch 19 taken 0 (throw)
+        4:   80-block 12
+        4:   80-block 14
+call   20 returned 4
+branch 21 taken 4 (fallthrough)
+branch 22 taken 0 (throw)
+        4:   80-block 15
+call   23 returned 4
+branch 24 taken 4 (fallthrough)
+branch 25 taken 0 (throw)
+        4:   80-block 16
+call   26 returned 4
+branch 27 taken 4 (fallthrough)
+branch 28 taken 0 (throw)
+        4:   80-block 17
+call   29 returned 4
+branch 30 taken 4 (fallthrough)
+branch 31 taken 0 (throw)
+        4:   80-block 18
+call   32 returned 4
+branch 33 taken 4 (fallthrough)
+branch 34 taken 0 (throw)
+        4:   80-block 19
+call   35 returned 4
+branch 36 taken 4 (fallthrough)
+branch 37 taken 0 (throw)
+        4:   80-block 20
+call   38 returned 4
+call   39 returned 4
+        4:   80-block 23
+call   40 returned 4
+call   41 returned 4
+        4:   80-block 26
+call   42 returned 4
+branch 43 taken 0
+branch 44 taken 4 (fallthrough)
+    $$$$$:   80-block 265
+call   45 never executed
+    $$$$$:   80-block 267
+call   46 never executed
+    $$$$$:   80-block 271
+    $$$$$:   80-block 272
+    $$$$$:   80-block 273
+    $$$$$:   80-block 274
+call   47 never executed
+    $$$$$:   80-block 276
+    $$$$$:   80-block 277
+call   48 never executed
+    $$$$$:   80-block 279
+        4:   81:    std::string instructionStr;
+        4:   81-block 28
+call    0 returned 4
+        -:   82:
+        4:   83:    uint64_t lineNo = 1;
+        4:   84:    uint16_t count = 0;
+        4:   85:    uint64_t currentAddr = ENTRY_POINT_ADDRESS;
+        4:   86:    uint64_t insCount = 0;
+        4:   87:    bool foundFirstLabel = false;
+        -:   88:
+        -:   89:    // TODO: Scan for multiline comments and ignore them
+      124:   90:    while (std::getline(assembly, instructionStr, '\n')) {
+      124:   90-block 186
+call    0 returned 124
+branch  1 taken 124 (fallthrough)
+branch  2 taken 0 (throw)
+      124:   90-block 187
+call    3 returned 124
+branch  4 taken 124 (fallthrough)
+branch  5 taken 0 (throw)
+      124:   90-block 188
+branch  6 taken 120
+branch  7 taken 4 (fallthrough)
+      120:   91:        if (instructionStr.contains(":")){
+      120:   91-block 30
+call    0 returned 120
+branch  1 taken 18 (fallthrough)
+branch  2 taken 102
+       18:   92:            instructionStr.erase(std::ranges::remove_if(instructionStr, ::isspace).begin(), instructionStr.end());
+       18:   92-block 32
+call    0 returned 18
+call    1 returned 18
+call    2 returned 18
+branch  3 taken 18 (fallthrough)
+branch  4 taken 0 (throw)
+       18:   92-block 35
+call    5 returned 18
+call    6 returned 18
+call    7 returned 18
+branch  8 taken 18 (fallthrough)
+branch  9 taken 0 (throw)
+    $$$$$:   92-block 280
+    $$$$$:   92-block 281
+    $$$$$:   92-block 282
+    $$$$$:   92-block 283
+    $$$$$:   92-block 284
+       18:   93:            if (instructionStr.ends_with(":")){
+       18:   93-block 38
+call    0 returned 18
+branch  1 taken 18 (fallthrough)
+branch  2 taken 0
+       18:   94:                if (instructionStr.contains(';')){
+       18:   94-block 40
+call    0 returned 18
+branch  1 taken 0 (fallthrough)
+branch  2 taken 18
+    #####:   95:                    if (instructionStr.find_first_of(';') > instructionStr.find_last_of(':')){
+    %%%%%:   95-block 42
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    #####:   96:                        if (labels.empty()){
+    %%%%%:   96-block 45
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:   97:                            foundFirstLabel = true;
+    %%%%%:   97-block 47
+        -:   98:                        }
+    #####:   99:                        else if (foundFirstLabel){
+    %%%%%:   99-block 48
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  100:                            lastInstructionLineNo = std::atoi(std::prev(addressLineNoMap.end())->second.data());
+    %%%%%:  100-block 49
+call    0 never executed
+    %%%%%:  100-block 56
+call    1 never executed
+call    2 never executed
+    #####:  101:                            foundFirstLabel = false;
+        -:  102:                        }
+    #####:  103:                        if (!labelLineNoRange.empty()) {
+    %%%%%:  103-block 59
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  104:                            labelLineNoRange[labelLineNoRange.back().first].second = strtol(std::prev(addressLineNoMap.end())->second.data(), nullptr, 10);
+    %%%%%:  104-block 61
+call    0 never executed
+    %%%%%:  104-block 68
+call    1 never executed
+call    2 never executed
+call    3 never executed
+call    4 never executed
+branch  5 never executed (fallthrough)
+branch  6 never executed (throw)
+    %%%%%:  104-block 72
+call    7 never executed
+branch  8 never executed (fallthrough)
+branch  9 never executed (throw)
+    %%%%%:  104-block 73
+    $$$$$:  104-block 285
+        -:  105:                        }
+        -:  106:
+    #####:  107:                        labelLineNoMapInternal.insert({instructionStr.substr(0, instructionStr.find_first_of(':')), lineNo});
+    %%%%%:  107-block 74
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+    %%%%%:  107-block 76
+call    4 never executed
+call    5 never executed
+branch  6 never executed (fallthrough)
+branch  7 never executed (throw)
+    %%%%%:  107-block 78
+call    8 never executed
+call    9 never executed
+    $$$$$:  107-block 286
+call   10 never executed
+    $$$$$:  107-block 288
+call   11 never executed
+    $$$$$:  107-block 290
+    $$$$$:  107-block 291
+    #####:  108:                        labelLineNoRange.insert({instructionStr.substr(0, instructionStr.find_first_of(':')), {lineNo, 0}});
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+    %%%%%:  108-block 82
+call    4 never executed
+call    5 never executed
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:  108-block 85
+call    9 never executed
+call   10 never executed
+    $$$$$:  108-block 292
+call   11 never executed
+    $$$$$:  108-block 294
+    $$$$$:  108-block 295
+    $$$$$:  108-block 296
+call   12 never executed
+    $$$$$:  108-block 298
+    $$$$$:  108-block 299
+    $$$$$:  108-block 300
+    #####:  109:                        labels.push_back(instructionStr.substr(0, instructionStr.find_first_of(':')));
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+    %%%%%:  109-block 89
+call    4 never executed
+branch  5 never executed (fallthrough)
+branch  6 never executed (throw)
+    %%%%%:  109-block 90
+call    7 never executed
+    $$$$$:  109-block 301
+call    8 never executed
+    $$$$$:  109-block 303
+        -:  110:                    }
+        -:  111:                }
+        -:  112:                else{
+       18:  113:                    if (labels.empty()){
+       18:  113-block 92
+call    0 returned 18
+branch  1 taken 3 (fallthrough)
+branch  2 taken 15
+        3:  114:                        foundFirstLabel = true;
+        3:  114-block 94
+        -:  115:                    }
+       15:  116:                    else if (foundFirstLabel) {
+       15:  116-block 95
+branch  0 taken 3 (fallthrough)
+branch  1 taken 12
+        6:  117:                        lastInstructionLineNo = std::atoi(std::prev(addressLineNoMap.end())->second.data());
+        3:  117-block 96
+call    0 returned 3
+        3:  117-block 103
+call    1 returned 3
+call    2 returned 3
+        3:  118:                        foundFirstLabel = false;
+        -:  119:                    }
+        -:  120:
+       18:  121:                    if (!labelLineNoRange.empty()) {
+       18:  121-block 106
+call    0 returned 18
+branch  1 taken 15 (fallthrough)
+branch  2 taken 3
+       30:  122:                        labelLineNoRange[labelLineNoRange.back().first].second = strtol(std::prev(addressLineNoMap.end())->second.data(), nullptr, 10);
+       15:  122-block 108
+call    0 returned 15
+       15:  122-block 115
+call    1 returned 15
+call    2 returned 15
+call    3 returned 15
+call    4 returned 15
+branch  5 taken 15 (fallthrough)
+branch  6 taken 0 (throw)
+       15:  122-block 119
+call    7 returned 15
+branch  8 taken 15 (fallthrough)
+branch  9 taken 0 (throw)
+       15:  122-block 120
+    $$$$$:  122-block 304
+        -:  123:                    }
+        -:  124:
+       18:  125:                    labelLineNoMapInternal.insert({instructionStr.substr(0, instructionStr.find_first_of(':')), lineNo});
+       18:  125-block 121
+call    0 returned 18
+call    1 returned 18
+branch  2 taken 18 (fallthrough)
+branch  3 taken 0 (throw)
+       18:  125-block 123
+call    4 returned 18
+call    5 returned 18
+branch  6 taken 18 (fallthrough)
+branch  7 taken 0 (throw)
+       18:  125-block 125
+call    8 returned 18
+call    9 returned 18
+    $$$$$:  125-block 305
+call   10 never executed
+    $$$$$:  125-block 307
+call   11 never executed
+    $$$$$:  125-block 309
+    $$$$$:  125-block 310
+       18:  126:                    labelLineNoRange.insert({instructionStr.substr(0, instructionStr.find_first_of(':')), {lineNo, 0}});
+call    0 returned 18
+call    1 returned 18
+branch  2 taken 18 (fallthrough)
+branch  3 taken 0 (throw)
+       18:  126-block 129
+call    4 returned 18
+call    5 returned 18
+call    6 returned 18
+branch  7 taken 18 (fallthrough)
+branch  8 taken 0 (throw)
+       18:  126-block 132
+call    9 returned 18
+call   10 returned 18
+    $$$$$:  126-block 311
+call   11 never executed
+    $$$$$:  126-block 313
+    $$$$$:  126-block 314
+    $$$$$:  126-block 315
+call   12 never executed
+    $$$$$:  126-block 317
+    $$$$$:  126-block 318
+    $$$$$:  126-block 319
+       18:  127:                    labels.push_back(instructionStr.substr(0, instructionStr.find_first_of(':')));
+call    0 returned 18
+call    1 returned 18
+branch  2 taken 18 (fallthrough)
+branch  3 taken 0 (throw)
+       18:  127-block 136
+call    4 returned 18
+branch  5 taken 18 (fallthrough)
+branch  6 taken 0 (throw)
+       18:  127-block 137
+call    7 returned 18
+    $$$$$:  127-block 320
+call    8 never executed
+    $$$$$:  127-block 322
+       18:  128:                    lineNo++;
+       18:  129:                    continue;
+        -:  130:                }
+        -:  131:            }
+        -:  132:        }
+      102:  133:        else if (instructionStr.empty()){
+      102:  133-block 139
+call    0 returned 102
+branch  1 taken 12 (fallthrough)
+branch  2 taken 90
+       12:  134:            emptyLineNumbers.push_back(lineNo);
+       12:  134-block 141
+call    0 returned 12
+branch  1 taken 12 (fallthrough)
+branch  2 taken 0 (throw)
+       12:  135:            lineNo++;
+       12:  136:            continue;
+       12:  136-block 142
+        -:  137:        }
+        -:  138:
+       90:  139:        if (instructionStr.starts_with("\t")){
+       90:  139-block 143
+call    0 returned 90
+branch  1 taken 54 (fallthrough)
+branch  2 taken 36
+       54:  140:            auto idx = instructionStr.find_first_not_of('\t');
+       54:  140-block 145
+call    0 returned 54
+       54:  141:            if (idx != std::string::npos){
+branch  0 taken 54 (fallthrough)
+branch  1 taken 0
+       54:  142:                instructionStr = instructionStr.substr(idx);
+       54:  142-block 147
+call    0 returned 54
+branch  1 taken 54 (fallthrough)
+branch  2 taken 0 (throw)
+       54:  142-block 148
+call    3 returned 54
+call    4 returned 54
+    $$$$$:  142-block 323
+        -:  143:            }
+        -:  144:        }
+       90:  145:        if (instructionStr.starts_with(" ")){
+       90:  145-block 151
+call    0 returned 90
+branch  1 taken 36 (fallthrough)
+branch  2 taken 54
+       36:  146:            auto idx = instructionStr.find_first_not_of(' ');
+       36:  146-block 153
+call    0 returned 36
+       36:  147:            if (idx != std::string::npos){
+branch  0 taken 33 (fallthrough)
+branch  1 taken 3
+       33:  148:                instructionStr = instructionStr.substr(idx);
+       33:  148-block 155
+call    0 returned 33
+branch  1 taken 33 (fallthrough)
+branch  2 taken 0 (throw)
+       33:  148-block 156
+call    3 returned 33
+call    4 returned 33
+    $$$$$:  148-block 324
+        -:  149:            }
+        -:  150:        }
+        -:  151:
+       90:  152:        if (const auto idx = instructionStr.find_first_of(' '); idx != std::string::npos){
+       90:  152-block 159
+call    0 returned 90
+branch  1 taken 84 (fallthrough)
+branch  2 taken 6
+       84:  153:            instructionStr = instructionStr.substr(0, idx);
+       84:  153-block 161
+call    0 returned 84
+branch  1 taken 84 (fallthrough)
+branch  2 taken 0 (throw)
+       84:  153-block 162
+call    3 returned 84
+call    4 returned 84
+    $$$$$:  153-block 325
+        -:  154:        }
+        -:  155:
+      90*:  156:        if (instructionStr.contains(";")){
+       90:  156-block 165
+call    0 returned 90
+branch  1 taken 0 (fallthrough)
+branch  2 taken 90
+    #####:  157:            lineNo++;
+    #####:  158:            continue;
+    %%%%%:  158-block 167
+        -:  159:        }
+        -:  160:
+       90:  161:        instructionStr = toUpperCase(instructionStr);
+       90:  161-block 168
+call    0 returned 90
+branch  1 taken 90 (fallthrough)
+branch  2 taken 0 (throw)
+       90:  161-block 169
+call    3 returned 90
+call    4 returned 90
+    $$$$$:  161-block 326
+        -:  162:
+        -:  163://       if it's valid instruction
+       90:  164:        if (std::ranges::find(archInstructions, instructionStr) != archInstructions.end()){
+call    0 returned 90
+call    1 returned 90
+branch  2 taken 90 (fallthrough)
+branch  3 taken 0 (throw)
+       90:  164-block 173
+call    4 returned 90
+branch  5 taken 87 (fallthrough)
+branch  6 taken 3
+    $$$$$:  164-block 327
+    $$$$$:  164-block 328
+       87:  165:            addressLineNoMap.insert({std::to_string(currentAddr), std::to_string(lineNo)});
+       87:  165-block 175
+call    0 returned 87
+branch  1 taken 87 (fallthrough)
+branch  2 taken 0 (throw)
+       87:  165-block 176
+call    3 returned 87
+branch  4 taken 87 (fallthrough)
+branch  5 taken 0 (throw)
+       87:  165-block 177
+call    6 returned 87
+call    7 returned 87
+branch  8 taken 87 (fallthrough)
+branch  9 taken 0 (throw)
+       87:  165-block 179
+call   10 returned 87
+call   11 returned 87
+call   12 returned 87
+    $$$$$:  165-block 329
+call   13 never executed
+    $$$$$:  165-block 331
+call   14 never executed
+    $$$$$:  165-block 333
+    $$$$$:  165-block 334
+call   15 never executed
+    $$$$$:  165-block 336
+    $$$$$:  165-block 337
+       87:  166:            currentAddr += instructionSizes[count];
+call    0 returned 87
+       87:  167:            count++;
+        -:  168:        }
+        -:  169:        else {
+        3:  170:            emptyLineNumbers.push_back(lineNo);
+        3:  170-block 184
+call    0 returned 3
+branch  1 taken 3 (fallthrough)
+branch  2 taken 0 (throw)
+        -:  171:        }
+       90:  172:        lineNo++;
+       90:  172-block 185
+        -:  173:    }
+        -:  174:
+       4*:  175:    if (!labelLineNoRange.empty() && (!addressLineNoMap.empty())) {
+        4:  175-block 189
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0
+        4:  175-block 191
+call    3 returned 4
+branch  4 taken 4 (fallthrough)
+branch  5 taken 0
+        4:  175-block 193
+    %%%%%:  175-block 194
+        4:  175-block 195
+branch  6 taken 4 (fallthrough)
+branch  7 taken 0
+        8:  176:        labelLineNoRange[labelLineNoRange.back().first].second = strtol(std::prev(addressLineNoMap.end())->second.data(), nullptr, 10);
+        4:  176-block 196
+call    0 returned 4
+        4:  176-block 203
+call    1 returned 4
+call    2 returned 4
+call    3 returned 4
+call    4 returned 4
+branch  5 taken 4 (fallthrough)
+branch  6 taken 0 (throw)
+        4:  176-block 207
+call    7 returned 4
+branch  8 taken 4 (fallthrough)
+branch  9 taken 0 (throw)
+        4:  176-block 208
+    $$$$$:  176-block 338
+        -:  177:    }
+        4:  178:    totalInstructions = count;
+        4:  178-block 209
+       12:  179:    LOG_INFO("Updated to instruction size information map.");
+        4:  179-block 210
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0
+        4:  179-block 212
+call    3 returned 4
+branch  4 taken 4 (fallthrough)
+branch  5 taken 0
+        4:  179-block 214
+call    6 returned 4
+branch  7 taken 4 (fallthrough)
+branch  8 taken 0 (throw)
+        4:  179-block 215
+call    9 returned 4
+branch 10 taken 4 (fallthrough)
+branch 11 taken 0 (throw)
+        4:  179-block 216
+call   12 returned 4
+call   13 returned 4
+call   14 returned 4
+branch 15 taken 4 (fallthrough)
+branch 16 taken 0 (throw)
+        4:  179-block 219
+call   17 returned 4
+branch 18 taken 4 (fallthrough)
+branch 19 taken 0 (throw)
+        4:  179-block 220
+        4:  179-block 222
+call   20 returned 4
+branch 21 taken 4 (fallthrough)
+branch 22 taken 0 (throw)
+        4:  179-block 223
+call   23 returned 4
+branch 24 taken 4 (fallthrough)
+branch 25 taken 0 (throw)
+        4:  179-block 224
+call   26 returned 4
+branch 27 taken 4 (fallthrough)
+branch 28 taken 0 (throw)
+        4:  179-block 225
+call   29 returned 4
+branch 30 taken 4 (fallthrough)
+branch 31 taken 0 (throw)
+        4:  179-block 226
+call   32 returned 4
+branch 33 taken 4 (fallthrough)
+branch 34 taken 0 (throw)
+        4:  179-block 227
+call   35 returned 4
+branch 36 taken 4 (fallthrough)
+branch 37 taken 0 (throw)
+        4:  179-block 228
+call   38 returned 4
+call   39 returned 4
+        4:  179-block 231
+call   40 returned 4
+call   41 returned 4
+        4:  179-block 234
+call   42 returned 4
+branch 43 taken 0
+branch 44 taken 4 (fallthrough)
+    $$$$$:  179-block 339
+call   45 never executed
+    $$$$$:  179-block 341
+call   46 never executed
+    $$$$$:  179-block 345
+    $$$$$:  179-block 346
+    $$$$$:  179-block 347
+    $$$$$:  179-block 348
+call   47 never executed
+    $$$$$:  179-block 350
+    $$$$$:  179-block 351
+call   48 never executed
+    $$$$$:  179-block 353
+       12:  180:    LOG_DEBUG("Total instructions to execute: " << totalInstructions);
+        4:  180-block 236
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0
+        4:  180-block 238
+call    3 returned 4
+branch  4 taken 4 (fallthrough)
+branch  5 taken 0
+        4:  180-block 240
+call    6 returned 4
+branch  7 taken 4 (fallthrough)
+branch  8 taken 0 (throw)
+        4:  180-block 241
+call    9 returned 4
+branch 10 taken 4 (fallthrough)
+branch 11 taken 0 (throw)
+        4:  180-block 242
+call   12 returned 4
+call   13 returned 4
+call   14 returned 4
+branch 15 taken 4 (fallthrough)
+branch 16 taken 0 (throw)
+        4:  180-block 245
+call   17 returned 4
+branch 18 taken 4 (fallthrough)
+branch 19 taken 0 (throw)
+        4:  180-block 246
+        4:  180-block 248
+call   20 returned 4
+branch 21 taken 4 (fallthrough)
+branch 22 taken 0 (throw)
+        4:  180-block 249
+call   23 returned 4
+branch 24 taken 4 (fallthrough)
+branch 25 taken 0 (throw)
+        4:  180-block 250
+call   26 returned 4
+branch 27 taken 4 (fallthrough)
+branch 28 taken 0 (throw)
+        4:  180-block 251
+call   29 returned 4
+branch 30 taken 4 (fallthrough)
+branch 31 taken 0 (throw)
+        4:  180-block 252
+call   32 returned 4
+branch 33 taken 4 (fallthrough)
+branch 34 taken 0 (throw)
+        4:  180-block 253
+call   35 returned 4
+branch 36 taken 4 (fallthrough)
+branch 37 taken 0 (throw)
+        4:  180-block 254
+call   38 returned 4
+branch 39 taken 4 (fallthrough)
+branch 40 taken 0 (throw)
+        4:  180-block 255
+call   41 returned 4
+call   42 returned 4
+        4:  180-block 258
+call   43 returned 4
+call   44 returned 4
+        4:  180-block 261
+call   45 returned 4
+branch 46 taken 0
+branch 47 taken 4 (fallthrough)
+    $$$$$:  180-block 354
+call   48 never executed
+    $$$$$:  180-block 356
+call   49 never executed
+    $$$$$:  180-block 360
+    $$$$$:  180-block 361
+    $$$$$:  180-block 362
+    $$$$$:  180-block 363
+call   50 never executed
+    $$$$$:  180-block 365
+    $$$$$:  180-block 366
+call   51 never executed
+    $$$$$:  180-block 368
+        4:  181:}
+        4:  181-block 263
+call    0 returned 4
+    $$$$$:  181-block 369
+call    1 never executed
+        -:  182:
+function _Z22countValidInstructionsRNSt7__cxx1118basic_stringstreamIcSt11char_traitsIcESaIcEEE called 0 returned 0% blocks executed 0%
+    #####:  183:uint64_t countValidInstructions(std::stringstream& asmStream){
+    #####:  184:    LOG_INFO("Counting valid instructions...");
+    %%%%%:  184-block 2
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:  184-block 4
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:  184-block 6
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:  184-block 7
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+    %%%%%:  184-block 8
+call   12 never executed
+call   13 never executed
+call   14 never executed
+branch 15 never executed (fallthrough)
+branch 16 never executed (throw)
+    %%%%%:  184-block 11
+call   17 never executed
+branch 18 never executed (fallthrough)
+branch 19 never executed (throw)
+    %%%%%:  184-block 12
+    %%%%%:  184-block 14
+call   20 never executed
+branch 21 never executed (fallthrough)
+branch 22 never executed (throw)
+    %%%%%:  184-block 15
+call   23 never executed
+branch 24 never executed (fallthrough)
+branch 25 never executed (throw)
+    %%%%%:  184-block 16
+call   26 never executed
+branch 27 never executed (fallthrough)
+branch 28 never executed (throw)
+    %%%%%:  184-block 17
+call   29 never executed
+branch 30 never executed (fallthrough)
+branch 31 never executed (throw)
+    %%%%%:  184-block 18
+call   32 never executed
+branch 33 never executed (fallthrough)
+branch 34 never executed (throw)
+    %%%%%:  184-block 19
+call   35 never executed
+branch 36 never executed (fallthrough)
+branch 37 never executed (throw)
+    %%%%%:  184-block 20
+call   38 never executed
+call   39 never executed
+    %%%%%:  184-block 23
+call   40 never executed
+call   41 never executed
+    %%%%%:  184-block 26
+call   42 never executed
+branch 43 never executed
+branch 44 never executed (fallthrough)
+    $$$$$:  184-block 110
+call   45 never executed
+    $$$$$:  184-block 112
+call   46 never executed
+    $$$$$:  184-block 116
+    $$$$$:  184-block 117
+    $$$$$:  184-block 118
+    $$$$$:  184-block 119
+call   47 never executed
+    $$$$$:  184-block 121
+    $$$$$:  184-block 122
+call   48 never executed
+    $$$$$:  184-block 124
+    #####:  185:    std::string instructionStr;
+    %%%%%:  185-block 28
+call    0 never executed
+    #####:  186:    uint16_t count = 0;
+        -:  187:
+    #####:  188:    while (std::getline(asmStream, instructionStr, '\n')) {
+    %%%%%:  188-block 77
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  188-block 78
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    %%%%%:  188-block 79
+branch  6 never executed
+branch  7 never executed (fallthrough)
+    #####:  189:        if (instructionStr.starts_with("\t")){
+    %%%%%:  189-block 30
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  190:            auto idx = instructionStr.find_first_not_of('\t');
+    %%%%%:  190-block 32
+call    0 never executed
+    #####:  191:            if (idx != std::string::npos){
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  192:                instructionStr = instructionStr.substr(idx);
+    %%%%%:  192-block 34
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  192-block 35
+call    3 never executed
+call    4 never executed
+    $$$$$:  192-block 125
+        -:  193:            }
+        -:  194:        }
+    #####:  195:        if (instructionStr.starts_with(" ")){
+    %%%%%:  195-block 38
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  196:            auto idx = instructionStr.find_first_not_of(' ');
+    %%%%%:  196-block 40
+call    0 never executed
+    #####:  197:            if (idx != std::string::npos){
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  198:                instructionStr = instructionStr.substr(idx);
+    %%%%%:  198-block 42
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  198-block 43
+call    3 never executed
+call    4 never executed
+    $$$$$:  198-block 126
+        -:  199:            }
+        -:  200:        }
+        -:  201:
+    #####:  202:        if (instructionStr.starts_with(" ") || instructionStr.starts_with("\t")){
+    %%%%%:  202-block 46
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:  202-block 48
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:  202-block 50
+    %%%%%:  202-block 51
+    %%%%%:  202-block 52
+branch  6 never executed (fallthrough)
+branch  7 never executed
+    #####:  203:            instructionStr = instructionStr.substr(1);
+    %%%%%:  203-block 53
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  203-block 54
+call    3 never executed
+call    4 never executed
+    $$$$$:  203-block 127
+        -:  204:        }
+        -:  205:
+    #####:  206:        if (instructionStr.empty()){
+    %%%%%:  206-block 57
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  207:            continue;
+    %%%%%:  207-block 59
+        -:  208:        }
+        -:  209:
+    #####:  210:        if (instructionStr.contains(";")){
+    %%%%%:  210-block 60
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  211:            continue;
+    %%%%%:  211-block 62
+        -:  212:        }
+        -:  213:
+    #####:  214:        instructionStr = toUpperCase(instructionStr);
+    %%%%%:  214-block 63
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  214-block 64
+call    3 never executed
+call    4 never executed
+    $$$$$:  214-block 128
+    #####:  215:        auto spaceIt = instructionStr.find_first_of(' ');
+call    0 never executed
+    #####:  216:        if (spaceIt != std::string::npos){
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  217:            instructionStr = instructionStr.substr(0, spaceIt);
+    %%%%%:  217-block 68
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  217-block 69
+call    3 never executed
+call    4 never executed
+    $$$$$:  217-block 129
+        -:  218:        }
+        -:  219:
+    #####:  220:        if (std::ranges::find(archInstructions, instructionStr) != archInstructions.end()){
+    %%%%%:  220-block 72
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+    %%%%%:  220-block 74
+call    4 never executed
+branch  5 never executed (fallthrough)
+branch  6 never executed
+    $$$$$:  220-block 130
+    $$$$$:  220-block 131
+    #####:  221:            count++;
+    %%%%%:  221-block 76
+        -:  222:        }
+        -:  223:    }
+        -:  224:
+    #####:  225:    LOG_DEBUG("Total valid instructions : " << count);
+    %%%%%:  225-block 80
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:  225-block 82
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:  225-block 84
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:  225-block 85
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+    %%%%%:  225-block 86
+call   12 never executed
+call   13 never executed
+call   14 never executed
+branch 15 never executed (fallthrough)
+branch 16 never executed (throw)
+    %%%%%:  225-block 89
+call   17 never executed
+branch 18 never executed (fallthrough)
+branch 19 never executed (throw)
+    %%%%%:  225-block 90
+    %%%%%:  225-block 92
+call   20 never executed
+branch 21 never executed (fallthrough)
+branch 22 never executed (throw)
+    %%%%%:  225-block 93
+call   23 never executed
+branch 24 never executed (fallthrough)
+branch 25 never executed (throw)
+    %%%%%:  225-block 94
+call   26 never executed
+branch 27 never executed (fallthrough)
+branch 28 never executed (throw)
+    %%%%%:  225-block 95
+call   29 never executed
+branch 30 never executed (fallthrough)
+branch 31 never executed (throw)
+    %%%%%:  225-block 96
+call   32 never executed
+branch 33 never executed (fallthrough)
+branch 34 never executed (throw)
+    %%%%%:  225-block 97
+call   35 never executed
+branch 36 never executed (fallthrough)
+branch 37 never executed (throw)
+    %%%%%:  225-block 98
+call   38 never executed
+branch 39 never executed (fallthrough)
+branch 40 never executed (throw)
+    %%%%%:  225-block 99
+call   41 never executed
+call   42 never executed
+    %%%%%:  225-block 102
+call   43 never executed
+call   44 never executed
+    %%%%%:  225-block 105
+call   45 never executed
+branch 46 never executed
+branch 47 never executed (fallthrough)
+    $$$$$:  225-block 132
+call   48 never executed
+    $$$$$:  225-block 134
+call   49 never executed
+    $$$$$:  225-block 138
+    $$$$$:  225-block 139
+    $$$$$:  225-block 140
+    $$$$$:  225-block 141
+call   50 never executed
+    $$$$$:  225-block 143
+    $$$$$:  225-block 144
+call   51 never executed
+    $$$$$:  225-block 146
+    #####:  226:    return count;
+    %%%%%:  226-block 109
+    #####:  227:}
+    %%%%%:  227-block 107
+call    0 never executed
+    $$$$$:  227-block 147
+call    1 never executed
+        -:  228:
+function _Z22updateInstructionSizesRKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE called 4 returned 100% blocks executed 71%
+        4:  229:void updateInstructionSizes(const std::string& compiledAsm){
+       12:  230:    LOG_INFO("Updating instruction sizes...");
+        4:  230-block 2
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0
+        4:  230-block 4
+call    3 returned 4
+branch  4 taken 4 (fallthrough)
+branch  5 taken 0
+        4:  230-block 6
+call    6 returned 4
+branch  7 taken 4 (fallthrough)
+branch  8 taken 0 (throw)
+        4:  230-block 7
+call    9 returned 4
+branch 10 taken 4 (fallthrough)
+branch 11 taken 0 (throw)
+        4:  230-block 8
+call   12 returned 4
+call   13 returned 4
+call   14 returned 4
+branch 15 taken 4 (fallthrough)
+branch 16 taken 0 (throw)
+        4:  230-block 11
+call   17 returned 4
+branch 18 taken 4 (fallthrough)
+branch 19 taken 0 (throw)
+        4:  230-block 12
+        4:  230-block 14
+call   20 returned 4
+branch 21 taken 4 (fallthrough)
+branch 22 taken 0 (throw)
+        4:  230-block 15
+call   23 returned 4
+branch 24 taken 4 (fallthrough)
+branch 25 taken 0 (throw)
+        4:  230-block 16
+call   26 returned 4
+branch 27 taken 4 (fallthrough)
+branch 28 taken 0 (throw)
+        4:  230-block 17
+call   29 returned 4
+branch 30 taken 4 (fallthrough)
+branch 31 taken 0 (throw)
+        4:  230-block 18
+call   32 returned 4
+branch 33 taken 4 (fallthrough)
+branch 34 taken 0 (throw)
+        4:  230-block 19
+call   35 returned 4
+branch 36 taken 4 (fallthrough)
+branch 37 taken 0 (throw)
+        4:  230-block 20
+call   38 returned 4
+call   39 returned 4
+        4:  230-block 23
+call   40 returned 4
+call   41 returned 4
+        4:  230-block 26
+call   42 returned 4
+branch 43 taken 0
+branch 44 taken 4 (fallthrough)
+    $$$$$:  230-block 44
+call   45 never executed
+    $$$$$:  230-block 46
+call   46 never executed
+    $$$$$:  230-block 50
+    $$$$$:  230-block 51
+    $$$$$:  230-block 52
+    $$$$$:  230-block 53
+call   47 never executed
+    $$$$$:  230-block 55
+    $$$$$:  230-block 56
+call   48 never executed
+    $$$$$:  230-block 58
+        -:  231:    csh handle;
+        -:  232:    cs_insn *instruction;
+        -:  233:
+        4:  234:    if (cs_open(codeInformation.archCS, codeInformation.modeCS, &handle) != CS_ERR_OK)
+        4:  234-block 28
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0 (throw)
+        4:  234-block 29
+branch  3 taken 0 (fallthrough)
+branch  4 taken 4
+    #####:  235:        return;
+    %%%%%:  235-block 30
+        -:  236:
+        4:  237:    const size_t count = cs_disasm(handle, reinterpret_cast<const uint8_t *>(compiledAsm.c_str()), compiledAsm.length(),
+        4:  237-block 31
+call    0 returned 4
+call    1 returned 4
+call    2 returned 4
+branch  3 taken 4 (fallthrough)
+branch  4 taken 0 (throw)
+        -:  238:                                   ENTRY_POINT_ADDRESS, 0, &instruction);
+        4:  239:    if (count > 0) {
+        4:  239-block 34
+branch  0 taken 4 (fallthrough)
+branch  1 taken 0
+      120:  240:        for (size_t j = 0; j < count; j++) {
+        4:  240-block 35
+      116:  240-block 37
+      120:  240-block 38
+branch  0 taken 116
+branch  1 taken 4 (fallthrough)
+      116:  241:            instructionSizes.push_back(instruction[j].size);
+      116:  241-block 36
+call    0 returned 116
+branch  1 taken 116 (fallthrough)
+branch  2 taken 0 (throw)
+        -:  242:        }
+        -:  243:
+        4:  244:        cs_free(instruction, count);
+        4:  244-block 39
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0 (throw)
+        -:  245:    } else {
+    #####:  246:        tinyfd_messageBox("Unable to run the given code!\n",  "Please check the logs and create an issue on GitHub if the issue persists", "ok", "error", 0);
+    %%%%%:  246-block 40
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:  247:    }
+        -:  248:
+        4:  249:    cs_close(&handle);
+        4:  249-block 41
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0 (throw)
+        -:  250:}
+        -:  251:
+function _Z8getBytesRKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE called 4 returned 100% blocks executed 44%
+        4:  252:std::string getBytes(const std::string& fileName){
+       12:  253:    LOG_DEBUG("Getting bytes from the file: " << fileName);
+        4:  253-block 2
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0
+        4:  253-block 4
+call    3 returned 4
+branch  4 taken 4 (fallthrough)
+branch  5 taken 0
+        4:  253-block 6
+call    6 returned 4
+branch  7 taken 4 (fallthrough)
+branch  8 taken 0 (throw)
+        4:  253-block 7
+call    9 returned 4
+branch 10 taken 4 (fallthrough)
+branch 11 taken 0 (throw)
+        4:  253-block 8
+call   12 returned 4
+call   13 returned 4
+call   14 returned 4
+branch 15 taken 4 (fallthrough)
+branch 16 taken 0 (throw)
+        4:  253-block 11
+call   17 returned 4
+branch 18 taken 4 (fallthrough)
+branch 19 taken 0 (throw)
+        4:  253-block 12
+        4:  253-block 14
+call   20 returned 4
+branch 21 taken 4 (fallthrough)
+branch 22 taken 0 (throw)
+        4:  253-block 15
+call   23 returned 4
+branch 24 taken 4 (fallthrough)
+branch 25 taken 0 (throw)
+        4:  253-block 16
+call   26 returned 4
+branch 27 taken 4 (fallthrough)
+branch 28 taken 0 (throw)
+        4:  253-block 17
+call   29 returned 4
+branch 30 taken 4 (fallthrough)
+branch 31 taken 0 (throw)
+        4:  253-block 18
+call   32 returned 4
+branch 33 taken 4 (fallthrough)
+branch 34 taken 0 (throw)
+        4:  253-block 19
+call   35 returned 4
+branch 36 taken 4 (fallthrough)
+branch 37 taken 0 (throw)
+        4:  253-block 20
+call   38 returned 4
+branch 39 taken 4 (fallthrough)
+branch 40 taken 0 (throw)
+        4:  253-block 21
+call   41 returned 4
+call   42 returned 4
+        4:  253-block 24
+call   43 returned 4
+call   44 returned 4
+        4:  253-block 27
+call   45 returned 4
+branch 46 taken 0
+branch 47 taken 4 (fallthrough)
+    $$$$$:  253-block 122
+call   48 never executed
+    $$$$$:  253-block 124
+call   49 never executed
+    $$$$$:  253-block 128
+    $$$$$:  253-block 129
+    $$$$$:  253-block 130
+    $$$$$:  253-block 131
+call   50 never executed
+    $$$$$:  253-block 133
+    $$$$$:  253-block 134
+call   51 never executed
+    $$$$$:  253-block 136
+        -:  254:
+        4:  255:    std::ifstream asmFile(fileName);
+        4:  255-block 29
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0 (throw)
+        -:  256:
+        4:  257:    if (!asmFile.is_open()){
+        4:  257-block 30
+call    0 returned 4
+branch  1 taken 0 (fallthrough)
+branch  2 taken 4
+    #####:  258:        LOG_ERROR("File can not be read: getBytes(" << fileName << ")");
+    %%%%%:  258-block 32
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:  258-block 34
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:  258-block 36
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:  258-block 37
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+    %%%%%:  258-block 38
+call   12 never executed
+call   13 never executed
+call   14 never executed
+branch 15 never executed (fallthrough)
+branch 16 never executed (throw)
+    %%%%%:  258-block 41
+call   17 never executed
+branch 18 never executed (fallthrough)
+branch 19 never executed (throw)
+    %%%%%:  258-block 42
+    %%%%%:  258-block 44
+call   20 never executed
+branch 21 never executed (fallthrough)
+branch 22 never executed (throw)
+    %%%%%:  258-block 45
+call   23 never executed
+branch 24 never executed (fallthrough)
+branch 25 never executed (throw)
+    %%%%%:  258-block 46
+call   26 never executed
+branch 27 never executed (fallthrough)
+branch 28 never executed (throw)
+    %%%%%:  258-block 47
+call   29 never executed
+branch 30 never executed (fallthrough)
+branch 31 never executed (throw)
+    %%%%%:  258-block 48
+call   32 never executed
+branch 33 never executed (fallthrough)
+branch 34 never executed (throw)
+    %%%%%:  258-block 49
+call   35 never executed
+branch 36 never executed (fallthrough)
+branch 37 never executed (throw)
+    %%%%%:  258-block 50
+call   38 never executed
+branch 39 never executed (fallthrough)
+branch 40 never executed (throw)
+    %%%%%:  258-block 51
+call   41 never executed
+branch 42 never executed (fallthrough)
+branch 43 never executed (throw)
+    %%%%%:  258-block 52
+call   44 never executed
+call   45 never executed
+    %%%%%:  258-block 55
+call   46 never executed
+call   47 never executed
+    %%%%%:  258-block 58
+call   48 never executed
+branch 49 never executed
+branch 50 never executed (fallthrough)
+    $$$$$:  258-block 137
+call   51 never executed
+    $$$$$:  258-block 139
+call   52 never executed
+    $$$$$:  258-block 143
+    $$$$$:  258-block 144
+    $$$$$:  258-block 145
+    $$$$$:  258-block 146
+call   53 never executed
+    $$$$$:  258-block 148
+    $$$$$:  258-block 149
+call   54 never executed
+    $$$$$:  258-block 151
+    #####:  259:        tinyfd_messageBox("File read error!", "Asm file can't be read!", "ok", "error", 0);
+    %%%%%:  259-block 60
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  260:        return "";
+    %%%%%:  260-block 63
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  260-block 65
+    $$$$$:  260-block 154
+        -:  261:    }
+        -:  262:
+        4:  263:    assembly << asmFile.rdbuf();
+        4:  263-block 66
+call    0 returned 4
+call    1 returned 4
+branch  2 taken 4 (fallthrough)
+branch  3 taken 0 (throw)
+        4:  264:    asmFile.close();
+        4:  264-block 68
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0 (throw)
+        -:  265:
+        4:  266:    keystoneSettings ksSettings = {.arch = codeInformation.archKS, .mode = codeInformation.modeKS, .optionType = KS_OPT_SYNTAX, .optionValue=codeInformation.syntax};
+        4:  267:    auto [bytes, size] = assemble(assembly.str(), ksSettings);
+        4:  267-block 69
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0 (throw)
+        4:  267-block 70
+call    3 returned 4
+branch  4 taken 4 (fallthrough)
+branch  5 taken 0 (throw)
+        4:  267-block 71
+call    6 returned 4
+call    7 returned 4
+call    8 returned 4
+    $$$$$:  267-block 155
+call    9 never executed
+    $$$$$:  267-block 157
+        -:  268:
+       4*:  269:    if (size == 0 && bytes.empty()) {
+branch  0 taken 0 (fallthrough)
+branch  1 taken 4
+    %%%%%:  269-block 75
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed
+    %%%%%:  269-block 77
+        4:  269-block 78
+        4:  269-block 79
+branch  5 taken 0 (fallthrough)
+branch  6 taken 4
+    #####:  270:        return "";
+    %%%%%:  270-block 82
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  270-block 84
+    $$$$$:  270-block 160
+        -:  271:    }
+        -:  272:
+        4:  273:    updateInstructionSizes(bytes);
+        4:  273-block 85
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0 (throw)
+        4:  274:    initInsSizeInfoMap();
+        4:  274-block 86
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0 (throw)
+       12:  275:    LOG_INFO("Got bytes, now hexlifying...");
+        4:  275-block 87
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0
+        4:  275-block 89
+call    3 returned 4
+branch  4 taken 4 (fallthrough)
+branch  5 taken 0
+        4:  275-block 91
+call    6 returned 4
+branch  7 taken 4 (fallthrough)
+branch  8 taken 0 (throw)
+        4:  275-block 92
+call    9 returned 4
+branch 10 taken 4 (fallthrough)
+branch 11 taken 0 (throw)
+        4:  275-block 93
+call   12 returned 4
+call   13 returned 4
+call   14 returned 4
+branch 15 taken 4 (fallthrough)
+branch 16 taken 0 (throw)
+        4:  275-block 96
+call   17 returned 4
+branch 18 taken 4 (fallthrough)
+branch 19 taken 0 (throw)
+        4:  275-block 97
+        4:  275-block 99
+call   20 returned 4
+branch 21 taken 4 (fallthrough)
+branch 22 taken 0 (throw)
+        4:  275-block 100
+call   23 returned 4
+branch 24 taken 4 (fallthrough)
+branch 25 taken 0 (throw)
+        4:  275-block 101
+call   26 returned 4
+branch 27 taken 4 (fallthrough)
+branch 28 taken 0 (throw)
+        4:  275-block 102
+call   29 returned 4
+branch 30 taken 4 (fallthrough)
+branch 31 taken 0 (throw)
+        4:  275-block 103
+call   32 returned 4
+branch 33 taken 4 (fallthrough)
+branch 34 taken 0 (throw)
+        4:  275-block 104
+call   35 returned 4
+branch 36 taken 4 (fallthrough)
+branch 37 taken 0 (throw)
+        4:  275-block 105
+call   38 returned 4
+call   39 returned 4
+        4:  275-block 108
+call   40 returned 4
+call   41 returned 4
+        4:  275-block 111
+call   42 returned 4
+branch 43 taken 0
+branch 44 taken 4 (fallthrough)
+    $$$$$:  275-block 161
+call   45 never executed
+    $$$$$:  275-block 163
+call   46 never executed
+    $$$$$:  275-block 167
+    $$$$$:  275-block 168
+    $$$$$:  275-block 169
+    $$$$$:  275-block 170
+call   47 never executed
+    $$$$$:  275-block 172
+    $$$$$:  275-block 173
+call   48 never executed
+    $$$$$:  275-block 175
+        4:  276:    return hexlify({bytes.data(), size});
+        4:  276-block 113
+call    0 returned 4
+call    1 returned 4
+call    2 returned 4
+branch  3 taken 4 (fallthrough)
+branch  4 taken 0 (throw)
+        4:  276-block 116
+        4:  276-block 117
+    $$$$$:  276-block 176
+        4:  277:}
+        4:  277-block 118
+call    0 returned 4
+        4:  277-block 119
+call    1 returned 4
+    $$$$$:  277-block 177
+call    2 never executed
+    $$$$$:  277-block 179
+call    3 never executed
+        -:  278:
+function _Z8getBytesRKNSt7__cxx1118basic_stringstreamIcSt11char_traitsIcESaIcEEE called 0 returned 0% blocks executed 0%
+    #####:  279:std::string getBytes(const std::stringstream &assembly){
+    #####:  280:    const keystoneSettings ksSettings = {.arch = codeInformation.archKS, .mode = codeInformation.modeKS, .optionType = KS_OPT_SYNTAX, .optionValue=codeInformation.syntax};
+    #####:  281:    auto [bytes, size] = assemble(assembly.str(), ksSettings);
+    %%%%%:  281-block 2
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  281-block 3
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    %%%%%:  281-block 4
+call    6 never executed
+call    7 never executed
+call    8 never executed
+    $$$$$:  281-block 40
+call    9 never executed
+    $$$$$:  281-block 42
+    #####:  282:    LOG_INFO("Got bytes, now hexlifying...");
+    %%%%%:  282-block 7
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:  282-block 9
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:  282-block 11
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:  282-block 12
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+    %%%%%:  282-block 13
+call   12 never executed
+call   13 never executed
+call   14 never executed
+branch 15 never executed (fallthrough)
+branch 16 never executed (throw)
+    %%%%%:  282-block 16
+call   17 never executed
+branch 18 never executed (fallthrough)
+branch 19 never executed (throw)
+    %%%%%:  282-block 17
+    %%%%%:  282-block 19
+call   20 never executed
+branch 21 never executed (fallthrough)
+branch 22 never executed (throw)
+    %%%%%:  282-block 20
+call   23 never executed
+branch 24 never executed (fallthrough)
+branch 25 never executed (throw)
+    %%%%%:  282-block 21
+call   26 never executed
+branch 27 never executed (fallthrough)
+branch 28 never executed (throw)
+    %%%%%:  282-block 22
+call   29 never executed
+branch 30 never executed (fallthrough)
+branch 31 never executed (throw)
+    %%%%%:  282-block 23
+call   32 never executed
+branch 33 never executed (fallthrough)
+branch 34 never executed (throw)
+    %%%%%:  282-block 24
+call   35 never executed
+branch 36 never executed (fallthrough)
+branch 37 never executed (throw)
+    %%%%%:  282-block 25
+call   38 never executed
+call   39 never executed
+    %%%%%:  282-block 28
+call   40 never executed
+call   41 never executed
+    %%%%%:  282-block 31
+call   42 never executed
+branch 43 never executed
+branch 44 never executed (fallthrough)
+    $$$$$:  282-block 43
+call   45 never executed
+    $$$$$:  282-block 45
+call   46 never executed
+    $$$$$:  282-block 49
+    $$$$$:  282-block 50
+    $$$$$:  282-block 51
+    $$$$$:  282-block 52
+call   47 never executed
+    $$$$$:  282-block 54
+    $$$$$:  282-block 55
+call   48 never executed
+    $$$$$:  282-block 57
+    #####:  283:    return hexlify({bytes.data(), size});
+    %%%%%:  283-block 33
+call    0 never executed
+call    1 never executed
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed (throw)
+    %%%%%:  283-block 36
+    %%%%%:  283-block 39
+    $$$$$:  283-block 58
+    #####:  284:}
+    %%%%%:  284-block 37
+call    0 never executed
+    $$$$$:  284-block 59
+call    1 never executed

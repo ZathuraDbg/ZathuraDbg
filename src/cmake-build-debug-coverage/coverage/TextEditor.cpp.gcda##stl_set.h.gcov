@@ -1,0 +1,1154 @@
+        -:    0:Source:/usr/include/c++/14.2.1/bits/stl_set.h
+        -:    0:Graph:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/home/rc/ZathuraDbg/vendor/ImGuiColorTextEdit/TextEditor.cpp.gcno
+        -:    0:Data:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/home/rc/ZathuraDbg/vendor/ImGuiColorTextEdit/TextEditor.cpp.gcda
+        -:    0:Runs:1
+        -:    1:// Set implementation -*- C++ -*-
+        -:    2:
+        -:    3:// Copyright (C) 2001-2024 Free Software Foundation, Inc.
+        -:    4://
+        -:    5:// This file is part of the GNU ISO C++ Library.  This library is free
+        -:    6:// software; you can redistribute it and/or modify it under the
+        -:    7:// terms of the GNU General Public License as published by the
+        -:    8:// Free Software Foundation; either version 3, or (at your option)
+        -:    9:// any later version.
+        -:   10:
+        -:   11:// This library is distributed in the hope that it will be useful,
+        -:   12:// but WITHOUT ANY WARRANTY; without even the implied warranty of
+        -:   13:// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+        -:   14:// GNU General Public License for more details.
+        -:   15:
+        -:   16:// Under Section 7 of GPL version 3, you are granted additional
+        -:   17:// permissions described in the GCC Runtime Library Exception, version
+        -:   18:// 3.1, as published by the Free Software Foundation.
+        -:   19:
+        -:   20:// You should have received a copy of the GNU General Public License and
+        -:   21:// a copy of the GCC Runtime Library Exception along with this program;
+        -:   22:// see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+        -:   23:// <http://www.gnu.org/licenses/>.
+        -:   24:
+        -:   25:/*
+        -:   26: *
+        -:   27: * Copyright (c) 1994
+        -:   28: * Hewlett-Packard Company
+        -:   29: *
+        -:   30: * Permission to use, copy, modify, distribute and sell this software
+        -:   31: * and its documentation for any purpose is hereby granted without fee,
+        -:   32: * provided that the above copyright notice appear in all copies and
+        -:   33: * that both that copyright notice and this permission notice appear
+        -:   34: * in supporting documentation.  Hewlett-Packard Company makes no
+        -:   35: * representations about the suitability of this software for any
+        -:   36: * purpose.  It is provided "as is" without express or implied warranty.
+        -:   37: *
+        -:   38: *
+        -:   39: * Copyright (c) 1996,1997
+        -:   40: * Silicon Graphics Computer Systems, Inc.
+        -:   41: *
+        -:   42: * Permission to use, copy, modify, distribute and sell this software
+        -:   43: * and its documentation for any purpose is hereby granted without fee,
+        -:   44: * provided that the above copyright notice appear in all copies and
+        -:   45: * that both that copyright notice and this permission notice appear
+        -:   46: * in supporting documentation.  Silicon Graphics makes no
+        -:   47: * representations about the suitability of this software for any
+        -:   48: * purpose.  It is provided "as is" without express or implied warranty.
+        -:   49: */
+        -:   50:
+        -:   51:/** @file bits/stl_set.h
+        -:   52: *  This is an internal header file, included by other library headers.
+        -:   53: *  Do not attempt to use it directly. @headername{set}
+        -:   54: */
+        -:   55:
+        -:   56:#ifndef _STL_SET_H
+        -:   57:#define _STL_SET_H 1
+        -:   58:
+        -:   59:#include <bits/concept_check.h>
+        -:   60:#if __cplusplus >= 201103L
+        -:   61:#include <initializer_list>
+        -:   62:#endif
+        -:   63:
+        -:   64:namespace std _GLIBCXX_VISIBILITY(default)
+        -:   65:{
+        -:   66:_GLIBCXX_BEGIN_NAMESPACE_VERSION
+        -:   67:_GLIBCXX_BEGIN_NAMESPACE_CONTAINER
+        -:   68:
+        -:   69:  template<typename _Key, typename _Compare, typename _Alloc>
+        -:   70:    class multiset;
+        -:   71:
+        -:   72:  /**
+        -:   73:   *  @brief A standard container made up of unique keys, which can be
+        -:   74:   *  retrieved in logarithmic time.
+        -:   75:   *
+        -:   76:   *  @ingroup associative_containers
+        -:   77:   *  @headerfile set
+        -:   78:   *  @since C++98
+        -:   79:   *
+        -:   80:   *  @tparam _Key  Type of key objects.
+        -:   81:   *  @tparam _Compare  Comparison function object type, defaults to less<_Key>.
+        -:   82:   *  @tparam _Alloc  Allocator type, defaults to allocator<_Key>.
+        -:   83:   *
+        -:   84:   *  Meets the requirements of a <a href="tables.html#65">container</a>, a
+        -:   85:   *  <a href="tables.html#66">reversible container</a>, and an
+        -:   86:   *  <a href="tables.html#69">associative container</a> (using unique keys).
+        -:   87:   *
+        -:   88:   *  Sets support bidirectional iterators.
+        -:   89:   *
+        -:   90:   *  The private tree data is declared exactly the same way for set and
+        -:   91:   *  multiset; the distinction is made entirely in how the tree functions are
+        -:   92:   *  called (*_unique versus *_equal, same as the standard).
+        -:   93:  */
+        -:   94:  template<typename _Key, typename _Compare = std::less<_Key>,
+        -:   95:	   typename _Alloc = std::allocator<_Key> >
+        -:   96:    class set
+        -:   97:    {
+        -:   98:#ifdef _GLIBCXX_CONCEPT_CHECKS
+        -:   99:      // concept requirements
+        -:  100:      typedef typename _Alloc::value_type		_Alloc_value_type;
+        -:  101:# if __cplusplus < 201103L
+        -:  102:      __glibcxx_class_requires(_Key, _SGIAssignableConcept)
+        -:  103:# endif
+        -:  104:      __glibcxx_class_requires4(_Compare, bool, _Key, _Key,
+        -:  105:				_BinaryFunctionConcept)
+        -:  106:      __glibcxx_class_requires2(_Key, _Alloc_value_type, _SameTypeConcept)
+        -:  107:#endif
+        -:  108:
+        -:  109:#if __cplusplus >= 201103L
+        -:  110:      static_assert(is_same<typename remove_cv<_Key>::type, _Key>::value,
+        -:  111:	  "std::set must have a non-const, non-volatile value_type");
+        -:  112:# if __cplusplus > 201703L || defined __STRICT_ANSI__
+        -:  113:      static_assert(is_same<typename _Alloc::value_type, _Key>::value,
+        -:  114:	  "std::set must have the same value_type as its allocator");
+        -:  115:# endif
+        -:  116:#endif
+        -:  117:
+        -:  118:    public:
+        -:  119:      // typedefs:
+        -:  120:      ///@{
+        -:  121:      /// Public typedefs.
+        -:  122:      typedef _Key     key_type;
+        -:  123:      typedef _Key     value_type;
+        -:  124:      typedef _Compare key_compare;
+        -:  125:      typedef _Compare value_compare;
+        -:  126:      typedef _Alloc   allocator_type;
+        -:  127:      ///@}
+        -:  128:
+        -:  129:    private:
+        -:  130:      typedef typename __gnu_cxx::__alloc_traits<_Alloc>::template
+        -:  131:	rebind<_Key>::other _Key_alloc_type;
+        -:  132:
+        -:  133:      typedef _Rb_tree<key_type, value_type, _Identity<value_type>,
+        -:  134:		       key_compare, _Key_alloc_type> _Rep_type;
+        -:  135:      _Rep_type _M_t;  // Red-black tree representing set.
+        -:  136:
+        -:  137:      typedef __gnu_cxx::__alloc_traits<_Key_alloc_type> _Alloc_traits;
+        -:  138:
+        -:  139:    public:
+        -:  140:      ///@{
+        -:  141:      ///  Iterator-related typedefs.
+        -:  142:      typedef typename _Alloc_traits::pointer		 pointer;
+        -:  143:      typedef typename _Alloc_traits::const_pointer	 const_pointer;
+        -:  144:      typedef typename _Alloc_traits::reference		 reference;
+        -:  145:      typedef typename _Alloc_traits::const_reference	 const_reference;
+        -:  146:      // _GLIBCXX_RESOLVE_LIB_DEFECTS
+        -:  147:      // DR 103. set::iterator is required to be modifiable,
+        -:  148:      // but this allows modification of keys.
+        -:  149:      typedef typename _Rep_type::const_iterator	 iterator;
+        -:  150:      typedef typename _Rep_type::const_iterator	 const_iterator;
+        -:  151:      typedef typename _Rep_type::const_reverse_iterator reverse_iterator;
+        -:  152:      typedef typename _Rep_type::const_reverse_iterator const_reverse_iterator;
+        -:  153:      typedef typename _Rep_type::size_type		 size_type;
+        -:  154:      typedef typename _Rep_type::difference_type	 difference_type;
+        -:  155:      ///@}
+        -:  156:
+        -:  157:#if __cplusplus > 201402L
+        -:  158:      using node_type = typename _Rep_type::node_type;
+        -:  159:      using insert_return_type = typename _Rep_type::insert_return_type;
+        -:  160:#endif
+        -:  161:
+        -:  162:      // allocation/deallocation
+        -:  163:      /**
+        -:  164:       *  @brief  Default constructor creates no elements.
+        -:  165:       */
+        -:  166:#if __cplusplus < 201103L
+        -:  167:      set() : _M_t() { }
+        -:  168:#else
+       4*:  169:      set() = default;
+------------------
+_ZNSt3setIN5boost13re_detail_5007digraphIcEESt4lessIS3_ESaIS3_EEC2Ev:
+function _ZNSt3setIN5boost13re_detail_5007digraphIcEESt4lessIS3_ESaIS3_EEC2Ev called 4 returned 100% blocks executed 100%
+        4:  169:      set() = default;
+        4:  169-block 2
+call    0 returned 4
+------------------
+_ZNSt3setIiSt4lessIiESaIiEEC2Ev:
+function _ZNSt3setIiSt4lessIiESaIiEEC2Ev called 0 returned 0% blocks executed 0%
+    #####:  169:      set() = default;
+    %%%%%:  169-block 2
+call    0 never executed
+------------------
+        -:  170:#endif
+        -:  171:
+        -:  172:      /**
+        -:  173:       *  @brief  Creates a %set with no elements.
+        -:  174:       *  @param  __comp  Comparator to use.
+        -:  175:       *  @param  __a  An allocator object.
+        -:  176:       */
+        -:  177:      explicit
+        -:  178:      set(const _Compare& __comp,
+        -:  179:	  const allocator_type& __a = allocator_type())
+        -:  180:      : _M_t(__comp, _Key_alloc_type(__a)) { }
+        -:  181:
+        -:  182:      /**
+        -:  183:       *  @brief  Builds a %set from a range.
+        -:  184:       *  @param  __first  An input iterator.
+        -:  185:       *  @param  __last  An input iterator.
+        -:  186:       *
+        -:  187:       *  Create a %set consisting of copies of the elements from
+        -:  188:       *  [__first,__last).  This is linear in N if the range is
+        -:  189:       *  already sorted, and NlogN otherwise (where N is
+        -:  190:       *  distance(__first,__last)).
+        -:  191:       */
+        -:  192:      template<typename _InputIterator>
+        -:  193:	set(_InputIterator __first, _InputIterator __last)
+        -:  194:	: _M_t()
+        -:  195:	{ _M_t._M_insert_range_unique(__first, __last); }
+        -:  196:
+        -:  197:      /**
+        -:  198:       *  @brief  Builds a %set from a range.
+        -:  199:       *  @param  __first  An input iterator.
+        -:  200:       *  @param  __last  An input iterator.
+        -:  201:       *  @param  __comp  A comparison functor.
+        -:  202:       *  @param  __a  An allocator object.
+        -:  203:       *
+        -:  204:       *  Create a %set consisting of copies of the elements from
+        -:  205:       *  [__first,__last).  This is linear in N if the range is
+        -:  206:       *  already sorted, and NlogN otherwise (where N is
+        -:  207:       *  distance(__first,__last)).
+        -:  208:       */
+        -:  209:      template<typename _InputIterator>
+        -:  210:	set(_InputIterator __first, _InputIterator __last,
+        -:  211:	    const _Compare& __comp,
+        -:  212:	    const allocator_type& __a = allocator_type())
+        -:  213:	: _M_t(__comp, _Key_alloc_type(__a))
+        -:  214:	{ _M_t._M_insert_range_unique(__first, __last); }
+        -:  215:
+        -:  216:      /**
+        -:  217:       *  @brief  %Set copy constructor.
+        -:  218:       *
+        -:  219:       *  Whether the allocator is copied depends on the allocator traits.
+        -:  220:       */
+        -:  221:#if __cplusplus < 201103L
+        -:  222:      set(const set& __x)
+        -:  223:      : _M_t(__x._M_t) { }
+        -:  224:#else
+        -:  225:      set(const set&) = default;
+        -:  226:
+        -:  227:     /**
+        -:  228:       *  @brief %Set move constructor
+        -:  229:       *
+        -:  230:       *  The newly-created %set contains the exact contents of the moved
+        -:  231:       *  instance. The moved instance is a valid, but unspecified, %set.
+        -:  232:       */
+        -:  233:      set(set&&) = default;
+        -:  234:
+        -:  235:      /**
+        -:  236:       *  @brief  Builds a %set from an initializer_list.
+        -:  237:       *  @param  __l  An initializer_list.
+        -:  238:       *  @param  __comp  A comparison functor.
+        -:  239:       *  @param  __a  An allocator object.
+        -:  240:       *
+        -:  241:       *  Create a %set consisting of copies of the elements in the list.
+        -:  242:       *  This is linear in N if the list is already sorted, and NlogN
+        -:  243:       *  otherwise (where N is @a __l.size()).
+        -:  244:       */
+        -:  245:      set(initializer_list<value_type> __l,
+        -:  246:	  const _Compare& __comp = _Compare(),
+        -:  247:	  const allocator_type& __a = allocator_type())
+        -:  248:      : _M_t(__comp, _Key_alloc_type(__a))
+        -:  249:      { _M_t._M_insert_range_unique(__l.begin(), __l.end()); }
+        -:  250:
+        -:  251:      /// Allocator-extended default constructor.
+        -:  252:      explicit
+        -:  253:      set(const allocator_type& __a)
+        -:  254:      : _M_t(_Key_alloc_type(__a)) { }
+        -:  255:
+        -:  256:      /// Allocator-extended copy constructor.
+        -:  257:      set(const set& __x, const __type_identity_t<allocator_type>& __a)
+        -:  258:      : _M_t(__x._M_t, _Key_alloc_type(__a)) { }
+        -:  259:
+        -:  260:      /// Allocator-extended move constructor.
+        -:  261:      set(set&& __x, const __type_identity_t<allocator_type>& __a)
+        -:  262:      noexcept(is_nothrow_copy_constructible<_Compare>::value
+        -:  263:	       && _Alloc_traits::_S_always_equal())
+        -:  264:      : _M_t(std::move(__x._M_t), _Key_alloc_type(__a)) { }
+        -:  265:
+        -:  266:      /// Allocator-extended initialier-list constructor.
+        -:  267:      set(initializer_list<value_type> __l, const allocator_type& __a)
+        -:  268:      : _M_t(_Key_alloc_type(__a))
+        -:  269:      { _M_t._M_insert_range_unique(__l.begin(), __l.end()); }
+        -:  270:
+        -:  271:      /// Allocator-extended range constructor.
+        -:  272:      template<typename _InputIterator>
+        -:  273:	set(_InputIterator __first, _InputIterator __last,
+        -:  274:	    const allocator_type& __a)
+        -:  275:	: _M_t(_Key_alloc_type(__a))
+        -:  276:	{ _M_t._M_insert_range_unique(__first, __last); }
+        -:  277:
+        -:  278:      /**
+        -:  279:       *  The dtor only erases the elements, and note that if the elements
+        -:  280:       *  themselves are pointers, the pointed-to memory is not touched in any
+        -:  281:       *  way. Managing the pointer is the user's responsibility.
+        -:  282:       */
+       4*:  283:      ~set() = default;
+------------------
+_ZNSt3setIN5boost13re_detail_5007digraphIcEESt4lessIS3_ESaIS3_EED2Ev:
+function _ZNSt3setIN5boost13re_detail_5007digraphIcEESt4lessIS3_ESaIS3_EED2Ev called 4 returned 100% blocks executed 100%
+        4:  283:      ~set() = default;
+        4:  283-block 2
+call    0 returned 4
+------------------
+_ZNSt3setIiSt4lessIiESaIiEED2Ev:
+function _ZNSt3setIiSt4lessIiESaIiEED2Ev called 0 returned 0% blocks executed 0%
+    #####:  283:      ~set() = default;
+    %%%%%:  283-block 2
+call    0 never executed
+------------------
+        -:  284:#endif
+        -:  285:
+        -:  286:      /**
+        -:  287:       *  @brief  %Set assignment operator.
+        -:  288:       *
+        -:  289:       *  Whether the allocator is copied depends on the allocator traits.
+        -:  290:       */
+        -:  291:#if __cplusplus < 201103L
+        -:  292:      set&
+        -:  293:      operator=(const set& __x)
+        -:  294:      {
+        -:  295:	_M_t = __x._M_t;
+        -:  296:	return *this;
+        -:  297:      }
+        -:  298:#else
+        -:  299:      set&
+        -:  300:      operator=(const set&) = default;
+        -:  301:
+        -:  302:      /// Move assignment operator.
+        -:  303:      set&
+        -:  304:      operator=(set&&) = default;
+        -:  305:
+        -:  306:      /**
+        -:  307:       *  @brief  %Set list assignment operator.
+        -:  308:       *  @param  __l  An initializer_list.
+        -:  309:       *
+        -:  310:       *  This function fills a %set with copies of the elements in the
+        -:  311:       *  initializer list @a __l.
+        -:  312:       *
+        -:  313:       *  Note that the assignment completely changes the %set and
+        -:  314:       *  that the resulting %set's size is the same as the number
+        -:  315:       *  of elements assigned.
+        -:  316:       */
+        -:  317:      set&
+        -:  318:      operator=(initializer_list<value_type> __l)
+        -:  319:      {
+        -:  320:	_M_t._M_assign_unique(__l.begin(), __l.end());
+        -:  321:	return *this;
+        -:  322:      }
+        -:  323:#endif
+        -:  324:
+        -:  325:      // accessors:
+        -:  326:
+        -:  327:      ///  Returns the comparison object with which the %set was constructed.
+        -:  328:      key_compare
+        -:  329:      key_comp() const
+        -:  330:      { return _M_t.key_comp(); }
+        -:  331:      ///  Returns the comparison object with which the %set was constructed.
+        -:  332:      value_compare
+        -:  333:      value_comp() const
+        -:  334:      { return _M_t.key_comp(); }
+        -:  335:      ///  Returns the allocator object with which the %set was constructed.
+        -:  336:      allocator_type
+        -:  337:      get_allocator() const _GLIBCXX_NOEXCEPT
+        -:  338:      { return allocator_type(_M_t.get_allocator()); }
+        -:  339:
+        -:  340:      /**
+        -:  341:       *  Returns a read-only (constant) iterator that points to the first
+        -:  342:       *  element in the %set.  Iteration is done in ascending order according
+        -:  343:       *  to the keys.
+        -:  344:       */
+        -:  345:      iterator
+       4*:  346:      begin() const _GLIBCXX_NOEXCEPT
+       4*:  347:      { return _M_t.begin(); }
+------------------
+_ZNKSt3setIN5boost13re_detail_5007digraphIcEESt4lessIS3_ESaIS3_EE5beginEv:
+function _ZNKSt3setIN5boost13re_detail_5007digraphIcEESt4lessIS3_ESaIS3_EE5beginEv called 4 returned 100% blocks executed 100%
+        4:  346:      begin() const _GLIBCXX_NOEXCEPT
+        4:  347:      { return _M_t.begin(); }
+        4:  347-block 2
+call    0 returned 4
+------------------
+_ZNKSt3setIiSt4lessIiESaIiEE5beginEv:
+function _ZNKSt3setIiSt4lessIiESaIiEE5beginEv called 0 returned 0% blocks executed 0%
+    #####:  346:      begin() const _GLIBCXX_NOEXCEPT
+    #####:  347:      { return _M_t.begin(); }
+    %%%%%:  347-block 2
+call    0 never executed
+------------------
+        -:  348:
+        -:  349:      /**
+        -:  350:       *  Returns a read-only (constant) iterator that points one past the last
+        -:  351:       *  element in the %set.  Iteration is done in ascending order according
+        -:  352:       *  to the keys.
+        -:  353:       */
+        -:  354:      iterator
+       4*:  355:      end() const _GLIBCXX_NOEXCEPT
+       4*:  356:      { return _M_t.end(); }
+------------------
+_ZNKSt3setIN5boost13re_detail_5007digraphIcEESt4lessIS3_ESaIS3_EE3endEv:
+function _ZNKSt3setIN5boost13re_detail_5007digraphIcEESt4lessIS3_ESaIS3_EE3endEv called 4 returned 100% blocks executed 100%
+        4:  355:      end() const _GLIBCXX_NOEXCEPT
+        4:  356:      { return _M_t.end(); }
+        4:  356-block 2
+call    0 returned 4
+------------------
+_ZNKSt3setIiSt4lessIiESaIiEE3endEv:
+function _ZNKSt3setIiSt4lessIiESaIiEE3endEv called 0 returned 0% blocks executed 0%
+    #####:  355:      end() const _GLIBCXX_NOEXCEPT
+    #####:  356:      { return _M_t.end(); }
+    %%%%%:  356-block 2
+call    0 never executed
+------------------
+        -:  357:
+        -:  358:      /**
+        -:  359:       *  Returns a read-only (constant) iterator that points to the last
+        -:  360:       *  element in the %set.  Iteration is done in descending order according
+        -:  361:       *  to the keys.
+        -:  362:       */
+        -:  363:      reverse_iterator
+function _ZNKSt3setIiSt4lessIiESaIiEE6rbeginEv called 0 returned 0% blocks executed 0%
+    #####:  364:      rbegin() const _GLIBCXX_NOEXCEPT
+    #####:  365:      { return _M_t.rbegin(); }
+    %%%%%:  365-block 2
+call    0 never executed
+        -:  366:
+        -:  367:      /**
+        -:  368:       *  Returns a read-only (constant) reverse iterator that points to the
+        -:  369:       *  last pair in the %set.  Iteration is done in descending order
+        -:  370:       *  according to the keys.
+        -:  371:       */
+        -:  372:      reverse_iterator
+function _ZNKSt3setIiSt4lessIiESaIiEE4rendEv called 0 returned 0% blocks executed 0%
+    #####:  373:      rend() const _GLIBCXX_NOEXCEPT
+    #####:  374:      { return _M_t.rend(); }
+    %%%%%:  374-block 2
+call    0 never executed
+        -:  375:
+        -:  376:#if __cplusplus >= 201103L
+        -:  377:      /**
+        -:  378:       *  Returns a read-only (constant) iterator that points to the first
+        -:  379:       *  element in the %set.  Iteration is done in ascending order according
+        -:  380:       *  to the keys.
+        -:  381:       */
+        -:  382:      iterator
+        -:  383:      cbegin() const noexcept
+        -:  384:      { return _M_t.begin(); }
+        -:  385:
+        -:  386:      /**
+        -:  387:       *  Returns a read-only (constant) iterator that points one past the last
+        -:  388:       *  element in the %set.  Iteration is done in ascending order according
+        -:  389:       *  to the keys.
+        -:  390:       */
+        -:  391:      iterator
+        -:  392:      cend() const noexcept
+        -:  393:      { return _M_t.end(); }
+        -:  394:
+        -:  395:      /**
+        -:  396:       *  Returns a read-only (constant) iterator that points to the last
+        -:  397:       *  element in the %set.  Iteration is done in descending order according
+        -:  398:       *  to the keys.
+        -:  399:       */
+        -:  400:      reverse_iterator
+        -:  401:      crbegin() const noexcept
+        -:  402:      { return _M_t.rbegin(); }
+        -:  403:
+        -:  404:      /**
+        -:  405:       *  Returns a read-only (constant) reverse iterator that points to the
+        -:  406:       *  last pair in the %set.  Iteration is done in descending order
+        -:  407:       *  according to the keys.
+        -:  408:       */
+        -:  409:      reverse_iterator
+        -:  410:      crend() const noexcept
+        -:  411:      { return _M_t.rend(); }
+        -:  412:#endif
+        -:  413:
+        -:  414:      ///  Returns true if the %set is empty.
+        -:  415:      _GLIBCXX_NODISCARD bool
+        -:  416:      empty() const _GLIBCXX_NOEXCEPT
+        -:  417:      { return _M_t.empty(); }
+        -:  418:
+        -:  419:      ///  Returns the size of the %set.
+        -:  420:      size_type
+        -:  421:      size() const _GLIBCXX_NOEXCEPT
+        -:  422:      { return _M_t.size(); }
+        -:  423:
+        -:  424:      ///  Returns the maximum size of the %set.
+        -:  425:      size_type
+        -:  426:      max_size() const _GLIBCXX_NOEXCEPT
+        -:  427:      { return _M_t.max_size(); }
+        -:  428:
+        -:  429:      /**
+        -:  430:       *  @brief  Swaps data with another %set.
+        -:  431:       *  @param  __x  A %set of the same element and allocator types.
+        -:  432:       *
+        -:  433:       *  This exchanges the elements between two sets in constant
+        -:  434:       *  time.  (It is only swapping a pointer, an integer, and an
+        -:  435:       *  instance of the @c Compare type (which itself is often
+        -:  436:       *  stateless and empty), so it should be quite fast.)  Note
+        -:  437:       *  that the global std::swap() function is specialized such
+        -:  438:       *  that std::swap(s1,s2) will feed to this function.
+        -:  439:       *
+        -:  440:       *  Whether the allocators are swapped depends on the allocator traits.
+        -:  441:       */
+        -:  442:      void
+        -:  443:      swap(set& __x)
+        -:  444:      _GLIBCXX_NOEXCEPT_IF(__is_nothrow_swappable<_Compare>::value)
+        -:  445:      { _M_t.swap(__x._M_t); }
+        -:  446:
+        -:  447:      // insert/erase
+        -:  448:#if __cplusplus >= 201103L
+        -:  449:      /**
+        -:  450:       *  @brief Attempts to build and insert an element into the %set.
+        -:  451:       *  @param __args  Arguments used to generate an element.
+        -:  452:       *  @return  A pair, of which the first element is an iterator that points
+        -:  453:       *           to the possibly inserted element, and the second is a bool
+        -:  454:       *           that is true if the element was actually inserted.
+        -:  455:       *
+        -:  456:       *  This function attempts to build and insert an element into the %set.
+        -:  457:       *  A %set relies on unique keys and thus an element is only inserted if
+        -:  458:       *  it is not already present in the %set.
+        -:  459:       *
+        -:  460:       *  Insertion requires logarithmic time.
+        -:  461:       */
+        -:  462:      template<typename... _Args>
+        -:  463:	std::pair<iterator, bool>
+        -:  464:	emplace(_Args&&... __args)
+        -:  465:	{ return _M_t._M_emplace_unique(std::forward<_Args>(__args)...); }
+        -:  466:
+        -:  467:      /**
+        -:  468:       *  @brief Attempts to insert an element into the %set.
+        -:  469:       *  @param  __pos  An iterator that serves as a hint as to where the
+        -:  470:       *                element should be inserted.
+        -:  471:       *  @param  __args  Arguments used to generate the element to be
+        -:  472:       *                 inserted.
+        -:  473:       *  @return An iterator that points to the element with key equivalent to
+        -:  474:       *          the one generated from @a __args (may or may not be the
+        -:  475:       *          element itself).
+        -:  476:       *
+        -:  477:       *  This function is not concerned about whether the insertion took place,
+        -:  478:       *  and thus does not return a boolean like the single-argument emplace()
+        -:  479:       *  does.  Note that the first parameter is only a hint and can
+        -:  480:       *  potentially improve the performance of the insertion process.  A bad
+        -:  481:       *  hint would cause no gains in efficiency.
+        -:  482:       *
+        -:  483:       *  For more on @a hinting, see:
+        -:  484:       *  https://gcc.gnu.org/onlinedocs/libstdc++/manual/associative.html#containers.associative.insert_hints
+        -:  485:       *
+        -:  486:       *  Insertion requires logarithmic time (if the hint is not taken).
+        -:  487:       */
+        -:  488:      template<typename... _Args>
+        -:  489:	iterator
+        -:  490:	emplace_hint(const_iterator __pos, _Args&&... __args)
+        -:  491:	{
+        -:  492:	  return _M_t._M_emplace_hint_unique(__pos,
+        -:  493:					     std::forward<_Args>(__args)...);
+        -:  494:	}
+        -:  495:#endif
+        -:  496:
+        -:  497:      /**
+        -:  498:       *  @brief Attempts to insert an element into the %set.
+        -:  499:       *  @param  __x  Element to be inserted.
+        -:  500:       *  @return  A pair, of which the first element is an iterator that points
+        -:  501:       *           to the possibly inserted element, and the second is a bool
+        -:  502:       *           that is true if the element was actually inserted.
+        -:  503:       *
+        -:  504:       *  This function attempts to insert an element into the %set.  A %set
+        -:  505:       *  relies on unique keys and thus an element is only inserted if it is
+        -:  506:       *  not already present in the %set.
+        -:  507:       *
+        -:  508:       *  Insertion requires logarithmic time.
+        -:  509:       */
+        -:  510:      std::pair<iterator, bool>
+       2*:  511:      insert(const value_type& __x)
+        -:  512:      {
+        -:  513:	std::pair<typename _Rep_type::iterator, bool> __p =
+       2*:  514:	  _M_t._M_insert_unique(__x);
+       2*:  515:	return std::pair<iterator, bool>(__p.first, __p.second);
+        -:  516:      }
+        -:  517:
+        -:  518:#if __cplusplus >= 201103L
+        -:  519:      std::pair<iterator, bool>
+        -:  520:      insert(value_type&& __x)
+        -:  521:      {
+        -:  522:	std::pair<typename _Rep_type::iterator, bool> __p =
+        -:  523:	  _M_t._M_insert_unique(std::move(__x));
+        -:  524:	return std::pair<iterator, bool>(__p.first, __p.second);
+        -:  525:      }
+        -:  526:#endif
+        -:  527:
+        -:  528:      /**
+        -:  529:       *  @brief Attempts to insert an element into the %set.
+        -:  530:       *  @param  __position  An iterator that serves as a hint as to where the
+        -:  531:       *                    element should be inserted.
+        -:  532:       *  @param  __x  Element to be inserted.
+        -:  533:       *  @return An iterator that points to the element with key of
+        -:  534:       *           @a __x (may or may not be the element passed in).
+        -:  535:       *
+        -:  536:       *  This function is not concerned about whether the insertion took place,
+        -:  537:       *  and thus does not return a boolean like the single-argument insert()
+        -:  538:       *  does.  Note that the first parameter is only a hint and can
+        -:  539:       *  potentially improve the performance of the insertion process.  A bad
+        -:  540:       *  hint would cause no gains in efficiency.
+        -:  541:       *
+        -:  542:       *  For more on @a hinting, see:
+        -:  543:       *  https://gcc.gnu.org/onlinedocs/libstdc++/manual/associative.html#containers.associative.insert_hints
+        -:  544:       *
+        -:  545:       *  Insertion requires logarithmic time (if the hint is not taken).
+        -:  546:       */
+        -:  547:      iterator
+        -:  548:      insert(const_iterator __position, const value_type& __x)
+        -:  549:      { return _M_t._M_insert_unique_(__position, __x); }
+        -:  550:
+        -:  551:#if __cplusplus >= 201103L
+        -:  552:      iterator
+        -:  553:      insert(const_iterator __position, value_type&& __x)
+        -:  554:      { return _M_t._M_insert_unique_(__position, std::move(__x)); }
+        -:  555:#endif
+        -:  556:
+        -:  557:      /**
+        -:  558:       *  @brief A template function that attempts to insert a range
+        -:  559:       *  of elements.
+        -:  560:       *  @param  __first  Iterator pointing to the start of the range to be
+        -:  561:       *                   inserted.
+        -:  562:       *  @param  __last  Iterator pointing to the end of the range.
+        -:  563:       *
+        -:  564:       *  Complexity similar to that of the range constructor.
+        -:  565:       */
+        -:  566:      template<typename _InputIterator>
+        -:  567:	void
+        -:  568:	insert(_InputIterator __first, _InputIterator __last)
+        -:  569:	{ _M_t._M_insert_range_unique(__first, __last); }
+        -:  570:
+        -:  571:#if __cplusplus >= 201103L
+        -:  572:      /**
+        -:  573:       *  @brief Attempts to insert a list of elements into the %set.
+        -:  574:       *  @param  __l  A std::initializer_list<value_type> of elements
+        -:  575:       *               to be inserted.
+        -:  576:       *
+        -:  577:       *  Complexity similar to that of the range constructor.
+        -:  578:       */
+        -:  579:      void
+        -:  580:      insert(initializer_list<value_type> __l)
+        -:  581:      { this->insert(__l.begin(), __l.end()); }
+        -:  582:#endif
+        -:  583:
+        -:  584:#if __cplusplus > 201402L
+        -:  585:      /// Extract a node.
+        -:  586:      node_type
+        -:  587:      extract(const_iterator __pos)
+        -:  588:      {
+        -:  589:	__glibcxx_assert(__pos != end());
+        -:  590:	return _M_t.extract(__pos);
+        -:  591:      }
+        -:  592:
+        -:  593:      /// Extract a node.
+        -:  594:      node_type
+        -:  595:      extract(const key_type& __x)
+        -:  596:      { return _M_t.extract(__x); }
+        -:  597:
+        -:  598:      /// Re-insert an extracted node.
+        -:  599:      insert_return_type
+        -:  600:      insert(node_type&& __nh)
+        -:  601:      { return _M_t._M_reinsert_node_unique(std::move(__nh)); }
+        -:  602:
+        -:  603:      /// Re-insert an extracted node.
+        -:  604:      iterator
+        -:  605:      insert(const_iterator __hint, node_type&& __nh)
+        -:  606:      { return _M_t._M_reinsert_node_hint_unique(__hint, std::move(__nh)); }
+        -:  607:
+        -:  608:      template<typename, typename>
+        -:  609:	friend struct std::_Rb_tree_merge_helper;
+        -:  610:
+        -:  611:      template<typename _Compare1>
+        -:  612:	void
+        -:  613:	merge(set<_Key, _Compare1, _Alloc>& __source)
+        -:  614:	{
+        -:  615:	  using _Merge_helper = _Rb_tree_merge_helper<set, _Compare1>;
+        -:  616:	  _M_t._M_merge_unique(_Merge_helper::_S_get_tree(__source));
+        -:  617:	}
+        -:  618:
+        -:  619:      template<typename _Compare1>
+        -:  620:	void
+        -:  621:	merge(set<_Key, _Compare1, _Alloc>&& __source)
+        -:  622:	{ merge(__source); }
+        -:  623:
+        -:  624:      template<typename _Compare1>
+        -:  625:	void
+        -:  626:	merge(multiset<_Key, _Compare1, _Alloc>& __source)
+        -:  627:	{
+        -:  628:	  using _Merge_helper = _Rb_tree_merge_helper<set, _Compare1>;
+        -:  629:	  _M_t._M_merge_unique(_Merge_helper::_S_get_tree(__source));
+        -:  630:	}
+        -:  631:
+        -:  632:      template<typename _Compare1>
+        -:  633:	void
+        -:  634:	merge(multiset<_Key, _Compare1, _Alloc>&& __source)
+        -:  635:	{ merge(__source); }
+        -:  636:#endif // C++17
+        -:  637:
+        -:  638:#if __cplusplus >= 201103L
+        -:  639:      // _GLIBCXX_RESOLVE_LIB_DEFECTS
+        -:  640:      // DR 130. Associative erase should return an iterator.
+        -:  641:      /**
+        -:  642:       *  @brief Erases an element from a %set.
+        -:  643:       *  @param  __position  An iterator pointing to the element to be erased.
+        -:  644:       *  @return An iterator pointing to the element immediately following
+        -:  645:       *          @a __position prior to the element being erased. If no such
+        -:  646:       *          element exists, end() is returned.
+        -:  647:       *
+        -:  648:       *  This function erases an element, pointed to by the given iterator,
+        -:  649:       *  from a %set.  Note that this function only erases the element, and
+        -:  650:       *  that if the element is itself a pointer, the pointed-to memory is not
+        -:  651:       *  touched in any way.  Managing the pointer is the user's
+        -:  652:       *  responsibility.
+        -:  653:       */
+        -:  654:      _GLIBCXX_ABI_TAG_CXX11
+        -:  655:      iterator
+        -:  656:      erase(const_iterator __position)
+        -:  657:      { return _M_t.erase(__position); }
+        -:  658:#else
+        -:  659:      /**
+        -:  660:       *  @brief Erases an element from a %set.
+        -:  661:       *  @param  position  An iterator pointing to the element to be erased.
+        -:  662:       *
+        -:  663:       *  This function erases an element, pointed to by the given iterator,
+        -:  664:       *  from a %set.  Note that this function only erases the element, and
+        -:  665:       *  that if the element is itself a pointer, the pointed-to memory is not
+        -:  666:       *  touched in any way.  Managing the pointer is the user's
+        -:  667:       *  responsibility.
+        -:  668:       */
+        -:  669:      void
+        -:  670:      erase(iterator __position)
+        -:  671:      { _M_t.erase(__position); }
+        -:  672:#endif
+        -:  673:
+        -:  674:      /**
+        -:  675:       *  @brief Erases elements according to the provided key.
+        -:  676:       *  @param  __x  Key of element to be erased.
+        -:  677:       *  @return  The number of elements erased.
+        -:  678:       *
+        -:  679:       *  This function erases all the elements located by the given key from
+        -:  680:       *  a %set.
+        -:  681:       *  Note that this function only erases the element, and that if
+        -:  682:       *  the element is itself a pointer, the pointed-to memory is not touched
+        -:  683:       *  in any way.  Managing the pointer is the user's responsibility.
+        -:  684:       */
+        -:  685:      size_type
+        -:  686:      erase(const key_type& __x)
+        -:  687:      { return _M_t.erase(__x); }
+        -:  688:
+        -:  689:#if __cplusplus >= 201103L
+        -:  690:      // _GLIBCXX_RESOLVE_LIB_DEFECTS
+        -:  691:      // DR 130. Associative erase should return an iterator.
+        -:  692:      /**
+        -:  693:       *  @brief Erases a [__first,__last) range of elements from a %set.
+        -:  694:       *  @param  __first  Iterator pointing to the start of the range to be
+        -:  695:       *                 erased.
+        -:  696:
+        -:  697:       *  @param __last Iterator pointing to the end of the range to
+        -:  698:       *  be erased.
+        -:  699:       *  @return The iterator @a __last.
+        -:  700:       *
+        -:  701:       *  This function erases a sequence of elements from a %set.
+        -:  702:       *  Note that this function only erases the element, and that if
+        -:  703:       *  the element is itself a pointer, the pointed-to memory is not touched
+        -:  704:       *  in any way.  Managing the pointer is the user's responsibility.
+        -:  705:       */
+        -:  706:      _GLIBCXX_ABI_TAG_CXX11
+        -:  707:      iterator
+        -:  708:      erase(const_iterator __first, const_iterator __last)
+        -:  709:      { return _M_t.erase(__first, __last); }
+        -:  710:#else
+        -:  711:      /**
+        -:  712:       *  @brief Erases a [first,last) range of elements from a %set.
+        -:  713:       *  @param  __first  Iterator pointing to the start of the range to be
+        -:  714:       *                 erased.
+        -:  715:       *  @param __last Iterator pointing to the end of the range to
+        -:  716:       *  be erased.
+        -:  717:       *
+        -:  718:       *  This function erases a sequence of elements from a %set.
+        -:  719:       *  Note that this function only erases the element, and that if
+        -:  720:       *  the element is itself a pointer, the pointed-to memory is not touched
+        -:  721:       *  in any way.  Managing the pointer is the user's responsibility.
+        -:  722:       */
+        -:  723:      void
+        -:  724:      erase(iterator __first, iterator __last)
+        -:  725:      { _M_t.erase(__first, __last); }
+        -:  726:#endif
+        -:  727:
+        -:  728:      /**
+        -:  729:       *  Erases all elements in a %set.  Note that this function only erases
+        -:  730:       *  the elements, and that if the elements themselves are pointers, the
+        -:  731:       *  pointed-to memory is not touched in any way.  Managing the pointer is
+        -:  732:       *  the user's responsibility.
+        -:  733:       */
+        -:  734:      void
+        -:  735:      clear() _GLIBCXX_NOEXCEPT
+        -:  736:      { _M_t.clear(); }
+        -:  737:
+        -:  738:      // set operations:
+        -:  739:
+        -:  740:      ///@{
+        -:  741:      /**
+        -:  742:       *  @brief  Finds the number of elements.
+        -:  743:       *  @param  __x  Element to located.
+        -:  744:       *  @return  Number of elements with specified key.
+        -:  745:       *
+        -:  746:       *  This function only makes sense for multisets; for set the result will
+        -:  747:       *  either be 0 (not present) or 1 (present).
+        -:  748:       */
+        -:  749:      size_type
+        -:  750:      count(const key_type& __x) const
+        -:  751:      { return _M_t.find(__x) == _M_t.end() ? 0 : 1; }
+        -:  752:
+        -:  753:#if __cplusplus > 201103L
+        -:  754:      template<typename _Kt>
+        -:  755:	auto
+        -:  756:	count(const _Kt& __x) const
+        -:  757:	-> decltype(_M_t._M_count_tr(__x))
+        -:  758:	{ return _M_t._M_count_tr(__x); }
+        -:  759:#endif
+        -:  760:      ///@}
+        -:  761:
+        -:  762:#if __cplusplus > 201703L
+        -:  763:      ///@{
+        -:  764:      /**
+        -:  765:       *  @brief  Finds whether an element with the given key exists.
+        -:  766:       *  @param  __x  Key of elements to be located.
+        -:  767:       *  @return  True if there is an element with the specified key.
+        -:  768:       */
+        -:  769:      bool
+        -:  770:      contains(const key_type& __x) const
+        -:  771:      { return _M_t.find(__x) != _M_t.end(); }
+        -:  772:
+        -:  773:      template<typename _Kt>
+        -:  774:	auto
+        -:  775:	contains(const _Kt& __x) const
+        -:  776:	-> decltype(_M_t._M_find_tr(__x), void(), true)
+        -:  777:	{ return _M_t._M_find_tr(__x) != _M_t.end(); }
+        -:  778:      ///@}
+        -:  779:#endif
+        -:  780:
+        -:  781:      // _GLIBCXX_RESOLVE_LIB_DEFECTS
+        -:  782:      // 214.  set::find() missing const overload
+        -:  783:      ///@{
+        -:  784:      /**
+        -:  785:       *  @brief Tries to locate an element in a %set.
+        -:  786:       *  @param  __x  Element to be located.
+        -:  787:       *  @return  Iterator pointing to sought-after element, or end() if not
+        -:  788:       *           found.
+        -:  789:       *
+        -:  790:       *  This function takes a key and tries to locate the element with which
+        -:  791:       *  the key matches.  If successful the function returns an iterator
+        -:  792:       *  pointing to the sought after element.  If unsuccessful it returns the
+        -:  793:       *  past-the-end ( @c end() ) iterator.
+        -:  794:       */
+        -:  795:      iterator
+        -:  796:      find(const key_type& __x)
+        -:  797:      { return _M_t.find(__x); }
+        -:  798:
+        -:  799:      const_iterator
+        -:  800:      find(const key_type& __x) const
+        -:  801:      { return _M_t.find(__x); }
+        -:  802:
+        -:  803:#if __cplusplus > 201103L
+        -:  804:      template<typename _Kt>
+        -:  805:	auto
+        -:  806:	find(const _Kt& __x)
+        -:  807:	-> decltype(iterator{_M_t._M_find_tr(__x)})
+        -:  808:	{ return iterator{_M_t._M_find_tr(__x)}; }
+        -:  809:
+        -:  810:      template<typename _Kt>
+        -:  811:	auto
+        -:  812:	find(const _Kt& __x) const
+        -:  813:	-> decltype(const_iterator{_M_t._M_find_tr(__x)})
+        -:  814:	{ return const_iterator{_M_t._M_find_tr(__x)}; }
+        -:  815:#endif
+        -:  816:      ///@}
+        -:  817:
+        -:  818:      ///@{
+        -:  819:      /**
+        -:  820:       *  @brief Finds the beginning of a subsequence matching given key.
+        -:  821:       *  @param  __x  Key to be located.
+        -:  822:       *  @return  Iterator pointing to first element equal to or greater
+        -:  823:       *           than key, or end().
+        -:  824:       *
+        -:  825:       *  This function returns the first element of a subsequence of elements
+        -:  826:       *  that matches the given key.  If unsuccessful it returns an iterator
+        -:  827:       *  pointing to the first element that has a greater value than given key
+        -:  828:       *  or end() if no such element exists.
+        -:  829:       */
+        -:  830:      iterator
+        -:  831:      lower_bound(const key_type& __x)
+        -:  832:      { return _M_t.lower_bound(__x); }
+        -:  833:
+        -:  834:      const_iterator
+        -:  835:      lower_bound(const key_type& __x) const
+        -:  836:      { return _M_t.lower_bound(__x); }
+        -:  837:
+        -:  838:#if __cplusplus > 201103L
+        -:  839:      template<typename _Kt>
+        -:  840:	auto
+        -:  841:	lower_bound(const _Kt& __x)
+        -:  842:	-> decltype(iterator(_M_t._M_lower_bound_tr(__x)))
+        -:  843:	{ return iterator(_M_t._M_lower_bound_tr(__x)); }
+        -:  844:
+        -:  845:      template<typename _Kt>
+        -:  846:	auto
+        -:  847:	lower_bound(const _Kt& __x) const
+        -:  848:	-> decltype(const_iterator(_M_t._M_lower_bound_tr(__x)))
+        -:  849:	{ return const_iterator(_M_t._M_lower_bound_tr(__x)); }
+        -:  850:#endif
+        -:  851:      ///@}
+        -:  852:
+        -:  853:      ///@{
+        -:  854:      /**
+        -:  855:       *  @brief Finds the end of a subsequence matching given key.
+        -:  856:       *  @param  __x  Key to be located.
+        -:  857:       *  @return Iterator pointing to the first element
+        -:  858:       *          greater than key, or end().
+        -:  859:       */
+        -:  860:      iterator
+        -:  861:      upper_bound(const key_type& __x)
+        -:  862:      { return _M_t.upper_bound(__x); }
+        -:  863:
+        -:  864:      const_iterator
+        -:  865:      upper_bound(const key_type& __x) const
+        -:  866:      { return _M_t.upper_bound(__x); }
+        -:  867:
+        -:  868:#if __cplusplus > 201103L
+        -:  869:      template<typename _Kt>
+        -:  870:	auto
+        -:  871:	upper_bound(const _Kt& __x)
+        -:  872:	-> decltype(iterator(_M_t._M_upper_bound_tr(__x)))
+        -:  873:	{ return iterator(_M_t._M_upper_bound_tr(__x)); }
+        -:  874:
+        -:  875:      template<typename _Kt>
+        -:  876:	auto
+        -:  877:	upper_bound(const _Kt& __x) const
+        -:  878:	-> decltype(iterator(_M_t._M_upper_bound_tr(__x)))
+        -:  879:	{ return const_iterator(_M_t._M_upper_bound_tr(__x)); }
+        -:  880:#endif
+        -:  881:      ///@}
+        -:  882:
+        -:  883:      ///@{
+        -:  884:      /**
+        -:  885:       *  @brief Finds a subsequence matching given key.
+        -:  886:       *  @param  __x  Key to be located.
+        -:  887:       *  @return  Pair of iterators that possibly points to the subsequence
+        -:  888:       *           matching given key.
+        -:  889:       *
+        -:  890:       *  This function is equivalent to
+        -:  891:       *  @code
+        -:  892:       *    std::make_pair(c.lower_bound(val),
+        -:  893:       *                   c.upper_bound(val))
+        -:  894:       *  @endcode
+        -:  895:       *  (but is faster than making the calls separately).
+        -:  896:       *
+        -:  897:       *  This function probably only makes sense for multisets.
+        -:  898:       */
+        -:  899:      std::pair<iterator, iterator>
+        -:  900:      equal_range(const key_type& __x)
+        -:  901:      { return _M_t.equal_range(__x); }
+        -:  902:
+        -:  903:      std::pair<const_iterator, const_iterator>
+        -:  904:      equal_range(const key_type& __x) const
+        -:  905:      { return _M_t.equal_range(__x); }
+        -:  906:
+        -:  907:#if __cplusplus > 201103L
+        -:  908:      template<typename _Kt>
+        -:  909:	auto
+        -:  910:	equal_range(const _Kt& __x)
+        -:  911:	-> decltype(pair<iterator, iterator>(_M_t._M_equal_range_tr(__x)))
+        -:  912:	{ return pair<iterator, iterator>(_M_t._M_equal_range_tr(__x)); }
+        -:  913:
+        -:  914:      template<typename _Kt>
+        -:  915:	auto
+        -:  916:	equal_range(const _Kt& __x) const
+        -:  917:	-> decltype(pair<iterator, iterator>(_M_t._M_equal_range_tr(__x)))
+        -:  918:	{ return pair<iterator, iterator>(_M_t._M_equal_range_tr(__x)); }
+        -:  919:#endif
+        -:  920:      ///@}
+        -:  921:
+        -:  922:      template<typename _K1, typename _C1, typename _A1>
+        -:  923:	friend bool
+        -:  924:	operator==(const set<_K1, _C1, _A1>&, const set<_K1, _C1, _A1>&);
+        -:  925:
+        -:  926:#if __cpp_lib_three_way_comparison
+        -:  927:      template<typename _K1, typename _C1, typename _A1>
+        -:  928:	friend __detail::__synth3way_t<_K1>
+        -:  929:	operator<=>(const set<_K1, _C1, _A1>&, const set<_K1, _C1, _A1>&);
+        -:  930:#else
+        -:  931:      template<typename _K1, typename _C1, typename _A1>
+        -:  932:	friend bool
+        -:  933:	operator<(const set<_K1, _C1, _A1>&, const set<_K1, _C1, _A1>&);
+        -:  934:#endif
+        -:  935:    };
+        -:  936:
+        -:  937:#if __cpp_deduction_guides >= 201606
+        -:  938:
+        -:  939:  template<typename _InputIterator,
+        -:  940:	   typename _Compare =
+        -:  941:	     less<typename iterator_traits<_InputIterator>::value_type>,
+        -:  942:	   typename _Allocator =
+        -:  943:	     allocator<typename iterator_traits<_InputIterator>::value_type>,
+        -:  944:	   typename = _RequireInputIter<_InputIterator>,
+        -:  945:	   typename = _RequireNotAllocator<_Compare>,
+        -:  946:	   typename = _RequireAllocator<_Allocator>>
+        -:  947:    set(_InputIterator, _InputIterator,
+        -:  948:	_Compare = _Compare(), _Allocator = _Allocator())
+        -:  949:    -> set<typename iterator_traits<_InputIterator>::value_type,
+        -:  950:	  _Compare, _Allocator>;
+        -:  951:
+        -:  952:  template<typename _Key, typename _Compare = less<_Key>,
+        -:  953:	   typename _Allocator = allocator<_Key>,
+        -:  954:	   typename = _RequireNotAllocator<_Compare>,
+        -:  955:	   typename = _RequireAllocator<_Allocator>>
+        -:  956:    set(initializer_list<_Key>,
+        -:  957:	_Compare = _Compare(), _Allocator = _Allocator())
+        -:  958:    -> set<_Key, _Compare, _Allocator>;
+        -:  959:
+        -:  960:  template<typename _InputIterator, typename _Allocator,
+        -:  961:	   typename = _RequireInputIter<_InputIterator>,
+        -:  962:	   typename = _RequireAllocator<_Allocator>>
+        -:  963:    set(_InputIterator, _InputIterator, _Allocator)
+        -:  964:    -> set<typename iterator_traits<_InputIterator>::value_type,
+        -:  965:	   less<typename iterator_traits<_InputIterator>::value_type>,
+        -:  966:	   _Allocator>;
+        -:  967:
+        -:  968:  template<typename _Key, typename _Allocator,
+        -:  969:	   typename = _RequireAllocator<_Allocator>>
+        -:  970:    set(initializer_list<_Key>, _Allocator)
+        -:  971:    -> set<_Key, less<_Key>, _Allocator>;
+        -:  972:
+        -:  973:#endif // deduction guides
+        -:  974:
+        -:  975:  /**
+        -:  976:   *  @brief  Set equality comparison.
+        -:  977:   *  @param  __x  A %set.
+        -:  978:   *  @param  __y  A %set of the same type as @a x.
+        -:  979:   *  @return  True iff the size and elements of the sets are equal.
+        -:  980:   *
+        -:  981:   *  This is an equivalence relation.  It is linear in the size of the sets.
+        -:  982:   *  Sets are considered equivalent if their sizes are equal, and if
+        -:  983:   *  corresponding elements compare equal.
+        -:  984:  */
+        -:  985:  template<typename _Key, typename _Compare, typename _Alloc>
+        -:  986:    inline bool
+        -:  987:    operator==(const set<_Key, _Compare, _Alloc>& __x,
+        -:  988:	       const set<_Key, _Compare, _Alloc>& __y)
+        -:  989:    { return __x._M_t == __y._M_t; }
+        -:  990:
+        -:  991:#if __cpp_lib_three_way_comparison
+        -:  992:  /**
+        -:  993:   *  @brief  Set ordering relation.
+        -:  994:   *  @param  __x  A `set`.
+        -:  995:   *  @param  __y  A `set` of the same type as `x`.
+        -:  996:   *  @return  A value indicating whether `__x` is less than, equal to,
+        -:  997:   *           greater than, or incomparable with `__y`.
+        -:  998:   *
+        -:  999:   *  This is a total ordering relation.  It is linear in the size of the
+        -: 1000:   *  maps.  The elements must be comparable with @c <.
+        -: 1001:   *
+        -: 1002:   *  See `std::lexicographical_compare_three_way()` for how the determination
+        -: 1003:   *  is made. This operator is used to synthesize relational operators like
+        -: 1004:   *  `<` and `>=` etc.
+        -: 1005:  */
+        -: 1006:  template<typename _Key, typename _Compare, typename _Alloc>
+        -: 1007:    inline __detail::__synth3way_t<_Key>
+        -: 1008:    operator<=>(const set<_Key, _Compare, _Alloc>& __x,
+        -: 1009:		const set<_Key, _Compare, _Alloc>& __y)
+        -: 1010:    { return __x._M_t <=> __y._M_t; }
+        -: 1011:#else
+        -: 1012:  /**
+        -: 1013:   *  @brief  Set ordering relation.
+        -: 1014:   *  @param  __x  A %set.
+        -: 1015:   *  @param  __y  A %set of the same type as @a x.
+        -: 1016:   *  @return  True iff @a __x is lexicographically less than @a __y.
+        -: 1017:   *
+        -: 1018:   *  This is a total ordering relation.  It is linear in the size of the
+        -: 1019:   *  sets.  The elements must be comparable with @c <.
+        -: 1020:   *
+        -: 1021:   *  See std::lexicographical_compare() for how the determination is made.
+        -: 1022:  */
+        -: 1023:  template<typename _Key, typename _Compare, typename _Alloc>
+        -: 1024:    inline bool
+        -: 1025:    operator<(const set<_Key, _Compare, _Alloc>& __x,
+        -: 1026:	      const set<_Key, _Compare, _Alloc>& __y)
+        -: 1027:    { return __x._M_t < __y._M_t; }
+        -: 1028:
+        -: 1029:  ///  Returns !(x == y).
+        -: 1030:  template<typename _Key, typename _Compare, typename _Alloc>
+        -: 1031:    inline bool
+        -: 1032:    operator!=(const set<_Key, _Compare, _Alloc>& __x,
+        -: 1033:	       const set<_Key, _Compare, _Alloc>& __y)
+        -: 1034:    { return !(__x == __y); }
+        -: 1035:
+        -: 1036:  ///  Returns y < x.
+        -: 1037:  template<typename _Key, typename _Compare, typename _Alloc>
+        -: 1038:    inline bool
+        -: 1039:    operator>(const set<_Key, _Compare, _Alloc>& __x,
+        -: 1040:	      const set<_Key, _Compare, _Alloc>& __y)
+        -: 1041:    { return __y < __x; }
+        -: 1042:
+        -: 1043:  ///  Returns !(y < x)
+        -: 1044:  template<typename _Key, typename _Compare, typename _Alloc>
+        -: 1045:    inline bool
+        -: 1046:    operator<=(const set<_Key, _Compare, _Alloc>& __x,
+        -: 1047:	       const set<_Key, _Compare, _Alloc>& __y)
+        -: 1048:    { return !(__y < __x); }
+        -: 1049:
+        -: 1050:  ///  Returns !(x < y)
+        -: 1051:  template<typename _Key, typename _Compare, typename _Alloc>
+        -: 1052:    inline bool
+        -: 1053:    operator>=(const set<_Key, _Compare, _Alloc>& __x,
+        -: 1054:	       const set<_Key, _Compare, _Alloc>& __y)
+        -: 1055:    { return !(__x < __y); }
+        -: 1056:#endif // three-way comparison
+        -: 1057:
+        -: 1058:  /// See std::set::swap().
+        -: 1059:  template<typename _Key, typename _Compare, typename _Alloc>
+        -: 1060:    inline void
+        -: 1061:    swap(set<_Key, _Compare, _Alloc>& __x, set<_Key, _Compare, _Alloc>& __y)
+        -: 1062:    _GLIBCXX_NOEXCEPT_IF(noexcept(__x.swap(__y)))
+        -: 1063:    { __x.swap(__y); }
+        -: 1064:
+        -: 1065:_GLIBCXX_END_NAMESPACE_CONTAINER
+        -: 1066:
+        -: 1067:#if __cplusplus > 201402L
+        -: 1068:  // Allow std::set access to internals of compatible sets.
+        -: 1069:  template<typename _Val, typename _Cmp1, typename _Alloc, typename _Cmp2>
+        -: 1070:    struct
+        -: 1071:    _Rb_tree_merge_helper<_GLIBCXX_STD_C::set<_Val, _Cmp1, _Alloc>, _Cmp2>
+        -: 1072:    {
+        -: 1073:    private:
+        -: 1074:      friend class _GLIBCXX_STD_C::set<_Val, _Cmp1, _Alloc>;
+        -: 1075:
+        -: 1076:      static auto&
+        -: 1077:      _S_get_tree(_GLIBCXX_STD_C::set<_Val, _Cmp2, _Alloc>& __set)
+        -: 1078:      { return __set._M_t; }
+        -: 1079:
+        -: 1080:      static auto&
+        -: 1081:      _S_get_tree(_GLIBCXX_STD_C::multiset<_Val, _Cmp2, _Alloc>& __set)
+        -: 1082:      { return __set._M_t; }
+        -: 1083:    };
+        -: 1084:#endif // C++17
+        -: 1085:
+        -: 1086:_GLIBCXX_END_NAMESPACE_VERSION
+        -: 1087:} //namespace std
+        -: 1088:#endif /* _STL_SET_H */

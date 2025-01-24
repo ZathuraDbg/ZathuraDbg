@@ -1,0 +1,506 @@
+        -:    0:Source:/home/rc/ZathuraDbg/vendor/ImGuiColorTextEdit/TextEditor.h
+        -:    0:Graph:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/app/app.cpp.gcno
+        -:    0:Data:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/app/app.cpp.gcda
+        -:    0:Runs:1
+        -:    1:#pragma once
+        -:    2:
+        -:    3:#include <cassert>
+        -:    4:#include <iostream>
+        -:    5:#include <string>
+        -:    6:#include <vector>
+        -:    7:#include <array>
+        -:    8:#include <memory>
+        -:    9:#include <unordered_set>
+        -:   10:#include <unordered_map>
+        -:   11:#include <map>
+        -:   12:#include <cmath>
+        -:   13:#include <boost/regex.hpp>
+        -:   14:#include "imgui.h"
+        -:   15:
+        -:   16:class IMGUI_API TextEditor
+        -:   17:{
+        -:   18:public:
+        -:   19:	// ------------- Exposed API ------------- //
+        -:   20:
+        -:   21:	TextEditor();
+        -:   22:	~TextEditor();
+        -:   23:
+        -:   24:    std::vector<uint64_t> mLinesToHighlight= {};
+        -:   25:
+        -:   26:    enum HighlightType{
+        -:   27:        DebugBreakpoint,
+        -:   28:        DebugCurrentLine
+        -:   29:    };
+        -:   30:    enum class PaletteId
+        -:   31:	{
+        -:   32:		Dark, Light, Mariana, RetroBlue, Catppuccin
+        -:   33:	};
+        -:   34:	enum class LanguageDefinitionId
+        -:   35:	{
+        -:   36:		None, Cpp, C, Cs, Python, Lua, Json, Sql, AngelScript, Glsl, Hlsl, Asmx86_64
+        -:   37:	};
+        -:   38:	enum class SetViewAtLineMode
+        -:   39:	{
+        -:   40:		FirstVisibleLine, Centered, LastVisibleLine
+        -:   41:	};
+        -:   42:
+        -:   43:    void HighlightDebugCurrentLine(int line);
+        -:   44:    void HighlightBreakpoints(int line, bool ignoreHighlight = false);
+        -:   45:    void RemoveHighlight(int line);
+        -:   46:    bool SelectLabelDefinition(bool useScreenPos = true);
+        -:   47:    std::string GetClipboardText() const;
+        -:   48:    int mLineToHighlight = -1;
+        -:   49:
+        -:   50:	void RenderContextMenu();
+function _ZN10TextEditor18SetReadOnlyEnabledEb called 1 returned 100% blocks executed 100%
+        1:   51:	inline void SetReadOnlyEnabled(bool aValue) { mReadOnly = aValue; }
+        -:   52:	inline bool IsReadOnlyEnabled() const { return mReadOnly; }
+        -:   53:	inline void SetAutoIndentEnabled(bool aValue) { mAutoIndent = aValue; }
+        -:   54:	inline bool IsAutoIndentEnabled() const { return mAutoIndent; }
+function _ZN10TextEditor25SetShowWhitespacesEnabledEb called 1 returned 100% blocks executed 100%
+        1:   55:	inline void SetShowWhitespacesEnabled(bool aValue) { mShowWhitespaces = aValue; }
+        -:   56:	inline bool IsShowWhitespacesEnabled() const { return mShowWhitespaces; }
+        -:   57:	inline void SetShowLineNumbersEnabled(bool aValue) { mShowLineNumbers = aValue; }
+        -:   58:	inline bool IsShowLineNumbersEnabled() const { return mShowLineNumbers; }
+        -:   59:	inline void SetShortTabsEnabled(bool aValue) { mShortTabs = aValue; }
+        -:   60:	inline bool IsShortTabsEnabled() const { return mShortTabs; }
+        -:   61:	inline int GetLineCount() const { return mLines.size(); }
+        -:   62:	inline bool IsOverwriteEnabled() const { return mOverwrite; }
+        -:   63:	void SetPalette(PaletteId aValue);
+        -:   64:	PaletteId GetPalette() const { return mPaletteId; }
+        -:   65:	void SetLanguageDefinition(LanguageDefinitionId aValue);
+        -:   66:	LanguageDefinitionId GetLanguageDefinition() const { return mLanguageDefinitionId; };
+        -:   67:	const char* GetLanguageDefinitionName() const;
+        -:   68:	void SetTabSize(int aValue);
+        -:   69:	inline int GetTabSize() const { return mTabSize; }
+        -:   70:	void SetLineSpacing(float aValue);
+        -:   71:	inline float GetLineSpacing() const { return mLineSpacing;  }
+        -:   72:
+        -:   73:	inline static void SetDefaultPalette(PaletteId aValue) { defaultPalette = aValue; }
+        -:   74:	inline static PaletteId GetDefaultPalette() { return defaultPalette; }
+        -:   75:
+        -:   76:	void SelectAll();
+        -:   77:	void SelectLine(int aLine);
+        -:   78:	void SelectRegion(int aStartLine, int aStartChar, int aEndLine, int aEndChar);
+        -:   79:	void SelectNextOccurrenceOf(const char* aText, int aTextSize, bool aCaseSensitive = true);
+        -:   80:	void SelectAllOccurrencesOf(const char* aText, int aTextSize, bool aCaseSensitive = true);
+        -:   81:	bool AnyCursorHasSelection() const;
+        -:   82:	bool AllCursorsHaveSelection() const;
+        -:   83:	void ClearExtraCursors();
+        -:   84:	void ClearSelections();
+        -:   85:	void SetCursorPosition(int aLine, int aCharIndex);
+        -:   86:	inline void GetCursorPosition(int& outLine, int& outColumn) const
+        -:   87:	{
+        -:   88:		auto coords = GetActualCursorCoordinates();
+        -:   89:		outLine = coords.mLine;
+        -:   90:		outColumn = coords.mColumn;
+        -:   91:	}
+        -:   92:	int GetFirstVisibleLine();
+        -:   93:	int GetLastVisibleLine();
+        -:   94:	void SetViewAtLine(int aLine, SetViewAtLineMode aMode);
+        -:   95:
+        -:   96:	void Copy();
+        -:   97:	void Cut();
+        -:   98:	void Paste();
+        -:   99:	void Undo(int aSteps = 1);
+        -:  100:	void Redo(int aSteps = 1);
+        -:  101:	inline bool CanUndo() const { return !mReadOnly && mUndoIndex > 0; };
+        -:  102:	inline bool CanRedo() const { return !mReadOnly && mUndoIndex < (int)mUndoBuffer.size(); };
+        -:  103:	inline int GetUndoIndex() const { return mUndoIndex; };
+        -:  104:
+        -:  105:    void (*FontInit)() = nullptr;
+        -:  106:    ImGuiInputTextCallback (*CompletionCallback)(ImGuiInputTextCallbackData *data) = nullptr;
+        -:  107:    void (*CreateLabelLineMap)(std::map<std::string, int>& labeLineMap) = nullptr;
+        -:  108:    std::pair<int, int> (*ParseStrIntoCoordinates)(std::string& popupInput) = nullptr;
+        -:  109:    void (*PasteCallback)(const std::string& clipboardText) = nullptr;
+        -:  110:
+        -:  111:    void GoToPopup();
+        -:  112:    std::string GetSelectedText(int aCursor = -1) const;
+        -:  113:	void SetText(const std::string& aText);
+        -:  114:	std::string GetText() const;
+        -:  115:
+        -:  116:    std::map<std::string, int> labelLineNoMap;
+        -:  117:	void SetTextLines(const std::vector<std::string>& aLines);
+        -:  118:	std::vector<std::string> GetTextLines() const;
+        -:  119:
+        -:  120:	bool Render(const char* aTitle, bool aParentIsFocused = false, const ImVec2& aSize = ImVec2(), bool aBorder = false);
+        -:  121:
+        -:  122:	void ImGuiDebugPanel(const std::string& panelName = "Debug");
+        -:  123:	void UnitTests();
+        -:  124:
+        -:  125:private:
+        -:  126:	// ------------- Generic utils ------------- //
+        -:  127:
+        -:  128:	static inline ImVec4 U32ColorToVec4(ImU32 in)
+        -:  129:	{
+        -:  130:		float s = 1.0f / 255.0f;
+        -:  131:		return ImVec4(
+        -:  132:			((in >> IM_COL32_A_SHIFT) & 0xFF) * s,
+        -:  133:			((in >> IM_COL32_B_SHIFT) & 0xFF) * s,
+        -:  134:			((in >> IM_COL32_G_SHIFT) & 0xFF) * s,
+        -:  135:			((in >> IM_COL32_R_SHIFT) & 0xFF) * s);
+        -:  136:	}
+        -:  137:	static inline bool IsUTFSequence(char c)
+        -:  138:	{
+        -:  139:		return (c & 0xC0) == 0x80;
+        -:  140:	}
+        -:  141:	static inline float Distance(const ImVec2& a, const ImVec2& b)
+        -:  142:	{
+        -:  143:		float x = a.x - b.x;
+        -:  144:		float y = a.y - b.y;
+        -:  145:		return sqrt(x * x + y * y);
+        -:  146:	}
+        -:  147:	template<typename T>
+        -:  148:	static inline T Max(T a, T b) { return a > b ? a : b; }
+        -:  149:	template<typename T>
+        -:  150:	static inline T Min(T a, T b) { return a < b ? a : b; }
+        -:  151:
+        -:  152:	// ------------- Internal ------------- //
+        -:  153:
+        -:  154:	enum class PaletteIndex
+        -:  155:	{
+        -:  156:		Default,
+        -:  157:		Keyword,
+        -:  158:		Number,
+        -:  159:		String,
+        -:  160:		CharLiteral,
+        -:  161:		Punctuation,
+        -:  162:		Preprocessor,
+        -:  163:		Identifier,
+        -:  164:		KnownIdentifier,
+        -:  165:		PreprocIdentifier,
+        -:  166:		Comment,
+        -:  167:		MultiLineComment,
+        -:  168:		Background,
+        -:  169:		Cursor,
+        -:  170:		Selection,
+        -:  171:		ErrorMarker,
+        -:  172:		ControlCharacter,
+        -:  173:		Breakpoint,
+        -:  174:		LineNumber,
+        -:  175:		CurrentLineFill,
+        -:  176:		CurrentLineFillInactive,
+        -:  177:		CurrentLineEdge,
+        -:  178:		DebugBreakpointLine,
+        -:  179:        DebugCurrentLine,
+        -:  180:		Max
+        -:  181:	};
+        -:  182:
+        -:  183:    size_t mLinesSize = 0;
+        -:  184:	// Represents a character coordinate from the user's point of view,
+        -:  185:	// i. e. consider an uniform grid (assuming fixed-width font) on the
+        -:  186:	// screen as it is rendered, and each cell has its own coordinate, starting from 0.
+        -:  187:	// Tabs are counted as [1..mTabSize] count empty spaces, depending on
+        -:  188:	// how many space is necessary to reach the next tab stop.
+        -:  189:	// For example, coordinate (1, 5) represents the character 'B' in a line "\tABC", when mTabSize = 4,
+        -:  190:	// because it is rendered as "    ABC" on the screen.
+        -:  191:	struct Coordinates
+        -:  192:	{
+        -:  193:		int mLine, mColumn;
+        -:  194:		Coordinates() : mLine(0), mColumn(0) {}
+        -:  195:		Coordinates(int aLine, int aColumn) : mLine(aLine), mColumn(aColumn)
+        -:  196:		{
+        -:  197:			assert(aLine >= 0);
+        -:  198:			assert(aColumn >= 0);
+        -:  199:		}
+        -:  200:		static Coordinates Invalid() { static Coordinates invalid(-1, -1); return invalid; }
+        -:  201:
+        -:  202:		bool operator ==(const Coordinates& o) const
+        -:  203:		{
+        -:  204:			return
+        -:  205:				mLine == o.mLine &&
+        -:  206:				mColumn == o.mColumn;
+        -:  207:		}
+        -:  208:
+        -:  209:		bool operator !=(const Coordinates& o) const
+        -:  210:		{
+        -:  211:			return
+        -:  212:				mLine != o.mLine ||
+        -:  213:				mColumn != o.mColumn;
+        -:  214:		}
+        -:  215:
+        -:  216:		bool operator <(const Coordinates& o) const
+        -:  217:		{
+        -:  218:			if (mLine != o.mLine)
+        -:  219:				return mLine < o.mLine;
+        -:  220:			return mColumn < o.mColumn;
+        -:  221:		}
+        -:  222:
+        -:  223:		bool operator >(const Coordinates& o) const
+        -:  224:		{
+        -:  225:			if (mLine != o.mLine)
+        -:  226:				return mLine > o.mLine;
+        -:  227:			return mColumn > o.mColumn;
+        -:  228:		}
+        -:  229:
+        -:  230:		bool operator <=(const Coordinates& o) const
+        -:  231:		{
+        -:  232:			if (mLine != o.mLine)
+        -:  233:				return mLine < o.mLine;
+        -:  234:			return mColumn <= o.mColumn;
+        -:  235:		}
+        -:  236:
+        -:  237:		bool operator >=(const Coordinates& o) const
+        -:  238:		{
+        -:  239:			if (mLine != o.mLine)
+        -:  240:				return mLine > o.mLine;
+        -:  241:			return mColumn >= o.mColumn;
+        -:  242:		}
+        -:  243:
+        -:  244:		Coordinates operator -(const Coordinates& o)
+        -:  245:		{
+        -:  246:			return Coordinates(mLine - o.mLine, mColumn - o.mColumn);
+        -:  247:		}
+        -:  248:
+        -:  249:		Coordinates operator +(const Coordinates& o)
+        -:  250:		{
+        -:  251:			return Coordinates(mLine + o.mLine, mColumn + o.mColumn);
+        -:  252:		}
+        -:  253:	};
+        -:  254:
+        -:  255:	struct Cursor
+        -:  256:	{
+        -:  257:		Coordinates mInteractiveStart = { 0, 0 };
+        -:  258:		Coordinates mInteractiveEnd = { 0, 0 };
+        -:  259:		inline Coordinates GetSelectionStart() const { return mInteractiveStart < mInteractiveEnd ? mInteractiveStart : mInteractiveEnd; }
+        -:  260:		inline Coordinates GetSelectionEnd() const { return mInteractiveStart > mInteractiveEnd ? mInteractiveStart : mInteractiveEnd; }
+        -:  261:		inline bool HasSelection() const { return mInteractiveStart != mInteractiveEnd; }
+        -:  262:	};
+        -:  263:
+        -:  264:	struct EditorState // state to be restored with undo/redo
+        -:  265:	{
+        -:  266:		int mCurrentCursor = 0;
+        -:  267:		int mLastAddedCursor = 0;
+        -:  268:		std::vector<Cursor> mCursors = { {{0,0}} };
+        -:  269:		void AddCursor();
+        -:  270:		int GetLastAddedCursorIndex();
+        -:  271:		void SortCursorsFromTopToBottom();
+        -:  272:	};
+        -:  273:
+        -:  274:	struct Identifier
+        -:  275:	{
+        -:  276:		Coordinates mLocation;
+        -:  277:		std::string mDeclaration;
+        -:  278:	};
+        -:  279:
+        -:  280:	typedef std::unordered_map<std::string, Identifier> Identifiers;
+        -:  281:	typedef std::array<ImU32, (unsigned)PaletteIndex::Max> Palette;
+        -:  282:
+        -:  283:	struct Glyph
+        -:  284:	{
+        -:  285:		char mChar;
+        -:  286:		PaletteIndex mColorIndex = PaletteIndex::Default;
+        -:  287:		bool mComment : 1;
+        -:  288:		bool mMultiLineComment : 1;
+        -:  289:		bool mPreprocessor : 1;
+        -:  290:
+        -:  291:		Glyph(char aChar, PaletteIndex aColorIndex) : mChar(aChar), mColorIndex(aColorIndex),
+        -:  292:			mComment(false), mMultiLineComment(false), mPreprocessor(false) {}
+        -:  293:	};
+        -:  294:
+        -:  295:	typedef std::vector<Glyph> Line;
+        -:  296:
+        -:  297:	struct LanguageDefinition
+        -:  298:	{
+        -:  299:		typedef std::pair<std::string, PaletteIndex> TokenRegexString;
+        -:  300:		typedef bool(*TokenizeCallback)(const char* in_begin, const char* in_end, const char*& out_begin, const char*& out_end, PaletteIndex& paletteIndex);
+        -:  301:
+        -:  302:		std::string mName;
+        -:  303:		std::unordered_set<std::string> mKeywords;
+        -:  304:		Identifiers mIdentifiers;
+        -:  305:		Identifiers mPreprocIdentifiers;
+        -:  306:		std::string mCommentStart, mCommentEnd, mSingleLineComment;
+        -:  307:		char mPreprocChar = '#';
+        -:  308:		TokenizeCallback mTokenize = nullptr;
+        -:  309:		std::vector<TokenRegexString> mTokenRegexStrings;
+        -:  310:		bool mCaseSensitive = true;
+        -:  311:
+        -:  312:        static const LanguageDefinition& Asmx86_64();
+        -:  313:		static const LanguageDefinition& Cpp();
+        -:  314:		static const LanguageDefinition& Hlsl();
+        -:  315:		static const LanguageDefinition& Glsl();
+        -:  316:		static const LanguageDefinition& Python();
+        -:  317:		static const LanguageDefinition& C();
+        -:  318:		static const LanguageDefinition& Sql();
+        -:  319:		static const LanguageDefinition& AngelScript();
+        -:  320:		static const LanguageDefinition& Lua();
+        -:  321:		static const LanguageDefinition& Cs();
+        -:  322:		static const LanguageDefinition& Json();
+        -:  323:	};
+        -:  324:
+        -:  325:	enum class UndoOperationType { Add, Delete };
+        -:  326:	struct UndoOperation
+        -:  327:	{
+        -:  328:		std::string mText;
+        -:  329:		TextEditor::Coordinates mStart;
+        -:  330:		TextEditor::Coordinates mEnd;
+        -:  331:		UndoOperationType mType;
+        -:  332:	};
+        -:  333:
+        -:  334:	typedef std::vector<std::pair<boost::regex, PaletteIndex>> RegexList;
+        -:  335:
+        -:  336:	class UndoRecord
+        -:  337:	{
+        -:  338:	public:
+        -:  339:		UndoRecord() {}
+        -:  340:		~UndoRecord() {}
+        -:  341:
+        -:  342:		UndoRecord(
+        -:  343:			const std::vector<UndoOperation>& aOperations,
+        -:  344:			TextEditor::EditorState& aBefore,
+        -:  345:			TextEditor::EditorState& aAfter);
+        -:  346:
+        -:  347:		void Undo(TextEditor* aEditor);
+        -:  348:		void Redo(TextEditor* aEditor);
+        -:  349:
+        -:  350:		std::vector<UndoOperation> mOperations;
+        -:  351:
+        -:  352:		EditorState mBefore;
+        -:  353:		EditorState mAfter;
+        -:  354:
+        -:  355:	};
+        -:  356:
+        -:  357:	std::string GetText(const Coordinates& aStart, const Coordinates& aEnd) const;
+        -:  358:
+        -:  359:	void SetCursorPosition(const Coordinates& aPosition, int aCursor = -1, bool aClearSelection = true);
+        -:  360:
+        -:  361:	int InsertTextAt(Coordinates& aWhere, const char* aValue);
+        -:  362:	void InsertTextAtCursor(const std::string& aValue, int aCursor = -1);
+        -:  363:	void InsertTextAtCursor(const char* aValue, int aCursor = -1);
+        -:  364:
+        -:  365:	enum class MoveDirection { Right = 0, Left = 1, Up = 2, Down = 3 };
+        -:  366:	bool Move(int& aLine, int& aCharIndex, bool aLeft = false, bool aLockLine = false) const;
+        -:  367:	void MoveCharIndexAndColumn(int aLine, int& aCharIndex, int& aColumn) const;
+        -:  368:	void MoveCoords(Coordinates& aCoords, MoveDirection aDirection, bool aWordMode = false, int aLineCount = 1) const;
+        -:  369:
+        -:  370:	void MoveUp(int aAmount = 1, bool aSelect = false);
+        -:  371:	void MoveDown(int aAmount = 1, bool aSelect = false);
+        -:  372:	void MoveLeft(bool aSelect = false, bool aWordMode = false);
+        -:  373:	void MoveRight(bool aSelect = false, bool aWordMode = false);
+        -:  374:	void MoveTop(bool aSelect = false);
+        -:  375:	void MoveBottom(bool aSelect = false);
+        -:  376:	void MoveHome(bool aSelect = false);
+        -:  377:	void MoveEnd(bool aSelect = false);
+        -:  378:	void EnterCharacter(ImWchar aChar, bool aShift);
+        -:  379:	void Backspace(bool aWordMode = false);
+        -:  380:	void Delete(bool aWordMode = false, const EditorState* aEditorState = nullptr);
+        -:  381:
+        -:  382:	void SetSelection(Coordinates aStart, Coordinates aEnd, int aCursor = -1);
+        -:  383:	void SetSelection(int aStartLine, int aStartChar, int aEndLine, int aEndChar, int aCursor = -1);
+        -:  384:
+        -:  385:	void SelectNextOccurrenceOf(const char* aText, int aTextSize, int aCursor = -1, bool aCaseSensitive = true);
+        -:  386:	void AddCursorForNextOccurrence(bool aCaseSensitive = true);
+        -:  387:	bool FindNextOccurrence(const char* aText, int aTextSize, const Coordinates& aFrom, Coordinates& outStart, Coordinates& outEnd, bool aCaseSensitive = true);
+        -:  388:    int labelCompletionCallback(ImGuiInputTextCallbackData* data);
+        -:  389:	bool FindMatchingBracket(int aLine, int aCharIndex, Coordinates& out);
+        -:  390:	void ChangeCurrentLinesIndentation(bool aIncrease);
+        -:  391:	void MoveUpCurrentLines();
+        -:  392:	void MoveDownCurrentLines();
+        -:  393:	void ToggleLineComment();
+        -:  394:	void RemoveCurrentLines();
+        -:  395:
+        -:  396:	float TextDistanceToLineStart(const Coordinates& aFrom, bool aSanitizeCoords = true) const;
+        -:  397:	void EnsureCursorVisible(int aCursor = -1, bool aStartToo = false);
+        -:  398:
+        -:  399:	Coordinates SanitizeCoordinates(const Coordinates& aValue) const;
+        -:  400:	Coordinates GetActualCursorCoordinates(int aCursor = -1, bool aStart = false) const;
+        -:  401:	Coordinates ScreenPosToCoordinates(const ImVec2& aPosition, bool aInsertionMode = false, bool* isOverLineNumber = nullptr) const;
+        -:  402:	Coordinates FindWordStart(const Coordinates& aFrom) const;
+        -:  403:	Coordinates FindWordEnd(const Coordinates& aFrom) const;
+        -:  404:	int GetCharacterIndexL(const Coordinates& aCoordinates) const;
+        -:  405:	int GetCharacterIndexR(const Coordinates& aCoordinates) const;
+        -:  406:	int GetCharacterColumn(int aLine, int aIndex) const;
+        -:  407:	int GetFirstVisibleCharacterIndex(int aLine) const;
+        -:  408:	int GetLineMaxColumn(int aLine, int aLimit = -1) const;
+        -:  409:
+        -:  410:	Line& InsertLine(int aIndex);
+        -:  411:	void RemoveLine(int aIndex, const std::unordered_set<int>* aHandledCursors = nullptr);
+        -:  412:	void RemoveLines(int aStart, int aEnd);
+        -:  413:	void DeleteRange(const Coordinates& aStart, const Coordinates& aEnd);
+        -:  414:	void DeleteSelection(int aCursor = -1);
+        -:  415:
+        -:  416:	void RemoveGlyphsFromLine(int aLine, int aStartChar, int aEndChar = -1);
+        -:  417:	void AddGlyphsToLine(int aLine, int aTargetIndex, Line::iterator aSourceStart, Line::iterator aSourceEnd);
+        -:  418:	void AddGlyphToLine(int aLine, int aTargetIndex, Glyph aGlyph);
+        -:  419:	ImU32 GetGlyphColor(const Glyph& aGlyph) const;
+        -:  420:    bool keepPopup = false;
+        -:  421:	void HandleKeyboardInputs(bool aParentIsFocused = false);
+        -:  422:	void HandleMouseInputs();
+        -:  423:	void UpdateViewVariables(float aScrollX, float aScrollY);
+        -:  424:	void Render(bool aParentIsFocused = false);
+        -:  425:
+        -:  426:	void OnCursorPositionChanged();
+        -:  427:	void OnLineChanged(bool aBeforeChange, int aLine, int aColumn, int aCharCount, bool aDeleted);
+        -:  428:	void MergeCursorsIfPossible();
+        -:  429:
+        -:  430:	void AddUndo(UndoRecord& aValue);
+        -:  431:
+        -:  432:	void Colorize(int aFromLine = 0, int aCount = -1);
+        -:  433:	void ColorizeRange(int aFromLine = 0, int aToLine = 0);
+        -:  434:	void ColorizeInternal();
+        -:  435:
+        -:  436:	std::vector<Line> mLines;
+        -:  437:	EditorState mState;
+        -:  438:	std::vector<UndoRecord> mUndoBuffer;
+        -:  439:	int mUndoIndex = 0;
+        -:  440:
+        -:  441:	int mTabSize = 4;
+        -:  442:	float mLineSpacing = 1.0f;
+        -:  443:	bool mOverwrite = false;
+        -:  444:	bool mReadOnly = false;
+        -:  445:	bool mAutoIndent = true;
+        -:  446:	bool mShowWhitespaces = true;
+        -:  447:	bool mShowLineNumbers = true;
+        -:  448:	bool mShortTabs = false;
+        -:  449:
+        -:  450:	int mSetViewAtLine = -1;
+        -:  451:	SetViewAtLineMode mSetViewAtLineMode;
+        -:  452:	int mEnsureCursorVisible = -1;
+        -:  453:	bool mEnsureCursorVisibleStartToo = false;
+        -:  454:	bool mScrollToTop = false;
+        -:  455:
+        -:  456:	float mTextStart = 20.0f; // position (in pixels) where a code line starts relative to the left of the TextEditor.
+        -:  457:	int mLeftMargin = 10;
+        -:  458:	ImVec2 mCharAdvance;
+        -:  459:	float mCurrentSpaceHeight = 20.0f;
+        -:  460:	float mCurrentSpaceWidth = 20.0f;
+        -:  461:	float mLastClickTime = -1.0f;
+        -:  462:	ImVec2 mLastClickPos;
+        -:  463:	int mFirstVisibleLine = 0;
+        -:  464:	int mLastVisibleLine = 0;
+        -:  465:	int mVisibleLineCount = 0;
+        -:  466:	int mFirstVisibleColumn = 0;
+        -:  467:	int mLastVisibleColumn = 0;
+        -:  468:	int mVisibleColumnCount = 0;
+        -:  469:	float mContentWidth = 0.0f;
+        -:  470:	float mContentHeight = 0.0f;
+        -:  471:	float mScrollX = 0.0f;
+        -:  472:	float mScrollY = 0.0f;
+        -:  473:	bool mPanning = false;
+        -:  474:	bool mDraggingSelection = false;
+        -:  475:	ImVec2 mLastMousePos;
+        -:  476:	bool mCursorPositionChanged = false;
+        -:  477:	bool mCursorOnBracket = false;
+        -:  478:	Coordinates mMatchingBracketCoords;
+        -:  479:
+        -:  480:	int mColorRangeMin = 0;
+        -:  481:	int mColorRangeMax = 0;
+        -:  482:	bool mCheckComments = true;
+        -:  483:	PaletteId mPaletteId;
+        -:  484:	Palette mPalette;
+        -:  485:	LanguageDefinitionId mLanguageDefinitionId;
+        -:  486:	const LanguageDefinition* mLanguageDefinition = nullptr;
+        -:  487:	RegexList mRegexList;
+        -:  488:
+        -:  489:	inline bool IsHorizontalScrollbarVisible() const { return mCurrentSpaceWidth > mContentWidth; }
+        -:  490:	inline bool IsVerticalScrollbarVisible() const { return mCurrentSpaceHeight > mContentHeight; }
+        -:  491:	inline int TabSizeAtColumn(int aColumn) const { return mTabSize - (aColumn % mTabSize); }
+        -:  492:	static const Palette& GetDarkPalette();
+        -:  493:	static const Palette& GetMarianaPalette();
+        -:  494:	static const Palette& GetLightPalette();
+        -:  495:	static const Palette& GetRetroBluePalette();
+        -:  496:    static const Palette& GetCatppuccin();
+        -:  497:	static const std::unordered_map<char, char> OPEN_TO_CLOSE_CHAR;
+        -:  498:	static const std::unordered_map<char, char> CLOSE_TO_OPEN_CHAR;
+        -:  499:	static PaletteId defaultPalette;
+        -:  500:};

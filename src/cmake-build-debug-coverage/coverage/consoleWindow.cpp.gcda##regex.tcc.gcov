@@ -1,0 +1,940 @@
+        -:    0:Source:/usr/include/c++/14.2.1/bits/regex.tcc
+        -:    0:Graph:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/app/windows/consoleWindow.cpp.gcno
+        -:    0:Data:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/app/windows/consoleWindow.cpp.gcda
+        -:    0:Runs:1
+        -:    1:// class template regex -*- C++ -*-
+        -:    2:
+        -:    3:// Copyright (C) 2013-2024 Free Software Foundation, Inc.
+        -:    4://
+        -:    5:// This file is part of the GNU ISO C++ Library.  This library is free
+        -:    6:// software; you can redistribute it and/or modify it under the
+        -:    7:// terms of the GNU General Public License as published by the
+        -:    8:// Free Software Foundation; either version 3, or (at your option)
+        -:    9:// any later version.
+        -:   10:
+        -:   11:// This library is distributed in the hope that it will be useful,
+        -:   12:// but WITHOUT ANY WARRANTY; without even the implied warranty of
+        -:   13:// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+        -:   14:// GNU General Public License for more details.
+        -:   15:
+        -:   16:// Under Section 7 of GPL version 3, you are granted additional
+        -:   17:// permissions described in the GCC Runtime Library Exception, version
+        -:   18:// 3.1, as published by the Free Software Foundation.
+        -:   19:
+        -:   20:// You should have received a copy of the GNU General Public License and
+        -:   21:// a copy of the GCC Runtime Library Exception along with this program;
+        -:   22:// see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+        -:   23:// <http://www.gnu.org/licenses/>.
+        -:   24:
+        -:   25:/**
+        -:   26: *  @file bits/regex.tcc
+        -:   27: *  This is an internal header file, included by other library headers.
+        -:   28: *  Do not attempt to use it directly. @headername{regex}
+        -:   29: */
+        -:   30:
+        -:   31:namespace std _GLIBCXX_VISIBILITY(default)
+        -:   32:{
+        -:   33:_GLIBCXX_BEGIN_NAMESPACE_VERSION
+        -:   34:
+        -:   35:namespace __detail
+        -:   36:{
+        -:   37:  /// @cond undocumented
+        -:   38:
+        -:   39:  // Result of merging regex_match and regex_search.
+        -:   40:  //
+        -:   41:  // __policy now can be _S_auto (auto dispatch) and _S_alternate (use
+        -:   42:  // the other one if possible, for test purpose).
+        -:   43:  //
+        -:   44:  // That __match_mode is true means regex_match, else regex_search.
+        -:   45:  template<typename _BiIter, typename _Alloc,
+        -:   46:	   typename _CharT, typename _TraitsT>
+        -:   47:    bool
+function _ZNSt8__detail17__regex_algo_implIN9__gnu_cxx17__normal_iteratorIPKcNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEESaINS5_9sub_matchISB_EEEcNS5_12regex_traitsIcEEEEbT_SH_RNS5_13match_resultsISH_T0_EERKNS5_11basic_regexIT1_T2_EENSt15regex_constants15match_flag_typeENS_20_RegexExecutorPolicyEb called 0 returned 0% blocks executed 0%
+    #####:   48:    __regex_algo_impl(_BiIter                              __s,
+        -:   49:		      _BiIter                              __e,
+        -:   50:		      match_results<_BiIter, _Alloc>&      __m,
+        -:   51:		      const basic_regex<_CharT, _TraitsT>& __re,
+        -:   52:		      regex_constants::match_flag_type     __flags,
+        -:   53:		      _RegexExecutorPolicy		   __policy,
+        -:   54:		      bool				   __match_mode)
+        -:   55:    {
+    #####:   56:      if (__re._M_automaton == nullptr)
+    %%%%%:   56-block 2
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:   57:	return false;
+    %%%%%:   57-block 4
+        -:   58:
+    #####:   59:      typename match_results<_BiIter, _Alloc>::_Unchecked& __res = __m;
+    #####:   60:      __m._M_begin = __s;
+    #####:   61:      __m._M_resize(__re._M_automaton->_M_sub_count());
+    %%%%%:   61-block 5
+call    0 never executed
+call    1 never executed
+call    2 never executed
+        -:   62:
+        -:   63:      bool __ret;
+    #####:   64:      if ((__re.flags() & regex_constants::__polynomial)
+call    0 never executed
+call    1 never executed
+    #####:   65:	  || (__policy == _RegexExecutorPolicy::_S_alternate
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:   65-block 11
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    %%%%%:   65-block 14
+    %%%%%:   65-block 15
+    %%%%%:   65-block 16
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    #####:   66:	      && !__re._M_automaton->_M_has_backref))
+    %%%%%:   66-block 12
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+        -:   67:	{
+        -:   68:	  _Executor<_BiIter, _Alloc, _TraitsT, false>
+    #####:   69:	    __executor(__s, __e, __res, __re, __flags);
+    %%%%%:   69-block 17
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:   70:	  if (__match_mode)
+    %%%%%:   70-block 18
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:   71:	    __ret = __executor._M_match();
+    %%%%%:   71-block 19
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:   71-block 20
+        -:   72:	  else
+    #####:   73:	    __ret = __executor._M_search();
+    %%%%%:   73-block 21
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:   73-block 22
+    #####:   74:	}
+    %%%%%:   74-block 23
+call    0 never executed
+    $$$$$:   74-block 54
+call    1 never executed
+        -:   75:      else
+        -:   76:	{
+        -:   77:	  _Executor<_BiIter, _Alloc, _TraitsT, true>
+    #####:   78:	    __executor(__s, __e, __res, __re, __flags);
+    %%%%%:   78-block 25
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:   79:	  if (__match_mode)
+    %%%%%:   79-block 26
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:   80:	    __ret = __executor._M_match();
+    %%%%%:   80-block 27
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:   80-block 28
+        -:   81:	  else
+    #####:   82:	    __ret = __executor._M_search();
+    %%%%%:   82-block 29
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:   82-block 30
+    #####:   83:	}
+    %%%%%:   83-block 31
+call    0 never executed
+    $$$$$:   83-block 57
+call    1 never executed
+    #####:   84:      if (__ret)
+    %%%%%:   84-block 33
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:   85:	{
+    #####:   86:	  for (auto& __it : __res)
+    %%%%%:   86-block 34
+call    0 never executed
+call    1 never executed
+    %%%%%:   86-block 36
+call    2 never executed
+    %%%%%:   86-block 39
+call    3 never executed
+    %%%%%:   86-block 40
+call    4 never executed
+branch  5 never executed
+branch  6 never executed (fallthrough)
+    #####:   87:	    if (!__it.matched)
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:   88:	      __it.first = __it.second = __e;
+    %%%%%:   88-block 38
+    #####:   89:	  auto& __pre = __m._M_prefix();
+    %%%%%:   89-block 42
+call    0 never executed
+    #####:   90:	  auto& __suf = __m._M_suffix();
+call    0 never executed
+    #####:   91:	  if (__match_mode)
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:   92:	    {
+    #####:   93:	      __pre.matched = false;
+    #####:   94:	      __pre.first = __s;
+    #####:   95:	      __pre.second = __s;
+    #####:   96:	      __suf.matched = false;
+    #####:   97:	      __suf.first = __e;
+    #####:   98:	      __suf.second = __e;
+    %%%%%:   98-block 45
+        -:   99:	    }
+        -:  100:	  else
+        -:  101:	    {
+    #####:  102:	      __pre.first = __s;
+    #####:  103:	      __pre.second = __res[0].first;
+    %%%%%:  103-block 46
+call    0 never executed
+    #####:  104:	      __pre.matched = (__pre.first != __pre.second);
+call    0 never executed
+    #####:  105:	      __suf.first = __res[0].second;
+call    0 never executed
+    #####:  106:	      __suf.second = __e;
+    #####:  107:	      __suf.matched = (__suf.first != __suf.second);
+call    0 never executed
+        -:  108:	    }
+        -:  109:	}
+        -:  110:      else
+        -:  111:	{
+    #####:  112:	  __m._M_establish_failed_match(__e);
+    %%%%%:  112-block 51
+call    0 never executed
+        -:  113:	}
+    #####:  114:      return __ret;
+    %%%%%:  114-block 52
+        -:  115:    }
+        -:  116:  /// @endcond
+        -:  117:} // namespace __detail
+        -:  118:
+        -:  119:  template<typename _Ch_type>
+        -:  120:  template<typename _Fwd_iter>
+        -:  121:    typename regex_traits<_Ch_type>::string_type
+function _ZNKSt7__cxx1112regex_traitsIcE18lookup_collatenameIPKcEENS_12basic_stringIcSt11char_traitsIcESaIcEEET_SA_ called 0 returned 0% blocks executed 0%
+    #####:  122:    regex_traits<_Ch_type>::
+        -:  123:    lookup_collatename(_Fwd_iter __first, _Fwd_iter __last) const
+        -:  124:    {
+        -:  125:      typedef std::ctype<char_type> __ctype_type;
+    #####:  126:      const __ctype_type& __fctyp(use_facet<__ctype_type>(_M_locale));
+    %%%%%:  126-block 2
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:  127:
+        -:  128:      static const char* __collatenames[] =
+        -:  129:	{
+        -:  130:	  "NUL",
+        -:  131:	  "SOH",
+        -:  132:	  "STX",
+        -:  133:	  "ETX",
+        -:  134:	  "EOT",
+        -:  135:	  "ENQ",
+        -:  136:	  "ACK",
+        -:  137:	  "alert",
+        -:  138:	  "backspace",
+        -:  139:	  "tab",
+        -:  140:	  "newline",
+        -:  141:	  "vertical-tab",
+        -:  142:	  "form-feed",
+        -:  143:	  "carriage-return",
+        -:  144:	  "SO",
+        -:  145:	  "SI",
+        -:  146:	  "DLE",
+        -:  147:	  "DC1",
+        -:  148:	  "DC2",
+        -:  149:	  "DC3",
+        -:  150:	  "DC4",
+        -:  151:	  "NAK",
+        -:  152:	  "SYN",
+        -:  153:	  "ETB",
+        -:  154:	  "CAN",
+        -:  155:	  "EM",
+        -:  156:	  "SUB",
+        -:  157:	  "ESC",
+        -:  158:	  "IS4",
+        -:  159:	  "IS3",
+        -:  160:	  "IS2",
+        -:  161:	  "IS1",
+        -:  162:	  "space",
+        -:  163:	  "exclamation-mark",
+        -:  164:	  "quotation-mark",
+        -:  165:	  "number-sign",
+        -:  166:	  "dollar-sign",
+        -:  167:	  "percent-sign",
+        -:  168:	  "ampersand",
+        -:  169:	  "apostrophe",
+        -:  170:	  "left-parenthesis",
+        -:  171:	  "right-parenthesis",
+        -:  172:	  "asterisk",
+        -:  173:	  "plus-sign",
+        -:  174:	  "comma",
+        -:  175:	  "hyphen",
+        -:  176:	  "period",
+        -:  177:	  "slash",
+        -:  178:	  "zero",
+        -:  179:	  "one",
+        -:  180:	  "two",
+        -:  181:	  "three",
+        -:  182:	  "four",
+        -:  183:	  "five",
+        -:  184:	  "six",
+        -:  185:	  "seven",
+        -:  186:	  "eight",
+        -:  187:	  "nine",
+        -:  188:	  "colon",
+        -:  189:	  "semicolon",
+        -:  190:	  "less-than-sign",
+        -:  191:	  "equals-sign",
+        -:  192:	  "greater-than-sign",
+        -:  193:	  "question-mark",
+        -:  194:	  "commercial-at",
+        -:  195:	  "A",
+        -:  196:	  "B",
+        -:  197:	  "C",
+        -:  198:	  "D",
+        -:  199:	  "E",
+        -:  200:	  "F",
+        -:  201:	  "G",
+        -:  202:	  "H",
+        -:  203:	  "I",
+        -:  204:	  "J",
+        -:  205:	  "K",
+        -:  206:	  "L",
+        -:  207:	  "M",
+        -:  208:	  "N",
+        -:  209:	  "O",
+        -:  210:	  "P",
+        -:  211:	  "Q",
+        -:  212:	  "R",
+        -:  213:	  "S",
+        -:  214:	  "T",
+        -:  215:	  "U",
+        -:  216:	  "V",
+        -:  217:	  "W",
+        -:  218:	  "X",
+        -:  219:	  "Y",
+        -:  220:	  "Z",
+        -:  221:	  "left-square-bracket",
+        -:  222:	  "backslash",
+        -:  223:	  "right-square-bracket",
+        -:  224:	  "circumflex",
+        -:  225:	  "underscore",
+        -:  226:	  "grave-accent",
+        -:  227:	  "a",
+        -:  228:	  "b",
+        -:  229:	  "c",
+        -:  230:	  "d",
+        -:  231:	  "e",
+        -:  232:	  "f",
+        -:  233:	  "g",
+        -:  234:	  "h",
+        -:  235:	  "i",
+        -:  236:	  "j",
+        -:  237:	  "k",
+        -:  238:	  "l",
+        -:  239:	  "m",
+        -:  240:	  "n",
+        -:  241:	  "o",
+        -:  242:	  "p",
+        -:  243:	  "q",
+        -:  244:	  "r",
+        -:  245:	  "s",
+        -:  246:	  "t",
+        -:  247:	  "u",
+        -:  248:	  "v",
+        -:  249:	  "w",
+        -:  250:	  "x",
+        -:  251:	  "y",
+        -:  252:	  "z",
+        -:  253:	  "left-curly-bracket",
+        -:  254:	  "vertical-line",
+        -:  255:	  "right-curly-bracket",
+        -:  256:	  "tilde",
+        -:  257:	  "DEL",
+        -:  258:	};
+        -:  259:
+    #####:  260:      string __s;
+    %%%%%:  260-block 3
+call    0 never executed
+    #####:  261:      for (; __first != __last; ++__first)
+    %%%%%:  261-block 7
+    %%%%%:  261-block 8
+branch  0 never executed
+branch  1 never executed (fallthrough)
+    #####:  262:	__s += __fctyp.narrow(*__first, 0);
+    %%%%%:  262-block 5
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  262-block 6
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+        -:  263:
+    #####:  264:      for (const auto& __it : __collatenames)
+    %%%%%:  264-block 9
+    %%%%%:  264-block 19
+    %%%%%:  264-block 20
+branch  0 never executed
+branch  1 never executed (fallthrough)
+    #####:  265:	if (__s == __it)
+    %%%%%:  265-block 10
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  265-block 11
+branch  3 never executed (fallthrough)
+branch  4 never executed
+    #####:  266:	  return string_type(1, __fctyp.widen(
+    %%%%%:  266-block 18
+    $$$$$:  266-block 27
+    #####:  267:	    static_cast<char>(&__it - __collatenames)));
+    %%%%%:  267-block 14
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  267-block 15
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+        -:  268:
+        -:  269:      // TODO Add digraph support:
+        -:  270:      // http://boost.sourceforge.net/libs/regex/doc/collating_names.html
+        -:  271:
+    #####:  272:      return string_type();
+    %%%%%:  272-block 21
+call    0 never executed
+    #####:  273:    }
+    %%%%%:  273-block 22
+call    0 never executed
+    $$$$$:  273-block 28
+call    1 never executed
+        -:  274:
+        -:  275:  template<typename _Ch_type>
+        -:  276:  template<typename _Fwd_iter>
+        -:  277:    typename regex_traits<_Ch_type>::char_class_type
+function _ZNKSt7__cxx1112regex_traitsIcE16lookup_classnameIPKcEENS1_10_RegexMaskET_S6_b called 0 returned 0% blocks executed 0%
+    #####:  278:    regex_traits<_Ch_type>::
+        -:  279:    lookup_classname(_Fwd_iter __first, _Fwd_iter __last, bool __icase) const
+        -:  280:    {
+        -:  281:      typedef std::ctype<char_type> __ctype_type;
+    #####:  282:      const __ctype_type& __fctyp(use_facet<__ctype_type>(_M_locale));
+    %%%%%:  282-block 2
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:  283:
+        -:  284:      // Mappings from class name to class mask.
+        -:  285:      static const pair<const char*, char_class_type> __classnames[] =
+        -:  286:      {
+        -:  287:	{"d", ctype_base::digit},
+        -:  288:	{"w", {ctype_base::alnum, _RegexMask::_S_under}},
+        -:  289:	{"s", ctype_base::space},
+        -:  290:	{"alnum", ctype_base::alnum},
+        -:  291:	{"alpha", ctype_base::alpha},
+        -:  292:	{"blank", ctype_base::blank},
+        -:  293:	{"cntrl", ctype_base::cntrl},
+        -:  294:	{"digit", ctype_base::digit},
+        -:  295:	{"graph", ctype_base::graph},
+        -:  296:	{"lower", ctype_base::lower},
+        -:  297:	{"print", ctype_base::print},
+        -:  298:	{"punct", ctype_base::punct},
+        -:  299:	{"space", ctype_base::space},
+        -:  300:	{"upper", ctype_base::upper},
+        -:  301:	{"xdigit", ctype_base::xdigit},
+        -:  302:      };
+        -:  303:
+    #####:  304:      string __s;
+    %%%%%:  304-block 3
+call    0 never executed
+    #####:  305:      for (; __first != __last; ++__first)
+    %%%%%:  305-block 8
+    %%%%%:  305-block 9
+branch  0 never executed
+branch  1 never executed (fallthrough)
+    #####:  306:	__s += __fctyp.narrow(__fctyp.tolower(*__first), 0);
+    %%%%%:  306-block 5
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  306-block 6
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    %%%%%:  306-block 7
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+        -:  307:
+    #####:  308:      for (const auto& __it : __classnames)
+    %%%%%:  308-block 10
+    %%%%%:  308-block 26
+    %%%%%:  308-block 27
+branch  0 never executed
+branch  1 never executed (fallthrough)
+    #####:  309:	if (__s == __it.first)
+    %%%%%:  309-block 11
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  309-block 12
+branch  3 never executed (fallthrough)
+branch  4 never executed
+        -:  310:	  {
+    #####:  311:	    if (__icase
+    #####:  312:		&& ((__it.second
+    %%%%%:  312-block 13
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  312-block 19
+    %%%%%:  312-block 20
+    #####:  313:		     & (ctype_base::lower | ctype_base::upper)) != 0))
+    %%%%%:  313-block 14
+call    0 never executed
+call    1 never executed
+call    2 never executed
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:  313-block 21
+branch  6 never executed (fallthrough)
+branch  7 never executed
+    #####:  314:	      return ctype_base::alpha;
+    %%%%%:  314-block 22
+call    0 never executed
+    %%%%%:  314-block 24
+    #####:  315:	    return __it.second;
+    %%%%%:  315-block 25
+        -:  316:	  }
+    #####:  317:      return 0;
+    %%%%%:  317-block 28
+call    0 never executed
+    %%%%%:  317-block 30
+    #####:  318:    }
+    %%%%%:  318-block 31
+call    0 never executed
+    $$$$$:  318-block 34
+call    1 never executed
+        -:  319:
+        -:  320:  template<typename _Ch_type>
+        -:  321:    bool
+function _ZNKSt7__cxx1112regex_traitsIcE7isctypeEcNS1_10_RegexMaskE called 0 returned 0% blocks executed 0%
+    #####:  322:    regex_traits<_Ch_type>::
+        -:  323:    isctype(_Ch_type __c, char_class_type __f) const
+        -:  324:    {
+        -:  325:      typedef std::ctype<char_type> __ctype_type;
+    #####:  326:      const __ctype_type& __fctyp(use_facet<__ctype_type>(_M_locale));
+    %%%%%:  326-block 2
+call    0 never executed
+        -:  327:
+    #####:  328:      return __fctyp.is(__f._M_base, __c)
+call    0 never executed
+        -:  329:	// [[:w:]]
+    #####:  330:	|| ((__f._M_extended & _RegexMask::_S_under)
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  330-block 5
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    %%%%%:  330-block 8
+    %%%%%:  330-block 9
+    #####:  331:	    && __c == __fctyp.widen('_'));
+    %%%%%:  331-block 6
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:  331-block 10
+        -:  332:    }
+        -:  333:
+        -:  334:  template<typename _Ch_type>
+        -:  335:    int
+function _ZNKSt7__cxx1112regex_traitsIcE5valueEci called 0 returned 0% blocks executed 0%
+    #####:  336:    regex_traits<_Ch_type>::
+    %%%%%:  336-block 2
+        -:  337:    value(_Ch_type __ch, int __radix) const
+        -:  338:    {
+    #####:  339:      std::basic_istringstream<char_type> __is(string_type(1, __ch));
+    %%%%%:  339-block 4
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  339-block 5
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    %%%%%:  339-block 6
+call    6 never executed
+    $$$$$:  339-block 21
+call    7 never executed
+    $$$$$:  339-block 25
+    $$$$$:  339-block 26
+        -:  340:      long __v;
+    #####:  341:      if (__radix == 8)
+    %%%%%:  341-block 8
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  342:	__is >> std::oct;
+    %%%%%:  342-block 9
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  343:      else if (__radix == 16)
+    %%%%%:  343-block 10
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  344:	__is >> std::hex;
+    %%%%%:  344-block 11
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  345:      __is >> __v;
+    %%%%%:  345-block 12
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  346:      return __is.fail() ? -1 : __v;
+    %%%%%:  346-block 13
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:  346-block 15
+    %%%%%:  346-block 16
+    %%%%%:  346-block 17
+    %%%%%:  346-block 20
+    #####:  347:    }
+    %%%%%:  347-block 18
+call    0 never executed
+    $$$$$:  347-block 27
+call    1 never executed
+        -:  348:
+        -:  349:  template<typename _Bi_iter, typename _Alloc>
+        -:  350:  template<typename _Out_iter>
+        -:  351:    _Out_iter
+        -:  352:    match_results<_Bi_iter, _Alloc>::
+        -:  353:    format(_Out_iter __out,
+        -:  354:	   const match_results<_Bi_iter, _Alloc>::char_type* __fmt_first,
+        -:  355:	   const match_results<_Bi_iter, _Alloc>::char_type* __fmt_last,
+        -:  356:	   match_flag_type __flags) const
+        -:  357:    {
+        -:  358:      __glibcxx_assert( ready() );
+        -:  359:      regex_traits<char_type> __traits;
+        -:  360:      typedef std::ctype<char_type> __ctype_type;
+        -:  361:      const __ctype_type&
+        -:  362:	__fctyp(use_facet<__ctype_type>(__traits.getloc()));
+        -:  363:
+        -:  364:      auto __output = [&](size_t __idx)
+        -:  365:	{
+        -:  366:	  auto& __sub = (*this)[__idx];
+        -:  367:	  if (__sub.matched)
+        -:  368:	    __out = std::copy(__sub.first, __sub.second, __out);
+        -:  369:	};
+        -:  370:
+        -:  371:      if (__flags & regex_constants::format_sed)
+        -:  372:	{
+        -:  373:	  bool __escaping = false;
+        -:  374:	  for (; __fmt_first != __fmt_last; __fmt_first++)
+        -:  375:	    {
+        -:  376:	      if (__escaping)
+        -:  377:		{
+        -:  378:		  __escaping = false;
+        -:  379:		  if (__fctyp.is(__ctype_type::digit, *__fmt_first))
+        -:  380:		    __output(__traits.value(*__fmt_first, 10));
+        -:  381:		  else
+        -:  382:		    *__out++ = *__fmt_first;
+        -:  383:		  continue;
+        -:  384:		}
+        -:  385:	      if (*__fmt_first == '\\')
+        -:  386:		{
+        -:  387:		  __escaping = true;
+        -:  388:		  continue;
+        -:  389:		}
+        -:  390:	      if (*__fmt_first == '&')
+        -:  391:		{
+        -:  392:		  __output(0);
+        -:  393:		  continue;
+        -:  394:		}
+        -:  395:	      *__out++ = *__fmt_first;
+        -:  396:	    }
+        -:  397:	  if (__escaping)
+        -:  398:	    *__out++ = '\\';
+        -:  399:	}
+        -:  400:      else
+        -:  401:	{
+        -:  402:	  while (1)
+        -:  403:	    {
+        -:  404:	      auto __next = std::find(__fmt_first, __fmt_last, '$');
+        -:  405:	      if (__next == __fmt_last)
+        -:  406:		break;
+        -:  407:
+        -:  408:	      __out = std::copy(__fmt_first, __next, __out);
+        -:  409:
+        -:  410:	      auto __eat = [&](char __ch) -> bool
+        -:  411:		{
+        -:  412:		  if (*__next == __ch)
+        -:  413:		    {
+        -:  414:		      ++__next;
+        -:  415:		      return true;
+        -:  416:		    }
+        -:  417:		  return false;
+        -:  418:		};
+        -:  419:
+        -:  420:	      if (++__next == __fmt_last)
+        -:  421:		*__out++ = '$';
+        -:  422:	      else if (__eat('$'))
+        -:  423:		*__out++ = '$';
+        -:  424:	      else if (__eat('&'))
+        -:  425:		__output(0);
+        -:  426:	      else if (__eat('`'))
+        -:  427:		{
+        -:  428:		  auto& __sub = _M_prefix();
+        -:  429:		  if (__sub.matched)
+        -:  430:		    __out = std::copy(__sub.first, __sub.second, __out);
+        -:  431:		}
+        -:  432:	      else if (__eat('\''))
+        -:  433:		{
+        -:  434:		  auto& __sub = _M_suffix();
+        -:  435:		  if (__sub.matched)
+        -:  436:		    __out = std::copy(__sub.first, __sub.second, __out);
+        -:  437:		}
+        -:  438:	      else if (__fctyp.is(__ctype_type::digit, *__next))
+        -:  439:		{
+        -:  440:		  long __num = __traits.value(*__next, 10);
+        -:  441:		  if (++__next != __fmt_last
+        -:  442:		      && __fctyp.is(__ctype_type::digit, *__next))
+        -:  443:		    {
+        -:  444:		      __num *= 10;
+        -:  445:		      __num += __traits.value(*__next++, 10);
+        -:  446:		    }
+        -:  447:		  if (0 <= __num && __num < this->size())
+        -:  448:		    __output(__num);
+        -:  449:		}
+        -:  450:	      else
+        -:  451:		*__out++ = '$';
+        -:  452:	      __fmt_first = __next;
+        -:  453:	    }
+        -:  454:	  __out = std::copy(__fmt_first, __fmt_last, __out);
+        -:  455:	}
+        -:  456:      return __out;
+        -:  457:    }
+        -:  458:
+        -:  459:  template<typename _Out_iter, typename _Bi_iter,
+        -:  460:	   typename _Rx_traits, typename _Ch_type>
+        -:  461:    _Out_iter
+        -:  462:    __regex_replace(_Out_iter __out, _Bi_iter __first, _Bi_iter __last,
+        -:  463:		    const basic_regex<_Ch_type, _Rx_traits>& __e,
+        -:  464:		    const _Ch_type* __fmt, size_t __len,
+        -:  465:		    regex_constants::match_flag_type __flags)
+        -:  466:    {
+        -:  467:      typedef regex_iterator<_Bi_iter, _Ch_type, _Rx_traits> _IterT;
+        -:  468:      _IterT __i(__first, __last, __e, __flags);
+        -:  469:      _IterT __end;
+        -:  470:      if (__i == __end)
+        -:  471:	{
+        -:  472:	  if (!(__flags & regex_constants::format_no_copy))
+        -:  473:	    __out = std::copy(__first, __last, __out);
+        -:  474:	}
+        -:  475:      else
+        -:  476:	{
+        -:  477:	  sub_match<_Bi_iter> __last;
+        -:  478:	  for (; __i != __end; ++__i)
+        -:  479:	    {
+        -:  480:	      if (!(__flags & regex_constants::format_no_copy))
+        -:  481:		__out = std::copy(__i->prefix().first, __i->prefix().second,
+        -:  482:				  __out);
+        -:  483:	      __out = __i->format(__out, __fmt, __fmt + __len, __flags);
+        -:  484:	      __last = __i->suffix();
+        -:  485:	      if (__flags & regex_constants::format_first_only)
+        -:  486:		break;
+        -:  487:	    }
+        -:  488:	  if (!(__flags & regex_constants::format_no_copy))
+        -:  489:	    __out = std::copy(__last.first, __last.second, __out);
+        -:  490:	}
+        -:  491:      return __out;
+        -:  492:    }
+        -:  493:
+        -:  494:  template<typename _Bi_iter,
+        -:  495:	   typename _Ch_type,
+        -:  496:	   typename _Rx_traits>
+        -:  497:    bool
+        -:  498:    regex_iterator<_Bi_iter, _Ch_type, _Rx_traits>::
+        -:  499:    operator==(const regex_iterator& __rhs) const noexcept
+        -:  500:    {
+        -:  501:      if (_M_pregex == nullptr && __rhs._M_pregex == nullptr)
+        -:  502:	return true;
+        -:  503:      return _M_pregex == __rhs._M_pregex
+        -:  504:	  && _M_begin == __rhs._M_begin
+        -:  505:	  && _M_end == __rhs._M_end
+        -:  506:	  && _M_flags == __rhs._M_flags
+        -:  507:	  && _M_match[0] == __rhs._M_match[0];
+        -:  508:    }
+        -:  509:
+        -:  510:  template<typename _Bi_iter,
+        -:  511:	   typename _Ch_type,
+        -:  512:	   typename _Rx_traits>
+        -:  513:    regex_iterator<_Bi_iter, _Ch_type, _Rx_traits>&
+        -:  514:    regex_iterator<_Bi_iter, _Ch_type, _Rx_traits>::
+        -:  515:    operator++()
+        -:  516:    {
+        -:  517:      // In all cases in which the call to regex_search returns true,
+        -:  518:      // match.prefix().first shall be equal to the previous value of
+        -:  519:      // match[0].second, and for each index i in the half-open range
+        -:  520:      // [0, match.size()) for which match[i].matched is true,
+        -:  521:      // match[i].position() shall return distance(begin, match[i].first).
+        -:  522:      // [28.12.1.4.5]
+        -:  523:      if (_M_match[0].matched)
+        -:  524:	{
+        -:  525:	  auto __start = _M_match[0].second;
+        -:  526:	  auto __prefix_first = _M_match[0].second;
+        -:  527:	  if (_M_match[0].first == _M_match[0].second)
+        -:  528:	    {
+        -:  529:	      if (__start == _M_end)
+        -:  530:		{
+        -:  531:		  _M_pregex = nullptr;
+        -:  532:		  return *this;
+        -:  533:		}
+        -:  534:	      else
+        -:  535:		{
+        -:  536:		  if (regex_search(__start, _M_end, _M_match, *_M_pregex,
+        -:  537:				   _M_flags
+        -:  538:				   | regex_constants::match_not_null
+        -:  539:				   | regex_constants::match_continuous))
+        -:  540:		    {
+        -:  541:		      __glibcxx_assert(_M_match[0].matched);
+        -:  542:		      auto& __prefix = _M_match._M_prefix();
+        -:  543:		      __prefix.first = __prefix_first;
+        -:  544:		      __prefix.matched = __prefix.first != __prefix.second;
+        -:  545:		      // [28.12.1.4.5]
+        -:  546:		      _M_match._M_begin = _M_begin;
+        -:  547:		      return *this;
+        -:  548:		    }
+        -:  549:		  else
+        -:  550:		    ++__start;
+        -:  551:		}
+        -:  552:	    }
+        -:  553:	  _M_flags |= regex_constants::match_prev_avail;
+        -:  554:	  if (regex_search(__start, _M_end, _M_match, *_M_pregex, _M_flags))
+        -:  555:	    {
+        -:  556:	      __glibcxx_assert(_M_match[0].matched);
+        -:  557:	      auto& __prefix = _M_match._M_prefix();
+        -:  558:	      __prefix.first = __prefix_first;
+        -:  559:	      __prefix.matched = __prefix.first != __prefix.second;
+        -:  560:	      // [28.12.1.4.5]
+        -:  561:	      _M_match._M_begin = _M_begin;
+        -:  562:	    }
+        -:  563:	  else
+        -:  564:	    _M_pregex = nullptr;
+        -:  565:	}
+        -:  566:      return *this;
+        -:  567:    }
+        -:  568:
+        -:  569:  template<typename _Bi_iter,
+        -:  570:	   typename _Ch_type,
+        -:  571:	   typename _Rx_traits>
+        -:  572:    regex_token_iterator<_Bi_iter, _Ch_type, _Rx_traits>&
+        -:  573:    regex_token_iterator<_Bi_iter, _Ch_type, _Rx_traits>::
+        -:  574:    operator=(const regex_token_iterator& __rhs)
+        -:  575:    {
+        -:  576:      _M_position = __rhs._M_position;
+        -:  577:      _M_subs = __rhs._M_subs;
+        -:  578:      _M_n = __rhs._M_n;
+        -:  579:      _M_suffix = __rhs._M_suffix;
+        -:  580:      _M_has_m1 = __rhs._M_has_m1;
+        -:  581:      _M_normalize_result();
+        -:  582:      return *this;
+        -:  583:    }
+        -:  584:
+        -:  585:  template<typename _Bi_iter,
+        -:  586:	   typename _Ch_type,
+        -:  587:	   typename _Rx_traits>
+        -:  588:    bool
+        -:  589:    regex_token_iterator<_Bi_iter, _Ch_type, _Rx_traits>::
+        -:  590:    operator==(const regex_token_iterator& __rhs) const
+        -:  591:    {
+        -:  592:      if (_M_end_of_seq() && __rhs._M_end_of_seq())
+        -:  593:	return true;
+        -:  594:      if (_M_suffix.matched && __rhs._M_suffix.matched
+        -:  595:	  && _M_suffix == __rhs._M_suffix)
+        -:  596:	return true;
+        -:  597:      if (_M_end_of_seq() || _M_suffix.matched
+        -:  598:	  || __rhs._M_end_of_seq() || __rhs._M_suffix.matched)
+        -:  599:	return false;
+        -:  600:      return _M_position == __rhs._M_position
+        -:  601:	&& _M_n == __rhs._M_n
+        -:  602:	&& _M_subs == __rhs._M_subs;
+        -:  603:    }
+        -:  604:
+        -:  605:  template<typename _Bi_iter,
+        -:  606:	   typename _Ch_type,
+        -:  607:	   typename _Rx_traits>
+        -:  608:    regex_token_iterator<_Bi_iter, _Ch_type, _Rx_traits>&
+        -:  609:    regex_token_iterator<_Bi_iter, _Ch_type, _Rx_traits>::
+        -:  610:    operator++()
+        -:  611:    {
+        -:  612:      _Position __prev = _M_position;
+        -:  613:      if (_M_suffix.matched)
+        -:  614:	*this = regex_token_iterator();
+        -:  615:      else if (_M_n + 1 < _M_subs.size())
+        -:  616:	{
+        -:  617:	  _M_n++;
+        -:  618:	  _M_result = &_M_current_match();
+        -:  619:	}
+        -:  620:      else
+        -:  621:	{
+        -:  622:	  _M_n = 0;
+        -:  623:	  ++_M_position;
+        -:  624:	  if (_M_position != _Position())
+        -:  625:	    _M_result = &_M_current_match();
+        -:  626:	  else if (_M_has_m1 && __prev->suffix().length() != 0)
+        -:  627:	    {
+        -:  628:	      _M_suffix.matched = true;
+        -:  629:	      _M_suffix.first = __prev->suffix().first;
+        -:  630:	      _M_suffix.second = __prev->suffix().second;
+        -:  631:	      _M_result = &_M_suffix;
+        -:  632:	    }
+        -:  633:	  else
+        -:  634:	    *this = regex_token_iterator();
+        -:  635:	}
+        -:  636:      return *this;
+        -:  637:    }
+        -:  638:
+        -:  639:  template<typename _Bi_iter,
+        -:  640:	   typename _Ch_type,
+        -:  641:	   typename _Rx_traits>
+        -:  642:    void
+        -:  643:    regex_token_iterator<_Bi_iter, _Ch_type, _Rx_traits>::
+        -:  644:    _M_init(_Bi_iter __a, _Bi_iter __b)
+        -:  645:    {
+        -:  646:      _M_has_m1 = false;
+        -:  647:      for (auto __it : _M_subs)
+        -:  648:	if (__it == -1)
+        -:  649:	  {
+        -:  650:	    _M_has_m1 = true;
+        -:  651:	    break;
+        -:  652:	  }
+        -:  653:      if (_M_position != _Position())
+        -:  654:	_M_result = &_M_current_match();
+        -:  655:      else if (_M_has_m1)
+        -:  656:	{
+        -:  657:	  _M_suffix.matched = true;
+        -:  658:	  _M_suffix.first = __a;
+        -:  659:	  _M_suffix.second = __b;
+        -:  660:	  _M_result = &_M_suffix;
+        -:  661:	}
+        -:  662:      else
+        -:  663:	_M_result = nullptr;
+        -:  664:    }
+        -:  665:
+        -:  666:_GLIBCXX_END_NAMESPACE_VERSION
+        -:  667:} // namespace
