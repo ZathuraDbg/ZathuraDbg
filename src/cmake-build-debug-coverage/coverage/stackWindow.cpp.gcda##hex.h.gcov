@@ -1,0 +1,3544 @@
+        -:    0:Source:/home/rc/ZathuraDbg/vendor/hex/hex.h
+        -:    0:Graph:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/app/windows/stackWindow.cpp.gcno
+        -:    0:Data:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/app/windows/stackWindow.cpp.gcda
+        -:    0:Runs:1
+        -:    1:// Mini memory editor for Dear ImGui (to embed in your game/tools)
+        -:    2:// Get latest version at http://www.github.com/ocornut/imgui_club
+        -:    3://
+        -:    4:// Right-click anywhere to access the Options menu!
+        -:    5:// You can adjust the keyboard repeat delay/rate in ImGuiIO.
+        -:    6:// The code assume a mono-space font for simplicity!
+        -:    7:// If you don't use the default font, use ImGui::PushFont()/PopFont() to switch to a mono-space font before calling this.
+        -:    8://
+        -:    9:// Usage:
+        -:   10://   // Create a window and draw memory editor inside it:
+        -:   11://   static MemoryEditor mem_edit_1;
+        -:   12://   static char data[0x10000];
+        -:   13://   size_t data_size = 0x10000;
+        -:   14://   mem_edit_1.DrawWindow("Memory Editor", data, data_size);
+        -:   15://
+        -:   16:// Usage:
+        -:   17://   // If you already have a window, use DrawContents() instead:
+        -:   18://   static MemoryEditor mem_edit_2;
+        -:   19://   ImGui::Begin("MyWindow")
+        -:   20://   mem_edit_2.DrawContents(this, sizeof(*this), (size_t)this);
+        -:   21://   ImGui::End();
+        -:   22://
+        -:   23:// Changelog:
+        -:   24:// - v0.10: initial version
+        -:   25:// - v0.23 (2017/08/17): added to github. fixed right-arrow triggering a byte write.
+        -:   26:// - v0.24 (2018/06/02): changed DragInt("Rows" to use a %d data format (which is desirable since imgui 1.61).
+        -:   27:// - v0.25 (2018/07/11): fixed wording: all occurrences of "Rows" renamed to "Columns".
+        -:   28:// - v0.26 (2018/08/02): fixed clicking on hex region
+        -:   29:// - v0.30 (2018/08/02): added data preview for common data types
+        -:   30:// - v0.31 (2018/10/10): added OptUpperCaseHex option to select lower/upper casing display [@samhocevar]
+        -:   31:// - v0.32 (2018/10/10): changed signatures to use void* instead of unsigned char*
+        -:   32:// - v0.33 (2018/10/10): added OptShowOptions option to hide all the interactive option setting.
+        -:   33:// - v0.34 (2019/05/07): binary preview now applies endianness setting [@nicolasnoble]
+        -:   34:// - v0.35 (2020/01/29): using ImGuiDataType available since Dear ImGui 1.69.
+        -:   35:// - v0.36 (2020/05/05): minor tweaks, minor refactor.
+        -:   36:// - v0.40 (2020/10/04): fix misuse of ImGuiListClipper API, broke with Dear ImGui 1.79. made cursor position appears on left-side of edit box. option popup appears on mouse release. fix MSVC warnings where _CRT_SECURE_NO_WARNINGS wasn't working in recent versions.
+        -:   37:// - v0.41 (2020/10/05): fix when using with keyboard/gamepad navigation enabled.
+        -:   38:// - v0.42 (2020/10/14): fix for . character in ASCII view always being greyed out.
+        -:   39:// - v0.43 (2021/03/12): added OptFooterExtraHeight to allow for custom drawing at the bottom of the editor [@leiradel]
+        -:   40:// - v0.44 (2021/03/12): use ImGuiInputTextFlags_AlwaysOverwrite in 1.82 + fix hardcoded width.
+        -:   41:// - v0.50 (2021/11/12): various fixes for recent dear imgui versions (fixed misuse of clipper, relying on SetKeyboardFocusHere() handling scrolling from 1.85). added default size.
+        -:   42:// - v0.51 (2024/02/22): fix for layout change in 1.89 when using IMGUI_DISABLE_OBSOLETE_FUNCTIONS. (#34)
+        -:   43:// - v0.52 (2024/03/08): removed unnecessary GetKeyIndex() calls, they are a no-op since 1.87.
+        -:   44://
+        -:   45:// Todo/Bugs:
+        -:   46:// - This is generally old/crappy code, it should work but isn't very good.. to be rewritten some day.
+        -:   47:// - PageUp/PageDown are not supported because we use _NoNav. This is a good test scenario for working out idioms of how to mix natural nav and our own...
+        -:   48:// - Arrows are being sent to the InputText() about to disappear which for LeftArrow makes the text cursor appear at position 1 for one frame.
+        -:   49:// - Using InputText() is awkward and maybe overkill here, consider implementing something custom.
+        -:   50:
+        -:   51:#pragma once
+        -:   52:
+        -:   53:#include <cstdio>      // sprintf, scanf
+        -:   54:#include <cstdint>     // uint8_t, etc.
+        -:   55:#include <iostream>
+        -:   56:#include <string>
+        -:   57:#include <sstream>
+        -:   58:#include <iomanip>
+        -:   59:#include <vector>
+        -:   60:#include <stack>
+        -:   61:#include <variant>
+        -:   62:
+        -:   63:#include "../../src/utils/iconfont.h"
+        -:   64:#include "../../src/utils/fonts.hpp"
+        -:   65:#ifdef _MSC_VER
+        -:   66:#define _PRISizeT   "I"
+        -:   67:#define ImSnprintf  _snprintf
+        -:   68:#else
+        -:   69:#define _PRISizeT   "z"
+        -:   70:#define ImSnprintf  snprintf
+        -:   71:#endif
+        -:   72:
+        -:   73:#ifdef _MSC_VER
+        -:   74:#pragma warning (push)
+        -:   75:#pragma warning (disable: 4996) // warning C4996: 'sprintf': This function or variable may be unsafe.
+        -:   76:#endif
+        -:   77:
+        -:   78:struct MemoryEditor
+        -:   79:{
+        -:   80:    enum DataFormat
+        -:   81:    {
+        -:   82:        DataFormat_Bin = 0,
+        -:   83:        DataFormat_Dec = 1,
+        -:   84:        DataFormat_Hex = 2,
+        -:   85:        DataFormat_COUNT
+        -:   86:    };
+        -:   87:
+        -:   88:    enum ActionType{
+        -:   89:        MemWrite,
+        -:   90:        MemWriteBatch,
+        -:   91:        SetBaseAddr
+        -:   92:    };
+        -:   93:
+        -:   94:    struct Actions{
+        -:   95:        ActionType Action;
+        -:   96:        uint64_t startAddr;
+        -:   97:        uint64_t endAddr;
+        -:   98:        size_t operationSize;
+        -:   99:        std::vector<intptr_t> operationData;
+        -:  100:        std::vector<intptr_t> originalData;
+        -:  101:    };
+        -:  102:
+        -:  103:    struct fillRangeInfoT{
+        -:  104:        uint64_t address;
+        -:  105:        int size;
+        -:  106:        char character;
+        -:  107:    };
+        -:  108:
+        -:  109:    // Settings
+        -:  110:    bool            Open;                                       // = true   // set to false when DrawWindow() was closed. ignore if not using DrawWindow().
+        -:  111:    bool            ReadOnly;                                   // = false  // disable any editing.
+        -:  112:    int             Cols;                                       // = 16     // number of columns to display.
+        -:  113:    bool            OptShowOptions;                             // = true   // display options button/context menu. when disabled, options will be locked unless you provide your own UI for them.
+        -:  114:    bool            OptShowDataPreview;                         // = false  // display a footer previewing the decimal/binary/hex/float representation of the currently selected bytes.
+        -:  115:    bool            OptShowHexII;                               // = false  // display values in HexII representation instead of regular hexadecimal: hide null/zero bytes, ascii values as ".X".
+        -:  116:    bool            OptShowAscii;                               // = true   // display ASCII representation on the right side.
+        -:  117:    bool            OptGreyOutZeroes;                           // = true   // display null/zero bytes using the TextDisabled color.
+        -:  118:    bool            OptUpperCaseHex;                            // = true   // display hexadecimal values as "FF" instead of "ff".
+        -:  119:    bool            OptShowAddWindowButton;                     // = false  // display a "+" to add a new window
+        -:  120:    int             OptMidColsCount;                            // = 8      // set to 0 to disable extra spacing between every mid-cols.
+        -:  121:    int             OptAddrDigitsCount;                         // = 0      // number of addr digits to display (default calculated based on maximum displayed addr).
+        -:  122:    bool            OptShowSetBaseAddrOption;                   // = false  // show the option to set the update the base address of the window
+        -:  123:    bool            OptFillMemoryRange;                         // = false  // allows you to have a function which can fill memory ranges
+        -:  124:    float           OptFooterExtraHeight;                       // = 0      // space to reserve at the bottom of the widget to add custom widgets
+        -:  125:    ImU32           HighlightColor;                             //          // background color of highlighted bytes.
+        -:  126:    ImU32 (*BgColorFn)(const ImU8* data, size_t off);
+        -:  127:    void (*InteractFn)(const ImU8* data, size_t off);
+        -:  128:    void            GoToPopup();
+        -:  129:    ImU8            (*ReadFn)(const ImU8* data, size_t off);    // = 0      // optional handler to read bytes.
+        -:  130:    void            (*WriteFn)(ImU8* data, size_t off, ImU8 d); // = 0      // optional handler to write bytes.
+        -:  131:    bool            (*HighlightFn)(const ImU8* data, size_t off);//= 0      // optional handler to return Highlight property (to support non-contiguous highlighting).
+        -:  132:    bool            (*NewWindowInfoFn)();
+        -:  133:    bool            (*ShowRequiredButton)(const std::string& buttonName, bool state);
+        -:  134:    fillRangeInfoT  (*FillMemoryRange)();
+        -:  135:    std::variant<bool, std::pair<void*, size_t>> (*SetBaseAddress2)(uintptr_t baseAddr, uintptr_t size);
+        -:  136:
+        -:  137:    // [Internal State]
+        -:  138:    bool            ContentsWidthChanged;
+        -:  139:    size_t          DataPreviewAddr;
+        -:  140:    size_t          DataEditingAddr;
+        -:  141:    size_t          SelectionStartAddr;
+        -:  142:    size_t          SelectionEndAddr;
+        -:  143:    size_t          HoveredAddr;
+        -:  144:    uint64_t        BaseDisplayAddr;
+        -:  145:    bool            DataEditingTakeFocus;
+        -:  146:    char            DataInputBuf[32];
+        -:  147:    char            AddrInputBuf[32];
+        -:  148:    size_t          GotoAddr;
+        -:  149:    size_t          HighlightMin, HighlightMax;
+        -:  150:    int             PreviewEndianness;
+        -:  151:    ImGuiDataType   PreviewDataType;
+        -:  152:    bool            Keep;
+        -:  153:    bool            KeepSetBaseAddrWindow;
+        -:  154:    bool            KeepFillMemoryWindow;
+        -:  155:    bool            KeepGoToPopup;
+        -:  156:    bool            CopySelection;
+        -:  157:    bool            StackFashionAddrSubtraction;
+        -:  158:    uint8_t*        MemData;
+        -:  159:    std::stack<Actions> UndoActions;
+        -:  160:    std::stack<Actions> RedoActions;
+        -:  161:
+function _ZN12MemoryEditorC2Ev called 0 returned 0% blocks executed 0%
+    #####:  162:    MemoryEditor()
+    #####:  163:    {
+    %%%%%:  163-block 2
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+        -:  164:        // Settings
+    #####:  165:        Open = true;
+    #####:  166:        ReadOnly = false;
+    #####:  167:        Cols = 16;
+    #####:  168:        OptShowOptions = true;
+    #####:  169:        OptShowDataPreview = false;
+    #####:  170:        OptShowHexII = false;
+    #####:  171:        OptShowAscii = true;
+    #####:  172:        OptGreyOutZeroes = true;
+    #####:  173:        OptUpperCaseHex = true;
+    #####:  174:        OptMidColsCount = 8;
+    #####:  175:        OptAddrDigitsCount = 0;
+    #####:  176:        OptFooterExtraHeight = 0.0f;
+    #####:  177:        HighlightColor = IM_COL32(0, 0, 0, 0);
+    #####:  178:        SelectionEndAddr = SelectionStartAddr = -1;
+    #####:  179:        ReadFn = nullptr;
+    #####:  180:        WriteFn = nullptr;
+    #####:  181:        HighlightFn = nullptr;
+    #####:  182:        BgColorFn = nullptr;
+    #####:  183:        InteractFn = nullptr;
+    #####:  184:        ShowRequiredButton = nullptr;
+    #####:  185:        Keep = false;
+        -:  186:        // State/Internals
+    #####:  187:        ContentsWidthChanged = false;
+    #####:  188:        DataPreviewAddr = DataEditingAddr = (size_t)-1;
+    #####:  189:        DataEditingTakeFocus = false;
+    #####:  190:        memset(DataInputBuf, 0, sizeof(DataInputBuf));
+    #####:  191:        memset(AddrInputBuf, 0, sizeof(AddrInputBuf));
+    #####:  192:        GotoAddr = (size_t)-1;
+    #####:  193:        HighlightMin = HighlightMax = (size_t)-1;
+    #####:  194:        PreviewEndianness = 0;
+    #####:  195:        PreviewDataType = ImGuiDataType_S32;
+    #####:  196:        NewWindowInfoFn = nullptr;
+    #####:  197:        MemData = nullptr;
+    #####:  198:        KeepFillMemoryWindow = false;
+    #####:  199:        UndoActions = {};
+    %%%%%:  199-block 4
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  199-block 5
+call    3 never executed
+call    4 never executed
+    $$$$$:  199-block 11
+    #####:  200:        RedoActions = {};
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  200-block 8
+call    3 never executed
+call    4 never executed
+    $$$$$:  200-block 12
+    #####:  201:    }
+    $$$$$:  201-block 13
+call    0 never executed
+    $$$$$:  201-block 15
+call    1 never executed
+        -:  202:
+        -:  203:    void GotoAddrAndHighlight(size_t addr_min, size_t addr_max)
+        -:  204:    {
+        -:  205:        GotoAddr = addr_min;
+        -:  206:        HighlightMin = addr_min;
+        -:  207:        HighlightMax = addr_max;
+        -:  208:    }
+        -:  209:
+        -:  210:
+        -:  211:    struct Sizes
+        -:  212:    {
+        -:  213:        int     AddrDigitsCount;
+        -:  214:        float   LineHeight;
+        -:  215:        float   GlyphWidth;
+        -:  216:        float   HexCellWidth;
+        -:  217:        float   SpacingBetweenMidCols;
+        -:  218:        float   PosHexStart;
+        -:  219:        float   PosHexEnd;
+        -:  220:        float   PosAsciiStart;
+        -:  221:        float   PosAsciiEnd;
+        -:  222:        float   WindowWidth;
+        -:  223:
+function _ZN12MemoryEditor5SizesC2Ev called 0 returned 0% blocks executed 0%
+    #####:  224:        Sizes() { memset(this, 0, sizeof(*this)); }
+        -:  225:    };
+        -:  226:
+        -:  227:
+        -:  228:
+function _ZN12MemoryEditor9CalcSizesERNS_5SizesEmm called 0 returned 0% blocks executed 0%
+    #####:  229:    void CalcSizes(Sizes& s, size_t mem_size, size_t base_display_addr)
+        -:  230:    {
+    #####:  231:        ImGuiStyle& style = ImGui::GetStyle();
+    %%%%%:  231-block 2
+call    0 never executed
+    #####:  232:        s.AddrDigitsCount = OptAddrDigitsCount;
+    #####:  233:        if (s.AddrDigitsCount == 0)
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  234:            for (size_t n = base_display_addr + mem_size - 1; n > 0; n >>= 4)
+    %%%%%:  234-block 4
+    %%%%%:  234-block 6
+branch  0 never executed
+branch  1 never executed (fallthrough)
+    #####:  235:                s.AddrDigitsCount++;
+    %%%%%:  235-block 5
+    #####:  236:        s.LineHeight = ImGui::GetTextLineHeight();
+    %%%%%:  236-block 7
+call    0 never executed
+    #####:  237:        s.GlyphWidth = ImGui::CalcTextSize("F").x + 1;                  // We assume the font is mono-space
+call    0 never executed
+    #####:  238:        s.HexCellWidth = (float)(int)(s.GlyphWidth * 2.5f);             // "FF " we include trailing space in the width to easily catch clicks everywhere
+    #####:  239:        s.SpacingBetweenMidCols = (float)(int)(s.HexCellWidth * 0.25f); // Every OptMidColsCount columns we add a bit of extra spacing
+    #####:  240:        s.PosHexStart = (s.AddrDigitsCount + 2) * s.GlyphWidth;
+    #####:  241:        s.PosHexEnd = s.PosHexStart + (s.HexCellWidth * Cols);
+    #####:  242:        s.PosAsciiStart = s.PosAsciiEnd = s.PosHexEnd;
+    #####:  243:        if (OptShowAscii)
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  244:        {
+    #####:  245:            s.PosAsciiStart = s.PosHexEnd + s.GlyphWidth * 1;
+    #####:  246:            if (OptMidColsCount > 0)
+    %%%%%:  246-block 10
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  247:                s.PosAsciiStart += (float)((Cols + OptMidColsCount - 1) / OptMidColsCount) * s.SpacingBetweenMidCols;
+    %%%%%:  247-block 11
+    #####:  248:            s.PosAsciiEnd = s.PosAsciiStart + Cols * s.GlyphWidth;
+    %%%%%:  248-block 12
+        -:  249:        }
+    #####:  250:        s.WindowWidth = s.PosAsciiEnd + style.ScrollbarSize + style.WindowPadding.x * 2 + s.GlyphWidth;
+    #####:  251:    }
+        -:  252:
+        -:  253:    // Standalone Memory Editor window
+function _ZN12MemoryEditor10DrawWindowEPKcPvmm called 0 returned 0% blocks executed 0%
+    #####:  254:    void DrawWindow(const char* title, void* mem_data, size_t mem_size, size_t base_display_addr = 0x0000)
+        -:  255:    {
+    #####:  256:        Sizes s;
+    %%%%%:  256-block 2
+call    0 never executed
+    #####:  257:        CalcSizes(s, mem_size, base_display_addr);
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  258:        ImGui::SetNextWindowSize(ImVec2(s.WindowWidth, s.WindowWidth * 0.60f), ImGuiCond_FirstUseEver);
+    %%%%%:  258-block 4
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+    $$$$$:  258-block 28
+    #####:  259:        ImGui::SetNextWindowSizeConstraints(ImVec2(0.0f, 0.0f), ImVec2(s.WindowWidth, FLT_MAX));
+    %%%%%:  259-block 6
+call    0 never executed
+call    1 never executed
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed (throw)
+    $$$$$:  259-block 29
+    $$$$$:  259-block 30
+    #####:  260:        BaseDisplayAddr = base_display_addr;
+    #####:  261:        Open = true;
+    #####:  262:        if (ImGui::Begin(title, &Open, ImGuiWindowFlags_NoScrollbar))
+    %%%%%:  262-block 9
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  262-block 10
+branch  3 never executed (fallthrough)
+branch  4 never executed
+        -:  263:        {
+    #####:  264:            if (ImGui::IsWindowHovered(ImGuiHoveredFlags_RootAndChildWindows) && ImGui::IsMouseReleased(ImGuiMouseButton_Right))
+    %%%%%:  264-block 11
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  264-block 12
+branch  3 never executed (fallthrough)
+branch  4 never executed
+    %%%%%:  264-block 13
+call    5 never executed
+branch  6 never executed (fallthrough)
+branch  7 never executed (throw)
+    %%%%%:  264-block 14
+branch  8 never executed (fallthrough)
+branch  9 never executed
+    %%%%%:  264-block 15
+    %%%%%:  264-block 16
+    %%%%%:  264-block 17
+branch 10 never executed (fallthrough)
+branch 11 never executed
+    #####:  265:                ImGui::OpenPopup("context");
+    %%%%%:  265-block 18
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  266:            DrawContents(mem_data, mem_size, base_display_addr);
+    %%%%%:  266-block 19
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  267:            if (ContentsWidthChanged)
+    %%%%%:  267-block 20
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  268:            {
+    #####:  269:                CalcSizes(s, mem_size, base_display_addr);
+    %%%%%:  269-block 21
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  270:                ImGui::SetWindowSize(ImVec2(s.WindowWidth, ImGui::GetWindowSize().y));
+    %%%%%:  270-block 22
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  270-block 23
+call    3 never executed
+call    4 never executed
+branch  5 never executed (fallthrough)
+branch  6 never executed (throw)
+    %%%%%:  270-block 25
+    $$$$$:  270-block 31
+        -:  271:            }
+        -:  272:        }
+    #####:  273:        ImGui::End();
+    %%%%%:  273-block 26
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  274:    }
+    %%%%%:  274-block 27
+        -:  275:
+function _ZN12MemoryEditor10ReadMemoryB5cxx11Emm called 0 returned 0% blocks executed 0%
+    #####:  276:    std::string ReadMemory(uint64_t startAddr, uint64_t endAddr){
+    #####:  277:        if (startAddr > endAddr){
+    %%%%%:  277-block 2
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  278:            std::swap(startAddr, endAddr);
+    %%%%%:  278-block 3
+call    0 never executed
+        -:  279:        }
+        -:  280:
+    #####:  281:        uint64_t blockSize = (endAddr - startAddr) + 1;
+        -:  282:
+    #####:  283:        auto *buffer = (unsigned char*)malloc(blockSize);
+    #####:  284:        memcpy(buffer, MemData + startAddr, blockSize);
+    #####:  285:        std::stringstream ss;
+    %%%%%:  285-block 4
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  286:        ss << std::hex << std::uppercase << std::setfill('0');
+    %%%%%:  286-block 5
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  286-block 6
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    %%%%%:  286-block 7
+call    6 never executed
+call    7 never executed
+branch  8 never executed (fallthrough)
+branch  9 never executed (throw)
+    #####:  287:        for (size_t i = 0; i < blockSize; ++i) {
+    %%%%%:  287-block 9
+    %%%%%:  287-block 14
+    %%%%%:  287-block 15
+branch  0 never executed
+branch  1 never executed (fallthrough)
+    #####:  288:            ss << std::setw(2) << static_cast<int>(buffer[i]) << " ";
+    %%%%%:  288-block 10
+call    0 never executed
+call    1 never executed
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed (throw)
+    %%%%%:  288-block 13
+call    5 never executed
+branch  6 never executed (fallthrough)
+branch  7 never executed (throw)
+        -:  289:        }
+    #####:  290:        std::string res = ss.str();
+    %%%%%:  290-block 16
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  291:        if (res.ends_with(' ')){
+    %%%%%:  291-block 17
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  292:            res.pop_back();
+    %%%%%:  292-block 19
+call    0 never executed
+        -:  293:        }
+    #####:  294:        return res;
+    %%%%%:  294-block 22
+    #####:  295:    }
+    %%%%%:  295-block 20
+call    0 never executed
+    $$$$$:  295-block 23
+call    1 never executed
+        -:  296:
+        -:  297:    // Memory Editor contents only
+function _ZN12MemoryEditor12DrawContentsEPvmm called 0 returned 0% blocks executed 0%
+    #####:  298:    void DrawContents(void* mem_data_void, size_t mem_size, size_t base_display_addr = 0x0000) {
+    #####:  299:        if (Cols < 1)
+    %%%%%:  299-block 2
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  300:            Cols = 1;
+    %%%%%:  300-block 3
+        -:  301:
+        -:  302:        static bool KeepNewWindowInfoFn;
+    #####:  303:        ImU8* mem_data = (ImU8*)mem_data_void;
+    #####:  304:        MemData = static_cast<uint8_t *>(mem_data_void);
+    #####:  305:        Sizes s;
+    %%%%%:  305-block 4
+call    0 never executed
+    #####:  306:        CalcSizes(s, mem_size, base_display_addr);
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  307:        ImGuiStyle& style = ImGui::GetStyle();
+    %%%%%:  307-block 6
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:  308:
+        -:  309:        // We begin into our scrolling region with the 'ImGuiWindowFlags_NoMove' in order to prevent click from moving the window.
+        -:  310:        // This is used as a facility since our main click detection code doesn't assign an ActiveId so the click would normally be caught as a window-move.
+    #####:  311:        const float height_separator = style.ItemSpacing.y;
+    #####:  312:        float footer_height = OptFooterExtraHeight;
+    #####:  313:        if (OptShowOptions)
+    %%%%%:  313-block 7
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  314:            footer_height += height_separator + ImGui::GetFrameHeightWithSpacing() * 1;
+    %%%%%:  314-block 8
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  314-block 9
+    #####:  315:        if (OptShowDataPreview)
+    %%%%%:  315-block 10
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  316:            footer_height += height_separator + ImGui::GetFrameHeightWithSpacing() * 1 + ImGui::GetTextLineHeightWithSpacing() * 3;
+    %%%%%:  316-block 11
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  316-block 12
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    %%%%%:  316-block 13
+    #####:  317:        ImGui::BeginChild("##scrolling", ImVec2(0, -footer_height), false, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav);
+    %%%%%:  317-block 14
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+    $$$$$:  317-block 414
+    #####:  318:        ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    %%%%%:  318-block 16
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:  319:
+    #####:  320:        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+    %%%%%:  320-block 17
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+    $$$$$:  320-block 415
+    #####:  321:        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
+    %%%%%:  321-block 19
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+    $$$$$:  321-block 416
+        -:  322:
+        -:  323:        // We are not really using the clipper API correctly here, because we rely on visible_start_addr/visible_end_addr for our scrolling function.
+    #####:  324:        const int line_total_count = (int)((mem_size + Cols - 1) / Cols);
+    #####:  325:        ImGuiListClipper clipper;
+    %%%%%:  325-block 21
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  326:        clipper.Begin(line_total_count, s.LineHeight);
+    %%%%%:  326-block 22
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:  327:
+    #####:  328:        bool data_next = false;
+        -:  329:
+    #####:  330:        if (ReadOnly || DataEditingAddr >= mem_size)
+    %%%%%:  330-block 23
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  330-block 24
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    #####:  331:            DataEditingAddr = (size_t)-1;
+    %%%%%:  331-block 25
+    #####:  332:        if (DataPreviewAddr >= mem_size)
+    %%%%%:  332-block 26
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  333:            DataPreviewAddr = (size_t)-1;
+    %%%%%:  333-block 27
+        -:  334:
+    #####:  335:        size_t preview_data_type_size = OptShowDataPreview ? DataTypeGetSize(PreviewDataType) : 0;
+    %%%%%:  335-block 28
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  335-block 29
+call    2 never executed
+    %%%%%:  335-block 30
+        -:  336:
+    #####:  337:        size_t data_editing_addr_next = (size_t)-1;
+    #####:  338:        if (DataEditingAddr != (size_t)-1)
+    %%%%%:  338-block 31
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  339:        {
+        -:  340:            // Move cursor but only apply on next frame so scrolling with be synchronized (because currently we can't change the scrolling while the window is being rendered)
+    #####:  341:            if (ImGui::IsKeyPressed(ImGuiKey_UpArrow) && (ptrdiff_t)DataEditingAddr >= (ptrdiff_t)Cols)                 { data_editing_addr_next = DataEditingAddr - Cols; }
+    %%%%%:  341-block 32
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  341-block 33
+branch  3 never executed (fallthrough)
+branch  4 never executed
+    %%%%%:  341-block 34
+branch  5 never executed (fallthrough)
+branch  6 never executed
+    %%%%%:  341-block 35
+    %%%%%:  341-block 36
+    %%%%%:  341-block 37
+branch  7 never executed (fallthrough)
+branch  8 never executed
+    %%%%%:  341-block 38
+    #####:  342:            else if (ImGui::IsKeyPressed(ImGuiKey_DownArrow) && (ptrdiff_t)DataEditingAddr < (ptrdiff_t)mem_size - Cols){ data_editing_addr_next = DataEditingAddr + Cols; }
+    %%%%%:  342-block 39
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  342-block 40
+branch  3 never executed (fallthrough)
+branch  4 never executed
+    %%%%%:  342-block 41
+branch  5 never executed (fallthrough)
+branch  6 never executed
+    %%%%%:  342-block 42
+    %%%%%:  342-block 43
+    %%%%%:  342-block 44
+branch  7 never executed (fallthrough)
+branch  8 never executed
+    %%%%%:  342-block 45
+    #####:  343:            else if (ImGui::IsKeyPressed(ImGuiKey_LeftArrow) && (ptrdiff_t)DataEditingAddr > (ptrdiff_t)0)              { data_editing_addr_next = DataEditingAddr - 1; }
+    %%%%%:  343-block 46
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  343-block 47
+branch  3 never executed (fallthrough)
+branch  4 never executed
+    %%%%%:  343-block 48
+branch  5 never executed (fallthrough)
+branch  6 never executed
+    %%%%%:  343-block 49
+    %%%%%:  343-block 50
+    %%%%%:  343-block 51
+branch  7 never executed (fallthrough)
+branch  8 never executed
+    %%%%%:  343-block 52
+    #####:  344:            else if (ImGui::IsKeyPressed(ImGuiKey_RightArrow) && (ptrdiff_t)DataEditingAddr < (ptrdiff_t)mem_size - 1)  { data_editing_addr_next = DataEditingAddr + 1; }
+    %%%%%:  344-block 53
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  344-block 54
+branch  3 never executed (fallthrough)
+branch  4 never executed
+    %%%%%:  344-block 55
+branch  5 never executed (fallthrough)
+branch  6 never executed
+    %%%%%:  344-block 56
+    %%%%%:  344-block 57
+    %%%%%:  344-block 58
+branch  7 never executed (fallthrough)
+branch  8 never executed
+    %%%%%:  344-block 59
+        -:  345:        }
+        -:  346:
+        -:  347:        // Draw vertical separator
+    #####:  348:        ImVec2 window_pos = ImGui::GetWindowPos();
+    %%%%%:  348-block 60
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  349:        if (OptShowAscii)
+    %%%%%:  349-block 61
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  350:            draw_list->AddLine(ImVec2(window_pos.x + s.PosAsciiStart - s.GlyphWidth, window_pos.y), ImVec2(window_pos.x + s.PosAsciiStart - s.GlyphWidth, window_pos.y + 9999), ImGui::GetColorU32(ImGuiCol_Border));
+    %%%%%:  350-block 62
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  350-block 63
+call    3 never executed
+call    4 never executed
+call    5 never executed
+branch  6 never executed (fallthrough)
+branch  7 never executed (throw)
+    %%%%%:  350-block 66
+    $$$$$:  350-block 417
+    $$$$$:  350-block 418
+        -:  351:
+    #####:  352:        const ImU32 color_text = ImGui::GetColorU32(ImGuiCol_Text);
+    %%%%%:  352-block 67
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  353:        const ImU32 color_disabled = OptGreyOutZeroes ? ImGui::GetColorU32(ImGuiCol_TextDisabled) : color_text;
+    %%%%%:  353-block 68
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  353-block 69
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed (throw)
+    %%%%%:  353-block 70
+    %%%%%:  353-block 71
+        -:  354:
+    #####:  355:        const char* format_address = OptUpperCaseHex ? "%0*" _PRISizeT "X: " : "%0*" _PRISizeT "x: ";
+    %%%%%:  355-block 72
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  355-block 73
+    %%%%%:  355-block 74
+    #####:  356:        const char* format_data = OptUpperCaseHex ? "%0*" _PRISizeT "X" : "%0*" _PRISizeT "x";
+    %%%%%:  356-block 75
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  356-block 76
+    %%%%%:  356-block 77
+    #####:  357:        const char* format_byte = OptUpperCaseHex ? "%02X" : "%02x";
+    %%%%%:  357-block 78
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  357-block 79
+    %%%%%:  357-block 80
+    #####:  358:        const char* format_byte_space = OptUpperCaseHex ? "%02X " : "%02x ";
+    %%%%%:  358-block 81
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  358-block 82
+    %%%%%:  358-block 83
+        -:  359:
+        -:  360:        // Disallow interacting with multiple bytes simultaneously.
+        -:  361:        // This is needed because consecutive hex cells overlap each other by 1 pixel.
+    #####:  362:        bool interact_invoked = false;
+        -:  363:
+    #####:  364:        while (clipper.Step())
+    %%%%%:  364-block 84
+    %%%%%:  364-block 311
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  364-block 312
+branch  3 never executed
+branch  4 never executed (fallthrough)
+    #####:  365:            for (int line_i = clipper.DisplayStart; line_i < clipper.DisplayEnd; line_i++) // display only visible lines
+    %%%%%:  365-block 85
+    %%%%%:  365-block 309
+    %%%%%:  365-block 310
+branch  0 never executed
+branch  1 never executed (fallthrough)
+        -:  366:            {
+    #####:  367:                size_t addr = (size_t)(line_i * Cols);
+    #####:  368:                if (StackFashionAddrSubtraction) {
+    %%%%%:  368-block 86
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  369:                    ImGui::Text(format_address, s.AddrDigitsCount, base_display_addr - addr);
+    %%%%%:  369-block 87
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:  370:                }
+        -:  371:                else {
+    #####:  372:                    ImGui::Text(format_address, s.AddrDigitsCount, (base_display_addr + addr));
+    %%%%%:  372-block 88
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:  373:                }
+        -:  374:                // Draw Hexadecimal
+    #####:  375:                for (int n = 0; n < Cols && addr < mem_size; n++, addr++)
+    %%%%%:  375-block 89
+    %%%%%:  375-block 253
+    %%%%%:  375-block 254
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  375-block 255
+branch  2 never executed
+branch  3 never executed (fallthrough)
+        -:  376:                {
+    #####:  377:                    float byte_pos_x = s.PosHexStart + s.HexCellWidth * n;
+    #####:  378:                    if (OptMidColsCount > 0)
+    %%%%%:  378-block 90
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  379:                        byte_pos_x += (float)(n / OptMidColsCount) * s.SpacingBetweenMidCols;
+    %%%%%:  379-block 91
+    #####:  380:                    ImGui::SameLine(byte_pos_x);
+    %%%%%:  380-block 92
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:  381:
+        -:  382:                    // Draw highlight
+    #####:  383:                    bool is_highlight_from_user_range = (addr >= HighlightMin && addr < HighlightMax);
+    %%%%%:  383-block 93
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  383-block 94
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    %%%%%:  383-block 95
+    %%%%%:  383-block 96
+    #####:  384:                    bool is_highlight_from_user_func = (HighlightFn && HighlightFn(mem_data, addr));
+    %%%%%:  384-block 97
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  384-block 98
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed (throw)
+    %%%%%:  384-block 99
+branch  5 never executed (fallthrough)
+branch  6 never executed
+    %%%%%:  384-block 100
+    %%%%%:  384-block 101
+    #####:  385:                    bool is_highlight_from_preview = (addr >= DataPreviewAddr && addr < DataPreviewAddr + preview_data_type_size);
+    %%%%%:  385-block 102
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  385-block 103
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    %%%%%:  385-block 104
+    %%%%%:  385-block 105
+    #####:  386:                    bool is_selection_highlight = false;
+    #####:  387:                    if (((SelectionStartAddr != -1))){
+    %%%%%:  387-block 106
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  388:                        if ((addr <= SelectionEndAddr && addr >= SelectionStartAddr) || ((addr >= SelectionEndAddr && addr <= SelectionStartAddr) && (SelectionStartAddr > SelectionEndAddr))){
+    %%%%%:  388-block 107
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  388-block 108
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    %%%%%:  388-block 109
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:  388-block 110
+branch  6 never executed (fallthrough)
+branch  7 never executed
+    %%%%%:  388-block 111
+branch  8 never executed (fallthrough)
+branch  9 never executed
+    #####:  389:                            is_selection_highlight = true;
+    %%%%%:  389-block 112
+        -:  390:                        }
+        -:  391:                    };
+    #####:  392:                    if (is_highlight_from_user_range || is_highlight_from_user_func || is_highlight_from_preview || is_selection_highlight)
+    %%%%%:  392-block 113
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  392-block 114
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    %%%%%:  392-block 115
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:  392-block 116
+branch  6 never executed (fallthrough)
+branch  7 never executed
+        -:  393:                    {
+    #####:  394:                        ImVec2 pos = ImGui::GetCursorScreenPos();
+    %%%%%:  394-block 117
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  395:                        float highlight_width = s.GlyphWidth * 2;
+    #####:  396:                        bool is_next_byte_highlighted = (addr + 1 < mem_size) && ((HighlightMax != (size_t)-1 && addr + 1 < HighlightMax) || (HighlightFn && HighlightFn(mem_data, addr + 1)));
+    %%%%%:  396-block 118
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  396-block 119
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    %%%%%:  396-block 120
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:  396-block 121
+branch  6 never executed (fallthrough)
+branch  7 never executed
+    %%%%%:  396-block 122
+call    8 never executed
+branch  9 never executed (fallthrough)
+branch 10 never executed (throw)
+    %%%%%:  396-block 123
+branch 11 never executed (fallthrough)
+branch 12 never executed
+    %%%%%:  396-block 124
+    %%%%%:  396-block 125
+    #####:  397:                        if (is_next_byte_highlighted || (n + 1 == Cols))
+    %%%%%:  397-block 126
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  397-block 127
+branch  2 never executed (fallthrough)
+branch  3 never executed
+        -:  398:                        {
+    #####:  399:                            highlight_width = s.HexCellWidth;
+    #####:  400:                            if (OptMidColsCount > 0 && n > 0 && (n + 1) < Cols && ((n + 1) % OptMidColsCount) == 0)
+    %%%%%:  400-block 128
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  400-block 129
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    %%%%%:  400-block 130
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:  400-block 131
+branch  6 never executed (fallthrough)
+branch  7 never executed
+    #####:  401:                                highlight_width += s.SpacingBetweenMidCols;
+    %%%%%:  401-block 132
+        -:  402:                        }
+    #####:  403:                        draw_list->AddRectFilled(pos, ImVec2(pos.x + highlight_width, pos.y + s.LineHeight), HighlightColor);
+    %%%%%:  403-block 133
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+    $$$$$:  403-block 419
+    #####:  404:                    }
+    %%%%%:  404-block 135
+    #####:  405:                    else if (BgColorFn)
+    %%%%%:  405-block 136
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  406:                    {
+    #####:  407:                        ImVec2 pos = ImGui::GetCursorScreenPos();
+    %%%%%:  407-block 137
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  408:                        float highlight_width = s.GlyphWidth * 2;
+    #####:  409:                        bool is_next_byte_highlighted = (addr + 1 < mem_size) && ((BgColorFn(mem_data, addr + 1) & IM_COL32_A_MASK) != 0);
+    %%%%%:  409-block 138
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  409-block 139
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed (throw)
+    %%%%%:  409-block 140
+branch  5 never executed (fallthrough)
+branch  6 never executed
+    %%%%%:  409-block 141
+    %%%%%:  409-block 142
+    #####:  410:                        if (is_next_byte_highlighted || (n + 1 == Cols))
+    %%%%%:  410-block 143
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  410-block 144
+branch  2 never executed (fallthrough)
+branch  3 never executed
+        -:  411:                        {
+    #####:  412:                            highlight_width = s.HexCellWidth;
+    #####:  413:                            if (OptMidColsCount > 0 && n > 0 && (n + 1) < Cols && ((n + 1) % OptMidColsCount) == 0)
+    %%%%%:  413-block 145
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  413-block 146
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    %%%%%:  413-block 147
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:  413-block 148
+branch  6 never executed (fallthrough)
+branch  7 never executed
+    #####:  414:                                highlight_width += s.SpacingBetweenMidCols;
+    %%%%%:  414-block 149
+        -:  415:                        }
+    #####:  416:                        draw_list->AddRectFilled(pos, ImVec2(pos.x + highlight_width, pos.y + s.LineHeight), BgColorFn(mem_data, addr));
+    %%%%%:  416-block 150
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  416-block 151
+call    3 never executed
+call    4 never executed
+branch  5 never executed (fallthrough)
+branch  6 never executed (throw)
+    %%%%%:  416-block 153
+    $$$$$:  416-block 421
+        -:  417:                    }
+        -:  418:
+    #####:  419:                    if (DataEditingAddr == addr)
+    %%%%%:  419-block 154
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  420:                    {
+        -:  421:                        // Display text input on current byte
+    #####:  422:                        bool data_write = false;
+    #####:  423:                        ImGui::PushID((void*)addr);
+    %%%%%:  423-block 155
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  424:                        if (DataEditingTakeFocus)
+    %%%%%:  424-block 156
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  425:                        {
+    #####:  426:                            ImGui::SetKeyboardFocusHere(0);
+    %%%%%:  426-block 157
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  427:                            sprintf(AddrInputBuf, format_data, s.AddrDigitsCount, base_display_addr + addr);
+    #####:  428:                            sprintf(DataInputBuf, format_byte, ReadFn ? ReadFn(mem_data, addr) : mem_data[addr]);
+    %%%%%:  428-block 158
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  428-block 159
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed (throw)
+    %%%%%:  428-block 160
+    %%%%%:  428-block 161
+    #####:  429:                            ImGui::SetNextItemWidth(s.GlyphWidth * 2);
+    %%%%%:  429-block 162
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:  430:                        }
+        -:  431:                        struct UserData
+        -:  432:                        {
+        -:  433:                            // FIXME: We should have a way to retrieve the text edit cursor position more easily in the API, this is rather tedious. This is such a ugly mess we may be better off not using InputText() at all here.
+function _ZZN12MemoryEditor12DrawContentsEPvmmEN8UserData8CallbackEP26ImGuiInputTextCallbackData called 0 returned 0% blocks executed 0%
+    #####:  434:                            static int Callback(ImGuiInputTextCallbackData* data)
+        -:  435:                            {
+    #####:  436:                                UserData* user_data = (UserData*)data->UserData;
+    #####:  437:                                if (!data->HasSelection())
+    %%%%%:  437-block 2
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  438:                                    user_data->CursorPos = data->CursorPos;
+    %%%%%:  438-block 4
+    #####:  439:                                if (data->SelectionStart == 0 && data->SelectionEnd == data->BufTextLen)
+    %%%%%:  439-block 5
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  439-block 6
+branch  2 never executed (fallthrough)
+branch  3 never executed
+        -:  440:                                {
+        -:  441:                                    // When not editing a byte, always refresh its InputText content pulled from underlying memory data
+        -:  442:                                    // (this is a bit tricky, since InputText technically "owns" the master copy of the buffer we edit it in there)
+    #####:  443:                                    data->DeleteChars(0, data->BufTextLen);
+    %%%%%:  443-block 7
+call    0 never executed
+    #####:  444:                                    data->InsertChars(0, user_data->CurrentBufOverwrite);
+call    0 never executed
+    #####:  445:                                    data->SelectionStart = 0;
+    #####:  446:                                    data->SelectionEnd = 2;
+    #####:  447:                                    data->CursorPos = 0;
+        -:  448:                                }
+    #####:  449:                                return 0;
+    %%%%%:  449-block 10
+        -:  450:                            }
+        -:  451:                            char   CurrentBufOverwrite[3];  // Input
+        -:  452:                            int    CursorPos;               // Output
+        -:  453:                        };
+        -:  454:                        UserData user_data;
+    #####:  455:                        user_data.CursorPos = -1;
+    #####:  456:                        sprintf(user_data.CurrentBufOverwrite, format_byte, ReadFn ? ReadFn(mem_data, addr) : mem_data[addr]);
+    %%%%%:  456-block 163
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  456-block 164
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed (throw)
+    %%%%%:  456-block 165
+    %%%%%:  456-block 166
+        -:  457:
+    #####:  458:                        if ((ImGui::IsKeyDown(ImGuiKey_LeftShift))){
+    %%%%%:  458-block 167
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  458-block 168
+branch  3 never executed (fallthrough)
+branch  4 never executed
+    #####:  459:                            if (SelectionStartAddr == -1){
+    %%%%%:  459-block 169
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  460:                                SelectionStartAddr = addr;
+    #####:  461:                                SelectionEndAddr = addr;
+    %%%%%:  461-block 170
+        -:  462:                            }
+        -:  463:
+    #####:  464:                            SelectionEndAddr = addr;
+    %%%%%:  464-block 171
+        -:  465:                        }
+    #####:  466:                        else if (SelectionStartAddr != -1 && (addr != SelectionEndAddr)){
+    %%%%%:  466-block 172
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  466-block 173
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    #####:  467:                            SelectionStartAddr = -1;
+    %%%%%:  467-block 174
+        -:  468:                        }
+    #####:  469:                        ImGuiInputTextFlags flags = ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_NoHorizontalScroll | ImGuiInputTextFlags_CallbackAlways;
+    #####:  470:                        flags |= ImGuiInputTextFlags_AlwaysOverwrite; // was ImGuiInputTextFlags_AlwaysInsertMode
+    #####:  471:                        ImGui::SetNextItemWidth(s.GlyphWidth * 2);
+    %%%%%:  471-block 175
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  472:                        if (ImGui::InputText("##data", DataInputBuf, IM_ARRAYSIZE(DataInputBuf), flags, UserData::Callback, &user_data))
+    %%%%%:  472-block 176
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  472-block 177
+branch  3 never executed (fallthrough)
+branch  4 never executed
+    #####:  473:                            data_write = data_next = true;
+    %%%%%:  473-block 178
+    #####:  474:                        else if (!DataEditingTakeFocus && !ImGui::IsItemActive())
+    %%%%%:  474-block 179
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  474-block 180
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed (throw)
+    %%%%%:  474-block 181
+branch  5 never executed (fallthrough)
+branch  6 never executed
+    %%%%%:  474-block 182
+    %%%%%:  474-block 183
+    %%%%%:  474-block 184
+branch  7 never executed (fallthrough)
+branch  8 never executed
+    #####:  475:                            DataEditingAddr = data_editing_addr_next = (size_t)-1;
+    %%%%%:  475-block 185
+    #####:  476:                        DataEditingTakeFocus = false;
+    #####:  477:                        if (user_data.CursorPos >= 2)
+    %%%%%:  477-block 186
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  478:                            data_write = data_next = true;
+    %%%%%:  478-block 187
+    #####:  479:                        if (data_editing_addr_next != (size_t)-1)
+    %%%%%:  479-block 188
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  480:                            data_write = data_next = false;
+    %%%%%:  480-block 189
+    #####:  481:                        unsigned int data_input_value = 0;
+    #####:  482:                        if (data_write && sscanf(DataInputBuf, "%X", &data_input_value) == 1)
+    %%%%%:  482-block 190
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  482-block 191
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    %%%%%:  482-block 192
+    %%%%%:  482-block 193
+    %%%%%:  482-block 194
+branch  4 never executed (fallthrough)
+branch  5 never executed
+        -:  483:                        {
+    #####:  484:                            if (WriteFn){
+    %%%%%:  484-block 195
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  485:                                WriteFn(mem_data, addr, (ImU8)data_input_value);
+    %%%%%:  485-block 196
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  486:                                Actions undoAction = {.Action = MemWrite, .startAddr = addr, .endAddr = addr + 1, .operationSize = 1};
+    #####:  487:                                undoAction.operationData.push_back(data_input_value);
+    %%%%%:  487-block 197
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    $$$$$:  487-block 423
+    #####:  488:                                undoAction.originalData.push_back(mem_data[addr]);
+    %%%%%:  488-block 198
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    $$$$$:  488-block 424
+    #####:  489:                                UndoActions.push(undoAction);
+    %%%%%:  489-block 199
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  490:                            }
+    %%%%%:  490-block 200
+call    0 never executed
+    $$$$$:  490-block 425
+call    1 never executed
+        -:  491:                            else
+    #####:  492:                                mem_data[addr] = (ImU8)data_input_value;
+    %%%%%:  492-block 202
+        -:  493:                        }
+    #####:  494:                        ImGui::PopID();
+    %%%%%:  494-block 203
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:  495:                    }
+        -:  496:                    else
+        -:  497:                    {
+        -:  498:                        // NB: The trailing space is not visible but ensure there's no gap that the mouse cannot click on.
+    #####:  499:                        ImU8 b = ReadFn ? ReadFn(mem_data, addr) : mem_data[addr];
+    %%%%%:  499-block 205
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  499-block 206
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed (throw)
+    %%%%%:  499-block 207
+    %%%%%:  499-block 208
+        -:  500:
+    #####:  501:                        if (OptShowHexII)
+    %%%%%:  501-block 209
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  502:                        {
+    #####:  503:                            if ((b >= 32 && b < 128))
+    %%%%%:  503-block 210
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  503-block 211
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    #####:  504:                                ImGui::Text(".%c ", b);
+    %%%%%:  504-block 212
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  505:                            else if (b == 0xFF && OptGreyOutZeroes)
+    %%%%%:  505-block 214
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  505-block 215
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    #####:  506:                                ImGui::TextDisabled("## ");
+    %%%%%:  506-block 216
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  507:                            else if (b == 0x00)
+    %%%%%:  507-block 218
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  508:                                ImGui::Text("   ");
+    %%%%%:  508-block 219
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:  509:                            else
+    #####:  510:                                ImGui::Text(format_byte_space, b);
+    %%%%%:  510-block 220
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:  511:                        }
+        -:  512:                        else
+        -:  513:                        {
+    #####:  514:                            if (b == 0 && OptGreyOutZeroes)
+    %%%%%:  514-block 222
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  514-block 223
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    #####:  515:                                ImGui::TextDisabled("00 ");
+    %%%%%:  515-block 224
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:  516:                            else
+    #####:  517:                                ImGui::Text(format_byte_space, b);
+    %%%%%:  517-block 226
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:  518:                        }
+    #####:  519:                        if (!ReadOnly && ImGui::IsItemHovered() && ImGui::IsMouseClicked(0))
+    %%%%%:  519-block 227
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  519-block 228
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed (throw)
+    %%%%%:  519-block 229
+branch  5 never executed (fallthrough)
+branch  6 never executed
+    %%%%%:  519-block 230
+call    7 never executed
+branch  8 never executed (fallthrough)
+branch  9 never executed (throw)
+    %%%%%:  519-block 231
+branch 10 never executed (fallthrough)
+branch 11 never executed
+    %%%%%:  519-block 232
+    %%%%%:  519-block 233
+    %%%%%:  519-block 234
+branch 12 never executed (fallthrough)
+branch 13 never executed
+        -:  520:                        {
+    #####:  521:                            DataEditingTakeFocus = true;
+    #####:  522:                            data_editing_addr_next = addr;
+    %%%%%:  522-block 235
+        -:  523:                        }
+    #####:  524:                        else if (InteractFn && ImGui::IsItemHovered()) {
+    %%%%%:  524-block 236
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  524-block 237
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed (throw)
+    %%%%%:  524-block 238
+branch  5 never executed (fallthrough)
+branch  6 never executed
+    %%%%%:  524-block 239
+    %%%%%:  524-block 240
+    %%%%%:  524-block 241
+branch  7 never executed (fallthrough)
+branch  8 never executed
+    #####:  525:                            if (!interact_invoked) {
+    %%%%%:  525-block 242
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  526:                                // Revert padding/spacing to let users draw popups/windows without interference
+    #####:  527:                                ImGui::PopStyleVar(2);
+    %%%%%:  527-block 243
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  528:                                InteractFn(mem_data, addr);
+    %%%%%:  528-block 244
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  529:                                interact_invoked = true;
+    #####:  530:                                ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+    %%%%%:  530-block 245
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+    $$$$$:  530-block 429
+    #####:  531:                                ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
+    %%%%%:  531-block 247
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+    %%%%%:  531-block 249
+    $$$$$:  531-block 430
+        -:  532:                            }
+        -:  533:
+        -:  534:
+        -:  535:                        }
+    #####:  536:                        if (ImGui::IsItemHovered()){
+    %%%%%:  536-block 250
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  536-block 251
+branch  3 never executed (fallthrough)
+branch  4 never executed
+    #####:  537:                            HoveredAddr = addr;
+    %%%%%:  537-block 252
+        -:  538:                        }
+        -:  539:                    }
+        -:  540:                }
+        -:  541:
+    #####:  542:                if (OptShowAscii)
+    %%%%%:  542-block 256
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  543:                {
+        -:  544:                    // Draw ASCII values
+    #####:  545:                    ImGui::SameLine(s.PosAsciiStart);
+    %%%%%:  545-block 257
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  546:                    ImVec2 pos = ImGui::GetCursorScreenPos();
+    %%%%%:  546-block 258
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  547:                    addr = line_i * Cols;
+    #####:  548:                    size_t mouseAddr = addr + (size_t)((ImGui::GetIO().MousePos.x - pos.x) / s.GlyphWidth);
+    %%%%%:  548-block 259
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  549:                    ImGui::PushID(line_i);
+    %%%%%:  549-block 260
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  550:                    if (ImGui::InvisibleButton("ascii", ImVec2(s.PosAsciiEnd - s.PosAsciiStart, s.LineHeight)))
+    %%%%%:  550-block 261
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+    %%%%%:  550-block 263
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    $$$$$:  550-block 431
+        -:  551:                    {
+    #####:  552:                        DataEditingAddr = DataPreviewAddr = addr + (size_t)((ImGui::GetIO().MousePos.x - pos.x) / s.GlyphWidth);
+    %%%%%:  552-block 264
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  553:                        DataEditingTakeFocus = true;
+    %%%%%:  553-block 265
+        -:  554:                    }
+    #####:  555:                    if (InteractFn && ImGui::IsItemHovered())
+    %%%%%:  555-block 266
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  555-block 267
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed (throw)
+    %%%%%:  555-block 268
+branch  5 never executed (fallthrough)
+branch  6 never executed
+    %%%%%:  555-block 269
+    %%%%%:  555-block 270
+    %%%%%:  555-block 271
+branch  7 never executed (fallthrough)
+branch  8 never executed
+        -:  556:                    {
+    #####:  557:                        if (!interact_invoked)
+    %%%%%:  557-block 272
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  558:                        {
+        -:  559:                            // Revert padding/spacing to let users draw popups/windows without interference
+    #####:  560:                            ImGui::PopStyleVar(2);
+    %%%%%:  560-block 273
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  561:                            InteractFn(mem_data, mouseAddr);
+    %%%%%:  561-block 274
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  562:                            interact_invoked = true;
+    #####:  563:                            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+    %%%%%:  563-block 275
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+    $$$$$:  563-block 432
+    #####:  564:                            ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
+    %%%%%:  564-block 277
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+    %%%%%:  564-block 279
+    $$$$$:  564-block 433
+        -:  565:                        }
+        -:  566:                    }
+    #####:  567:                    ImGui::PopID();
+    %%%%%:  567-block 280
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  568:                    for (int n = 0; n < Cols && addr < mem_size; n++, addr++)
+    %%%%%:  568-block 281
+    %%%%%:  568-block 306
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  568-block 307
+branch  2 never executed
+branch  3 never executed (fallthrough)
+        -:  569:                    {
+    #####:  570:                        if (addr == DataEditingAddr)
+    %%%%%:  570-block 282
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  571:                        {
+    #####:  572:                            draw_list->AddRectFilled(pos, ImVec2(pos.x + s.GlyphWidth, pos.y + s.LineHeight), ImColor(59, 60, 79));
+    %%%%%:  572-block 283
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+    %%%%%:  572-block 285
+call    4 never executed
+call    5 never executed
+branch  6 never executed (fallthrough)
+branch  7 never executed (throw)
+    %%%%%:  572-block 287
+    $$$$$:  572-block 434
+    $$$$$:  572-block 435
+        -:  573:                        }
+    #####:  574:                        else if (BgColorFn)
+    %%%%%:  574-block 288
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  575:                        {
+    #####:  576:                            draw_list->AddRectFilled(pos, ImVec2(pos.x + s.GlyphWidth, pos.y + s.LineHeight), BgColorFn(mem_data, addr));
+    %%%%%:  576-block 289
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  576-block 290
+call    3 never executed
+call    4 never executed
+branch  5 never executed (fallthrough)
+branch  6 never executed (throw)
+    %%%%%:  576-block 292
+    $$$$$:  576-block 436
+        -:  577:                        }
+    #####:  578:                        unsigned char c = ReadFn ? ReadFn(mem_data, addr) : mem_data[addr];
+    %%%%%:  578-block 293
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  578-block 294
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed (throw)
+    %%%%%:  578-block 295
+    %%%%%:  578-block 296
+    #####:  579:                        char display_c = (c < 32 || c >= 128) ? '.' : c;
+    %%%%%:  579-block 297
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  579-block 298
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    %%%%%:  579-block 299
+    %%%%%:  579-block 300
+    #####:  580:                        draw_list->AddText(pos, (display_c == c) ? color_text : color_disabled, &display_c, &display_c + 1);
+    %%%%%:  580-block 301
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  580-block 302
+    %%%%%:  580-block 303
+    %%%%%:  580-block 304
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed (throw)
+    #####:  581:                        pos.x += s.GlyphWidth;
+    %%%%%:  581-block 305
+        -:  582:                    }
+        -:  583:                }
+        -:  584:            }
+    #####:  585:        ImGui::PopStyleVar(2);
+    %%%%%:  585-block 313
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  586:        ImGui::EndChild();
+    %%%%%:  586-block 314
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:  587:
+        -:  588:        // Notify the main window of our ideal child content size (FIXME: we are missing an API to get the contents size from the child)
+    #####:  589:        ImGui::SetCursorPosX(s.WindowWidth);
+    %%%%%:  589-block 315
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  590:        ImGui::Dummy(ImVec2(0.0f, 0.0f));
+    %%%%%:  590-block 316
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+    $$$$$:  590-block 439
+        -:  591:
+    #####:  592:        if (data_next && DataEditingAddr + 1 < mem_size)
+    %%%%%:  592-block 318
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  592-block 319
+branch  2 never executed (fallthrough)
+branch  3 never executed
+        -:  593:        {
+    #####:  594:            DataEditingAddr = DataPreviewAddr = DataEditingAddr + 1;
+    #####:  595:            DataEditingTakeFocus = true;
+    %%%%%:  595-block 320
+        -:  596:        }
+    #####:  597:        else if (data_editing_addr_next != (size_t)-1)
+    %%%%%:  597-block 321
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  598:        {
+    #####:  599:            DataEditingAddr = DataPreviewAddr = data_editing_addr_next;
+    #####:  600:            DataEditingTakeFocus = true;
+    %%%%%:  600-block 322
+        -:  601:        }
+        -:  602:
+    #####:  603:        const bool lock_show_data_preview = OptShowDataPreview;
+    #####:  604:        if (OptShowOptions)
+    %%%%%:  604-block 323
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  605:        {
+    #####:  606:            ImGui::Separator();
+    %%%%%:  606-block 324
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  607:            DrawOptionsLine(s, mem_data, mem_size, base_display_addr);
+    %%%%%:  607-block 325
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:  608:        }
+        -:  609:
+    #####:  610:        if (lock_show_data_preview)
+    %%%%%:  610-block 326
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  611:        {
+    #####:  612:            ImGui::Separator();
+    %%%%%:  612-block 327
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  613:            DrawPreviewLine(s, mem_data, mem_size, base_display_addr);
+    %%%%%:  613-block 328
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:  614:        }
+        -:  615:
+        -:  616:
+    #####:  617:        if (OptShowAddWindowButton){
+    %%%%%:  617-block 329
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  618:            ImGui::SameLine();
+    %%%%%:  618-block 330
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  619:            ImGui::SetCursorPosX(ImGui::GetWindowSize().x - 30);
+    %%%%%:  619-block 331
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  619-block 332
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    #####:  620:            if (ImGui::Button("+")){
+    %%%%%:  620-block 333
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+    %%%%%:  620-block 335
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    $$$$$:  620-block 440
+    #####:  621:                KeepNewWindowInfoFn = true;
+    %%%%%:  621-block 336
+        -:  622:            }
+        -:  623:        }
+        -:  624:
+    #####:  625:        if (KeepFillMemoryWindow && FillMemoryRange){
+    %%%%%:  625-block 337
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  625-block 338
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    #####:  626:            auto [address, upto, character] = FillMemoryRange();
+    %%%%%:  626-block 339
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  627:            if ((address == 0 && upto == 1 && character == -1)){
+    %%%%%:  627-block 340
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  627-block 341
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    %%%%%:  627-block 342
+branch  4 never executed (fallthrough)
+branch  5 never executed
+        -:  628:                // cancel
+    #####:  629:                KeepFillMemoryWindow = false;
+    %%%%%:  629-block 343
+        -:  630:            }
+    #####:  631:            else if (!(address == 0 && upto == 0 && character <= 0)){
+    %%%%%:  631-block 344
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  631-block 345
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    %%%%%:  631-block 346
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    #####:  632:                FillRangeWithByte(address, upto, character);
+    %%%%%:  632-block 347
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  633:                KeepFillMemoryWindow = false;
+    %%%%%:  633-block 348
+        -:  634:            }
+        -:  635:        }
+        -:  636:
+        -:  637:
+    #####:  638:        if (KeepNewWindowInfoFn && NewWindowInfoFn){
+    %%%%%:  638-block 350
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  638-block 351
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    #####:  639:            if (NewWindowInfoFn()){
+    %%%%%:  639-block 352
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  639-block 353
+branch  3 never executed (fallthrough)
+branch  4 never executed
+    #####:  640:                KeepNewWindowInfoFn = false;
+    %%%%%:  640-block 354
+        -:  641:            }
+        -:  642:        }
+        -:  643:
+    #####:  644:        if (KeepSetBaseAddrWindow && SetBaseAddress2){
+    %%%%%:  644-block 355
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  644-block 356
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    #####:  645:            if (!SetBaseAddress2)
+    %%%%%:  645-block 357
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  646:            {
+    #####:  647:                std::cout << "null" << std::endl;
+    %%%%%:  647-block 358
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  647-block 359
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+        -:  648:            }
+    #####:  649:            auto val = SetBaseAddress2(0, 0);
+    %%%%%:  649-block 360
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  650:            if (std::holds_alternative<std::pair<void*, size_t>>(val)) {
+    %%%%%:  650-block 361
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  651:                auto const&[addr, size] = std::get<std::pair<void*, size_t>>(val);
+    %%%%%:  651-block 363
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  651-block 364
+call    3 never executed
+call    4 never executed
+    #####:  652:                if (addr != mem_data_void) {
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  653:                    Actions changeAddrAction = {.Action = ActionType::SetBaseAddr, .startAddr = reinterpret_cast<uintptr_t>(addr), .endAddr = (uintptr_t)(reinterpret_cast<uintptr_t>(addr) + size),.operationSize = size,
+    #####:  654:                    .operationData = {reinterpret_cast<intptr_t>(addr)}, .originalData = {static_cast<intptr_t>(base_display_addr)}};
+    %%%%%:  654-block 367
+    %%%%%:  654-block 369
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  654-block 370
+    %%%%%:  654-block 372
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    %%%%%:  654-block 373
+    %%%%%:  654-block 374
+    $$$$$:  654-block 444
+    $$$$$:  654-block 445
+    $$$$$:  654-block 446
+branch  6 never executed (fallthrough)
+branch  7 never executed
+    $$$$$:  654-block 447
+call    8 never executed
+    $$$$$:  654-block 451
+    $$$$$:  654-block 452
+    #####:  655:                    UndoActions.push(changeAddrAction);
+    %%%%%:  655-block 375
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  656:                    KeepSetBaseAddrWindow = false;
+    #####:  657:                }
+    %%%%%:  657-block 376
+call    0 never executed
+    $$$$$:  657-block 453
+call    1 never executed
+        -:  658:            }
+    #####:  659:            else if (std::holds_alternative<bool>(val)){
+    %%%%%:  659-block 378
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  660:                if ( std::get<bool>(val)){
+    %%%%%:  660-block 380
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  660-block 381
+branch  3 never executed (fallthrough)
+branch  4 never executed
+    #####:  661:                    KeepSetBaseAddrWindow = false;
+    %%%%%:  661-block 382
+        -:  662:                }
+        -:  663:            }
+        -:  664:        }
+        -:  665:
+    #####:  666:        if (KeepGoToPopup) {
+    %%%%%:  666-block 384
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  667:            GoToPopup();
+    %%%%%:  667-block 385
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:  668:        }
+        -:  669:
+        -:  670:        /* Note: We don't have keyboard shortcuts for goto, fill memory with byte and select all
+        -:  671:         * because somehow the data between the two instances of the hex editor, which are
+        -:  672:         * that of the memory editor and that of the stack editor are getting mixed and that is causing
+        -:  673:         * them to not work at all.
+        -:  674:         * I expected this to be fixed later, but at the moment I have no idea what to do with this.
+        -:  675:         * I have tried using the same callback function with different IDs when they are called from
+        -:  676:         * stack and the memory editor, but it doesn't seem to work.
+        -:  677:        */
+        -:  678:
+    #####:  679:        if (ImGui::IsKeyDown(ImGuiKey_LeftCtrl) && ImGui::IsKeyPressed(ImGuiKey_Z)){
+    %%%%%:  679-block 386
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  679-block 387
+branch  3 never executed (fallthrough)
+branch  4 never executed
+    %%%%%:  679-block 388
+call    5 never executed
+branch  6 never executed (fallthrough)
+branch  7 never executed (throw)
+    %%%%%:  679-block 389
+branch  8 never executed (fallthrough)
+branch  9 never executed
+    %%%%%:  679-block 390
+    %%%%%:  679-block 391
+    %%%%%:  679-block 392
+branch 10 never executed (fallthrough)
+branch 11 never executed
+    #####:  680:            UndoRedo();
+    %%%%%:  680-block 393
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:  681:        }
+        -:  682:
+    #####:  683:        if (ImGui::IsKeyDown(ImGuiKey_LeftCtrl) && ImGui::IsKeyPressed(ImGuiKey_Y)){
+    %%%%%:  683-block 394
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  683-block 395
+branch  3 never executed (fallthrough)
+branch  4 never executed
+    %%%%%:  683-block 396
+call    5 never executed
+branch  6 never executed (fallthrough)
+branch  7 never executed (throw)
+    %%%%%:  683-block 397
+branch  8 never executed (fallthrough)
+branch  9 never executed
+    %%%%%:  683-block 398
+    %%%%%:  683-block 399
+    %%%%%:  683-block 400
+branch 10 never executed (fallthrough)
+branch 11 never executed
+    #####:  684:            UndoRedo(true);
+    %%%%%:  684-block 401
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:  685:        }
+        -:  686:
+    #####:  687:        if (ImGui::IsKeyDown(ImGuiKey_LeftCtrl) && ImGui::IsKeyDown(ImGuiKey_LeftShift) && ImGui::IsKeyDown(ImGuiKey_E)){
+    %%%%%:  687-block 402
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  687-block 403
+branch  3 never executed (fallthrough)
+branch  4 never executed
+    %%%%%:  687-block 404
+call    5 never executed
+branch  6 never executed (fallthrough)
+branch  7 never executed (throw)
+    %%%%%:  687-block 405
+branch  8 never executed (fallthrough)
+branch  9 never executed
+    %%%%%:  687-block 406
+call   10 never executed
+branch 11 never executed (fallthrough)
+branch 12 never executed (throw)
+    %%%%%:  687-block 407
+branch 13 never executed (fallthrough)
+branch 14 never executed
+    %%%%%:  687-block 408
+    %%%%%:  687-block 409
+    %%%%%:  687-block 410
+branch 15 never executed (fallthrough)
+branch 16 never executed
+    #####:  688:            KeepSetBaseAddrWindow = true;
+    %%%%%:  688-block 411
+        -:  689:        }
+        -:  690:
+    #####:  691:    }
+    %%%%%:  691-block 412
+call    0 never executed
+    $$$$$:  691-block 457
+call    1 never executed
+        -:  692:
+function _ZN12MemoryEditor13GetDataToCopyENSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEb called 0 returned 0% blocks executed 0%
+    #####:  693:    std::string GetDataToCopy(std::string bytes, bool asArray) {
+    %%%%%:  693-block 2
+    #####:  694:        std::string dataToCopy = asArray ? "{0x" : "\\x";
+    %%%%%:  694-block 4
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  694-block 5
+    %%%%%:  694-block 6
+    %%%%%:  694-block 7
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed (throw)
+    $$$$$:  694-block 35
+call    5 never executed
+        -:  695:        
+    #####:  696:        if (asArray){
+    %%%%%:  696-block 9
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  697:            if (!bytes.empty()) {
+    %%%%%:  697-block 10
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  698:                for (size_t i = 0; i < bytes.length(); i++) {
+    %%%%%:  698-block 12
+    %%%%%:  698-block 18
+    %%%%%:  698-block 19
+call    0 never executed
+branch  1 never executed
+branch  2 never executed (fallthrough)
+    #####:  699:                    if (bytes[i]!=' '){
+    %%%%%:  699-block 13
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  700:                        dataToCopy += bytes[i];
+    %%%%%:  700-block 15
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+        -:  701:                    }
+        -:  702:                    else{
+    #####:  703:                        dataToCopy += ", 0x";
+    %%%%%:  703-block 17
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:  704:                    }
+        -:  705:                }
+        -:  706:
+    #####:  707:                dataToCopy.append("}");
+    %%%%%:  707-block 21
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:  708:            }
+        -:  709:        }
+        -:  710:        else{
+    #####:  711:            for (size_t i = 0; i < bytes.length(); i++){
+    %%%%%:  711-block 22
+    %%%%%:  711-block 28
+    %%%%%:  711-block 29
+call    0 never executed
+branch  1 never executed
+branch  2 never executed (fallthrough)
+    #####:  712:                if (bytes[i] != ' '){
+    %%%%%:  712-block 23
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  713:                    dataToCopy += bytes[i];
+    %%%%%:  713-block 25
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+        -:  714:                }
+        -:  715:                else{
+    #####:  716:                    dataToCopy += "\\x";
+    %%%%%:  716-block 27
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:  717:                }
+        -:  718:            }
+        -:  719:        }
+        -:  720:
+    #####:  721:        return dataToCopy;
+    %%%%%:  721-block 31
+    %%%%%:  721-block 32
+    =====:  722:    }
+    $$$$$:  722-block 36
+call    0 never executed
+        -:  723:
+function _ZN12MemoryEditor8UndoRedoEb called 0 returned 0% blocks executed 0%
+    #####:  724:    void UndoRedo(bool redo = false){
+    #####:  725:        auto currentAction = redo ? RedoActions : UndoActions;
+    %%%%%:  725-block 2
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  725-block 3
+    %%%%%:  725-block 4
+    %%%%%:  725-block 5
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed (throw)
+    #####:  726:        if (currentAction.empty()){
+    %%%%%:  726-block 6
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  727:            return;
+    %%%%%:  727-block 8
+        -:  728:        }
+        -:  729:
+    #####:  730:        Actions currentActionTop = currentAction.top();
+    %%%%%:  730-block 9
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+    #####:  731:        switch (currentActionTop.Action) {
+    %%%%%:  731-block 11
+branch  0 never executed
+branch  1 never executed
+branch  2 never executed
+branch  3 never executed
+    #####:  732:            case ActionType::MemWrite:
+        -:  733:            {
+    #####:  734:                if (WriteFn){
+    %%%%%:  734-block 12
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  735:                    WriteFn(MemData, currentActionTop.startAddr, currentActionTop.originalData[0]);
+    %%%%%:  735-block 13
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+        -:  736:                }
+        -:  737:
+    #####:  738:                std::swap(currentActionTop.operationData[0],  currentActionTop.originalData[0]);
+    %%%%%:  738-block 15
+call    0 never executed
+call    1 never executed
+call    2 never executed
+    #####:  739:                break;
+        -:  740:            }
+    #####:  741:            case ActionType::MemWriteBatch:
+        -:  742:            {
+    #####:  743:                if (WriteFn){
+    %%%%%:  743-block 19
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  744:                    for (int i = 0; i < currentActionTop.operationSize; i++){
+    %%%%%:  744-block 20
+    %%%%%:  744-block 23
+    %%%%%:  744-block 24
+branch  0 never executed
+branch  1 never executed (fallthrough)
+    #####:  745:                        WriteFn(MemData, currentActionTop.startAddr + i, currentActionTop.originalData[i]);
+    %%%%%:  745-block 21
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+        -:  746:                    }
+    #####:  747:                    std::swap(currentActionTop.operationData,  currentActionTop.originalData);
+    %%%%%:  747-block 25
+call    0 never executed
+        -:  748:                }
+    #####:  749:                break;
+    %%%%%:  749-block 26
+        -:  750:            }
+    #####:  751:            case ActionType::SetBaseAddr:
+        -:  752:            {
+    #####:  753:                if (SetBaseAddress2) {
+    %%%%%:  753-block 27
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  754:                    SetBaseAddress2(currentActionTop.originalData[0], currentActionTop.operationSize);
+    %%%%%:  754-block 28
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+    $$$$$:  754-block 46
+    #####:  755:                    std::swap(currentActionTop.operationData,  currentActionTop.originalData);
+    %%%%%:  755-block 30
+call    0 never executed
+        -:  756:                }
+        -:  757:
+    #####:  758:                break;
+    %%%%%:  758-block 31
+        -:  759:            }
+    #####:  760:            default:
+    #####:  761:                break;
+    %%%%%:  761-block 32
+        -:  762:        }
+        -:  763:
+    #####:  764:        if (redo){
+    %%%%%:  764-block 33
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  765:            UndoActions.push(currentActionTop);
+    %%%%%:  765-block 34
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  766:            RedoActions.pop();
+    %%%%%:  766-block 35
+call    0 never executed
+        -:  767:        }
+        -:  768:        else{
+    #####:  769:            RedoActions.push(currentActionTop);
+    %%%%%:  769-block 36
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  770:            UndoActions.pop();
+    %%%%%:  770-block 37
+call    0 never executed
+        -:  771:        }
+    #####:  772:    }
+    %%%%%:  772-block 38
+call    0 never executed
+    %%%%%:  772-block 40
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    $$$$$:  772-block 47
+call    4 never executed
+    $$$$$:  772-block 49
+call    5 never executed
+        -:  773:
+function _ZN12MemoryEditor17FillRangeWithByteEmmc called 0 returned 0% blocks executed 0%
+    #####:  774:    bool FillRangeWithByte(uint64_t address, size_t upto, char byte){
+    #####:  775:        Actions undoAction = {.Action = MemWriteBatch, .startAddr = address - BaseDisplayAddr, .endAddr = (address + upto) - BaseDisplayAddr, .operationSize = upto};
+    #####:  776:        if (WriteFn){
+    %%%%%:  776-block 2
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  777:            for (auto i = 0; i < (upto); address++, i++){
+    %%%%%:  777-block 3
+    %%%%%:  777-block 7
+    %%%%%:  777-block 8
+branch  0 never executed
+branch  1 never executed (fallthrough)
+    #####:  778:                undoAction.originalData.push_back(MemData[address - BaseDisplayAddr]);
+    %%%%%:  778-block 4
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    $$$$$:  778-block 13
+    #####:  779:                undoAction.operationData.push_back(byte);
+    %%%%%:  779-block 5
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    $$$$$:  779-block 14
+    #####:  780:                WriteFn(MemData, address - BaseDisplayAddr, byte);
+    %%%%%:  780-block 6
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:  781:            }
+    #####:  782:            UndoActions.push(undoAction);
+    %%%%%:  782-block 9
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:  783:        }
+    #####:  784:        return true;
+    %%%%%:  784-block 12
+    #####:  785:    }
+    %%%%%:  785-block 10
+call    0 never executed
+    $$$$$:  785-block 15
+call    1 never executed
+        -:  786:
+function _ZN12MemoryEditor19WriteVectorToMemoryERKSt6vectorIlSaIlEEb called 0 returned 0% blocks executed 0%
+    #####:  787:    bool WriteVectorToMemory(const std::vector<intptr_t> &vec, bool PasteAll = false) {
+    #####:  788:        auto currentAddr = SelectionStartAddr;
+    #####:  789:        auto endAddr = SelectionEndAddr;
+        -:  790:
+    #####:  791:        if (currentAddr == -1){
+    %%%%%:  791-block 2
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  792:            currentAddr = endAddr = HoveredAddr;
+    %%%%%:  792-block 3
+        -:  793:        }
+        -:  794:
+    #####:  795:        if (WriteFn) {
+    %%%%%:  795-block 4
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  796:            if (PasteAll){
+    %%%%%:  796-block 5
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  797:                Actions undoAction = {.Action = MemWriteBatch, .startAddr = currentAddr, .endAddr = currentAddr + vec.size(), .operationSize = vec.size(),
+    #####:  798:                        .operationData = vec};
+    %%%%%:  798-block 6
+call    0 never executed
+call    1 never executed
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed (throw)
+    #####:  799:                for (int i = 0; i < vec.size(); currentAddr++, i++) {
+    %%%%%:  799-block 9
+    %%%%%:  799-block 13
+    %%%%%:  799-block 14
+call    0 never executed
+branch  1 never executed
+branch  2 never executed (fallthrough)
+    #####:  800:                    undoAction.originalData.push_back(MemData[currentAddr]);
+    %%%%%:  800-block 10
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    $$$$$:  800-block 36
+    #####:  801:                    WriteFn(MemData, currentAddr, vec[i]);
+    %%%%%:  801-block 11
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+        -:  802:                }
+    #####:  803:                UndoActions.push(undoAction);
+    %%%%%:  803-block 16
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  804:            }
+    %%%%%:  804-block 17
+call    0 never executed
+    $$$$$:  804-block 37
+call    1 never executed
+        -:  805:            else{
+    #####:  806:                Actions undoAction = {.Action = MemWriteBatch, .startAddr = currentAddr,
+    #####:  807:                        .operationData = vec};
+    %%%%%:  807-block 19
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:  808:
+    #####:  809:                for (int i = 0; currentAddr != endAddr + 1 && i < vec.size(); currentAddr++, i++) {
+    %%%%%:  809-block 20
+    %%%%%:  809-block 24
+    %%%%%:  809-block 25
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  809-block 26
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed
+    %%%%%:  809-block 28
+    %%%%%:  809-block 29
+    %%%%%:  809-block 30
+branch  5 never executed
+branch  6 never executed (fallthrough)
+    #####:  810:                    undoAction.originalData.push_back(MemData[currentAddr]);
+    %%%%%:  810-block 21
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    $$$$$:  810-block 40
+    #####:  811:                    WriteFn(MemData, currentAddr, vec[i]);
+    %%%%%:  811-block 22
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+        -:  812:                }
+        -:  813:
+    #####:  814:                undoAction.endAddr = currentAddr + 1;
+    #####:  815:                undoAction.operationSize = currentAddr - (endAddr);
+    #####:  816:                UndoActions.push(undoAction);
+    %%%%%:  816-block 31
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  817:            }
+    %%%%%:  817-block 32
+call    0 never executed
+    $$$$$:  817-block 41
+call    1 never executed
+        -:  818:
+        -:  819:        }
+        -:  820:
+    #####:  821:        return true;
+    %%%%%:  821-block 34
+    %%%%%:  821-block 35
+        -:  822:    }
+        -:  823:
+function _ZN12MemoryEditor11validateHexEc called 0 returned 0% blocks executed 0%
+    #####:  824:    bool validateHex(char toValidate){
+    #####:  825:        if ((toValidate >= '0' && toValidate <= '9') || (toValidate >= 'A' && toValidate <= 'F') || (toValidate >= 'a' && toValidate <= 'f')) {
+    %%%%%:  825-block 2
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  825-block 3
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    %%%%%:  825-block 4
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:  825-block 5
+branch  6 never executed (fallthrough)
+branch  7 never executed
+    %%%%%:  825-block 6
+branch  8 never executed (fallthrough)
+branch  9 never executed
+    %%%%%:  825-block 7
+branch 10 never executed (fallthrough)
+branch 11 never executed
+    #####:  826:            return true;
+    %%%%%:  826-block 8
+        -:  827:        }
+        -:  828:        else{
+    #####:  829:            return false;
+    %%%%%:  829-block 9
+        -:  830:        }
+        -:  831:    }
+        -:  832:
+function _ZN12MemoryEditor18PasteWriteToMemoryEb called 0 returned 0% blocks executed 0%
+    #####:  833:    bool PasteWriteToMemory(bool PasteAll = false){
+    %%%%%:  833-block 2
+    #####:  834:        std::string clipboardText = ImGui::GetClipboardText();
+    %%%%%:  834-block 4
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  834-block 5
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    $$$$$:  834-block 45
+    #####:  835:        std::vector<intptr_t> convertedInts;
+    #####:  836:        std::string hex;
+    %%%%%:  836-block 7
+call    0 never executed
+        -:  837:
+    #####:  838:        for (int i = 0; i < clipboardText.length(); i++){
+    %%%%%:  838-block 33
+    %%%%%:  838-block 34
+call    0 never executed
+branch  1 never executed
+branch  2 never executed (fallthrough)
+    #####:  839:            if (clipboardText[i] == ' '){
+    %%%%%:  839-block 9
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  840:                continue;
+    %%%%%:  840-block 11
+        -:  841:            }
+        -:  842:
+    #####:  843:            if (validateHex(clipboardText[i]) && (i+1 <= clipboardText.length() && (validateHex(clipboardText[i+1])))){
+    %%%%%:  843-block 12
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    %%%%%:  843-block 15
+call    4 never executed
+branch  5 never executed (fallthrough)
+branch  6 never executed
+    %%%%%:  843-block 17
+call    7 never executed
+call    8 never executed
+branch  9 never executed (fallthrough)
+branch 10 never executed
+    %%%%%:  843-block 20
+    %%%%%:  843-block 21
+    %%%%%:  843-block 22
+branch 11 never executed (fallthrough)
+branch 12 never executed
+    #####:  844:                hex += clipboardText[i];
+    %%%%%:  844-block 23
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+        -:  845:            }
+        -:  846:            else{
+    #####:  847:                return false;
+    %%%%%:  847-block 25
+        -:  848:            }
+    #####:  849:            ++i;
+    #####:  850:            hex += clipboardText[i];
+    %%%%%:  850-block 26
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+    #####:  851:            convertedInts.push_back(std::strtol(hex.c_str(), nullptr, 16));
+    %%%%%:  851-block 28
+call    0 never executed
+call    1 never executed
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed (throw)
+    $$$$$:  851-block 46
+    #####:  852:            hex.clear();
+    %%%%%:  852-block 31
+call    0 never executed
+    #####:  853:            hex = "";
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:  854:        }
+        -:  855:
+    #####:  856:        WriteVectorToMemory(convertedInts, PasteAll);
+    %%%%%:  856-block 36
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  857:        return false;
+    %%%%%:  857-block 37
+    #####:  858:    }
+    %%%%%:  858-block 38
+call    0 never executed
+call    1 never executed
+call    2 never executed
+    $$$$$:  858-block 47
+call    3 never executed
+    $$$$$:  858-block 49
+call    4 never executed
+    $$$$$:  858-block 51
+call    5 never executed
+        -:  859:
+function _ZN12MemoryEditor15DrawOptionsLineERKNS_5SizesEPvmm called 0 returned 0% blocks executed 0%
+    #####:  860:    void DrawOptionsLine(const Sizes& s, void* mem_data, size_t mem_size, size_t base_display_addr)
+        -:  861:    {
+        -:  862:        IM_UNUSED(mem_data);
+    #####:  863:        ImGuiStyle& style = ImGui::GetStyle();
+    %%%%%:  863-block 2
+call    0 never executed
+        -:  864:
+    #####:  865:        ImGui::GetStyle().Colors[ImGuiCol_HeaderHovered] = ImColor(0x18, 0x19, 0x26);
+call    0 never executed
+call    1 never executed
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed (throw)
+    $$$$$:  865-block 129
+call    5 never executed
+    #####:  866:        if (ImGui::BeginPopup("context"))
+    %%%%%:  866-block 6
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+        -:  867:        {
+    #####:  868:            ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[4]);
+    %%%%%:  868-block 8
+call    0 never executed
+call    1 never executed
+call    2 never executed
+    #####:  869:            if (ImGui::MenuItem("Undo", "CTRL + Z", false)){
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  870:                UndoRedo(false);
+    %%%%%:  870-block 13
+call    0 never executed
+        -:  871:            }
+    #####:  872:            ImGui::Separator();
+    %%%%%:  872-block 14
+call    0 never executed
+    #####:  873:            if (ImGui::MenuItem("Redo", "CTRL + Y", false)){
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  874:                UndoRedo(true);
+    %%%%%:  874-block 17
+call    0 never executed
+        -:  875:            }
+    #####:  876:            ImGui::Separator();
+    %%%%%:  876-block 18
+call    0 never executed
+    #####:  877:            if (ImGui::MenuItem("Copy", "CTRL + C", false)){
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  878:                ImGui::SetClipboardText(ReadMemory(SelectionStartAddr, SelectionEndAddr).c_str());
+    %%%%%:  878-block 21
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  878-block 22
+call    3 never executed
+call    4 never executed
+branch  5 never executed (fallthrough)
+branch  6 never executed (throw)
+    %%%%%:  878-block 24
+call    7 never executed
+    $$$$$:  878-block 130
+call    8 never executed
+    $$$$$:  878-block 132
+call    9 never executed
+        -:  879:            }
+    #####:  880:            ImGui::Separator();
+    %%%%%:  880-block 26
+call    0 never executed
+    #####:  881:            if (ImGui::BeginMenu("Copy as")) {
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  882:                if (ImGui::MenuItem("C array")){
+    %%%%%:  882-block 29
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  883:                    ImGui::SetClipboardText(GetDataToCopy(ReadMemory(SelectionStartAddr, SelectionEndAddr), true).c_str());
+    %%%%%:  883-block 31
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  883-block 32
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    %%%%%:  883-block 33
+call    6 never executed
+call    7 never executed
+branch  8 never executed (fallthrough)
+branch  9 never executed (throw)
+    %%%%%:  883-block 35
+call   10 never executed
+call   11 never executed
+    $$$$$:  883-block 133
+call   12 never executed
+    $$$$$:  883-block 135
+call   13 never executed
+    $$$$$:  883-block 137
+    $$$$$:  883-block 138
+call   14 never executed
+        -:  884:                }
+        -:  885:
+    #####:  886:                if (ImGui::MenuItem("Hex")){
+    %%%%%:  886-block 38
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  887:                    ImGui::SetClipboardText(GetDataToCopy(ReadMemory(SelectionStartAddr, SelectionEndAddr), false).c_str());
+    %%%%%:  887-block 40
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  887-block 41
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    %%%%%:  887-block 42
+call    6 never executed
+call    7 never executed
+branch  8 never executed (fallthrough)
+branch  9 never executed (throw)
+    %%%%%:  887-block 44
+call   10 never executed
+call   11 never executed
+    $$$$$:  887-block 139
+call   12 never executed
+    $$$$$:  887-block 141
+call   13 never executed
+    $$$$$:  887-block 143
+    $$$$$:  887-block 144
+call   14 never executed
+        -:  888:                }
+    #####:  889:                ImGui::EndMenu();
+    %%%%%:  889-block 47
+call    0 never executed
+        -:  890:            }
+        -:  891:
+    #####:  892:            ImGui::Separator();
+    %%%%%:  892-block 48
+call    0 never executed
+    #####:  893:            if (ImGui::MenuItem("Paste", "CTRL + V", false)){
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  894:                PasteWriteToMemory();
+    %%%%%:  894-block 51
+call    0 never executed
+        -:  895:            }
+    #####:  896:            ImGui::Separator();
+    %%%%%:  896-block 52
+call    0 never executed
+    #####:  897:            if (ImGui::MenuItem("Paste All", "CTRL + V", false)){
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  898:                PasteWriteToMemory(true);
+    %%%%%:  898-block 55
+call    0 never executed
+        -:  899:            }
+    #####:  900:            ImGui::Separator();
+    %%%%%:  900-block 56
+call    0 never executed
+    #####:  901:            if (ImGui::MenuItem("Select All", "CTRL + A", false)){
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  902:                SelectionStartAddr = 0;
+    #####:  903:                SelectionEndAddr = SelectionStartAddr + mem_size;
+    %%%%%:  903-block 59
+        -:  904:            }
+        -:  905:
+    #####:  906:            if (OptShowSetBaseAddrOption){
+    %%%%%:  906-block 60
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  907:                ImGui::Separator();
+    %%%%%:  907-block 61
+call    0 never executed
+    #####:  908:                if (ImGui::MenuItem("Set Base Address", "CTRL + Shift + E", false)){
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  909:                    if (SetBaseAddress2){
+    %%%%%:  909-block 64
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  910:                        SetBaseAddress2(0, 0);
+    %%%%%:  910-block 65
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    $$$$$:  910-block 145
+call    3 never executed
+    #####:  911:                        KeepSetBaseAddrWindow = true;
+    %%%%%:  911-block 66
+        -:  912:                    }
+        -:  913:                }
+        -:  914:            }
+        -:  915:
+    #####:  916:            if (OptFillMemoryRange){
+    %%%%%:  916-block 67
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  917:                ImGui::Separator();
+    %%%%%:  917-block 68
+call    0 never executed
+    #####:  918:                if (ImGui::MenuItem("Fill memory with byte",  nullptr)){
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  919:                    if (FillMemoryRange){
+    %%%%%:  919-block 71
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  920:                        FillMemoryRange();
+    %%%%%:  920-block 72
+call    0 never executed
+    #####:  921:                        KeepFillMemoryWindow = true;
+        -:  922:                    }
+        -:  923:                }
+        -:  924:            }
+        -:  925:
+    #####:  926:            ImGui::Separator();
+    %%%%%:  926-block 74
+call    0 never executed
+    #####:  927:            if (ImGui::MenuItem("Goto", "CTRL + G")){
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  928:                KeepGoToPopup = true;
+    %%%%%:  928-block 77
+        -:  929:            }
+    #####:  930:            ImGui::PopFont();
+    %%%%%:  930-block 78
+call    0 never executed
+    #####:  931:            ImGui::EndPopup();
+call    0 never executed
+        -:  932:        }
+        -:  933:
+    #####:  934:        ImGui::SameLine();
+    %%%%%:  934-block 80
+call    0 never executed
+    #####:  935:        if (!ShowRequiredButton){
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  936:            if (ImGui::Button("^^")){
+    %%%%%:  936-block 82
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+    %%%%%:  936-block 84
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    $$$$$:  936-block 146
+call    6 never executed
+    #####:  937:                OptShowDataPreview = !OptShowDataPreview;
+    %%%%%:  937-block 85
+        -:  938:            }
+    #####:  939:            ImGui::SameLine();
+    %%%%%:  939-block 86
+call    0 never executed
+    #####:  940:            if (ImGui::Button("Aa")){
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+    %%%%%:  940-block 89
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    $$$$$:  940-block 147
+call    6 never executed
+    #####:  941:                OptUpperCaseHex = !OptUpperCaseHex;
+    %%%%%:  941-block 90
+        -:  942:            }
+        -:  943:        }
+        -:  944:        else{
+    #####:  945:            if (ShowRequiredButton("Preview", OptShowDataPreview)){
+    %%%%%:  945-block 91
+    %%%%%:  945-block 93
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  945-block 94
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    %%%%%:  945-block 95
+call    6 never executed
+    %%%%%:  945-block 97
+branch  7 never executed (fallthrough)
+branch  8 never executed
+    $$$$$:  945-block 148
+call    9 never executed
+    $$$$$:  945-block 152
+    $$$$$:  945-block 153
+call   10 never executed
+    #####:  946:                OptShowDataPreview = !OptShowDataPreview;
+    %%%%%:  946-block 98
+        -:  947:            }
+    #####:  948:            ImGui::SameLine();
+    %%%%%:  948-block 99
+call    0 never executed
+    #####:  949:            if (ShowRequiredButton("Case", OptUpperCaseHex)){
+    %%%%%:  949-block 102
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  949-block 103
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    %%%%%:  949-block 104
+call    6 never executed
+    %%%%%:  949-block 106
+branch  7 never executed (fallthrough)
+branch  8 never executed
+    $$$$$:  949-block 154
+call    9 never executed
+    $$$$$:  949-block 158
+    $$$$$:  949-block 159
+call   10 never executed
+    #####:  950:                OptUpperCaseHex = !OptUpperCaseHex;
+    %%%%%:  950-block 107
+        -:  951:            }
+    #####:  952:            ImGui::SameLine();
+    %%%%%:  952-block 108
+call    0 never executed
+    #####:  953:            if (ShowRequiredButton("Ascii", OptShowAscii)){
+    %%%%%:  953-block 111
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  953-block 112
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    %%%%%:  953-block 113
+call    6 never executed
+    %%%%%:  953-block 115
+branch  7 never executed (fallthrough)
+branch  8 never executed
+    $$$$$:  953-block 160
+call    9 never executed
+    $$$$$:  953-block 164
+    $$$$$:  953-block 165
+call   10 never executed
+    #####:  954:                OptShowAscii = !OptShowAscii;
+    %%%%%:  954-block 116
+        -:  955:            }
+    #####:  956:            ImGui::SameLine();
+    %%%%%:  956-block 117
+call    0 never executed
+        -:  957:       }
+        -:  958:
+    #####:  959:        if (GotoAddr != (size_t)-1)
+    %%%%%:  959-block 118
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  960:        {
+    #####:  961:            if (GotoAddr < mem_size)
+    %%%%%:  961-block 119
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  962:            {
+    #####:  963:                ImGui::BeginChild("##scrolling");
+    %%%%%:  963-block 120
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+    #####:  964:                ImGui::SetScrollFromPosY(ImGui::GetCursorStartPos().y + (GotoAddr / Cols) * ImGui::GetTextLineHeight());
+    %%%%%:  964-block 122
+call    0 never executed
+call    1 never executed
+call    2 never executed
+    #####:  965:                ImGui::EndChild();
+call    0 never executed
+    #####:  966:                DataEditingAddr = DataPreviewAddr = GotoAddr;
+    #####:  967:                DataEditingTakeFocus = true;
+        -:  968:            }
+    #####:  969:            GotoAddr = (size_t)-1;
+    %%%%%:  969-block 127
+        -:  970:        }
+        -:  971:
+        -:  972:
+    #####:  973:    }
+    %%%%%:  973-block 128
+        -:  974:
+function _ZN12MemoryEditor15DrawPreviewLineERKNS_5SizesEPvmm called 0 returned 0% blocks executed 0%
+    #####:  975:    void DrawPreviewLine(const Sizes& s, void* mem_data_void, size_t mem_size, size_t base_display_addr)
+        -:  976:    {
+        -:  977:        IM_UNUSED(base_display_addr);
+    #####:  978:        ImU8* mem_data = (ImU8*)mem_data_void;
+    #####:  979:        ImGuiStyle& style = ImGui::GetStyle();
+    %%%%%:  979-block 2
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  980:        ImGui::AlignTextToFramePadding();
+    %%%%%:  980-block 3
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  981:        ImGui::Text("Preview as:");
+    %%%%%:  981-block 4
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  982:        ImGui::SameLine();
+    %%%%%:  982-block 5
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  983:        ImGui::SetNextItemWidth((s.GlyphWidth * 10.0f) + style.FramePadding.x * 2.0f + style.ItemInnerSpacing.x);
+    %%%%%:  983-block 6
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  984:        if (ImGui::BeginCombo("##combo_type", DataTypeGetDesc(PreviewDataType), ImGuiComboFlags_HeightLargest))
+    %%%%%:  984-block 7
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+    %%%%%:  984-block 9
+branch  4 never executed (fallthrough)
+branch  5 never executed
+        -:  985:        {
+    #####:  986:            for (int n = 0; n < ImGuiDataType_COUNT; n++)
+    %%%%%:  986-block 10
+    %%%%%:  986-block 16
+    %%%%%:  986-block 17
+branch  0 never executed
+branch  1 never executed (fallthrough)
+    #####:  987:                if (ImGui::Selectable(DataTypeGetDesc((ImGuiDataType)n), PreviewDataType == n))
+    %%%%%:  987-block 11
+call    0 never executed
+call    1 never executed
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed (throw)
+    %%%%%:  987-block 14
+branch  5 never executed (fallthrough)
+branch  6 never executed
+    $$$$$:  987-block 47
+    #####:  988:                    PreviewDataType = (ImGuiDataType)n;
+    %%%%%:  988-block 15
+    #####:  989:            ImGui::EndCombo();
+    %%%%%:  989-block 18
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:  990:        }
+    #####:  991:        ImGui::SameLine();
+    %%%%%:  991-block 19
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  992:        ImGui::SetNextItemWidth((s.GlyphWidth * 6.0f) + style.FramePadding.x * 2.0f + style.ItemInnerSpacing.x);
+    %%%%%:  992-block 20
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  993:        ImGui::Combo("##combo_endianness", &PreviewEndianness, "LE\0BE\0\0");
+    %%%%%:  993-block 21
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:  994:
+    #####:  995:        char buf[128] = "";
+    #####:  996:        float x = s.GlyphWidth * 6.0f;
+    #####:  997:        bool has_value = DataPreviewAddr != (size_t)-1;
+    #####:  998:        if (has_value)
+    %%%%%:  998-block 22
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  999:            DrawPreviewData(DataPreviewAddr, mem_data, mem_size, PreviewDataType, DataFormat_Dec, buf, (size_t)IM_ARRAYSIZE(buf));
+    %%%%%:  999-block 23
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####: 1000:        ImGui::Text("Dec"); ImGui::SameLine(x); ImGui::TextUnformatted(has_value ? buf : "N/A");
+    %%%%%: 1000-block 24
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%: 1000-block 25
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    %%%%%: 1000-block 26
+branch  6 never executed (fallthrough)
+branch  7 never executed
+    %%%%%: 1000-block 27
+    %%%%%: 1000-block 28
+    %%%%%: 1000-block 29
+call    8 never executed
+branch  9 never executed (fallthrough)
+branch 10 never executed (throw)
+    #####: 1001:        if (has_value)
+    %%%%%: 1001-block 30
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####: 1002:            DrawPreviewData(DataPreviewAddr, mem_data, mem_size, PreviewDataType, DataFormat_Hex, buf, (size_t)IM_ARRAYSIZE(buf));
+    %%%%%: 1002-block 31
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####: 1003:        ImGui::Text("Hex"); ImGui::SameLine(x); ImGui::TextUnformatted(has_value ? buf : "N/A");
+    %%%%%: 1003-block 32
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%: 1003-block 33
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    %%%%%: 1003-block 34
+branch  6 never executed (fallthrough)
+branch  7 never executed
+    %%%%%: 1003-block 35
+    %%%%%: 1003-block 36
+    %%%%%: 1003-block 37
+call    8 never executed
+branch  9 never executed (fallthrough)
+branch 10 never executed (throw)
+    #####: 1004:        if (has_value)
+    %%%%%: 1004-block 38
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####: 1005:            DrawPreviewData(DataPreviewAddr, mem_data, mem_size, PreviewDataType, DataFormat_Bin, buf, (size_t)IM_ARRAYSIZE(buf));
+    %%%%%: 1005-block 39
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####: 1006:        buf[IM_ARRAYSIZE(buf) - 1] = 0;
+    #####: 1007:        ImGui::Text("Bin"); ImGui::SameLine(x); ImGui::TextUnformatted(has_value ? buf : "N/A");
+    %%%%%: 1007-block 40
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%: 1007-block 41
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    %%%%%: 1007-block 42
+branch  6 never executed (fallthrough)
+branch  7 never executed
+    %%%%%: 1007-block 43
+    %%%%%: 1007-block 44
+    %%%%%: 1007-block 45
+call    8 never executed
+branch  9 never executed (fallthrough)
+branch 10 never executed (throw)
+    #####: 1008:    }
+    %%%%%: 1008-block 46
+        -: 1009:
+        -: 1010:    // Utilities for Data Preview
+function _ZNK12MemoryEditor15DataTypeGetDescEi called 0 returned 0% blocks executed 0%
+    #####: 1011:    const char* DataTypeGetDesc(ImGuiDataType data_type) const
+        -: 1012:    {
+    #####: 1013:        const char* descs[] = { "Int8", "Uint8", "Int16", "Uint16", "Int32", "Uint32", "Int64", "Uint64", "Float", "Double" };
+    #####: 1014:        IM_ASSERT(data_type >= 0 && data_type < ImGuiDataType_COUNT);
+    %%%%%: 1014-block 2
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%: 1014-block 3
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    %%%%%: 1014-block 4
+    %%%%%: 1014-block 5
+call    4 never executed
+    #####: 1015:        return descs[data_type];
+    %%%%%: 1015-block 6
+        -: 1016:    }
+        -: 1017:
+function _ZNK12MemoryEditor15DataTypeGetSizeEi called 0 returned 0% blocks executed 0%
+    #####: 1018:    size_t DataTypeGetSize(ImGuiDataType data_type) const
+        -: 1019:    {
+    #####: 1020:        const size_t sizes[] = { 1, 1, 2, 2, 4, 4, 8, 8, sizeof(float), sizeof(double) };
+    #####: 1021:        IM_ASSERT(data_type >= 0 && data_type < ImGuiDataType_COUNT);
+    %%%%%: 1021-block 2
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%: 1021-block 3
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    %%%%%: 1021-block 4
+    %%%%%: 1021-block 5
+call    4 never executed
+    #####: 1022:        return sizes[data_type];
+    %%%%%: 1022-block 6
+        -: 1023:    }
+        -: 1024:
+        -: 1025:    const char* DataFormatGetDesc(DataFormat data_format) const
+        -: 1026:    {
+        -: 1027:        const char* descs[] = { "Bin", "Dec", "Hex" };
+        -: 1028:        IM_ASSERT(data_format >= 0 && data_format < DataFormat_COUNT);
+        -: 1029:        return descs[data_format];
+        -: 1030:    }
+        -: 1031:
+function _ZNK12MemoryEditor11IsBigEndianEv called 0 returned 0% blocks executed 0%
+    #####: 1032:    bool IsBigEndian() const
+        -: 1033:    {
+    #####: 1034:        uint16_t x = 1;
+        -: 1035:        char c[2];
+    #####: 1036:        memcpy(c, &x, 2);
+    #####: 1037:        return c[0] != 0;
+    %%%%%: 1037-block 2
+        -: 1038:    }
+        -: 1039:
+function _ZN12MemoryEditor23EndiannessCopyBigEndianEPvS0_mi called 0 returned 0% blocks executed 0%
+    #####: 1040:    static void* EndiannessCopyBigEndian(void* _dst, void* _src, size_t s, int is_little_endian)
+        -: 1041:    {
+    #####: 1042:        if (is_little_endian)
+    %%%%%: 1042-block 2
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -: 1043:        {
+    #####: 1044:            uint8_t* dst = (uint8_t*)_dst;
+    #####: 1045:            uint8_t* src = (uint8_t*)_src + s - 1;
+    #####: 1046:            for (int i = 0, n = (int)s; i < n; ++i)
+    %%%%%: 1046-block 3
+    %%%%%: 1046-block 5
+branch  0 never executed
+branch  1 never executed (fallthrough)
+    #####: 1047:                memcpy(dst++, src--, 1);
+    %%%%%: 1047-block 4
+    #####: 1048:            return _dst;
+    %%%%%: 1048-block 6
+        -: 1049:        }
+        -: 1050:        else
+        -: 1051:        {
+    #####: 1052:            return memcpy(_dst, _src, s);
+    %%%%%: 1052-block 7
+        -: 1053:        }
+        -: 1054:    }
+        -: 1055:
+function _ZN12MemoryEditor26EndiannessCopyLittleEndianEPvS0_mi called 0 returned 0% blocks executed 0%
+    #####: 1056:    static void* EndiannessCopyLittleEndian(void* _dst, void* _src, size_t s, int is_little_endian)
+        -: 1057:    {
+    #####: 1058:        if (is_little_endian)
+    %%%%%: 1058-block 2
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -: 1059:        {
+    #####: 1060:            return memcpy(_dst, _src, s);
+    %%%%%: 1060-block 3
+        -: 1061:        }
+        -: 1062:        else
+        -: 1063:        {
+    #####: 1064:            uint8_t* dst = (uint8_t*)_dst;
+    #####: 1065:            uint8_t* src = (uint8_t*)_src + s - 1;
+    #####: 1066:            for (int i = 0, n = (int)s; i < n; ++i)
+    %%%%%: 1066-block 4
+    %%%%%: 1066-block 6
+branch  0 never executed
+branch  1 never executed (fallthrough)
+    #####: 1067:                memcpy(dst++, src--, 1);
+    %%%%%: 1067-block 5
+    #####: 1068:            return _dst;
+    %%%%%: 1068-block 7
+        -: 1069:        }
+        -: 1070:    }
+        -: 1071:
+function _ZNK12MemoryEditor14EndiannessCopyEPvS0_m called 0 returned 0% blocks executed 0%
+    #####: 1072:    void* EndiannessCopy(void* dst, void* src, size_t size) const
+        -: 1073:    {
+        -: 1074:        static void* (*fp)(void*, void*, size_t, int) = NULL;
+    #####: 1075:        if (fp == NULL)
+    %%%%%: 1075-block 2
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####: 1076:            fp = IsBigEndian() ? EndiannessCopyBigEndian : EndiannessCopyLittleEndian;
+    %%%%%: 1076-block 3
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%: 1076-block 5
+    %%%%%: 1076-block 6
+    %%%%%: 1076-block 7
+    #####: 1077:        return fp(dst, src, size, PreviewEndianness);
+    %%%%%: 1077-block 8
+call    0 never executed
+        -: 1078:    }
+        -: 1079:
+function _ZNK12MemoryEditor12FormatBinaryEPKhi called 0 returned 0% blocks executed 0%
+    #####: 1080:    const char* FormatBinary(const uint8_t* buf, int width) const
+        -: 1081:    {
+    #####: 1082:        IM_ASSERT(width <= 64);
+    %%%%%: 1082-block 2
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%: 1082-block 3
+call    2 never executed
+    #####: 1083:        size_t out_n = 0;
+        -: 1084:        static char out_buf[64 + 8 + 1];
+    #####: 1085:        int n = width / 8;
+    #####: 1086:        for (int j = n - 1; j >= 0; --j)
+    %%%%%: 1086-block 4
+    %%%%%: 1086-block 12
+branch  0 never executed
+branch  1 never executed (fallthrough)
+        -: 1087:        {
+    #####: 1088:            for (int i = 0; i < 8; ++i)
+    %%%%%: 1088-block 5
+    %%%%%: 1088-block 10
+branch  0 never executed
+branch  1 never executed (fallthrough)
+    #####: 1089:                out_buf[out_n++] = (buf[j] & (1 << (7 - i))) ? '1' : '0';
+    %%%%%: 1089-block 6
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%: 1089-block 7
+    %%%%%: 1089-block 8
+    %%%%%: 1089-block 9
+    #####: 1090:            out_buf[out_n++] = ' ';
+    %%%%%: 1090-block 11
+        -: 1091:        }
+    #####: 1092:        IM_ASSERT(out_n < IM_ARRAYSIZE(out_buf));
+    %%%%%: 1092-block 13
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%: 1092-block 14
+call    2 never executed
+    #####: 1093:        out_buf[out_n] = 0;
+    #####: 1094:        return out_buf;
+    %%%%%: 1094-block 15
+        -: 1095:    }
+        -: 1096:
+        -: 1097:    // [Internal]
+function _ZNK12MemoryEditor15DrawPreviewDataEmPKhmiNS_10DataFormatEPcm called 0 returned 0% blocks executed 0%
+    #####: 1098:    void DrawPreviewData(size_t addr, const ImU8* mem_data, size_t mem_size, ImGuiDataType data_type, DataFormat data_format, char* out_buf, size_t out_buf_size) const
+        -: 1099:    {
+        -: 1100:        uint8_t buf[8];
+    #####: 1101:        size_t elem_size = DataTypeGetSize(data_type);
+    %%%%%: 1101-block 2
+call    0 never executed
+    #####: 1102:        size_t size = addr + elem_size > mem_size ? mem_size - addr : elem_size;
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%: 1102-block 4
+    %%%%%: 1102-block 5
+    #####: 1103:        if (ReadFn)
+    %%%%%: 1103-block 6
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####: 1104:            for (int i = 0, n = (int)size; i < n; ++i)
+    %%%%%: 1104-block 7
+    %%%%%: 1104-block 10
+branch  0 never executed
+branch  1 never executed
+    #####: 1105:                buf[i] = ReadFn(mem_data, addr + i);
+    %%%%%: 1105-block 8
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%: 1105-block 9
+        -: 1106:        else
+    #####: 1107:            memcpy(buf, mem_data + addr, size);
+    %%%%%: 1107-block 11
+        -: 1108:
+    #####: 1109:        if (data_format == DataFormat_Bin)
+    %%%%%: 1109-block 12
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -: 1110:        {
+        -: 1111:            uint8_t binbuf[8];
+    #####: 1112:            EndiannessCopy(binbuf, buf, size);
+    %%%%%: 1112-block 13
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####: 1113:            ImSnprintf(out_buf, out_buf_size, "%s", FormatBinary(binbuf, (int)size * 8));
+    %%%%%: 1113-block 14
+call    0 never executed
+    #####: 1114:            return;
+        -: 1115:        }
+        -: 1116:
+    #####: 1117:        out_buf[0] = 0;
+    #####: 1118:        switch (data_type)
+    %%%%%: 1118-block 16
+branch  0 never executed
+branch  1 never executed
+branch  2 never executed
+branch  3 never executed
+branch  4 never executed
+branch  5 never executed
+branch  6 never executed
+branch  7 never executed
+branch  8 never executed
+branch  9 never executed
+branch 10 never executed
+branch 11 never executed
+        -: 1119:        {
+    #####: 1120:        case ImGuiDataType_S8:
+        -: 1121:        {
+    #####: 1122:            int8_t int8 = 0;
+    #####: 1123:            EndiannessCopy(&int8, buf, size);
+    %%%%%: 1123-block 17
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####: 1124:            if (data_format == DataFormat_Dec) { ImSnprintf(out_buf, out_buf_size, "%hhd", int8); return; }
+    %%%%%: 1124-block 18
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%: 1124-block 19
+    %%%%%: 1124-block 23
+    #####: 1125:            if (data_format == DataFormat_Hex) { ImSnprintf(out_buf, out_buf_size, "0x%02x", int8 & 0xFF); return; }
+    %%%%%: 1125-block 20
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%: 1125-block 21
+    #####: 1126:            break;
+    %%%%%: 1126-block 22
+        -: 1127:        }
+    #####: 1128:        case ImGuiDataType_U8:
+        -: 1129:        {
+    #####: 1130:            uint8_t uint8 = 0;
+    #####: 1131:            EndiannessCopy(&uint8, buf, size);
+    %%%%%: 1131-block 24
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####: 1132:            if (data_format == DataFormat_Dec) { ImSnprintf(out_buf, out_buf_size, "%hhu", uint8); return; }
+    %%%%%: 1132-block 25
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%: 1132-block 26
+    %%%%%: 1132-block 30
+    #####: 1133:            if (data_format == DataFormat_Hex) { ImSnprintf(out_buf, out_buf_size, "0x%02x", uint8 & 0XFF); return; }
+    %%%%%: 1133-block 27
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%: 1133-block 28
+    #####: 1134:            break;
+    %%%%%: 1134-block 29
+        -: 1135:        }
+    #####: 1136:        case ImGuiDataType_S16:
+        -: 1137:        {
+    #####: 1138:            int16_t int16 = 0;
+    #####: 1139:            EndiannessCopy(&int16, buf, size);
+    %%%%%: 1139-block 31
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####: 1140:            if (data_format == DataFormat_Dec) { ImSnprintf(out_buf, out_buf_size, "%hd", int16); return; }
+    %%%%%: 1140-block 32
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%: 1140-block 33
+    %%%%%: 1140-block 37
+    #####: 1141:            if (data_format == DataFormat_Hex) { ImSnprintf(out_buf, out_buf_size, "0x%04x", int16 & 0xFFFF); return; }
+    %%%%%: 1141-block 34
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%: 1141-block 35
+    #####: 1142:            break;
+    %%%%%: 1142-block 36
+        -: 1143:        }
+    #####: 1144:        case ImGuiDataType_U16:
+        -: 1145:        {
+    #####: 1146:            uint16_t uint16 = 0;
+    #####: 1147:            EndiannessCopy(&uint16, buf, size);
+    %%%%%: 1147-block 38
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####: 1148:            if (data_format == DataFormat_Dec) { ImSnprintf(out_buf, out_buf_size, "%hu", uint16); return; }
+    %%%%%: 1148-block 39
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%: 1148-block 40
+    %%%%%: 1148-block 44
+    #####: 1149:            if (data_format == DataFormat_Hex) { ImSnprintf(out_buf, out_buf_size, "0x%04x", uint16 & 0xFFFF); return; }
+    %%%%%: 1149-block 41
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%: 1149-block 42
+    #####: 1150:            break;
+    %%%%%: 1150-block 43
+        -: 1151:        }
+    #####: 1152:        case ImGuiDataType_S32:
+        -: 1153:        {
+    #####: 1154:            int32_t int32 = 0;
+    #####: 1155:            EndiannessCopy(&int32, buf, size);
+    %%%%%: 1155-block 45
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####: 1156:            if (data_format == DataFormat_Dec) { ImSnprintf(out_buf, out_buf_size, "%d", int32); return; }
+    %%%%%: 1156-block 46
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%: 1156-block 47
+    %%%%%: 1156-block 51
+    #####: 1157:            if (data_format == DataFormat_Hex) { ImSnprintf(out_buf, out_buf_size, "0x%08x", int32); return; }
+    %%%%%: 1157-block 48
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%: 1157-block 49
+    #####: 1158:            break;
+    %%%%%: 1158-block 50
+        -: 1159:        }
+    #####: 1160:        case ImGuiDataType_U32:
+        -: 1161:        {
+    #####: 1162:            uint32_t uint32 = 0;
+    #####: 1163:            EndiannessCopy(&uint32, buf, size);
+    %%%%%: 1163-block 52
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####: 1164:            if (data_format == DataFormat_Dec) { ImSnprintf(out_buf, out_buf_size, "%u", uint32); return; }
+    %%%%%: 1164-block 53
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%: 1164-block 54
+    %%%%%: 1164-block 58
+    #####: 1165:            if (data_format == DataFormat_Hex) { ImSnprintf(out_buf, out_buf_size, "0x%08x", uint32); return; }
+    %%%%%: 1165-block 55
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%: 1165-block 56
+    #####: 1166:            break;
+    %%%%%: 1166-block 57
+        -: 1167:        }
+    #####: 1168:        case ImGuiDataType_S64:
+        -: 1169:        {
+    #####: 1170:            int64_t int64 = 0;
+    #####: 1171:            EndiannessCopy(&int64, buf, size);
+    %%%%%: 1171-block 59
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####: 1172:            if (data_format == DataFormat_Dec) { ImSnprintf(out_buf, out_buf_size, "%lld", (long long)int64); return; }
+    %%%%%: 1172-block 60
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%: 1172-block 61
+    %%%%%: 1172-block 65
+    #####: 1173:            if (data_format == DataFormat_Hex) { ImSnprintf(out_buf, out_buf_size, "0x%016llx", (long long)int64); return; }
+    %%%%%: 1173-block 62
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%: 1173-block 63
+    #####: 1174:            break;
+    %%%%%: 1174-block 64
+        -: 1175:        }
+    #####: 1176:        case ImGuiDataType_U64:
+        -: 1177:        {
+    #####: 1178:            uint64_t uint64 = 0;
+    #####: 1179:            EndiannessCopy(&uint64, buf, size);
+    %%%%%: 1179-block 66
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####: 1180:            if (data_format == DataFormat_Dec) { ImSnprintf(out_buf, out_buf_size, "%llu", (long long)uint64); return; }
+    %%%%%: 1180-block 67
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%: 1180-block 68
+    %%%%%: 1180-block 72
+    #####: 1181:            if (data_format == DataFormat_Hex) { ImSnprintf(out_buf, out_buf_size, "0x%016llx", (long long)uint64); return; }
+    %%%%%: 1181-block 69
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%: 1181-block 70
+    #####: 1182:            break;
+    %%%%%: 1182-block 71
+        -: 1183:        }
+    #####: 1184:        case ImGuiDataType_Float:
+        -: 1185:        {
+    #####: 1186:            float float32 = 0.0f;
+    #####: 1187:            EndiannessCopy(&float32, buf, size);
+    %%%%%: 1187-block 73
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####: 1188:            if (data_format == DataFormat_Dec) { ImSnprintf(out_buf, out_buf_size, "%f", float32); return; }
+    %%%%%: 1188-block 74
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%: 1188-block 75
+    %%%%%: 1188-block 79
+    #####: 1189:            if (data_format == DataFormat_Hex) { ImSnprintf(out_buf, out_buf_size, "%a", float32); return; }
+    %%%%%: 1189-block 76
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%: 1189-block 77
+    #####: 1190:            break;
+    %%%%%: 1190-block 78
+        -: 1191:        }
+    #####: 1192:        case ImGuiDataType_Double:
+        -: 1193:        {
+    #####: 1194:            double float64 = 0.0;
+    #####: 1195:            EndiannessCopy(&float64, buf, size);
+    %%%%%: 1195-block 80
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####: 1196:            if (data_format == DataFormat_Dec) { ImSnprintf(out_buf, out_buf_size, "%f", float64); return; }
+    %%%%%: 1196-block 81
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%: 1196-block 82
+    %%%%%: 1196-block 86
+    #####: 1197:            if (data_format == DataFormat_Hex) { ImSnprintf(out_buf, out_buf_size, "%a", float64); return; }
+    %%%%%: 1197-block 83
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%: 1197-block 84
+    #####: 1198:            break;
+    %%%%%: 1198-block 85
+        -: 1199:        }
+    #####: 1200:        case ImGuiDataType_COUNT:
+    #####: 1201:            break;
+    %%%%%: 1201-block 87
+        -: 1202:        } // Switch
+    #####: 1203:        IM_ASSERT(0); // Shouldn't reach
+    %%%%%: 1203-block 88
+call    0 never executed
+        -: 1204:    }
+        -: 1205:};
+        -: 1206:
+        -: 1207:#undef _PRISizeT
+        -: 1208:#undef ImSnprintf
+        -: 1209:
+        -: 1210:#ifdef _MSC_VER
+        -: 1211:#pragma warning (pop)
+        -: 1212:#endif

@@ -1,0 +1,285 @@
+        -:    0:Source:/usr/include/c++/14.2.1/typeinfo
+        -:    0:Graph:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/app/windows/consoleWindow.cpp.gcno
+        -:    0:Data:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/app/windows/consoleWindow.cpp.gcda
+        -:    0:Runs:1
+        -:    1:// RTTI support for -*- C++ -*-
+        -:    2:// Copyright (C) 1994-2024 Free Software Foundation, Inc.
+        -:    3://
+        -:    4:// This file is part of GCC.
+        -:    5://
+        -:    6:// GCC is free software; you can redistribute it and/or modify
+        -:    7:// it under the terms of the GNU General Public License as published by
+        -:    8:// the Free Software Foundation; either version 3, or (at your option)
+        -:    9:// any later version.
+        -:   10://
+        -:   11:// GCC is distributed in the hope that it will be useful,
+        -:   12:// but WITHOUT ANY WARRANTY; without even the implied warranty of
+        -:   13:// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+        -:   14:// GNU General Public License for more details.
+        -:   15://
+        -:   16:// Under Section 7 of GPL version 3, you are granted additional
+        -:   17:// permissions described in the GCC Runtime Library Exception, version
+        -:   18:// 3.1, as published by the Free Software Foundation.
+        -:   19:
+        -:   20:// You should have received a copy of the GNU General Public License and
+        -:   21:// a copy of the GCC Runtime Library Exception along with this program;
+        -:   22:// see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+        -:   23:// <http://www.gnu.org/licenses/>.
+        -:   24:
+        -:   25:/** @file typeinfo
+        -:   26: *  This is a Standard C++ Library header.
+        -:   27: */
+        -:   28:
+        -:   29:#ifndef _TYPEINFO
+        -:   30:#define _TYPEINFO
+        -:   31:
+        -:   32:#pragma GCC system_header
+        -:   33:
+        -:   34:#include <bits/exception.h>
+        -:   35:#if __cplusplus >= 201103L
+        -:   36:#include <bits/hash_bytes.h>
+        -:   37:#endif
+        -:   38:
+        -:   39:#define __glibcxx_want_constexpr_typeinfo
+        -:   40:#include <bits/version.h>
+        -:   41:
+        -:   42:#pragma GCC visibility push(default)
+        -:   43:
+        -:   44:extern "C++" {
+        -:   45:
+        -:   46:namespace __cxxabiv1
+        -:   47:{
+        -:   48:  class __class_type_info;
+        -:   49:} // namespace __cxxabiv1
+        -:   50:
+        -:   51:// Determine whether typeinfo names for the same type are merged (in which
+        -:   52:// case comparison can just compare pointers) or not (in which case strings
+        -:   53:// must be compared), and whether comparison is to be implemented inline or
+        -:   54:// not.  We used to do inline pointer comparison by default if weak symbols
+        -:   55:// are available, but even with weak symbols sometimes names are not merged
+        -:   56:// when objects are loaded with RTLD_LOCAL, so now we always use strcmp by
+        -:   57:// default.  For ABI compatibility, we do the strcmp inline if weak symbols
+        -:   58:// are available, and out-of-line if not.  Out-of-line pointer comparison
+        -:   59:// is used where the object files are to be portable to multiple systems,
+        -:   60:// some of which may not be able to use pointer comparison, but the
+        -:   61:// particular system for which libstdc++ is being built can use pointer
+        -:   62:// comparison; in particular for most ARM EABI systems, where the ABI
+        -:   63:// specifies out-of-line comparison.  The compiler's target configuration
+        -:   64:// can override the defaults by defining __GXX_TYPEINFO_EQUALITY_INLINE to
+        -:   65:// 1 or 0 to indicate whether or not comparison is inline, and
+        -:   66:// __GXX_MERGED_TYPEINFO_NAMES to 1 or 0 to indicate whether or not pointer
+        -:   67:// comparison can be used.
+        -:   68:
+        -:   69:#ifndef __GXX_MERGED_TYPEINFO_NAMES
+        -:   70:// By default, typeinfo names are not merged.
+        -:   71:#define __GXX_MERGED_TYPEINFO_NAMES 0
+        -:   72:#endif
+        -:   73:
+        -:   74:// By default follow the old inline rules to avoid ABI changes.
+        -:   75:#ifndef __GXX_TYPEINFO_EQUALITY_INLINE
+        -:   76:#  if !__GXX_WEAK__
+        -:   77:#    define __GXX_TYPEINFO_EQUALITY_INLINE 0
+        -:   78:#  else
+        -:   79:#    define __GXX_TYPEINFO_EQUALITY_INLINE 1
+        -:   80:#  endif
+        -:   81:#endif
+        -:   82:
+        -:   83:namespace std
+        -:   84:{
+        -:   85:  /**
+        -:   86:   *  @brief  Part of RTTI.
+        -:   87:   *
+        -:   88:   *  The @c type_info class describes type information generated by
+        -:   89:   *  an implementation.
+        -:   90:  */
+        -:   91:  class type_info
+        -:   92:  {
+        -:   93:  public:
+        -:   94:    /** Destructor first. Being the first non-inline virtual function, this
+        -:   95:     *  controls in which translation unit the vtable is emitted. The
+        -:   96:     *  compiler makes use of that information to know where to emit
+        -:   97:     *  the runtime-mandated type_info structures in the new-abi.  */
+        -:   98:    virtual ~type_info();
+        -:   99:
+        -:  100:    /** Returns an @e implementation-defined byte string; this is not
+        -:  101:     *  portable between compilers!  */
+function _ZNKSt9type_info4nameEv called 0 returned 0% blocks executed 0%
+    #####:  102:    const char* name() const _GLIBCXX_NOEXCEPT
+    #####:  103:    { return __name[0] == '*' ? __name + 1 : __name; }
+    %%%%%:  103-block 2
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  103-block 3
+    %%%%%:  103-block 4
+    %%%%%:  103-block 5
+        -:  104:
+        -:  105:    /** Returns true if `*this` precedes `__arg` in the implementation's
+        -:  106:     *  collation order.  */
+        -:  107:    bool before(const type_info& __arg) const _GLIBCXX_NOEXCEPT;
+        -:  108:
+        -:  109:    _GLIBCXX23_CONSTEXPR
+        -:  110:    bool operator==(const type_info& __arg) const _GLIBCXX_NOEXCEPT;
+        -:  111:
+        -:  112:#if __cpp_impl_three_way_comparison < 201907L
+        -:  113:    bool operator!=(const type_info& __arg) const _GLIBCXX_NOEXCEPT
+        -:  114:    { return !operator==(__arg); }
+        -:  115:#endif
+        -:  116:
+        -:  117:#if __cplusplus >= 201103L
+        -:  118:    size_t hash_code() const noexcept
+        -:  119:    {
+        -:  120:#  if !__GXX_MERGED_TYPEINFO_NAMES
+        -:  121:      return _Hash_bytes(name(), __builtin_strlen(name()),
+        -:  122:			 static_cast<size_t>(0xc70f6907UL));
+        -:  123:#  else
+        -:  124:      return reinterpret_cast<size_t>(__name);
+        -:  125:#  endif
+        -:  126:    }
+        -:  127:#endif // C++11
+        -:  128:
+        -:  129:    // Return true if this is a pointer type of some kind
+        -:  130:    virtual bool __is_pointer_p() const;
+        -:  131:
+        -:  132:    // Return true if this is a function type
+        -:  133:    virtual bool __is_function_p() const;
+        -:  134:
+        -:  135:    // Try and catch a thrown type. Store an adjusted pointer to the
+        -:  136:    // caught type in THR_OBJ. If THR_TYPE is not a pointer type, then
+        -:  137:    // THR_OBJ points to the thrown object. If THR_TYPE is a pointer
+        -:  138:    // type, then THR_OBJ is the pointer itself. OUTER indicates the
+        -:  139:    // number of outer pointers, and whether they were const
+        -:  140:    // qualified.
+        -:  141:    virtual bool __do_catch(const type_info *__thr_type, void **__thr_obj,
+        -:  142:			    unsigned __outer) const;
+        -:  143:
+        -:  144:    // Internally used during catch matching
+        -:  145:    virtual bool __do_upcast(const __cxxabiv1::__class_type_info *__target,
+        -:  146:			     void **__obj_ptr) const;
+        -:  147:
+        -:  148:  protected:
+        -:  149:    const char *__name;
+        -:  150:
+        -:  151:    explicit type_info(const char *__n): __name(__n) { }
+        -:  152:
+        -:  153:  private:
+        -:  154:    // type_info objects cannot be copied.
+        -:  155:#if __cplusplus >= 201103L
+        -:  156:    type_info& operator=(const type_info&) = delete;
+        -:  157:    type_info(const type_info&) = delete;
+        -:  158:#else
+        -:  159:    type_info& operator=(const type_info&);
+        -:  160:    type_info(const type_info&);
+        -:  161:#endif
+        -:  162:
+        -:  163:#if ! __GXX_TYPEINFO_EQUALITY_INLINE
+        -:  164:    bool __equal(const type_info&) const _GLIBCXX_NOEXCEPT;
+        -:  165:#endif
+        -:  166:  };
+        -:  167:
+        -:  168:#if __GXX_TYPEINFO_EQUALITY_INLINE
+        -:  169:  inline bool
+        -:  170:  type_info::before(const type_info& __arg) const _GLIBCXX_NOEXCEPT
+        -:  171:  {
+        -:  172:#if !__GXX_MERGED_TYPEINFO_NAMES
+        -:  173:    // Even with the new abi, on systems that support dlopen
+        -:  174:    // we can run into cases where type_info names aren't merged,
+        -:  175:    // so we still need to do string comparison.
+        -:  176:    if (__name[0] != '*' || __arg.__name[0] != '*')
+        -:  177:      return __builtin_strcmp (__name, __arg.__name) < 0;
+        -:  178:#else
+        -:  179:    // On some targets we can rely on type_info's NTBS being unique,
+        -:  180:    // and therefore address comparisons are sufficient.
+        -:  181:#endif
+        -:  182:
+        -:  183:    // In old abi, or when weak symbols are not supported, there can
+        -:  184:    // be multiple instances of a type_info object for one
+        -:  185:    // type. Uniqueness must use the __name value, not object address.
+        -:  186:    return __name < __arg.__name;
+        -:  187:  }
+        -:  188:#endif
+        -:  189:
+        -:  190:#if __GXX_TYPEINFO_EQUALITY_INLINE || __cplusplus > 202002L
+        -:  191:  _GLIBCXX23_CONSTEXPR inline bool
+function _ZNKSt9type_infoeqERKS_ called 0 returned 0% blocks executed 0%
+    #####:  192:  type_info::operator==(const type_info& __arg) const _GLIBCXX_NOEXCEPT
+    %%%%%:  192-block 2
+        -:  193:  {
+    #####:  194:    if (std::__is_constant_evaluated())
+    %%%%%:  194-block 4
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  195:      return this == &__arg;
+    %%%%%:  195-block 5
+        -:  196:
+    #####:  197:    if (__name == __arg.__name)
+    %%%%%:  197-block 6
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  198:      return true;
+    %%%%%:  198-block 7
+        -:  199:
+        -:  200:#if !__GXX_TYPEINFO_EQUALITY_INLINE
+        -:  201:    // ABI requires comparisons to be non-inline.
+        -:  202:    return __equal(__arg);
+        -:  203:#elif !__GXX_MERGED_TYPEINFO_NAMES
+        -:  204:    // Need to do string comparison.
+    #####:  205:    return __name[0] != '*' && __builtin_strcmp (__name, __arg.name()) == 0;
+    %%%%%:  205-block 8
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  205-block 9
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed
+    %%%%%:  205-block 11
+    %%%%%:  205-block 12
+    %%%%%:  205-block 13
+        -:  206:#else
+        -:  207:    return false;
+        -:  208:#endif
+        -:  209:  }
+        -:  210:# endif
+        -:  211:
+        -:  212:
+        -:  213:  /**
+        -:  214:   *  @brief  Thrown during incorrect typecasting.
+        -:  215:   *  @ingroup exceptions
+        -:  216:   *
+        -:  217:   *  If you attempt an invalid @c dynamic_cast expression, an instance of
+        -:  218:   *  this class (or something derived from this class) is thrown.  */
+        -:  219:  class bad_cast : public exception
+        -:  220:  {
+        -:  221:  public:
+        -:  222:    bad_cast() _GLIBCXX_USE_NOEXCEPT { }
+        -:  223:
+        -:  224:    // This declaration is not useless:
+        -:  225:    // http://gcc.gnu.org/onlinedocs/gcc-3.0.2/gcc_6.html#SEC118
+        -:  226:    virtual ~bad_cast() _GLIBCXX_USE_NOEXCEPT;
+        -:  227:
+        -:  228:    // See comment in eh_exception.cc.
+        -:  229:    virtual const char* what() const _GLIBCXX_USE_NOEXCEPT;
+        -:  230:  };
+        -:  231:
+        -:  232:  /**
+        -:  233:   *  @brief Thrown when a NULL pointer in a @c typeid expression is used.
+        -:  234:   *  @ingroup exceptions
+        -:  235:   */
+        -:  236:  class bad_typeid : public exception
+        -:  237:  {
+        -:  238:  public:
+        -:  239:    bad_typeid () _GLIBCXX_USE_NOEXCEPT { }
+        -:  240:
+        -:  241:    // This declaration is not useless:
+        -:  242:    // http://gcc.gnu.org/onlinedocs/gcc-3.0.2/gcc_6.html#SEC118
+        -:  243:    virtual ~bad_typeid() _GLIBCXX_USE_NOEXCEPT;
+        -:  244:
+        -:  245:    // See comment in eh_exception.cc.
+        -:  246:    virtual const char* what() const _GLIBCXX_USE_NOEXCEPT;
+        -:  247:  };
+        -:  248:} // namespace std
+        -:  249:
+        -:  250:} // extern "C++"
+        -:  251:
+        -:  252:#pragma GCC visibility pop
+        -:  253:
+        -:  254:#endif

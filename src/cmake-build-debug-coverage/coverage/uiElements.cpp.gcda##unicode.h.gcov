@@ -1,0 +1,2253 @@
+        -:    0:Source:/usr/include/c++/14.2.1/bits/unicode.h
+        -:    0:Graph:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/utils/uiElements.cpp.gcno
+        -:    0:Data:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/utils/uiElements.cpp.gcda
+        -:    0:Runs:1
+        -:    1:// Unicode utilities -*- C++ -*-
+        -:    2:
+        -:    3:// Copyright The GNU Toolchain Authors.
+        -:    4://
+        -:    5:// This file is part of the GNU ISO C++ Library.  This library is free
+        -:    6:// software; you can redistribute it and/or modify it under the
+        -:    7:// terms of the GNU General Public License as published by the
+        -:    8:// Free Software Foundation; either version 3, or (at your option)
+        -:    9:// any later version.
+        -:   10:
+        -:   11:// This library is distributed in the hope that it will be useful,
+        -:   12:// but WITHOUT ANY WARRANTY; without even the implied warranty of
+        -:   13:// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+        -:   14:// GNU General Public License for more details.
+        -:   15:
+        -:   16:// Under Section 7 of GPL version 3, you are granted additional
+        -:   17:// permissions described in the GCC Runtime Library Exception, version
+        -:   18:// 3.1, as published by the Free Software Foundation.
+        -:   19:
+        -:   20:// You should have received a copy of the GNU General Public License and
+        -:   21:// a copy of the GCC Runtime Library Exception along with this program;
+        -:   22:// see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+        -:   23:// <http://www.gnu.org/licenses/>.
+        -:   24:
+        -:   25:/** @file include/bits/unicode.h
+        -:   26: *  This is an internal header file, included by other library headers.
+        -:   27: *  Do not attempt to use it directly. @headername{format}
+        -:   28: */
+        -:   29:
+        -:   30:#ifndef _GLIBCXX_UNICODE_H
+        -:   31:#define _GLIBCXX_UNICODE_H 1
+        -:   32:
+        -:   33:#if __cplusplus >= 202002L
+        -:   34:#include <array>
+        -:   35:#include <bit>      // bit_width
+        -:   36:#include <charconv> // __detail::__from_chars_alnum_to_val_table
+        -:   37:#include <string_view>
+        -:   38:#include <cstdint>
+        -:   39:#include <bits/stl_algo.h>
+        -:   40:#include <bits/stl_iterator.h>
+        -:   41:#include <bits/ranges_base.h> // iterator_t, sentinel_t, input_range, etc.
+        -:   42:#include <bits/ranges_util.h> // view_interface
+        -:   43:
+        -:   44:namespace std _GLIBCXX_VISIBILITY(default)
+        -:   45:{
+        -:   46:_GLIBCXX_BEGIN_NAMESPACE_VERSION
+        -:   47:namespace __unicode
+        -:   48:{
+        -:   49:  // A Unicode code point that is not a high or low surrogate.
+        -:   50:  constexpr bool
+function _ZNSt9__unicode17__is_scalar_valueEDi called 0 returned 0% blocks executed 0%
+    #####:   51:  __is_scalar_value(char32_t __c)
+        -:   52:  {
+    #####:   53:    if (__c < 0xD800) [[likely]]
+    %%%%%:   53-block 2
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:   54:      return true;
+    %%%%%:   54-block 3
+    #####:   55:    return 0xDFFF < __c && __c <= 0x10FFFF;
+    %%%%%:   55-block 4
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:   55-block 5
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    %%%%%:   55-block 6
+    %%%%%:   55-block 7
+    %%%%%:   55-block 8
+        -:   56:  }
+        -:   57:
+        -:   58:  // A code point that can be encoded in a single code unit of type _CharT.
+        -:   59:  template<typename _CharT>
+        -:   60:    constexpr bool
+function _ZNSt9__unicode21__is_single_code_unitIcEEbDi called 0 returned 0% blocks executed 0%
+    #####:   61:    __is_single_code_unit(char32_t __c)
+        -:   62:    {
+        -:   63:      if constexpr (__gnu_cxx::__int_traits<_CharT>::__max <= 0xFF)
+    #####:   64:	return __c < 0x7F; // ASCII character
+    %%%%%:   64-block 2
+        -:   65:      else
+        -:   66:	return __c < __gnu_cxx::__int_traits<_CharT>::__max
+        -:   67:		       && __is_scalar_value(__c);
+        -:   68:    }
+        -:   69:
+        -:   70:  // Based on https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2728r6.html#add-the-transcoding-iterator-template
+        -:   71:
+        -:   72:  struct _Repl
+        -:   73:  {
+        -:   74:    constexpr char32_t
+function _ZNKSt9__unicode5_ReplclEv called 0 returned 0% blocks executed 0%
+    #####:   75:    operator()() const noexcept
+    #####:   76:    { return 0xFFFD; }
+    %%%%%:   76-block 2
+        -:   77:  };
+        -:   78:
+        -:   79:  struct _Null_sentinel_t
+        -:   80:  {
+        -:   81:    template<input_iterator _It>
+        -:   82:      requires default_initializable<iter_value_t<_It>>
+        -:   83:	&& equality_comparable_with<iter_reference_t<_It>, iter_value_t<_It>>
+        -:   84:      friend constexpr auto
+        -:   85:      operator==(_It __it, _Null_sentinel_t)
+        -:   86:      { return *__it == iter_value_t<_It>{}; }
+        -:   87:  };
+        -:   88:
+        -:   89:  template<typename _FromFmt, typename _ToFmt,
+        -:   90:	   input_iterator _Iter, sentinel_for<_Iter> _Sent = _Iter,
+        -:   91:	   typename _ErrorHandler = _Repl>
+        -:   92:    requires convertible_to<iter_value_t<_Iter>, _FromFmt>
+        -:   93:    class _Utf_iterator
+        -:   94:    {
+        -:   95:      static_assert(forward_iterator<_Iter> || noexcept(_ErrorHandler()()));
+        -:   96:
+        -:   97:    public:
+        -:   98:      using value_type = _ToFmt;
+        -:   99:      using difference_type = iter_difference_t<_Iter>;
+        -:  100:      using reference = value_type;
+        -:  101:      using iterator_concept
+        -:  102:	= std::__detail::__clamp_iter_cat<__iter_category_t<_Iter>,
+        -:  103:					  bidirectional_iterator_tag>;
+        -:  104:
+        -:  105:      constexpr _Utf_iterator() = default;
+        -:  106:
+        -:  107:      constexpr
+    #####:  108:      _Utf_iterator(_Iter __first, _Iter __it, _Sent __last)
+        -:  109:      requires bidirectional_iterator<_Iter>
+    #####:  110:      : _M_first_and_curr{__first, __it}, _M_last(__last)
+        -:  111:      {
+    #####:  112:	if (_M_curr() != _M_last)
+    #####:  113:	  _M_read();
+        -:  114:	else
+    #####:  115:	  _M_buf = {};
+    #####:  116:      }
+------------------
+_ZNSt9__unicode13_Utf_iteratorIDicPKDiS2_NS_5_ReplEEC2ES2_S2_S2_Q22bidirectional_iteratorIT1_E:
+function _ZNSt9__unicode13_Utf_iteratorIDicPKDiS2_NS_5_ReplEEC2ES2_S2_S2_Q22bidirectional_iteratorIT1_E called 0 returned 0% blocks executed 0%
+    #####:  108:      _Utf_iterator(_Iter __first, _Iter __it, _Sent __last)
+        -:  109:      requires bidirectional_iterator<_Iter>
+    #####:  110:      : _M_first_and_curr{__first, __it}, _M_last(__last)
+    %%%%%:  110-block 2
+call    0 never executed
+        -:  111:      {
+    #####:  112:	if (_M_curr() != _M_last)
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  113:	  _M_read();
+    %%%%%:  113-block 5
+call    0 never executed
+        -:  114:	else
+    #####:  115:	  _M_buf = {};
+    %%%%%:  115-block 6
+    #####:  116:      }
+------------------
+_ZNSt9__unicode13_Utf_iteratorIcDiPKcS2_NS_5_ReplEEC2ES2_S2_S2_Q22bidirectional_iteratorIT1_E:
+function _ZNSt9__unicode13_Utf_iteratorIcDiPKcS2_NS_5_ReplEEC2ES2_S2_S2_Q22bidirectional_iteratorIT1_E called 0 returned 0% blocks executed 0%
+    #####:  108:      _Utf_iterator(_Iter __first, _Iter __it, _Sent __last)
+        -:  109:      requires bidirectional_iterator<_Iter>
+    #####:  110:      : _M_first_and_curr{__first, __it}, _M_last(__last)
+    %%%%%:  110-block 2
+call    0 never executed
+        -:  111:      {
+    #####:  112:	if (_M_curr() != _M_last)
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  113:	  _M_read();
+    %%%%%:  113-block 5
+call    0 never executed
+        -:  114:	else
+    #####:  115:	  _M_buf = {};
+    %%%%%:  115-block 6
+    #####:  116:      }
+------------------
+        -:  117:
+        -:  118:      constexpr
+        -:  119:      _Utf_iterator(_Iter __it, _Sent __last)
+        -:  120:      requires (!bidirectional_iterator<_Iter>)
+        -:  121:      : _M_first_and_curr{__it}, _M_last(__last)
+        -:  122:      {
+        -:  123:	if (_M_curr() != _M_last)
+        -:  124:	  _M_read();
+        -:  125:	else
+        -:  126:	  _M_buf = {};
+        -:  127:      }
+        -:  128:
+        -:  129:      template<class _Iter2, class _Sent2>
+        -:  130:	requires convertible_to<_Iter2, _Iter> && convertible_to<_Sent2, _Sent>
+        -:  131:	constexpr
+        -:  132:	_Utf_iterator(const _Utf_iterator<_FromFmt, _ToFmt, _Iter2, _Sent2,
+        -:  133:					  _ErrorHandler>& __other)
+        -:  134:	: _M_buf(__other._M_buf), _M_first_and_curr(__other._M_first_and_curr),
+        -:  135:	  _M_buf_index(__other._M_buf_index), _M_buf_last(__other._M_buf_last),
+        -:  136:	  _M_last(__other._M_last)
+        -:  137:	{ }
+        -:  138:
+        -:  139:      [[nodiscard]]
+        -:  140:      constexpr _Iter
+        -:  141:      begin() const requires bidirectional_iterator<_Iter>
+        -:  142:      { return _M_first(); }
+        -:  143:
+        -:  144:      [[nodiscard]]
+        -:  145:      constexpr _Sent
+function _ZNKSt9__unicode13_Utf_iteratorIcDiPKcS2_NS_5_ReplEE3endEv called 0 returned 0% blocks executed 0%
+    #####:  146:      end() const { return _M_last; }
+    %%%%%:  146-block 2
+        -:  147:
+        -:  148:      [[nodiscard]]
+        -:  149:      constexpr _Iter
+function _ZNKSt9__unicode13_Utf_iteratorIcDiPKcS2_NS_5_ReplEE4baseEvQ16forward_iteratorIT1_E called 0 returned 0% blocks executed 0%
+    #####:  150:      base() const requires forward_iterator<_Iter>
+    #####:  151:      { return _M_curr(); }
+    %%%%%:  151-block 2
+call    0 never executed
+        -:  152:
+        -:  153:      [[nodiscard]]
+        -:  154:      constexpr value_type
+    #####:  155:      operator*() const { return _M_buf[_M_buf_index]; }
+------------------
+_ZNKSt9__unicode13_Utf_iteratorIDicPKDiS2_NS_5_ReplEEdeEv:
+function _ZNKSt9__unicode13_Utf_iteratorIDicPKDiS2_NS_5_ReplEEdeEv called 0 returned 0% blocks executed 0%
+    #####:  155:      operator*() const { return _M_buf[_M_buf_index]; }
+    %%%%%:  155-block 2
+call    0 never executed
+------------------
+_ZNKSt9__unicode13_Utf_iteratorIcDiPKcS2_NS_5_ReplEEdeEv:
+function _ZNKSt9__unicode13_Utf_iteratorIcDiPKcS2_NS_5_ReplEEdeEv called 0 returned 0% blocks executed 0%
+    #####:  155:      operator*() const { return _M_buf[_M_buf_index]; }
+    %%%%%:  155-block 2
+call    0 never executed
+------------------
+        -:  156:
+        -:  157:      constexpr _Utf_iterator&
+    #####:  158:      operator++()
+        -:  159:      {
+    #####:  160:	if (_M_buf_index + 1 == _M_buf_last && _M_curr() != _M_last)
+        -:  161:	  {
+        -:  162:	    if constexpr (forward_iterator<_Iter>)
+    #####:  163:	      std::advance(_M_curr(), _M_to_increment);
+    #####:  164:	    if (_M_curr() == _M_last)
+    #####:  165:	      _M_buf_index = 0;
+        -:  166:	    else
+    #####:  167:	      _M_read();
+        -:  168:	  }
+    #####:  169:	else if (_M_buf_index + 1 < _M_buf_last)
+    #####:  170:	  ++_M_buf_index;
+    #####:  171:	return *this;
+        -:  172:      }
+------------------
+_ZNSt9__unicode13_Utf_iteratorIDicPKDiS2_NS_5_ReplEEppEv:
+function _ZNSt9__unicode13_Utf_iteratorIDicPKDiS2_NS_5_ReplEEppEv called 0 returned 0% blocks executed 0%
+    #####:  158:      operator++()
+        -:  159:      {
+    #####:  160:	if (_M_buf_index + 1 == _M_buf_last && _M_curr() != _M_last)
+    %%%%%:  160-block 2
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  160-block 3
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed
+    %%%%%:  160-block 5
+    %%%%%:  160-block 6
+    %%%%%:  160-block 7
+branch  5 never executed (fallthrough)
+branch  6 never executed
+        -:  161:	  {
+        -:  162:	    if constexpr (forward_iterator<_Iter>)
+    #####:  163:	      std::advance(_M_curr(), _M_to_increment);
+    %%%%%:  163-block 8
+call    0 never executed
+    #####:  164:	    if (_M_curr() == _M_last)
+    %%%%%:  164-block 13
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  165:	      _M_buf_index = 0;
+    %%%%%:  165-block 15
+        -:  166:	    else
+    #####:  167:	      _M_read();
+    %%%%%:  167-block 16
+call    0 never executed
+        -:  168:	  }
+    #####:  169:	else if (_M_buf_index + 1 < _M_buf_last)
+    %%%%%:  169-block 17
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  170:	  ++_M_buf_index;
+    %%%%%:  170-block 18
+    #####:  171:	return *this;
+    %%%%%:  171-block 19
+        -:  172:      }
+------------------
+_ZNSt9__unicode13_Utf_iteratorIcDiPKcS2_NS_5_ReplEEppEv:
+function _ZNSt9__unicode13_Utf_iteratorIcDiPKcS2_NS_5_ReplEEppEv called 0 returned 0% blocks executed 0%
+    #####:  158:      operator++()
+        -:  159:      {
+    #####:  160:	if (_M_buf_index + 1 == _M_buf_last && _M_curr() != _M_last)
+    %%%%%:  160-block 2
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  160-block 3
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed
+    %%%%%:  160-block 5
+    %%%%%:  160-block 6
+    %%%%%:  160-block 7
+branch  5 never executed (fallthrough)
+branch  6 never executed
+        -:  161:	  {
+        -:  162:	    if constexpr (forward_iterator<_Iter>)
+    #####:  163:	      std::advance(_M_curr(), _M_to_increment);
+    %%%%%:  163-block 8
+call    0 never executed
+    #####:  164:	    if (_M_curr() == _M_last)
+    %%%%%:  164-block 13
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  165:	      _M_buf_index = 0;
+    %%%%%:  165-block 15
+        -:  166:	    else
+    #####:  167:	      _M_read();
+    %%%%%:  167-block 16
+call    0 never executed
+        -:  168:	  }
+    #####:  169:	else if (_M_buf_index + 1 < _M_buf_last)
+    %%%%%:  169-block 17
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  170:	  ++_M_buf_index;
+    %%%%%:  170-block 18
+    #####:  171:	return *this;
+    %%%%%:  171-block 19
+        -:  172:      }
+------------------
+        -:  173:
+        -:  174:      constexpr _Utf_iterator
+function _ZNSt9__unicode13_Utf_iteratorIcDiPKcS2_NS_5_ReplEEppEi called 0 returned 0% blocks executed 0%
+    #####:  175:      operator++(int)
+        -:  176:      {
+    #####:  177:	auto __tmp = *this;
+    #####:  178:	++*this;
+    %%%%%:  178-block 2
+call    0 never executed
+    #####:  179:	return __tmp;
+        -:  180:      }
+        -:  181:
+        -:  182:      constexpr _Utf_iterator&
+        -:  183:      operator--() requires bidirectional_iterator<_Iter>
+        -:  184:      {
+        -:  185:	if (!_M_buf_index && _M_curr() != _M_first())
+        -:  186:	  _M_read_reverse();
+        -:  187:	else if (_M_buf_index)
+        -:  188:	  --_M_buf_index;
+        -:  189:	return *this;
+        -:  190:      }
+        -:  191:
+        -:  192:      constexpr _Utf_iterator
+        -:  193:      operator--(int)
+        -:  194:      {
+        -:  195:	auto __tmp = *this;
+        -:  196:	--*this;
+        -:  197:	return __tmp;
+        -:  198:      }
+        -:  199:
+        -:  200:      [[nodiscard]]
+        -:  201:      friend constexpr bool
+    #####:  202:      operator==(_Utf_iterator __lhs, _Utf_iterator __rhs)
+        -:  203:      requires forward_iterator<_Iter> || requires (_Iter __i) { __i != __i; }
+        -:  204:      {
+        -:  205:	if constexpr (forward_iterator<_Iter>)
+    #####:  206:	  return __lhs._M_curr() == __rhs._M_curr()
+    #####:  207:		   && __lhs._M_buf_index == __rhs._M_buf_index;
+        -:  208:	else if (__lhs._M_curr() != __rhs._M_curr())
+        -:  209:	  return false;
+        -:  210:	else if (__lhs._M_buf_index == __rhs._M_buf_index
+        -:  211:		   && __lhs._M_buf_last == __rhs._M_buf_last)
+        -:  212:	  return true;
+        -:  213:	else
+        -:  214:	  return __lhs._M_buf_index == __lhs._M_buf_last
+        -:  215:		   && __rhs._M_buf_index == __rhs._M_buf_last;
+        -:  216:      }
+------------------
+_ZNSt9__unicode13_Utf_iteratorIcDiPKcS2_NS_5_ReplEEFeqES4_S4_Qoo16forward_iteratorIT1_ErQS5__Xnefp_fp_E:
+function _ZNSt9__unicode13_Utf_iteratorIcDiPKcS2_NS_5_ReplEEFeqES4_S4_Qoo16forward_iteratorIT1_ErQS5__Xnefp_fp_E called 0 returned 0% blocks executed 0%
+    #####:  202:      operator==(_Utf_iterator __lhs, _Utf_iterator __rhs)
+        -:  203:      requires forward_iterator<_Iter> || requires (_Iter __i) { __i != __i; }
+        -:  204:      {
+        -:  205:	if constexpr (forward_iterator<_Iter>)
+    #####:  206:	  return __lhs._M_curr() == __rhs._M_curr()
+    %%%%%:  206-block 2
+call    0 never executed
+call    1 never executed
+    #####:  207:		   && __lhs._M_buf_index == __rhs._M_buf_index;
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  207-block 5
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    %%%%%:  207-block 6
+    %%%%%:  207-block 7
+    %%%%%:  207-block 8
+        -:  208:	else if (__lhs._M_curr() != __rhs._M_curr())
+        -:  209:	  return false;
+        -:  210:	else if (__lhs._M_buf_index == __rhs._M_buf_index
+        -:  211:		   && __lhs._M_buf_last == __rhs._M_buf_last)
+        -:  212:	  return true;
+        -:  213:	else
+        -:  214:	  return __lhs._M_buf_index == __lhs._M_buf_last
+        -:  215:		   && __rhs._M_buf_index == __rhs._M_buf_last;
+        -:  216:      }
+------------------
+_ZNSt9__unicode13_Utf_iteratorIDicPKDiS2_NS_5_ReplEEFeqES4_S4_Qoo16forward_iteratorIT1_ErQS5__Xnefp_fp_E:
+function _ZNSt9__unicode13_Utf_iteratorIDicPKDiS2_NS_5_ReplEEFeqES4_S4_Qoo16forward_iteratorIT1_ErQS5__Xnefp_fp_E called 0 returned 0% blocks executed 0%
+    #####:  202:      operator==(_Utf_iterator __lhs, _Utf_iterator __rhs)
+        -:  203:      requires forward_iterator<_Iter> || requires (_Iter __i) { __i != __i; }
+        -:  204:      {
+        -:  205:	if constexpr (forward_iterator<_Iter>)
+    #####:  206:	  return __lhs._M_curr() == __rhs._M_curr()
+    %%%%%:  206-block 2
+call    0 never executed
+call    1 never executed
+    #####:  207:		   && __lhs._M_buf_index == __rhs._M_buf_index;
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  207-block 5
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    %%%%%:  207-block 6
+    %%%%%:  207-block 7
+    %%%%%:  207-block 8
+        -:  208:	else if (__lhs._M_curr() != __rhs._M_curr())
+        -:  209:	  return false;
+        -:  210:	else if (__lhs._M_buf_index == __rhs._M_buf_index
+        -:  211:		   && __lhs._M_buf_last == __rhs._M_buf_last)
+        -:  212:	  return true;
+        -:  213:	else
+        -:  214:	  return __lhs._M_buf_index == __lhs._M_buf_last
+        -:  215:		   && __rhs._M_buf_index == __rhs._M_buf_last;
+        -:  216:      }
+------------------
+        -:  217:
+        -:  218:      [[nodiscard]]
+        -:  219:      friend constexpr bool
+function _ZNSt9__unicodeeqENS_13_Utf_iteratorIcDiPKcS2_NS_5_ReplEEES2_ called 0 returned 0% blocks executed 0%
+    #####:  220:      operator==(_Utf_iterator __lhs, _Sent __rhs)
+        -:  221:      {
+        -:  222:	if constexpr (forward_iterator<_Iter>)
+    #####:  223:	  return __lhs._M_curr() == __rhs;
+    %%%%%:  223-block 2
+call    0 never executed
+        -:  224:	else
+        -:  225:	  return __lhs._M_curr() == __rhs
+        -:  226:		   && __lhs._M_buf_index == __lhs._M_buf_last;
+        -:  227:      }
+        -:  228:
+        -:  229:    private:
+        -:  230:      constexpr void
+    #####:  231:      _M_read()
+        -:  232:      {
+        -:  233:	if constexpr (sizeof(_FromFmt) == sizeof(uint8_t))
+    #####:  234:	  _M_read_utf8();
+        -:  235:	else if constexpr (sizeof(_FromFmt) == sizeof(uint16_t))
+        -:  236:	  _M_read_utf16();
+        -:  237:	else
+        -:  238:	  {
+        -:  239:	    static_assert(sizeof(_FromFmt) == sizeof(uint32_t));
+    #####:  240:	    _M_read_utf32();
+        -:  241:	  }
+    #####:  242:      }
+------------------
+_ZNSt9__unicode13_Utf_iteratorIDicPKDiS2_NS_5_ReplEE7_M_readEv:
+function _ZNSt9__unicode13_Utf_iteratorIDicPKDiS2_NS_5_ReplEE7_M_readEv called 0 returned 0% blocks executed 0%
+    #####:  231:      _M_read()
+        -:  232:      {
+        -:  233:	if constexpr (sizeof(_FromFmt) == sizeof(uint8_t))
+        -:  234:	  _M_read_utf8();
+        -:  235:	else if constexpr (sizeof(_FromFmt) == sizeof(uint16_t))
+        -:  236:	  _M_read_utf16();
+        -:  237:	else
+        -:  238:	  {
+        -:  239:	    static_assert(sizeof(_FromFmt) == sizeof(uint32_t));
+    #####:  240:	    _M_read_utf32();
+    %%%%%:  240-block 2
+call    0 never executed
+        -:  241:	  }
+    #####:  242:      }
+------------------
+_ZNSt9__unicode13_Utf_iteratorIcDiPKcS2_NS_5_ReplEE7_M_readEv:
+function _ZNSt9__unicode13_Utf_iteratorIcDiPKcS2_NS_5_ReplEE7_M_readEv called 0 returned 0% blocks executed 0%
+    #####:  231:      _M_read()
+        -:  232:      {
+        -:  233:	if constexpr (sizeof(_FromFmt) == sizeof(uint8_t))
+    #####:  234:	  _M_read_utf8();
+    %%%%%:  234-block 2
+call    0 never executed
+        -:  235:	else if constexpr (sizeof(_FromFmt) == sizeof(uint16_t))
+        -:  236:	  _M_read_utf16();
+        -:  237:	else
+        -:  238:	  {
+        -:  239:	    static_assert(sizeof(_FromFmt) == sizeof(uint32_t));
+        -:  240:	    _M_read_utf32();
+        -:  241:	  }
+    #####:  242:      }
+------------------
+        -:  243:
+        -:  244:      constexpr void
+        -:  245:      _M_read_reverse(); // TODO
+        -:  246:
+        -:  247:      template<typename>
+        -:  248:	struct _Guard
+        -:  249:	{
+        -:  250:	  _Guard(void*, _Iter&) { }
+        -:  251:	};
+        -:  252:
+        -:  253:      template<typename _It> requires forward_iterator<_It>
+        -:  254:	struct _Guard<_It>
+        -:  255:	{
+    #####:  256:	  constexpr ~_Guard() { _M_this->_M_curr() = std::move(_M_orig); }
+------------------
+_ZNSt9__unicode13_Utf_iteratorIDicPKDiS2_NS_5_ReplEE6_GuardIS2_ED2Ev:
+function _ZNSt9__unicode13_Utf_iteratorIDicPKDiS2_NS_5_ReplEE6_GuardIS2_ED2Ev called 0 returned 0% blocks executed 0%
+    #####:  256:	  constexpr ~_Guard() { _M_this->_M_curr() = std::move(_M_orig); }
+    %%%%%:  256-block 2
+call    0 never executed
+call    1 never executed
+------------------
+_ZNSt9__unicode13_Utf_iteratorIcDiPKcS2_NS_5_ReplEE6_GuardIS2_ED2Ev:
+function _ZNSt9__unicode13_Utf_iteratorIcDiPKcS2_NS_5_ReplEE6_GuardIS2_ED2Ev called 0 returned 0% blocks executed 0%
+    #####:  256:	  constexpr ~_Guard() { _M_this->_M_curr() = std::move(_M_orig); }
+    %%%%%:  256-block 2
+call    0 never executed
+call    1 never executed
+------------------
+        -:  257:	  _Utf_iterator* _M_this;
+        -:  258:	  _It _M_orig;
+        -:  259:	};
+        -:  260:
+        -:  261:      constexpr void
+function _ZNSt9__unicode13_Utf_iteratorIcDiPKcS2_NS_5_ReplEE12_M_read_utf8Ev called 0 returned 0% blocks executed 0%
+    #####:  262:      _M_read_utf8()
+        -:  263:      {
+    #####:  264:	_Guard<_Iter> __g{this, _M_curr()};
+    %%%%%:  264-block 2
+call    0 never executed
+    #####:  265:	char32_t __c{};
+    #####:  266:	const uint8_t __lo_bound = 0x80, __hi_bound = 0xBF;
+    #####:  267:	uint8_t __u = *_M_curr()++;
+call    0 never executed
+    #####:  268:	uint8_t __to_incr = 1;
+function _ZZNSt9__unicode13_Utf_iteratorIcDiPKcS2_NS_5_ReplEE12_M_read_utf8EvENKUlvE_clEv called 0 returned 0% blocks executed 0%
+    #####:  269:	auto __incr = [&, this] {
+    #####:  270:	  ++__to_incr;
+    #####:  271:	  return ++_M_curr();
+    %%%%%:  271-block 2
+call    0 never executed
+        -:  272:	};
+        -:  273:
+    #####:  274:	if (__u <= 0x7F) [[likely]]      // 0x00 to 0x7F
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  275:	  __c = __u;
+    %%%%%:  275-block 5
+    #####:  276:	else if (__u < 0xC2) [[unlikely]]
+    %%%%%:  276-block 6
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  277:	  __c = _S_error();
+    %%%%%:  277-block 7
+call    0 never executed
+    #####:  278:	else if (_M_curr() == _M_last) [[unlikely]]
+    %%%%%:  278-block 8
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  279:	  __c = _S_error();
+    %%%%%:  279-block 10
+call    0 never executed
+    #####:  280:	else if (__u <= 0xDF) // 0xC2 to 0xDF
+    %%%%%:  280-block 11
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  281:	  {
+    #####:  282:	    __c = __u & 0x1F;
+    #####:  283:	    __u = *_M_curr();
+    %%%%%:  283-block 12
+call    0 never executed
+        -:  284:
+    #####:  285:	    if (__u < __lo_bound || __u > __hi_bound) [[unlikely]]
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  285-block 14
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    #####:  286:	      __c = _S_error();
+    %%%%%:  286-block 15
+call    0 never executed
+        -:  287:	    else
+        -:  288:	      {
+    #####:  289:		__c = (__c << 6) | (__u & 0x3F);
+    #####:  290:		__incr();
+    %%%%%:  290-block 16
+call    0 never executed
+        -:  291:	      }
+        -:  292:	  }
+    #####:  293:	else if (__u <= 0xEF) // 0xE0 to 0xEF
+    %%%%%:  293-block 18
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  294:	  {
+    #####:  295:	    const uint8_t __lo_bound_2 = __u == 0xE0 ? 0xA0 : __lo_bound;
+    %%%%%:  295-block 19
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  295-block 20
+    %%%%%:  295-block 21
+    #####:  296:	    const uint8_t __hi_bound_2 = __u == 0xED ? 0x9F : __hi_bound;
+    %%%%%:  296-block 22
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  296-block 23
+    %%%%%:  296-block 24
+        -:  297:
+    #####:  298:	    __c = __u & 0x0F;
+    #####:  299:	    __u = *_M_curr();
+    %%%%%:  299-block 25
+call    0 never executed
+        -:  300:
+    #####:  301:	    if (__u < __lo_bound_2 || __u > __hi_bound_2) [[unlikely]]
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  301-block 27
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    #####:  302:	      __c = _S_error();
+    %%%%%:  302-block 28
+call    0 never executed
+    #####:  303:	    else if (__incr() == _M_last) [[unlikely]]
+    %%%%%:  303-block 29
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  304:	      __c = _S_error();
+    %%%%%:  304-block 31
+call    0 never executed
+        -:  305:	    else
+        -:  306:	      {
+    #####:  307:		__c = (__c << 6) | (__u & 0x3F);
+    #####:  308:		__u = *_M_curr();
+    %%%%%:  308-block 32
+call    0 never executed
+        -:  309:
+    #####:  310:		if (__u < __lo_bound || __u > __hi_bound) [[unlikely]]
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  310-block 34
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    #####:  311:		  __c = _S_error();
+    %%%%%:  311-block 35
+call    0 never executed
+        -:  312:		else
+        -:  313:		  {
+    #####:  314:		    __c = (__c << 6) | (__u & 0x3F);
+    #####:  315:		    __incr();
+    %%%%%:  315-block 36
+call    0 never executed
+        -:  316:		  }
+        -:  317:	      }
+        -:  318:	  }
+    #####:  319:	else if (__u <= 0xF4) // 0xF0 to 0xF4
+    %%%%%:  319-block 38
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  320:	  {
+    #####:  321:	    const uint8_t __lo_bound_2 = __u == 0xF0 ? 0x90 : __lo_bound;
+    %%%%%:  321-block 39
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  321-block 40
+    %%%%%:  321-block 41
+    #####:  322:	    const uint8_t __hi_bound_2 = __u == 0xF4 ? 0x8F : __hi_bound;
+    %%%%%:  322-block 42
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  322-block 43
+    %%%%%:  322-block 44
+        -:  323:
+    #####:  324:	    __c = __u & 0x07;
+    #####:  325:	    __u = *_M_curr();
+    %%%%%:  325-block 45
+call    0 never executed
+        -:  326:
+    #####:  327:	    if (__u < __lo_bound_2 || __u > __hi_bound_2) [[unlikely]]
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  327-block 47
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    #####:  328:	      __c = _S_error();
+    %%%%%:  328-block 48
+call    0 never executed
+    #####:  329:	    else if (__incr() == _M_last) [[unlikely]]
+    %%%%%:  329-block 49
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  330:	      __c = _S_error();
+    %%%%%:  330-block 51
+call    0 never executed
+        -:  331:	    else
+        -:  332:	      {
+    #####:  333:		__c = (__c << 6) | (__u & 0x3F);
+    #####:  334:		__u = *_M_curr();
+    %%%%%:  334-block 52
+call    0 never executed
+        -:  335:
+    #####:  336:		if (__u < __lo_bound || __u > __hi_bound) [[unlikely]]
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  336-block 54
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    #####:  337:		  __c = _S_error();
+    %%%%%:  337-block 55
+call    0 never executed
+    #####:  338:		else if (__incr() == _M_last) [[unlikely]]
+    %%%%%:  338-block 56
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  339:		  __c = _S_error();
+    %%%%%:  339-block 58
+call    0 never executed
+        -:  340:		else
+        -:  341:		  {
+    #####:  342:		    __c = (__c << 6) | (__u & 0x3F);
+    #####:  343:		    __u = *_M_curr();
+    %%%%%:  343-block 59
+call    0 never executed
+        -:  344:
+    #####:  345:		    if (__u < __lo_bound || __u > __hi_bound) [[unlikely]]
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  345-block 61
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    #####:  346:		      __c = _S_error();
+    %%%%%:  346-block 62
+call    0 never executed
+        -:  347:		    else
+        -:  348:		      {
+    #####:  349:			__c = (__c << 6) | (__u & 0x3F);
+    #####:  350:			__incr();
+    %%%%%:  350-block 63
+call    0 never executed
+        -:  351:		      }
+        -:  352:		  }
+        -:  353:	      }
+        -:  354:	  }
+    #####:  355:	else [[unlikely]]
+    #####:  356:	  __c = _S_error();
+    %%%%%:  356-block 65
+call    0 never executed
+        -:  357:
+    #####:  358:	_M_update(__c, __to_incr);
+    %%%%%:  358-block 66
+call    0 never executed
+    #####:  359:      }
+call    0 never executed
+        -:  360:
+        -:  361:      constexpr void
+        -:  362:      _M_read_utf16()
+        -:  363:      {
+        -:  364:	_Guard<_Iter> __g{this, _M_curr()};
+        -:  365:	char32_t __c{};
+        -:  366:	uint16_t __u = *_M_curr()++;
+        -:  367:	uint8_t __to_incr = 1;
+        -:  368:
+        -:  369:	if (__u < 0xD800 || __u > 0xDFFF) [[likely]]
+        -:  370:	  __c = __u;
+        -:  371:	else if (__u < 0xDC00 && _M_curr() != _M_last)
+        -:  372:	  {
+        -:  373:	    uint16_t __u2 = *_M_curr();
+        -:  374:	    if (__u2 < 0xDC00 || __u2 > 0xDFFF) [[unlikely]]
+        -:  375:	      __c = _S_error();
+        -:  376:	    else
+        -:  377:	      {
+        -:  378:		++_M_curr();
+        -:  379:		__to_incr = 2;
+        -:  380:		uint32_t __x = (__u & 0x3F) << 10 | __u2 & 0x3FF;
+        -:  381:		uint32_t __w = (__u >> 6) & 0x1F;
+        -:  382:		__c = (__w + 1) << 16 | __x;
+        -:  383:	      }
+        -:  384:	  }
+        -:  385:	else
+        -:  386:	  __c = _S_error();
+        -:  387:
+        -:  388:	_M_update(__c, __to_incr);
+        -:  389:      }
+        -:  390:
+        -:  391:      constexpr void
+function _ZNSt9__unicode13_Utf_iteratorIDicPKDiS2_NS_5_ReplEE13_M_read_utf32Ev called 0 returned 0% blocks executed 0%
+    #####:  392:      _M_read_utf32()
+        -:  393:      {
+    #####:  394:	_Guard<_Iter> __g{this, _M_curr()};
+    %%%%%:  394-block 2
+call    0 never executed
+    #####:  395:	char32_t __c = *_M_curr()++;
+call    0 never executed
+    #####:  396:	if (!__is_scalar_value(__c)) [[unlikely]]
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  397:	  __c = _S_error();
+    %%%%%:  397-block 6
+call    0 never executed
+    #####:  398:	_M_update(__c, 1);
+    %%%%%:  398-block 7
+call    0 never executed
+    #####:  399:      }
+call    0 never executed
+        -:  400:
+        -:  401:      // Encode the code point __c as one or more code units in _M_buf.
+        -:  402:      constexpr void
+    #####:  403:      _M_update(char32_t __c, uint8_t __to_incr)
+        -:  404:      {
+    #####:  405:	_M_to_increment = __to_incr;
+    #####:  406:	_M_buf_index = 0;
+        -:  407:	if constexpr (sizeof(_ToFmt) == sizeof(uint32_t))
+        -:  408:	  {
+    #####:  409:	    _M_buf[0] = __c;
+    #####:  410:	    _M_buf_last = 1;
+        -:  411:	  }
+        -:  412:	else if constexpr (sizeof(_ToFmt) == sizeof(uint16_t))
+        -:  413:	  {
+        -:  414:	    if (__is_single_code_unit<_ToFmt>(__c))
+        -:  415:	      {
+        -:  416:		_M_buf[0] = __c;
+        -:  417:		_M_buf[1] = 0;
+        -:  418:		_M_buf_last = 1;
+        -:  419:	      }
+        -:  420:	    else
+        -:  421:	      {
+        -:  422:		// From http://www.unicode.org/faq/utf_bom.html#utf16-4
+        -:  423:		const char32_t __lead_offset = 0xD800 - (0x10000 >> 10);
+        -:  424:		char16_t __lead = __lead_offset + (__c >> 10);
+        -:  425:		char16_t __trail = 0xDC00 + (__c & 0x3FF);
+        -:  426:		_M_buf[0] = __lead;
+        -:  427:		_M_buf[1] = __trail;
+        -:  428:		_M_buf_last = 2;
+        -:  429:	      }
+        -:  430:	  }
+        -:  431:	else
+        -:  432:	  {
+        -:  433:	    static_assert(sizeof(_ToFmt) == 1);
+    #####:  434:	    int __bits = std::bit_width((uint32_t)__c);
+    #####:  435:	    if (__bits <= 7) [[likely]]
+        -:  436:	      {
+    #####:  437:		_M_buf[0] = __c;
+    #####:  438:		_M_buf[1] = _M_buf[2] = _M_buf[3] = 0;
+    #####:  439:		_M_buf_last = 1;
+        -:  440:	      }
+    #####:  441:	    else if (__bits <= 11)
+        -:  442:	      {
+    #####:  443:		_M_buf[0] = 0xC0 | (__c >> 6);
+    #####:  444:		_M_buf[1] = 0x80 | (__c & 0x3F);
+    #####:  445:		_M_buf[2] = _M_buf[3] = 0;
+    #####:  446:		_M_buf_last = 2;
+        -:  447:	      }
+    #####:  448:	    else if (__bits <= 16)
+        -:  449:	      {
+    #####:  450:		_M_buf[0] = 0xE0 | (__c >> 12);
+    #####:  451:		_M_buf[1] = 0x80 | ((__c >> 6) & 0x3F);
+    #####:  452:		_M_buf[2] = 0x80 | (__c & 0x3F);
+    #####:  453:		_M_buf[3] = 0;
+    #####:  454:		_M_buf_last = 3;
+        -:  455:	      }
+        -:  456:	    else
+        -:  457:	      {
+    #####:  458:		_M_buf[0] = 0xF0 | ((__c >> 18) & 0x07);
+    #####:  459:		_M_buf[1] = 0x80 | ((__c >> 12) & 0x3F);
+    #####:  460:		_M_buf[2] = 0x80 | ((__c >> 6) & 0x3F);
+    #####:  461:		_M_buf[3] = 0x80 | (__c & 0x3F);
+    #####:  462:		_M_buf_last = 4;
+        -:  463:	      }
+        -:  464:	  }
+    #####:  465:      }
+------------------
+_ZNSt9__unicode13_Utf_iteratorIDicPKDiS2_NS_5_ReplEE9_M_updateEDih:
+function _ZNSt9__unicode13_Utf_iteratorIDicPKDiS2_NS_5_ReplEE9_M_updateEDih called 0 returned 0% blocks executed 0%
+    #####:  403:      _M_update(char32_t __c, uint8_t __to_incr)
+        -:  404:      {
+    #####:  405:	_M_to_increment = __to_incr;
+    #####:  406:	_M_buf_index = 0;
+        -:  407:	if constexpr (sizeof(_ToFmt) == sizeof(uint32_t))
+        -:  408:	  {
+        -:  409:	    _M_buf[0] = __c;
+        -:  410:	    _M_buf_last = 1;
+        -:  411:	  }
+        -:  412:	else if constexpr (sizeof(_ToFmt) == sizeof(uint16_t))
+        -:  413:	  {
+        -:  414:	    if (__is_single_code_unit<_ToFmt>(__c))
+        -:  415:	      {
+        -:  416:		_M_buf[0] = __c;
+        -:  417:		_M_buf[1] = 0;
+        -:  418:		_M_buf_last = 1;
+        -:  419:	      }
+        -:  420:	    else
+        -:  421:	      {
+        -:  422:		// From http://www.unicode.org/faq/utf_bom.html#utf16-4
+        -:  423:		const char32_t __lead_offset = 0xD800 - (0x10000 >> 10);
+        -:  424:		char16_t __lead = __lead_offset + (__c >> 10);
+        -:  425:		char16_t __trail = 0xDC00 + (__c & 0x3FF);
+        -:  426:		_M_buf[0] = __lead;
+        -:  427:		_M_buf[1] = __trail;
+        -:  428:		_M_buf_last = 2;
+        -:  429:	      }
+        -:  430:	  }
+        -:  431:	else
+        -:  432:	  {
+        -:  433:	    static_assert(sizeof(_ToFmt) == 1);
+    #####:  434:	    int __bits = std::bit_width((uint32_t)__c);
+    %%%%%:  434-block 2
+call    0 never executed
+    #####:  435:	    if (__bits <= 7) [[likely]]
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  436:	      {
+    #####:  437:		_M_buf[0] = __c;
+    %%%%%:  437-block 4
+call    0 never executed
+    #####:  438:		_M_buf[1] = _M_buf[2] = _M_buf[3] = 0;
+call    0 never executed
+call    1 never executed
+call    2 never executed
+    #####:  439:		_M_buf_last = 1;
+        -:  440:	      }
+    #####:  441:	    else if (__bits <= 11)
+    %%%%%:  441-block 9
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  442:	      {
+    #####:  443:		_M_buf[0] = 0xC0 | (__c >> 6);
+    %%%%%:  443-block 10
+call    0 never executed
+    #####:  444:		_M_buf[1] = 0x80 | (__c & 0x3F);
+call    0 never executed
+    #####:  445:		_M_buf[2] = _M_buf[3] = 0;
+call    0 never executed
+call    1 never executed
+    #####:  446:		_M_buf_last = 2;
+        -:  447:	      }
+    #####:  448:	    else if (__bits <= 16)
+    %%%%%:  448-block 15
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  449:	      {
+    #####:  450:		_M_buf[0] = 0xE0 | (__c >> 12);
+    %%%%%:  450-block 16
+call    0 never executed
+    #####:  451:		_M_buf[1] = 0x80 | ((__c >> 6) & 0x3F);
+call    0 never executed
+    #####:  452:		_M_buf[2] = 0x80 | (__c & 0x3F);
+call    0 never executed
+    #####:  453:		_M_buf[3] = 0;
+call    0 never executed
+    #####:  454:		_M_buf_last = 3;
+        -:  455:	      }
+        -:  456:	    else
+        -:  457:	      {
+    #####:  458:		_M_buf[0] = 0xF0 | ((__c >> 18) & 0x07);
+    %%%%%:  458-block 21
+call    0 never executed
+    #####:  459:		_M_buf[1] = 0x80 | ((__c >> 12) & 0x3F);
+call    0 never executed
+    #####:  460:		_M_buf[2] = 0x80 | ((__c >> 6) & 0x3F);
+call    0 never executed
+    #####:  461:		_M_buf[3] = 0x80 | (__c & 0x3F);
+call    0 never executed
+    #####:  462:		_M_buf_last = 4;
+        -:  463:	      }
+        -:  464:	  }
+    #####:  465:      }
+------------------
+_ZNSt9__unicode13_Utf_iteratorIcDiPKcS2_NS_5_ReplEE9_M_updateEDih:
+function _ZNSt9__unicode13_Utf_iteratorIcDiPKcS2_NS_5_ReplEE9_M_updateEDih called 0 returned 0% blocks executed 0%
+    #####:  403:      _M_update(char32_t __c, uint8_t __to_incr)
+        -:  404:      {
+    #####:  405:	_M_to_increment = __to_incr;
+    #####:  406:	_M_buf_index = 0;
+        -:  407:	if constexpr (sizeof(_ToFmt) == sizeof(uint32_t))
+        -:  408:	  {
+    #####:  409:	    _M_buf[0] = __c;
+    %%%%%:  409-block 2
+call    0 never executed
+    #####:  410:	    _M_buf_last = 1;
+        -:  411:	  }
+        -:  412:	else if constexpr (sizeof(_ToFmt) == sizeof(uint16_t))
+        -:  413:	  {
+        -:  414:	    if (__is_single_code_unit<_ToFmt>(__c))
+        -:  415:	      {
+        -:  416:		_M_buf[0] = __c;
+        -:  417:		_M_buf[1] = 0;
+        -:  418:		_M_buf_last = 1;
+        -:  419:	      }
+        -:  420:	    else
+        -:  421:	      {
+        -:  422:		// From http://www.unicode.org/faq/utf_bom.html#utf16-4
+        -:  423:		const char32_t __lead_offset = 0xD800 - (0x10000 >> 10);
+        -:  424:		char16_t __lead = __lead_offset + (__c >> 10);
+        -:  425:		char16_t __trail = 0xDC00 + (__c & 0x3FF);
+        -:  426:		_M_buf[0] = __lead;
+        -:  427:		_M_buf[1] = __trail;
+        -:  428:		_M_buf_last = 2;
+        -:  429:	      }
+        -:  430:	  }
+        -:  431:	else
+        -:  432:	  {
+        -:  433:	    static_assert(sizeof(_ToFmt) == 1);
+        -:  434:	    int __bits = std::bit_width((uint32_t)__c);
+        -:  435:	    if (__bits <= 7) [[likely]]
+        -:  436:	      {
+        -:  437:		_M_buf[0] = __c;
+        -:  438:		_M_buf[1] = _M_buf[2] = _M_buf[3] = 0;
+        -:  439:		_M_buf_last = 1;
+        -:  440:	      }
+        -:  441:	    else if (__bits <= 11)
+        -:  442:	      {
+        -:  443:		_M_buf[0] = 0xC0 | (__c >> 6);
+        -:  444:		_M_buf[1] = 0x80 | (__c & 0x3F);
+        -:  445:		_M_buf[2] = _M_buf[3] = 0;
+        -:  446:		_M_buf_last = 2;
+        -:  447:	      }
+        -:  448:	    else if (__bits <= 16)
+        -:  449:	      {
+        -:  450:		_M_buf[0] = 0xE0 | (__c >> 12);
+        -:  451:		_M_buf[1] = 0x80 | ((__c >> 6) & 0x3F);
+        -:  452:		_M_buf[2] = 0x80 | (__c & 0x3F);
+        -:  453:		_M_buf[3] = 0;
+        -:  454:		_M_buf_last = 3;
+        -:  455:	      }
+        -:  456:	    else
+        -:  457:	      {
+        -:  458:		_M_buf[0] = 0xF0 | ((__c >> 18) & 0x07);
+        -:  459:		_M_buf[1] = 0x80 | ((__c >> 12) & 0x3F);
+        -:  460:		_M_buf[2] = 0x80 | ((__c >> 6) & 0x3F);
+        -:  461:		_M_buf[3] = 0x80 | (__c & 0x3F);
+        -:  462:		_M_buf_last = 4;
+        -:  463:	      }
+        -:  464:	  }
+    #####:  465:      }
+------------------
+        -:  466:
+        -:  467:      constexpr char32_t
+    #####:  468:      _S_error()
+        -:  469:      {
+    #####:  470:	char32_t __c = _ErrorHandler()();
+    #####:  471:	__glibcxx_assert(__is_scalar_value(__c));
+    #####:  472:	return __c;
+        -:  473:      }
+------------------
+_ZNSt9__unicode13_Utf_iteratorIDicPKDiS2_NS_5_ReplEE8_S_errorEv:
+function _ZNSt9__unicode13_Utf_iteratorIDicPKDiS2_NS_5_ReplEE8_S_errorEv called 0 returned 0% blocks executed 0%
+    #####:  468:      _S_error()
+        -:  469:      {
+    #####:  470:	char32_t __c = _ErrorHandler()();
+    %%%%%:  470-block 2
+call    0 never executed
+    #####:  471:	__glibcxx_assert(__is_scalar_value(__c));
+    %%%%%:  471-block 5
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  471-block 6
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed
+    #####:  472:	return __c;
+    %%%%%:  472-block 10
+        -:  473:      }
+------------------
+_ZNSt9__unicode13_Utf_iteratorIcDiPKcS2_NS_5_ReplEE8_S_errorEv:
+function _ZNSt9__unicode13_Utf_iteratorIcDiPKcS2_NS_5_ReplEE8_S_errorEv called 0 returned 0% blocks executed 0%
+    #####:  468:      _S_error()
+        -:  469:      {
+    #####:  470:	char32_t __c = _ErrorHandler()();
+    %%%%%:  470-block 2
+call    0 never executed
+    #####:  471:	__glibcxx_assert(__is_scalar_value(__c));
+    %%%%%:  471-block 5
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  471-block 6
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed
+    #####:  472:	return __c;
+    %%%%%:  472-block 10
+        -:  473:      }
+------------------
+        -:  474:
+        -:  475:      constexpr _Iter
+        -:  476:      _M_first() const requires bidirectional_iterator<_Iter>
+        -:  477:      { return _M_first_and_curr._M_first; }
+        -:  478:
+        -:  479:      constexpr _Iter&
+    #####:  480:      _M_curr() { return _M_first_and_curr._M_curr; }
+------------------
+_ZNSt9__unicode13_Utf_iteratorIDicPKDiS2_NS_5_ReplEE7_M_currEv:
+function _ZNSt9__unicode13_Utf_iteratorIDicPKDiS2_NS_5_ReplEE7_M_currEv called 0 returned 0% blocks executed 0%
+    #####:  480:      _M_curr() { return _M_first_and_curr._M_curr; }
+    %%%%%:  480-block 2
+------------------
+_ZNSt9__unicode13_Utf_iteratorIcDiPKcS2_NS_5_ReplEE7_M_currEv:
+function _ZNSt9__unicode13_Utf_iteratorIcDiPKcS2_NS_5_ReplEE7_M_currEv called 0 returned 0% blocks executed 0%
+    #####:  480:      _M_curr() { return _M_first_and_curr._M_curr; }
+    %%%%%:  480-block 2
+------------------
+        -:  481:
+        -:  482:      constexpr _Iter
+function _ZNKSt9__unicode13_Utf_iteratorIcDiPKcS2_NS_5_ReplEE7_M_currEv called 0 returned 0% blocks executed 0%
+    #####:  483:      _M_curr() const { return _M_first_and_curr._M_curr; }
+    %%%%%:  483-block 2
+        -:  484:
+        -:  485:      array<value_type, 4 / sizeof(_ToFmt)> _M_buf;
+        -:  486:
+        -:  487:      template<typename _It>
+        -:  488:	struct _First_and_curr
+        -:  489:	{
+        -:  490:	  _First_and_curr() = default;
+        -:  491:
+        -:  492:	  constexpr
+        -:  493:	  _First_and_curr(_It __curr) : _M_curr(__curr) { }
+        -:  494:
+        -:  495:	  template<convertible_to<_It> _It2>
+        -:  496:	    constexpr
+        -:  497:	    _First_and_curr(const _First_and_curr<_It2>& __other)
+        -:  498:	    : _M_curr(__other._M_curr) { }
+        -:  499:
+        -:  500:	  _It _M_curr;
+        -:  501:	};
+        -:  502:
+        -:  503:      template<typename _It> requires bidirectional_iterator<_It>
+        -:  504:	struct _First_and_curr<_It>
+        -:  505:	{
+        -:  506:	  _First_and_curr() = default;
+        -:  507:
+        -:  508:	  constexpr
+    #####:  509:	  _First_and_curr(_It __first, _It __curr)
+    #####:  510:	  : _M_first(__first), _M_curr(__curr) { }
+------------------
+_ZNSt9__unicode13_Utf_iteratorIDicPKDiS2_NS_5_ReplEE15_First_and_currIS2_EC2ES2_S2_:
+function _ZNSt9__unicode13_Utf_iteratorIDicPKDiS2_NS_5_ReplEE15_First_and_currIS2_EC2ES2_S2_ called 0 returned 0% blocks executed 0%
+    #####:  509:	  _First_and_curr(_It __first, _It __curr)
+    #####:  510:	  : _M_first(__first), _M_curr(__curr) { }
+------------------
+_ZNSt9__unicode13_Utf_iteratorIcDiPKcS2_NS_5_ReplEE15_First_and_currIS2_EC2ES2_S2_:
+function _ZNSt9__unicode13_Utf_iteratorIcDiPKcS2_NS_5_ReplEE15_First_and_currIS2_EC2ES2_S2_ called 0 returned 0% blocks executed 0%
+    #####:  509:	  _First_and_curr(_It __first, _It __curr)
+    #####:  510:	  : _M_first(__first), _M_curr(__curr) { }
+------------------
+        -:  511:
+        -:  512:	  template<convertible_to<_It> _It2>
+        -:  513:	    constexpr
+        -:  514:	    _First_and_curr(const _First_and_curr<_It2>& __other)
+        -:  515:	    : _M_first(__other._M_first), _M_curr(__other._M_curr) { }
+        -:  516:
+        -:  517:	  _It _M_first;
+        -:  518:	  _It _M_curr;
+        -:  519:	};
+        -:  520:
+        -:  521:      _First_and_curr<_Iter> _M_first_and_curr;
+        -:  522:
+        -:  523:      uint8_t _M_buf_index = 0;
+        -:  524:      uint8_t _M_buf_last = 0;
+        -:  525:      uint8_t _M_to_increment = 0;
+        -:  526:
+        -:  527:      [[no_unique_address]] _Sent _M_last;
+        -:  528:
+        -:  529:      template<typename _FromFmt2, typename _ToFmt2,
+        -:  530:	       input_iterator _Iter2, sentinel_for<_Iter2> _Sent2,
+        -:  531:	       typename _ErrHandler>
+        -:  532:	requires convertible_to<iter_value_t<_Iter2>, _FromFmt2>
+        -:  533:	friend class _Utf_iterator;
+        -:  534:    };
+        -:  535:
+        -:  536:  template<typename _ToFormat, ranges::input_range _Range>
+        -:  537:    class _Utf_view
+        -:  538:    : public ranges::view_interface<_Utf_view<_ToFormat, _Range>>
+        -:  539:    {
+        -:  540:      using _Iterator = _Utf_iterator<ranges::range_value_t<_Range>,
+        -:  541:				      _ToFormat, ranges::iterator_t<_Range>,
+        -:  542:				      ranges::sentinel_t<_Range>>;
+        -:  543:
+        -:  544:      template<typename _Iter, typename _Sent>
+        -:  545:	constexpr auto
+    #####:  546:	_M_begin(_Iter __first, _Sent __last)
+        -:  547:	{
+        -:  548:	  if constexpr (bidirectional_iterator<_Iter>)
+    #####:  549:	    return _Iterator(__first, __first, __last);
+        -:  550:	  else
+        -:  551:	    return _Iterator(__first, __last);
+        -:  552:	}
+------------------
+_ZNSt9__unicode9_Utf_viewIDiSt17basic_string_viewIcSt11char_traitsIcEEE8_M_beginIPKcS8_EEDaT_T0_:
+function _ZNSt9__unicode9_Utf_viewIDiSt17basic_string_viewIcSt11char_traitsIcEEE8_M_beginIPKcS8_EEDaT_T0_ called 0 returned 0% blocks executed 0%
+    #####:  546:	_M_begin(_Iter __first, _Sent __last)
+        -:  547:	{
+        -:  548:	  if constexpr (bidirectional_iterator<_Iter>)
+    #####:  549:	    return _Iterator(__first, __first, __last);
+    %%%%%:  549-block 2
+call    0 never executed
+        -:  550:	  else
+        -:  551:	    return _Iterator(__first, __last);
+        -:  552:	}
+------------------
+_ZNSt9__unicode9_Utf_viewIcRA1_KDiE8_M_beginIPS1_S6_EEDaT_T0_:
+function _ZNSt9__unicode9_Utf_viewIcRA1_KDiE8_M_beginIPS1_S6_EEDaT_T0_ called 0 returned 0% blocks executed 0%
+    #####:  546:	_M_begin(_Iter __first, _Sent __last)
+        -:  547:	{
+        -:  548:	  if constexpr (bidirectional_iterator<_Iter>)
+    #####:  549:	    return _Iterator(__first, __first, __last);
+    %%%%%:  549-block 2
+call    0 never executed
+        -:  550:	  else
+        -:  551:	    return _Iterator(__first, __last);
+        -:  552:	}
+------------------
+_ZNSt9__unicode9_Utf_viewIDiNSt6ranges8subrangeIPKcS4_LNS1_13subrange_kindE1EEEE8_M_beginIS4_S4_EEDaT_T0_:
+function _ZNSt9__unicode9_Utf_viewIDiNSt6ranges8subrangeIPKcS4_LNS1_13subrange_kindE1EEEE8_M_beginIS4_S4_EEDaT_T0_ called 0 returned 0% blocks executed 0%
+    #####:  546:	_M_begin(_Iter __first, _Sent __last)
+        -:  547:	{
+        -:  548:	  if constexpr (bidirectional_iterator<_Iter>)
+    #####:  549:	    return _Iterator(__first, __first, __last);
+    %%%%%:  549-block 2
+call    0 never executed
+        -:  550:	  else
+        -:  551:	    return _Iterator(__first, __last);
+        -:  552:	}
+------------------
+        -:  553:
+        -:  554:      template<typename _Iter, typename _Sent>
+        -:  555:	constexpr auto
+function _ZNSt9__unicode9_Utf_viewIcRA1_KDiE6_M_endIPS1_S6_EEDaT_T0_ called 0 returned 0% blocks executed 0%
+    #####:  556:	_M_end(_Iter __first, _Sent __last)
+        -:  557:	{
+        -:  558:	  if constexpr (!is_same_v<_Iter, _Sent>)
+        -:  559:	    return __last;
+        -:  560:	  else if constexpr (bidirectional_iterator<_Iter>)
+    #####:  561:	    return _Iterator(__first, __last, __last);
+    %%%%%:  561-block 2
+call    0 never executed
+        -:  562:	  else
+        -:  563:	    return _Iterator(__last, __last);
+        -:  564:	}
+        -:  565:
+        -:  566:      _Range _M_base;
+        -:  567:
+        -:  568:    public:
+        -:  569:      constexpr explicit
+    #####:  570:      _Utf_view(_Range&& __r) : _M_base(std::forward<_Range>(__r)) { }
+------------------
+_ZNSt9__unicode9_Utf_viewIDiSt17basic_string_viewIcSt11char_traitsIcEEEC2EOS4_:
+function _ZNSt9__unicode9_Utf_viewIDiSt17basic_string_viewIcSt11char_traitsIcEEEC2EOS4_ called 0 returned 0% blocks executed 0%
+    #####:  570:      _Utf_view(_Range&& __r) : _M_base(std::forward<_Range>(__r)) { }
+    %%%%%:  570-block 2
+call    0 never executed
+------------------
+_ZNSt9__unicode9_Utf_viewIcRA1_KDiEC2ES3_:
+function _ZNSt9__unicode9_Utf_viewIcRA1_KDiEC2ES3_ called 0 returned 0% blocks executed 0%
+    #####:  570:      _Utf_view(_Range&& __r) : _M_base(std::forward<_Range>(__r)) { }
+    %%%%%:  570-block 2
+call    0 never executed
+------------------
+_ZNSt9__unicode9_Utf_viewIDiNSt6ranges8subrangeIPKcS4_LNS1_13subrange_kindE1EEEEC2EOS6_:
+function _ZNSt9__unicode9_Utf_viewIDiNSt6ranges8subrangeIPKcS4_LNS1_13subrange_kindE1EEEEC2EOS6_ called 0 returned 0% blocks executed 0%
+    #####:  570:      _Utf_view(_Range&& __r) : _M_base(std::forward<_Range>(__r)) { }
+    %%%%%:  570-block 2
+call    0 never executed
+------------------
+        -:  571:
+    #####:  572:      constexpr auto begin()
+    #####:  573:      { return _M_begin(ranges::begin(_M_base), ranges::end(_M_base)); }
+------------------
+_ZNSt9__unicode9_Utf_viewIDiSt17basic_string_viewIcSt11char_traitsIcEEE5beginEv:
+function _ZNSt9__unicode9_Utf_viewIDiSt17basic_string_viewIcSt11char_traitsIcEEE5beginEv called 0 returned 0% blocks executed 0%
+    #####:  572:      constexpr auto begin()
+    #####:  573:      { return _M_begin(ranges::begin(_M_base), ranges::end(_M_base)); }
+    %%%%%:  573-block 2
+call    0 never executed
+call    1 never executed
+call    2 never executed
+------------------
+_ZNSt9__unicode9_Utf_viewIcRA1_KDiE5beginEv:
+function _ZNSt9__unicode9_Utf_viewIcRA1_KDiE5beginEv called 0 returned 0% blocks executed 0%
+    #####:  572:      constexpr auto begin()
+    #####:  573:      { return _M_begin(ranges::begin(_M_base), ranges::end(_M_base)); }
+    %%%%%:  573-block 2
+call    0 never executed
+call    1 never executed
+call    2 never executed
+------------------
+_ZNSt9__unicode9_Utf_viewIDiNSt6ranges8subrangeIPKcS4_LNS1_13subrange_kindE1EEEE5beginEv:
+function _ZNSt9__unicode9_Utf_viewIDiNSt6ranges8subrangeIPKcS4_LNS1_13subrange_kindE1EEEE5beginEv called 0 returned 0% blocks executed 0%
+    #####:  572:      constexpr auto begin()
+    #####:  573:      { return _M_begin(ranges::begin(_M_base), ranges::end(_M_base)); }
+    %%%%%:  573-block 2
+call    0 never executed
+call    1 never executed
+call    2 never executed
+------------------
+        -:  574:
+function _ZNSt9__unicode9_Utf_viewIcRA1_KDiE3endEv called 0 returned 0% blocks executed 0%
+    #####:  575:      constexpr auto end()
+    #####:  576:      { return _M_end(ranges::begin(_M_base), ranges::end(_M_base)); }
+    %%%%%:  576-block 2
+call    0 never executed
+call    1 never executed
+call    2 never executed
+        -:  577:
+function _ZNKSt9__unicode9_Utf_viewIDiNSt6ranges8subrangeIPKcS4_LNS1_13subrange_kindE1EEEE5emptyEv called 0 returned 0% blocks executed 0%
+    #####:  578:      constexpr bool empty() const { return ranges::empty(_M_base); }
+    %%%%%:  578-block 2
+call    0 never executed
+        -:  579:    };
+        -:  580:
+        -:  581:#ifdef __cpp_char8_t
+        -:  582:  template<typename _View>
+        -:  583:    using _Utf8_view = _Utf_view<char8_t, _View>;
+        -:  584:#else
+        -:  585:  template<typename _View>
+        -:  586:    using _Utf8_view = _Utf_view<char, _View>;
+        -:  587:#endif
+        -:  588:  template<typename _View>
+        -:  589:    using _Utf16_view = _Utf_view<char16_t, _View>;
+        -:  590:  template<typename _View>
+        -:  591:    using _Utf32_view = _Utf_view<char32_t, _View>;
+        -:  592:
+        -:  593:inline namespace __v15_1_0
+        -:  594:{
+        -:  595:#define _GLIBCXX_GET_UNICODE_DATA 150100
+        -:  596:#include "unicode-data.h"
+        -:  597:#ifdef _GLIBCXX_GET_UNICODE_DATA
+        -:  598:# error "Invalid unicode data"
+        -:  599:#endif
+        -:  600:
+        -:  601:  // The field width of a code point.
+        -:  602:  constexpr int
+function _ZNSt9__unicode9__v15_1_013__field_widthEDi called 0 returned 0% blocks executed 0%
+    #####:  603:  __field_width(char32_t __c) noexcept
+        -:  604:  {
+    #####:  605:    if (__c < __width_edges[0]) [[likely]]
+    %%%%%:  605-block 2
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  606:      return 1;
+    %%%%%:  606-block 3
+        -:  607:
+    #####:  608:    auto* __p = std::upper_bound(__width_edges, std::end(__width_edges), __c);
+    %%%%%:  608-block 6
+call    0 never executed
+    #####:  609:    return (__p - __width_edges) % 2 + 1;
+        -:  610:  }
+        -:  611:
+        -:  612:  // @pre c <= 0x10FFFF
+        -:  613:  constexpr _Gcb_property
+function _ZNSt9__unicode9__v15_1_033__grapheme_cluster_break_propertyEDi called 0 returned 0% blocks executed 0%
+    #####:  614:  __grapheme_cluster_break_property(char32_t __c) noexcept
+        -:  615:  {
+    #####:  616:    constexpr uint32_t __mask = (1 << __gcb_shift_bits) - 1;
+    %%%%%:  616-block 2
+    #####:  617:    auto* __end = std::end(__gcb_edges);
+    #####:  618:    auto* __p = std::lower_bound(__gcb_edges, __end,
+    #####:  619:				 (__c << __gcb_shift_bits) | __mask);
+    %%%%%:  619-block 4
+call    0 never executed
+    #####:  620:    return _Gcb_property(__p[-1] & __mask);
+        -:  621:  }
+        -:  622:
+        -:  623:  constexpr bool
+function _ZNSt9__unicode9__v15_1_016__is_incb_linkerEDi called 0 returned 0% blocks executed 0%
+    #####:  624:  __is_incb_linker(char32_t __c) noexcept
+    %%%%%:  624-block 2
+        -:  625:  {
+    #####:  626:    const auto __end = std::end(__incb_linkers);
+        -:  627:    // Array is small enough that linear search is faster than binary search.
+    #####:  628:    return std::find(__incb_linkers, __end, __c) != __end;
+    %%%%%:  628-block 4
+call    0 never executed
+        -:  629:  }
+        -:  630:
+        -:  631:  // @pre c <= 0x10FFFF
+        -:  632:  constexpr _InCB
+function _ZNSt9__unicode9__v15_1_015__incb_propertyEDi called 0 returned 0% blocks executed 0%
+    #####:  633:  __incb_property(char32_t __c) noexcept
+        -:  634:  {
+    #####:  635:    if ((__c << 2) < __incb_edges[0]) [[likely]]
+    %%%%%:  635-block 2
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  636:      return _InCB(0);
+    %%%%%:  636-block 3
+        -:  637:
+    #####:  638:    constexpr uint32_t __mask = 0x3;
+    %%%%%:  638-block 4
+    #####:  639:    auto* __end = std::end(__incb_edges);
+    #####:  640:    auto* __p = std::lower_bound(__incb_edges, __end, (__c << 2) | __mask);
+    %%%%%:  640-block 6
+call    0 never executed
+    #####:  641:    return _InCB(__p[-1] & __mask);
+        -:  642:  }
+        -:  643:
+        -:  644:  constexpr bool
+function _ZNSt9__unicode9__v15_1_026__is_extended_pictographicEDi called 0 returned 0% blocks executed 0%
+    #####:  645:  __is_extended_pictographic(char32_t __c)
+        -:  646:  {
+    #####:  647:    if (__c < __xpicto_edges[0]) [[likely]]
+    %%%%%:  647-block 2
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  648:      return 0;
+    %%%%%:  648-block 3
+        -:  649:
+    #####:  650:    auto* __p = std::upper_bound(__xpicto_edges, std::end(__xpicto_edges), __c);
+    %%%%%:  650-block 6
+call    0 never executed
+    #####:  651:    return (__p - __xpicto_edges) % 2;
+        -:  652:  }
+        -:  653:
+        -:  654:  struct _Grapheme_cluster_iterator_base
+        -:  655:  {
+        -:  656:    char32_t _M_c; // First code point in the cluster.
+        -:  657:    _Gcb_property _M_prop; // GCB property of _M_c.
+        -:  658:    enum class _XPicto : unsigned char { _Init, _Zwj, _Matched, _Failed };
+        -:  659:    _XPicto _M_xpicto_seq_state = _XPicto::_Init;
+        -:  660:    unsigned char _M_RI_count = 0;
+        -:  661:    bool _M_incb_linker_seen = false;
+        -:  662:
+        -:  663:    constexpr void
+function _ZNSt9__unicode9__v15_1_031_Grapheme_cluster_iterator_base8_M_resetEDiNS0_13_Gcb_propertyE called 0 returned 0% blocks executed 0%
+    #####:  664:    _M_reset(char32_t __c, _Gcb_property __p)
+        -:  665:    {
+    #####:  666:      _M_c = __c;
+    #####:  667:      _M_prop = __p;
+    #####:  668:      _M_xpicto_seq_state = _XPicto::_Init;
+    #####:  669:      _M_RI_count = 0;
+    #####:  670:      _M_incb_linker_seen = false;
+    #####:  671:    }
+        -:  672:
+        -:  673:    constexpr void
+function _ZNSt9__unicode9__v15_1_031_Grapheme_cluster_iterator_base26_M_update_xpicto_seq_stateEDiNS0_13_Gcb_propertyE called 0 returned 0% blocks executed 0%
+    #####:  674:    _M_update_xpicto_seq_state(char32_t __c, _Gcb_property __p)
+        -:  675:    {
+    #####:  676:      if (_M_xpicto_seq_state == _XPicto::_Failed)
+    %%%%%:  676-block 2
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  677:	return;
+    %%%%%:  677-block 3
+        -:  678:
+    #####:  679:      auto __next_state = _XPicto::_Failed;
+    #####:  680:      if (_M_xpicto_seq_state != _XPicto::_Zwj) // i.e. Init or Matched
+    %%%%%:  680-block 4
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  681:	{
+    #####:  682:	  if (__p == _Gcb_property::_Gcb_ZWJ)
+    %%%%%:  682-block 5
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  683:	    {
+    #####:  684:	      if (_M_xpicto_seq_state == _XPicto::_Matched)
+    %%%%%:  684-block 6
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  685:		__next_state = _XPicto::_Zwj;
+    %%%%%:  685-block 7
+        -:  686:	      // We check _M_c here so that we do the lookup at most once,
+        -:  687:	      // and only for clusters containing at least one ZWJ.
+    #####:  688:	      else if (__is_extended_pictographic(_M_c))
+    %%%%%:  688-block 8
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  689:		__next_state = _XPicto::_Zwj;
+    %%%%%:  689-block 10
+        -:  690:	    }
+    #####:  691:	  else if (__p == _Gcb_property::_Gcb_Extend)
+    %%%%%:  691-block 11
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  692:	    __next_state = _M_xpicto_seq_state; // no change
+    %%%%%:  692-block 12
+        -:  693:	}
+        -:  694:      else // Zwj
+        -:  695:	{
+        -:  696:	  // This assumes that all \p{Extended_Pictographic} emoji have
+        -:  697:	  // Grapheme_Cluster_Break=Other.
+    #####:  698:	  if (__p == _Gcb_property::_Gcb_Other
+    #####:  699:		&& __is_extended_pictographic(__c))
+    %%%%%:  699-block 13
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  699-block 14
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed
+    %%%%%:  699-block 16
+    %%%%%:  699-block 17
+    %%%%%:  699-block 18
+branch  5 never executed (fallthrough)
+branch  6 never executed
+    #####:  700:	    __next_state = _XPicto::_Matched;
+    %%%%%:  700-block 19
+        -:  701:	}
+    #####:  702:      _M_xpicto_seq_state = __next_state;
+    %%%%%:  702-block 20
+        -:  703:    }
+        -:  704:
+        -:  705:    constexpr void
+function _ZNSt9__unicode9__v15_1_031_Grapheme_cluster_iterator_base18_M_update_ri_countENS0_13_Gcb_propertyE called 0 returned 0% blocks executed 0%
+    #####:  706:    _M_update_ri_count(_Gcb_property __p)
+        -:  707:    {
+    #####:  708:      if (__p == _Gcb_property::_Gcb_Regional_Indicator)
+    %%%%%:  708-block 2
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  709:	++_M_RI_count;
+    %%%%%:  709-block 3
+        -:  710:      else
+    #####:  711:	_M_RI_count = 0;
+    %%%%%:  711-block 4
+    #####:  712:    }
+        -:  713:
+        -:  714:    constexpr void
+function _ZNSt9__unicode9__v15_1_031_Grapheme_cluster_iterator_base20_M_update_incb_stateEDiNS0_13_Gcb_propertyE called 0 returned 0% blocks executed 0%
+    #####:  715:    _M_update_incb_state(char32_t __c, _Gcb_property)
+        -:  716:    {
+    #####:  717:      if (__is_incb_linker(__c))
+    %%%%%:  717-block 2
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  718:	_M_incb_linker_seen = true;
+    %%%%%:  718-block 4
+    #####:  719:    }
+        -:  720:  };
+        -:  721:
+        -:  722:  // Split a range into extended grapheme clusters.
+        -:  723:  template<ranges::forward_range _View> requires ranges::view<_View>
+        -:  724:    class _Grapheme_cluster_view
+        -:  725:    : public ranges::view_interface<_Grapheme_cluster_view<_View>>
+        -:  726:    {
+        -:  727:    public:
+        -:  728:
+        -:  729:      constexpr
+function _ZNSt9__unicode9__v15_1_022_Grapheme_cluster_viewISt17basic_string_viewIcSt11char_traitsIcEEEC2ES5_ called 0 returned 0% blocks executed 0%
+    #####:  730:      _Grapheme_cluster_view(_View __v)
+    #####:  731:      : _M_begin(_Utf32_view<_View>(std::move(__v)).begin())
+    %%%%%:  731-block 2
+call    0 never executed
+call    1 never executed
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed (throw)
+    %%%%%:  731-block 5
+call    5 never executed
+branch  6 never executed (fallthrough)
+branch  7 never executed (throw)
+    #####:  732:      { }
+    %%%%%:  732-block 6
+        -:  733:
+function _ZNKSt9__unicode9__v15_1_022_Grapheme_cluster_viewISt17basic_string_viewIcSt11char_traitsIcEEE5beginEv called 0 returned 0% blocks executed 0%
+    #####:  734:      constexpr auto begin() const { return _M_begin; }
+    %%%%%:  734-block 2
+function _ZNKSt9__unicode9__v15_1_022_Grapheme_cluster_viewISt17basic_string_viewIcSt11char_traitsIcEEE3endEv called 0 returned 0% blocks executed 0%
+    #####:  735:      constexpr auto end() const { return _M_begin.end(); }
+    %%%%%:  735-block 2
+call    0 never executed
+        -:  736:
+        -:  737:    private:
+        -:  738:      struct _Iterator : private _Grapheme_cluster_iterator_base
+        -:  739:      {
+        -:  740:      private:
+        -:  741:	// Iterator over the underlying code points.
+        -:  742:	using _U32_iterator = ranges::iterator_t<_Utf32_view<_View>>;
+        -:  743:
+        -:  744:      public:
+        -:  745:	// TODO: Change value_type to be subrange<_U32_iterator> instead?
+        -:  746:	// Alternatively, value_type could be _Utf32_view<iterator_t<_View>>.
+        -:  747:	// That would be the whole cluster, not just the first code point.
+        -:  748:	// Would need to store two iterators and find end of current cluster
+        -:  749:	// on increment, so operator* returns value_type(_M_base, _M_next).
+        -:  750:	using value_type = char32_t;
+        -:  751:	using iterator_concept = forward_iterator_tag;
+        -:  752:	using difference_type = ptrdiff_t;
+        -:  753:
+        -:  754:	constexpr
+function _ZNSt9__unicode9__v15_1_022_Grapheme_cluster_viewISt17basic_string_viewIcSt11char_traitsIcEEE9_IteratorC2ENS_13_Utf_iteratorIcDiPKcSA_NS_5_ReplEEE called 0 returned 0% blocks executed 0%
+    #####:  755:	_Iterator(_U32_iterator __i)
+    #####:  756:	: _M_base(__i)
+    %%%%%:  756-block 2
+call    0 never executed
+        -:  757:	{
+    #####:  758:	  if (__i != __i.end())
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed
+        -:  759:	    {
+    #####:  760:	      _M_c = *__i;
+    %%%%%:  760-block 6
+call    0 never executed
+    #####:  761:	      _M_prop = __grapheme_cluster_break_property(_M_c);
+call    0 never executed
+        -:  762:	    }
+    #####:  763:	}
+        -:  764:
+        -:  765:	// The first code point of the current extended grapheme cluster.
+        -:  766:	constexpr value_type
+        -:  767:	operator*() const
+        -:  768:	{ return _M_c; }
+        -:  769:
+        -:  770:	constexpr auto
+        -:  771:	operator->() const
+        -:  772:	{ return &_M_c; }
+        -:  773:
+        -:  774:	// Move to the next extended grapheme cluster.
+        -:  775:	constexpr _Iterator&
+function _ZNSt9__unicode9__v15_1_022_Grapheme_cluster_viewISt17basic_string_viewIcSt11char_traitsIcEEE9_IteratorppEv called 0 returned 0% blocks executed 0%
+    #####:  776:	operator++()
+        -:  777:	{
+    #####:  778:	  const auto __end = _M_base.end();
+    %%%%%:  778-block 2
+call    0 never executed
+    #####:  779:	  if (_M_base != __end)
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+        -:  780:	    {
+    #####:  781:	      auto __p_prev = _M_prop;
+    #####:  782:	      auto __it = _M_base;
+    #####:  783:	      while (++__it != __end)
+    %%%%%:  783-block 5
+    %%%%%:  783-block 17
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  783-block 18
+call    3 never executed
+branch  4 never executed
+branch  5 never executed (fallthrough)
+        -:  784:		{
+    #####:  785:		  char32_t __c = *__it;
+    %%%%%:  785-block 6
+call    0 never executed
+    #####:  786:		  auto __p = __grapheme_cluster_break_property(*__it);
+call    0 never executed
+call    1 never executed
+    #####:  787:		  _M_update_xpicto_seq_state(__c, __p);
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  788:		  _M_update_ri_count(__p);
+    %%%%%:  788-block 10
+call    0 never executed
+    #####:  789:		  _M_update_incb_state(__c, __p);
+call    0 never executed
+    #####:  790:		  if (_M_is_break(__p_prev, __p, __it))
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  790-block 13
+branch  3 never executed (fallthrough)
+branch  4 never executed
+        -:  791:		    {
+        -:  792:		      // Found a grapheme cluster break
+    #####:  793:		      _M_reset(__c, __p);
+    %%%%%:  793-block 14
+call    0 never executed
+    #####:  794:		      break;
+        -:  795:		    }
+    #####:  796:		  __p_prev = __p;
+    %%%%%:  796-block 16
+        -:  797:		}
+    #####:  798:	      _M_base = __it;
+    %%%%%:  798-block 20
+        -:  799:	    }
+    #####:  800:	  return *this;
+    %%%%%:  800-block 21
+    %%%%%:  800-block 22
+        -:  801:	}
+        -:  802:
+        -:  803:	constexpr _Iterator
+        -:  804:	operator++(int)
+        -:  805:	{
+        -:  806:	  auto __tmp = *this;
+        -:  807:	  ++*this;
+        -:  808:	  return __tmp;
+        -:  809:	}
+        -:  810:
+        -:  811:	constexpr bool
+        -:  812:	operator==(const _Iterator& __i) const
+        -:  813:	{ return _M_base == __i._M_base; }
+        -:  814:
+        -:  815:	// This supports iter != iter.end()
+        -:  816:	constexpr bool
+function _ZNKSt9__unicode9__v15_1_022_Grapheme_cluster_viewISt17basic_string_viewIcSt11char_traitsIcEEE9_IteratoreqERKPKc called 0 returned 0% blocks executed 0%
+    #####:  817:	operator==(const ranges::sentinel_t<_View>& __i) const
+    #####:  818:	{ return _M_base == __i; }
+    %%%%%:  818-block 2
+call    0 never executed
+        -:  819:
+        -:  820:	// Iterator to the start of the current cluster.
+function _ZNKSt9__unicode9__v15_1_022_Grapheme_cluster_viewISt17basic_string_viewIcSt11char_traitsIcEEE9_Iterator4baseEv called 0 returned 0% blocks executed 0%
+    #####:  821:	constexpr auto base() const { return _M_base.base(); }
+    %%%%%:  821-block 2
+call    0 never executed
+        -:  822:
+        -:  823:	// The end of the underlying view (not the end of the current cluster!)
+function _ZNKSt9__unicode9__v15_1_022_Grapheme_cluster_viewISt17basic_string_viewIcSt11char_traitsIcEEE9_Iterator3endEv called 0 returned 0% blocks executed 0%
+    #####:  824:	constexpr auto end() const { return _M_base.end(); }
+    %%%%%:  824-block 2
+call    0 never executed
+        -:  825:
+        -:  826:	// Field width of the first code point in the cluster.
+        -:  827:	constexpr int
+function _ZNKSt9__unicode9__v15_1_022_Grapheme_cluster_viewISt17basic_string_viewIcSt11char_traitsIcEEE9_Iterator5widthEv called 0 returned 0% blocks executed 0%
+    #####:  828:	width() const noexcept
+    #####:  829:	{ return __field_width(_M_c); }
+    %%%%%:  829-block 2
+call    0 never executed
+        -:  830:
+        -:  831:      private:
+        -:  832:	_U32_iterator _M_base;
+        -:  833:
+        -:  834:	// Implement the Grapheme Cluster Boundary Rules from Unicode Annex #29
+        -:  835:	// http://www.unicode.org/reports/tr29/#Grapheme_Cluster_Boundary_Rules
+        -:  836:	// This implements the rules from TR29 revision 43 in Unicode 15.1.0.
+        -:  837:	// Return true if there is a break between code point with property p1
+        -:  838:	// and code point with property p2.
+        -:  839:	constexpr bool
+function _ZNKSt9__unicode9__v15_1_022_Grapheme_cluster_viewISt17basic_string_viewIcSt11char_traitsIcEEE9_Iterator11_M_is_breakENS0_13_Gcb_propertyES8_NS_13_Utf_iteratorIcDiPKcSB_NS_5_ReplEEE called 0 returned 0% blocks executed 0%
+    #####:  840:	_M_is_break(_Gcb_property __p1, _Gcb_property __p2,
+        -:  841:		    _U32_iterator __curr) const
+        -:  842:	{
+        -:  843:	  using enum _Gcb_property;
+        -:  844:
+    #####:  845:	  if (__p1 == _Gcb_Control || __p1 == _Gcb_LF)
+    %%%%%:  845-block 2
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  845-block 3
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    #####:  846:	    return true; // Break after Control or LF.
+    %%%%%:  846-block 4
+        -:  847:
+    #####:  848:	  if (__p1 == _Gcb_CR)
+    %%%%%:  848-block 5
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  849:	    return __p2 != _Gcb_LF; // Do not break between a CR and LF.
+    %%%%%:  849-block 6
+        -:  850:
+        -:  851:	  // Rule GB5
+    #####:  852:	  if (__p2 == _Gcb_Control || __p2 == _Gcb_CR || __p2 == _Gcb_LF)
+    %%%%%:  852-block 7
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  852-block 8
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    %%%%%:  852-block 9
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    #####:  853:	    return true; // Break before Control, CR or LF.
+    %%%%%:  853-block 10
+        -:  854:
+        -:  855:	  // Rule GB6
+    #####:  856:	  if (__p1 == _Gcb_L)
+    %%%%%:  856-block 11
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  857:	    switch (__p2)
+    %%%%%:  857-block 12
+branch  0 never executed
+branch  1 never executed
+        -:  858:	    {
+    #####:  859:	      case _Gcb_L:
+        -:  860:	      case _Gcb_V:
+        -:  861:	      case _Gcb_LV:
+        -:  862:	      case _Gcb_LVT:
+    #####:  863:		return false; // Do not break Hangul syllable sequences.
+    %%%%%:  863-block 13
+    #####:  864:	      default:
+    #####:  865:		return true;
+    %%%%%:  865-block 14
+        -:  866:	      }
+        -:  867:
+        -:  868:	  // Rule GB7
+    #####:  869:	  if (__p1 == _Gcb_LV || __p1 == _Gcb_V)
+    %%%%%:  869-block 15
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  869-block 16
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    #####:  870:	    switch (__p2)
+    %%%%%:  870-block 17
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  871:	    {
+    #####:  872:	      case _Gcb_V:
+        -:  873:	      case _Gcb_T:
+    #####:  874:		return false; // Do not break Hangul syllable sequences.
+    %%%%%:  874-block 18
+    #####:  875:	      default:
+    #####:  876:		return true;
+    %%%%%:  876-block 19
+        -:  877:	      }
+        -:  878:
+        -:  879:	  // Rule GB8
+    #####:  880:	  if (__p1 == _Gcb_LVT || __p1 == _Gcb_T)
+    %%%%%:  880-block 20
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  880-block 21
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    #####:  881:	    return __p2 != _Gcb_T; // Do not break Hangul syllable sequences.
+    %%%%%:  881-block 22
+        -:  882:
+        -:  883:	  // Rule GB9
+    #####:  884:	  if (__p2 == _Gcb_Extend || __p2 == _Gcb_ZWJ)
+    %%%%%:  884-block 23
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  884-block 24
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    #####:  885:	    return false; // Do not break before extending characters or ZWJ.
+    %%%%%:  885-block 25
+        -:  886:
+        -:  887:	  // The following GB9x rules only apply to extended grapheme clusters,
+        -:  888:	  // which is what the C++ standard uses (not legacy grapheme clusters).
+        -:  889:
+        -:  890:	  // Rule GB9a
+    #####:  891:	  if (__p2 == _Gcb_SpacingMark)
+    %%%%%:  891-block 26
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  892:	    return false; // Do not break before SpacingMarks,
+    %%%%%:  892-block 27
+        -:  893:	  // Rule GB9b
+    #####:  894:	  if (__p1 == _Gcb_Prepend)
+    %%%%%:  894-block 28
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  895:	    return false; // or after Prepend characters.
+    %%%%%:  895-block 29
+        -:  896:
+        -:  897:	  // Rule GB9c (Unicode 15.1.0)
+        -:  898:	  // Do not break within certain combinations with
+        -:  899:	  // Indic_Conjunct_Break (InCB)=Linker.
+    #####:  900:	  if (_M_incb_linker_seen
+    #####:  901:		&& __incb_property(_M_c) == _InCB::_Consonant
+    %%%%%:  901-block 31
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  902:		&& __incb_property(*__curr) == _InCB::_Consonant)
+    %%%%%:  902-block 30
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  902-block 33
+call    2 never executed
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:  902-block 36
+    %%%%%:  902-block 37
+    %%%%%:  902-block 38
+branch  6 never executed (fallthrough)
+branch  7 never executed
+        -:  903:	    {
+        -:  904:	      // Match [_M_base, __curr] against regular expression
+        -:  905:	      // Consonant ([Extend Linker]* Linker [Extend Linker]* Consonant)+
+    #####:  906:	      bool __have_linker = false;
+    #####:  907:	      auto __it = _M_base;
+    #####:  908:	      while (++__it != __curr)
+    %%%%%:  908-block 39
+    %%%%%:  908-block 50
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  908-block 51
+call    3 never executed
+branch  4 never executed
+branch  5 never executed (fallthrough)
+        -:  909:		{
+    #####:  910:		  if (__is_incb_linker(*__it))
+    %%%%%:  910-block 40
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    #####:  911:		    __have_linker = true;
+    %%%%%:  911-block 43
+        -:  912:		  else
+        -:  913:		    {
+    #####:  914:		      auto __incb = __incb_property(*__it);
+    %%%%%:  914-block 44
+call    0 never executed
+call    1 never executed
+    #####:  915:		      if (__incb == _InCB::_Consonant)
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  916:			__have_linker = false;
+    %%%%%:  916-block 47
+    #####:  917:		      else if (__incb != _InCB::_Extend)
+    %%%%%:  917-block 48
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  918:			break;
+    %%%%%:  918-block 49
+        -:  919:		    }
+        -:  920:		}
+    #####:  921:	      if (__it == __curr && __have_linker)
+    %%%%%:  921-block 53
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:  921-block 55
+branch  3 never executed (fallthrough)
+branch  4 never executed
+    %%%%%:  921-block 56
+    %%%%%:  921-block 57
+    %%%%%:  921-block 58
+branch  5 never executed (fallthrough)
+branch  6 never executed
+    #####:  922:		return false;
+    %%%%%:  922-block 59
+        -:  923:	    }
+        -:  924:
+        -:  925:	  // Rule GB11
+        -:  926:	  // Do not break within emoji modifier sequences
+        -:  927:	  // or emoji zwj sequences.
+    #####:  928:	  if (__p1 == _Gcb_ZWJ && _M_xpicto_seq_state == _XPicto::_Matched)
+    %%%%%:  928-block 61
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  928-block 62
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    #####:  929:	    return false;
+    %%%%%:  929-block 63
+        -:  930:
+        -:  931:	  // Rules GB12 and GB13
+        -:  932:	  // Do not break within emoji flag sequences. That is, do not break
+        -:  933:	  // between regional indicator (RI) symbols if there is an odd number
+        -:  934:	  // of RI characters before the break point.
+    #####:  935:	  if (__p1 == _Gcb_property::_Gcb_Regional_Indicator && __p1 == __p2)
+    %%%%%:  935-block 64
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  935-block 65
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    #####:  936:	    return (_M_RI_count & 1) == 0;
+    %%%%%:  936-block 66
+        -:  937:
+        -:  938:	  // Rule GB999
+    #####:  939:	  return true; // Otherwise, break everywhere.
+    %%%%%:  939-block 67
+        -:  940:	}
+        -:  941:      };
+        -:  942:
+        -:  943:      _Iterator _M_begin;
+        -:  944:    };
+        -:  945:
+        -:  946:} // namespace __v15_1_0
+        -:  947:
+        -:  948:  // Return the field width of a string.
+        -:  949:  template<typename _CharT>
+        -:  950:    constexpr size_t
+function _ZNSt9__unicode13__field_widthIcEEmSt17basic_string_viewIT_St11char_traitsIS2_EE called 0 returned 0% blocks executed 0%
+    #####:  951:    __field_width(basic_string_view<_CharT> __s)
+        -:  952:    {
+    #####:  953:      if (__s.empty()) [[unlikely]]
+    %%%%%:  953-block 2
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  954:	return 0;
+    %%%%%:  954-block 4
+    #####:  955:      _Grapheme_cluster_view<basic_string_view<_CharT>> __gc(__s);
+    %%%%%:  955-block 5
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  956:      auto __it = __gc.begin();
+    %%%%%:  956-block 6
+call    0 never executed
+    #####:  957:      const auto __end = __gc.end();
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  958:      size_t __n = __it.width();
+    %%%%%:  958-block 8
+call    0 never executed
+    #####:  959:      while (++__it != __end)
+    %%%%%:  959-block 12
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  959-block 13
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    %%%%%:  959-block 14
+branch  6 never executed
+branch  7 never executed (fallthrough)
+    #####:  960:	__n += __it.width();
+    %%%%%:  960-block 10
+call    0 never executed
+    #####:  961:      return __n;
+    %%%%%:  961-block 15
+        -:  962:    }
+        -:  963:
+        -:  964:  // Truncate a string to at most `__max` field width units, and return the
+        -:  965:  // resulting field width.
+        -:  966:  template<typename _CharT>
+        -:  967:    constexpr size_t
+function _ZNSt9__unicode10__truncateIcEEmRSt17basic_string_viewIT_St11char_traitsIS2_EEm called 0 returned 0% blocks executed 0%
+    #####:  968:    __truncate(basic_string_view<_CharT>& __s, size_t __max)
+        -:  969:    {
+    #####:  970:      if (__s.empty()) [[unlikely]]
+    %%%%%:  970-block 2
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  971:	return 0;
+    %%%%%:  971-block 4
+        -:  972:
+    #####:  973:      _Grapheme_cluster_view<basic_string_view<_CharT>> __gc(__s);
+    %%%%%:  973-block 5
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  974:      auto __it = __gc.begin();
+    %%%%%:  974-block 6
+call    0 never executed
+    #####:  975:      const auto __end = __gc.end();
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  976:      size_t __n = __it.width();
+    %%%%%:  976-block 8
+call    0 never executed
+    #####:  977:      if (__n > __max)
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  978:	{
+    #####:  979:	  __s = {};
+    %%%%%:  979-block 10
+call    0 never executed
+    #####:  980:	  return 0;
+        -:  981:	}
+    #####:  982:      while (++__it != __end)
+    %%%%%:  982-block 12
+    %%%%%:  982-block 20
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  982-block 21
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    %%%%%:  982-block 22
+branch  6 never executed
+branch  7 never executed (fallthrough)
+        -:  983:	{
+    #####:  984:	  size_t __n2 = __n + __it.width();
+    %%%%%:  984-block 13
+call    0 never executed
+    #####:  985:	  if (__n2 > __max)
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  986:	    {
+    #####:  987:	      __s = basic_string_view<_CharT>(__s.begin(), __it.base());
+    %%%%%:  987-block 15
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  987-block 16
+call    3 never executed
+call    4 never executed
+    $$$$$:  987-block 26
+    #####:  988:	      return __n;
+        -:  989:	    }
+    #####:  990:	  __n = __n2;
+    %%%%%:  990-block 19
+        -:  991:	}
+    #####:  992:      return __n;
+    %%%%%:  992-block 23
+        -:  993:    }
+        -:  994:
+        -:  995:  template<typename _CharT>
+        -:  996:    consteval bool
+        -:  997:    __literal_encoding_is_unicode()
+        -:  998:    {
+        -:  999:      if constexpr (is_same_v<_CharT, char16_t>)
+        -: 1000:	return true;
+        -: 1001:      else if constexpr (is_same_v<_CharT, char32_t>)
+        -: 1002:	  return true;
+        -: 1003:#ifdef __cpp_char8_t
+        -: 1004:      else if constexpr (is_same_v<_CharT, char8_t>)
+        -: 1005:	return true;
+        -: 1006:#endif
+        -: 1007:
+        -: 1008:      const char* __enc = "";
+        -: 1009:
+        -: 1010:#ifdef __GNUC_EXECUTION_CHARSET_NAME
+        -: 1011:      auto __remove_iso10646_prefix = [](const char* __s) {
+        -: 1012:	// GNU iconv allows "ISO-10646/" prefix (case-insensitive).
+        -: 1013:	if (__s[0] == 'I' || __s[0] == 'i')
+        -: 1014:	  if (__s[1] == 'S' || __s[1] == 's')
+        -: 1015:	    if (__s[2] == 'O' || __s[2] == 'o')
+        -: 1016:	      if (string_view(__s + 3).starts_with("-10646/"))
+        -: 1017:		return __s + 10;
+        -: 1018:	return __s;
+        -: 1019:      };
+        -: 1020:
+        -: 1021:      if constexpr (is_same_v<_CharT, char>)
+        -: 1022:	__enc = __remove_iso10646_prefix(__GNUC_EXECUTION_CHARSET_NAME);
+        -: 1023:# if defined _GLIBCXX_USE_WCHAR_T && defined __GNUC_WIDE_EXECUTION_CHARSET_NAME
+        -: 1024:      else
+        -: 1025:	__enc = __remove_iso10646_prefix(__GNUC_WIDE_EXECUTION_CHARSET_NAME);
+        -: 1026:# endif
+        -: 1027:
+        -: 1028:      if ((__enc[0] == 'U' || __enc[0] == 'u')
+        -: 1029:	    && (__enc[1] == 'T' || __enc[1] == 't')
+        -: 1030:	    && (__enc[2] == 'F' || __enc[2] == 'f'))
+        -: 1031:	{
+        -: 1032:	  __enc += 3;
+        -: 1033:	  if (__enc[0] == '-')
+        -: 1034:	    ++__enc;
+        -: 1035:	  if (__enc[0] == '8')
+        -: 1036:	    return __enc[1] == '\0' || string_view(__enc + 1) == "//";
+        -: 1037:	  else if constexpr (!is_same_v<_CharT, char>)
+        -: 1038:	    {
+        -: 1039:	      string_view __s(__enc);
+        -: 1040:	      if (__s.ends_with("//"))
+        -: 1041:		__s.remove_suffix(2);
+        -: 1042:	      return __s == "16" || __s == "32";
+        -: 1043:	    }
+        -: 1044:	}
+        -: 1045:#elif defined __clang_literal_encoding__
+        -: 1046:      if constexpr (is_same_v<_CharT, char>)
+        -: 1047:	__enc = __clang_literal_encoding__;
+        -: 1048:# if defined _GLIBCXX_USE_WCHAR_T && defined __clang_wide_literal_encoding__
+        -: 1049:      else
+        -: 1050:	__enc = __clang_wide_literal_encoding__;
+        -: 1051:# endif
+        -: 1052:      // Clang accepts "-fexec-charset=utf-8" but the macro is still uppercase.
+        -: 1053:      string_view __s(__enc);
+        -: 1054:      if (__s == "UTF-8")
+        -: 1055:	return true;
+        -: 1056:      else if constexpr (!is_same_v<_CharT, char>)
+        -: 1057:	return __s == "UTF-16" || __s == "UTF-32";
+        -: 1058:#endif
+        -: 1059:
+        -: 1060:      return false;
+        -: 1061:    }
+        -: 1062:
+        -: 1063:  consteval bool
+        -: 1064:  __literal_encoding_is_utf8()
+        -: 1065:  { return __literal_encoding_is_unicode<char>(); }
+        -: 1066:
+        -: 1067:  consteval bool
+        -: 1068:  __literal_encoding_is_extended_ascii()
+        -: 1069:  {
+        -: 1070:    return '0' == 0x30 && 'A' == 0x41 && 'Z' == 0x5a
+        -: 1071:	     && 'a' == 0x61 && 'z' == 0x7a;
+        -: 1072:  }
+        -: 1073:
+        -: 1074:  // https://www.unicode.org/reports/tr22/tr22-8.html#Charset_Alias_Matching
+        -: 1075:  constexpr bool
+        -: 1076:  __charset_alias_match(string_view __a, string_view __b)
+        -: 1077:  {
+        -: 1078:    // Map alphanumeric chars to their base 64 value, everything else to 127.
+        -: 1079:    auto __map = [](char __c, bool& __num) -> unsigned char {
+        -: 1080:      if (__c == '0') [[unlikely]]
+        -: 1081:	return __num ? 0 : 127;
+        -: 1082:      const auto __v = __detail::__from_chars_alnum_to_val(__c);
+        -: 1083:      __num = __v < 10;
+        -: 1084:      return __v;
+        -: 1085:    };
+        -: 1086:
+        -: 1087:    auto __ptr_a = __a.begin(), __end_a = __a.end();
+        -: 1088:    auto __ptr_b = __b.begin(), __end_b = __b.end();
+        -: 1089:    bool __num_a = false, __num_b = false;
+        -: 1090:
+        -: 1091:    while (true)
+        -: 1092:      {
+        -: 1093:	// Find the value of the next alphanumeric character in each string.
+        -: 1094:	unsigned char __val_a{}, __val_b{};
+        -: 1095:	while (__ptr_a != __end_a
+        -: 1096:		 && (__val_a = __map(*__ptr_a, __num_a)) == 127)
+        -: 1097:	  ++__ptr_a;
+        -: 1098:	while (__ptr_b != __end_b
+        -: 1099:		 && (__val_b = __map(*__ptr_b, __num_b)) == 127)
+        -: 1100:	  ++__ptr_b;
+        -: 1101:	// Stop when we reach the end of a string, or get a mismatch.
+        -: 1102:	if (__ptr_a == __end_a)
+        -: 1103:	  return __ptr_b == __end_b;
+        -: 1104:	else if (__ptr_b == __end_b)
+        -: 1105:	  return false;
+        -: 1106:	else if (__val_a != __val_b)
+        -: 1107:	  return false; // Found non-matching characters.
+        -: 1108:	++__ptr_a;
+        -: 1109:	++__ptr_b;
+        -: 1110:      }
+        -: 1111:    return true;
+        -: 1112:  }
+        -: 1113:
+        -: 1114:} // namespace __unicode
+        -: 1115:
+        -: 1116:namespace ranges
+        -: 1117:{
+        -: 1118:  template<typename _To, typename _Range>
+        -: 1119:    inline constexpr bool
+        -: 1120:    enable_borrowed_range<std::__unicode::_Utf_view<_To, _Range>>
+        -: 1121:      = enable_borrowed_range<_Range>;
+        -: 1122:
+        -: 1123:  template<typename _Range>
+        -: 1124:    inline constexpr bool
+        -: 1125:    enable_borrowed_range<std::__unicode::_Grapheme_cluster_view<_Range>>
+        -: 1126:      = enable_borrowed_range<_Range>;
+        -: 1127:} // namespace ranges
+        -: 1128:
+        -: 1129:_GLIBCXX_END_NAMESPACE_VERSION
+        -: 1130:} // namespace std
+        -: 1131:#endif // C++20
+        -: 1132:#endif // _GLIBCXX_UNICODE_H

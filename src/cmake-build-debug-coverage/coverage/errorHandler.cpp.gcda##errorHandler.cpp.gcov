@@ -1,0 +1,1382 @@
+        -:    0:Source:/home/rc/ZathuraDbg/src/app/integration/interpreter/errorHandler.cpp
+        -:    0:Graph:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/app/integration/interpreter/errorHandler.cpp.gcno
+        -:    0:Data:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/app/integration/interpreter/errorHandler.cpp.gcda
+        -:    0:Runs:1
+        -:    1:#include "errorHandler.hpp"
+        -:    2:
+function _Z14handleUCErrors6uc_err called 0 returned 0% blocks executed 0%
+    #####:    3:void handleUCErrors(uc_err err){
+    #####:    4:    if (err == UC_ERR_INSN_INVALID){
+    %%%%%:    4-block 2
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:    5:        LOG_ERROR("Failed on uc_emu_start(): Invalid Instruction provided.");
+    %%%%%:    5-block 3
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:    5-block 5
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:    5-block 7
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:    5-block 8
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+    %%%%%:    5-block 9
+call   12 never executed
+call   13 never executed
+call   14 never executed
+branch 15 never executed (fallthrough)
+branch 16 never executed (throw)
+    %%%%%:    5-block 12
+call   17 never executed
+branch 18 never executed (fallthrough)
+branch 19 never executed (throw)
+    %%%%%:    5-block 13
+    %%%%%:    5-block 15
+call   20 never executed
+branch 21 never executed (fallthrough)
+branch 22 never executed (throw)
+    %%%%%:    5-block 16
+call   23 never executed
+branch 24 never executed (fallthrough)
+branch 25 never executed (throw)
+    %%%%%:    5-block 17
+call   26 never executed
+branch 27 never executed (fallthrough)
+branch 28 never executed (throw)
+    %%%%%:    5-block 18
+call   29 never executed
+branch 30 never executed (fallthrough)
+branch 31 never executed (throw)
+    %%%%%:    5-block 19
+call   32 never executed
+branch 33 never executed (fallthrough)
+branch 34 never executed (throw)
+    %%%%%:    5-block 20
+call   35 never executed
+branch 36 never executed (fallthrough)
+branch 37 never executed (throw)
+    %%%%%:    5-block 21
+call   38 never executed
+call   39 never executed
+    %%%%%:    5-block 24
+call   40 never executed
+call   41 never executed
+    %%%%%:    5-block 27
+call   42 never executed
+branch 43 never executed
+branch 44 never executed (fallthrough)
+    $$$$$:    5-block 458
+call   45 never executed
+    $$$$$:    5-block 460
+call   46 never executed
+    $$$$$:    5-block 464
+    $$$$$:    5-block 465
+    $$$$$:    5-block 466
+    $$$$$:    5-block 467
+call   47 never executed
+    $$$$$:    5-block 469
+    $$$$$:    5-block 470
+call   48 never executed
+    $$$$$:    5-block 472
+call   49 never executed
+    #####:    6:        tinyfd_messageBox("ERROR!", "Invalid instruction found in the provided code!!", "ok", "error", 0);
+    %%%%%:    6-block 29
+call    0 never executed
+        -:    7:    }
+    #####:    8:    else if (err < UC_ERR_VERSION){
+    %%%%%:    8-block 30
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:    9:        LOG_ERROR("Failed on uc_emu_start() with error returned " <<  err << ": " << uc_strerror(err));
+    %%%%%:    9-block 31
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:    9-block 33
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:    9-block 35
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:    9-block 36
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+    %%%%%:    9-block 37
+call   12 never executed
+call   13 never executed
+call   14 never executed
+branch 15 never executed (fallthrough)
+branch 16 never executed (throw)
+    %%%%%:    9-block 40
+call   17 never executed
+branch 18 never executed (fallthrough)
+branch 19 never executed (throw)
+    %%%%%:    9-block 41
+    %%%%%:    9-block 43
+call   20 never executed
+branch 21 never executed (fallthrough)
+branch 22 never executed (throw)
+    %%%%%:    9-block 44
+call   23 never executed
+branch 24 never executed (fallthrough)
+branch 25 never executed (throw)
+    %%%%%:    9-block 45
+call   26 never executed
+branch 27 never executed (fallthrough)
+branch 28 never executed (throw)
+    %%%%%:    9-block 46
+call   29 never executed
+branch 30 never executed (fallthrough)
+branch 31 never executed (throw)
+    %%%%%:    9-block 47
+call   32 never executed
+branch 33 never executed (fallthrough)
+branch 34 never executed (throw)
+    %%%%%:    9-block 48
+call   35 never executed
+branch 36 never executed (fallthrough)
+branch 37 never executed (throw)
+    %%%%%:    9-block 49
+call   38 never executed
+branch 39 never executed (fallthrough)
+branch 40 never executed (throw)
+    %%%%%:    9-block 50
+call   41 never executed
+branch 42 never executed (fallthrough)
+branch 43 never executed (throw)
+    %%%%%:    9-block 51
+call   44 never executed
+branch 45 never executed (fallthrough)
+branch 46 never executed (throw)
+    %%%%%:    9-block 52
+call   47 never executed
+branch 48 never executed (fallthrough)
+branch 49 never executed (throw)
+    %%%%%:    9-block 53
+call   50 never executed
+call   51 never executed
+    %%%%%:    9-block 56
+call   52 never executed
+call   53 never executed
+    %%%%%:    9-block 59
+call   54 never executed
+branch 55 never executed
+branch 56 never executed (fallthrough)
+    $$$$$:    9-block 473
+call   57 never executed
+    $$$$$:    9-block 475
+call   58 never executed
+    $$$$$:    9-block 479
+    $$$$$:    9-block 480
+    $$$$$:    9-block 481
+    $$$$$:    9-block 482
+call   59 never executed
+    $$$$$:    9-block 484
+    $$$$$:    9-block 485
+call   60 never executed
+    $$$$$:    9-block 487
+call   61 never executed
+    #####:   10:        tinyfd_messageBox("INTERNAL ERROR!", "Failed to run the code because the internal configuration"
+    %%%%%:   10-block 61
+call    0 never executed
+        -:   11:                                             " has some issues. Please report this on GitHub with your logs!", "ok", "error", 0);
+        -:   12:    }
+    #####:   13:    else if (err > UC_ERR_VERSION && err < UC_ERR_HOOK){
+    %%%%%:   13-block 62
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:   13-block 63
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    #####:   14:        LOG_ERROR("Unmapped Memory Access Error!");
+    %%%%%:   14-block 64
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:   14-block 66
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:   14-block 68
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:   14-block 69
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+    %%%%%:   14-block 70
+call   12 never executed
+call   13 never executed
+call   14 never executed
+branch 15 never executed (fallthrough)
+branch 16 never executed (throw)
+    %%%%%:   14-block 73
+call   17 never executed
+branch 18 never executed (fallthrough)
+branch 19 never executed (throw)
+    %%%%%:   14-block 74
+    %%%%%:   14-block 76
+call   20 never executed
+branch 21 never executed (fallthrough)
+branch 22 never executed (throw)
+    %%%%%:   14-block 77
+call   23 never executed
+branch 24 never executed (fallthrough)
+branch 25 never executed (throw)
+    %%%%%:   14-block 78
+call   26 never executed
+branch 27 never executed (fallthrough)
+branch 28 never executed (throw)
+    %%%%%:   14-block 79
+call   29 never executed
+branch 30 never executed (fallthrough)
+branch 31 never executed (throw)
+    %%%%%:   14-block 80
+call   32 never executed
+branch 33 never executed (fallthrough)
+branch 34 never executed (throw)
+    %%%%%:   14-block 81
+call   35 never executed
+branch 36 never executed (fallthrough)
+branch 37 never executed (throw)
+    %%%%%:   14-block 82
+call   38 never executed
+call   39 never executed
+    %%%%%:   14-block 85
+call   40 never executed
+call   41 never executed
+    %%%%%:   14-block 88
+call   42 never executed
+branch 43 never executed
+branch 44 never executed (fallthrough)
+    $$$$$:   14-block 488
+call   45 never executed
+    $$$$$:   14-block 490
+call   46 never executed
+    $$$$$:   14-block 494
+    $$$$$:   14-block 495
+    $$$$$:   14-block 496
+    $$$$$:   14-block 497
+call   47 never executed
+    $$$$$:   14-block 499
+    $$$$$:   14-block 500
+call   48 never executed
+    $$$$$:   14-block 502
+call   49 never executed
+        -:   15:
+    #####:   16:        if (err == UC_ERR_READ_UNMAPPED){
+    %%%%%:   16-block 90
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:   17:            LOG_ERROR("Failed on uc_emu_start(): Attempt to read from memory which is not mapped.");
+    %%%%%:   17-block 91
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:   17-block 93
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:   17-block 95
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:   17-block 96
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+    %%%%%:   17-block 97
+call   12 never executed
+call   13 never executed
+call   14 never executed
+branch 15 never executed (fallthrough)
+branch 16 never executed (throw)
+    %%%%%:   17-block 100
+call   17 never executed
+branch 18 never executed (fallthrough)
+branch 19 never executed (throw)
+    %%%%%:   17-block 101
+    %%%%%:   17-block 103
+call   20 never executed
+branch 21 never executed (fallthrough)
+branch 22 never executed (throw)
+    %%%%%:   17-block 104
+call   23 never executed
+branch 24 never executed (fallthrough)
+branch 25 never executed (throw)
+    %%%%%:   17-block 105
+call   26 never executed
+branch 27 never executed (fallthrough)
+branch 28 never executed (throw)
+    %%%%%:   17-block 106
+call   29 never executed
+branch 30 never executed (fallthrough)
+branch 31 never executed (throw)
+    %%%%%:   17-block 107
+call   32 never executed
+branch 33 never executed (fallthrough)
+branch 34 never executed (throw)
+    %%%%%:   17-block 108
+call   35 never executed
+branch 36 never executed (fallthrough)
+branch 37 never executed (throw)
+    %%%%%:   17-block 109
+call   38 never executed
+call   39 never executed
+    %%%%%:   17-block 112
+call   40 never executed
+call   41 never executed
+    %%%%%:   17-block 115
+call   42 never executed
+branch 43 never executed
+branch 44 never executed (fallthrough)
+    $$$$$:   17-block 503
+call   45 never executed
+    $$$$$:   17-block 505
+call   46 never executed
+    $$$$$:   17-block 509
+    $$$$$:   17-block 510
+    $$$$$:   17-block 511
+    $$$$$:   17-block 512
+call   47 never executed
+    $$$$$:   17-block 514
+    $$$$$:   17-block 515
+call   48 never executed
+    $$$$$:   17-block 517
+call   49 never executed
+    #####:   18:            tinyfd_messageBox("Memory Access Error!", "Attempt to read from memory location which is not mapped!!", "ok", "error", 0);
+    %%%%%:   18-block 117
+call    0 never executed
+        -:   19:        }
+    #####:   20:        else if (err == UC_ERR_WRITE_UNMAPPED){
+    %%%%%:   20-block 118
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:   21:            LOG_ERROR("Failed on uc_emu_start(): Attempt to write to memory which is not mapped.");
+    %%%%%:   21-block 119
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:   21-block 121
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:   21-block 123
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:   21-block 124
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+    %%%%%:   21-block 125
+call   12 never executed
+call   13 never executed
+call   14 never executed
+branch 15 never executed (fallthrough)
+branch 16 never executed (throw)
+    %%%%%:   21-block 128
+call   17 never executed
+branch 18 never executed (fallthrough)
+branch 19 never executed (throw)
+    %%%%%:   21-block 129
+    %%%%%:   21-block 131
+call   20 never executed
+branch 21 never executed (fallthrough)
+branch 22 never executed (throw)
+    %%%%%:   21-block 132
+call   23 never executed
+branch 24 never executed (fallthrough)
+branch 25 never executed (throw)
+    %%%%%:   21-block 133
+call   26 never executed
+branch 27 never executed (fallthrough)
+branch 28 never executed (throw)
+    %%%%%:   21-block 134
+call   29 never executed
+branch 30 never executed (fallthrough)
+branch 31 never executed (throw)
+    %%%%%:   21-block 135
+call   32 never executed
+branch 33 never executed (fallthrough)
+branch 34 never executed (throw)
+    %%%%%:   21-block 136
+call   35 never executed
+branch 36 never executed (fallthrough)
+branch 37 never executed (throw)
+    %%%%%:   21-block 137
+call   38 never executed
+call   39 never executed
+    %%%%%:   21-block 140
+call   40 never executed
+call   41 never executed
+    %%%%%:   21-block 143
+call   42 never executed
+branch 43 never executed
+branch 44 never executed (fallthrough)
+    $$$$$:   21-block 518
+call   45 never executed
+    $$$$$:   21-block 520
+call   46 never executed
+    $$$$$:   21-block 524
+    $$$$$:   21-block 525
+    $$$$$:   21-block 526
+    $$$$$:   21-block 527
+call   47 never executed
+    $$$$$:   21-block 529
+    $$$$$:   21-block 530
+call   48 never executed
+    $$$$$:   21-block 532
+call   49 never executed
+    #####:   22:            tinyfd_messageBox("Memory Access Error!", "Attempt to write to memory location which is not mapped!!", "ok", "error", 0);
+    %%%%%:   22-block 145
+call    0 never executed
+        -:   23:        }
+    #####:   24:        else if (err == UC_ERR_FETCH_UNMAPPED){
+    %%%%%:   24-block 146
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:   25:            LOG_ERROR("Failed on uc_emu_start(): Attempt to fetch from memory which is not mapped.");
+    %%%%%:   25-block 147
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:   25-block 149
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:   25-block 151
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:   25-block 152
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+    %%%%%:   25-block 153
+call   12 never executed
+call   13 never executed
+call   14 never executed
+branch 15 never executed (fallthrough)
+branch 16 never executed (throw)
+    %%%%%:   25-block 156
+call   17 never executed
+branch 18 never executed (fallthrough)
+branch 19 never executed (throw)
+    %%%%%:   25-block 157
+    %%%%%:   25-block 159
+call   20 never executed
+branch 21 never executed (fallthrough)
+branch 22 never executed (throw)
+    %%%%%:   25-block 160
+call   23 never executed
+branch 24 never executed (fallthrough)
+branch 25 never executed (throw)
+    %%%%%:   25-block 161
+call   26 never executed
+branch 27 never executed (fallthrough)
+branch 28 never executed (throw)
+    %%%%%:   25-block 162
+call   29 never executed
+branch 30 never executed (fallthrough)
+branch 31 never executed (throw)
+    %%%%%:   25-block 163
+call   32 never executed
+branch 33 never executed (fallthrough)
+branch 34 never executed (throw)
+    %%%%%:   25-block 164
+call   35 never executed
+branch 36 never executed (fallthrough)
+branch 37 never executed (throw)
+    %%%%%:   25-block 165
+call   38 never executed
+call   39 never executed
+    %%%%%:   25-block 168
+call   40 never executed
+call   41 never executed
+    %%%%%:   25-block 171
+call   42 never executed
+branch 43 never executed
+branch 44 never executed (fallthrough)
+    $$$$$:   25-block 533
+call   45 never executed
+    $$$$$:   25-block 535
+call   46 never executed
+    $$$$$:   25-block 539
+    $$$$$:   25-block 540
+    $$$$$:   25-block 541
+    $$$$$:   25-block 542
+call   47 never executed
+    $$$$$:   25-block 544
+    $$$$$:   25-block 545
+call   48 never executed
+    $$$$$:   25-block 547
+call   49 never executed
+    #####:   26:            tinyfd_messageBox("Memory Access Error!", "Attempt to fetch from memory location which is not mapped!!", "ok", "error", 0);
+    %%%%%:   26-block 173
+call    0 never executed
+        -:   27:        }
+        -:   28:    }
+    #####:   29:    else if (err > UC_ERR_MAP && err < UC_ERR_ARG){
+    %%%%%:   29-block 175
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:   29-block 176
+branch  2 never executed (fallthrough)
+branch  3 never executed
+        -:   30:        // MEMORY PROTECTION ERRORS
+    #####:   31:        LOG_ERROR("Memory Protection Error!");
+    %%%%%:   31-block 177
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:   31-block 179
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:   31-block 181
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:   31-block 182
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+    %%%%%:   31-block 183
+call   12 never executed
+call   13 never executed
+call   14 never executed
+branch 15 never executed (fallthrough)
+branch 16 never executed (throw)
+    %%%%%:   31-block 186
+call   17 never executed
+branch 18 never executed (fallthrough)
+branch 19 never executed (throw)
+    %%%%%:   31-block 187
+    %%%%%:   31-block 189
+call   20 never executed
+branch 21 never executed (fallthrough)
+branch 22 never executed (throw)
+    %%%%%:   31-block 190
+call   23 never executed
+branch 24 never executed (fallthrough)
+branch 25 never executed (throw)
+    %%%%%:   31-block 191
+call   26 never executed
+branch 27 never executed (fallthrough)
+branch 28 never executed (throw)
+    %%%%%:   31-block 192
+call   29 never executed
+branch 30 never executed (fallthrough)
+branch 31 never executed (throw)
+    %%%%%:   31-block 193
+call   32 never executed
+branch 33 never executed (fallthrough)
+branch 34 never executed (throw)
+    %%%%%:   31-block 194
+call   35 never executed
+branch 36 never executed (fallthrough)
+branch 37 never executed (throw)
+    %%%%%:   31-block 195
+call   38 never executed
+call   39 never executed
+    %%%%%:   31-block 198
+call   40 never executed
+call   41 never executed
+    %%%%%:   31-block 201
+call   42 never executed
+branch 43 never executed
+branch 44 never executed (fallthrough)
+    $$$$$:   31-block 548
+call   45 never executed
+    $$$$$:   31-block 550
+call   46 never executed
+    $$$$$:   31-block 554
+    $$$$$:   31-block 555
+    $$$$$:   31-block 556
+    $$$$$:   31-block 557
+call   47 never executed
+    $$$$$:   31-block 559
+    $$$$$:   31-block 560
+call   48 never executed
+    $$$$$:   31-block 562
+call   49 never executed
+        -:   32:
+    #####:   33:        if (err == UC_ERR_WRITE_PROT){
+    %%%%%:   33-block 203
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:   34:            LOG_ERROR("Failed on uc_emu_start(): Attempt to write to memory which does not have write permission enabled.");
+    %%%%%:   34-block 204
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:   34-block 206
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:   34-block 208
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:   34-block 209
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+    %%%%%:   34-block 210
+call   12 never executed
+call   13 never executed
+call   14 never executed
+branch 15 never executed (fallthrough)
+branch 16 never executed (throw)
+    %%%%%:   34-block 213
+call   17 never executed
+branch 18 never executed (fallthrough)
+branch 19 never executed (throw)
+    %%%%%:   34-block 214
+    %%%%%:   34-block 216
+call   20 never executed
+branch 21 never executed (fallthrough)
+branch 22 never executed (throw)
+    %%%%%:   34-block 217
+call   23 never executed
+branch 24 never executed (fallthrough)
+branch 25 never executed (throw)
+    %%%%%:   34-block 218
+call   26 never executed
+branch 27 never executed (fallthrough)
+branch 28 never executed (throw)
+    %%%%%:   34-block 219
+call   29 never executed
+branch 30 never executed (fallthrough)
+branch 31 never executed (throw)
+    %%%%%:   34-block 220
+call   32 never executed
+branch 33 never executed (fallthrough)
+branch 34 never executed (throw)
+    %%%%%:   34-block 221
+call   35 never executed
+branch 36 never executed (fallthrough)
+branch 37 never executed (throw)
+    %%%%%:   34-block 222
+call   38 never executed
+call   39 never executed
+    %%%%%:   34-block 225
+call   40 never executed
+call   41 never executed
+    %%%%%:   34-block 228
+call   42 never executed
+branch 43 never executed
+branch 44 never executed (fallthrough)
+    $$$$$:   34-block 563
+call   45 never executed
+    $$$$$:   34-block 565
+call   46 never executed
+    $$$$$:   34-block 569
+    $$$$$:   34-block 570
+    $$$$$:   34-block 571
+    $$$$$:   34-block 572
+call   47 never executed
+    $$$$$:   34-block 574
+    $$$$$:   34-block 575
+call   48 never executed
+    $$$$$:   34-block 577
+call   49 never executed
+    #####:   35:            tinyfd_messageBox("Memory Protection Error!", "Attempt to write to memory location which does not have"
+    %%%%%:   35-block 230
+call    0 never executed
+        -:   36:                                                          " write permission enabled!!", "ok", "error", 0);
+        -:   37:        }
+    #####:   38:        else if (err == UC_ERR_READ_PROT){
+    %%%%%:   38-block 231
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:   39:            LOG_ERROR("Failed on uc_emu_start(): Attempt to read memory which does not have read permission enabled.");
+    %%%%%:   39-block 232
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:   39-block 234
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:   39-block 236
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:   39-block 237
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+    %%%%%:   39-block 238
+call   12 never executed
+call   13 never executed
+call   14 never executed
+branch 15 never executed (fallthrough)
+branch 16 never executed (throw)
+    %%%%%:   39-block 241
+call   17 never executed
+branch 18 never executed (fallthrough)
+branch 19 never executed (throw)
+    %%%%%:   39-block 242
+    %%%%%:   39-block 244
+call   20 never executed
+branch 21 never executed (fallthrough)
+branch 22 never executed (throw)
+    %%%%%:   39-block 245
+call   23 never executed
+branch 24 never executed (fallthrough)
+branch 25 never executed (throw)
+    %%%%%:   39-block 246
+call   26 never executed
+branch 27 never executed (fallthrough)
+branch 28 never executed (throw)
+    %%%%%:   39-block 247
+call   29 never executed
+branch 30 never executed (fallthrough)
+branch 31 never executed (throw)
+    %%%%%:   39-block 248
+call   32 never executed
+branch 33 never executed (fallthrough)
+branch 34 never executed (throw)
+    %%%%%:   39-block 249
+call   35 never executed
+branch 36 never executed (fallthrough)
+branch 37 never executed (throw)
+    %%%%%:   39-block 250
+call   38 never executed
+call   39 never executed
+    %%%%%:   39-block 253
+call   40 never executed
+call   41 never executed
+    %%%%%:   39-block 256
+call   42 never executed
+branch 43 never executed
+branch 44 never executed (fallthrough)
+    $$$$$:   39-block 578
+call   45 never executed
+    $$$$$:   39-block 580
+call   46 never executed
+    $$$$$:   39-block 584
+    $$$$$:   39-block 585
+    $$$$$:   39-block 586
+    $$$$$:   39-block 587
+call   47 never executed
+    $$$$$:   39-block 589
+    $$$$$:   39-block 590
+call   48 never executed
+    $$$$$:   39-block 592
+call   49 never executed
+    #####:   40:            tinyfd_messageBox("Memory Protection Error!", "Attempt to write to memory location which does not have write"
+    %%%%%:   40-block 258
+call    0 never executed
+        -:   41:                                                          " permission enabled!!", "ok", "error", 0);
+        -:   42:        }
+    #####:   43:        else if (err == UC_ERR_FETCH_PROT){
+    %%%%%:   43-block 259
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:   44:            LOG_ERROR("Failed on uc_emu_start(): Attempt to fetch memory which does not have fetch permission enabled.");
+    %%%%%:   44-block 260
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:   44-block 262
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:   44-block 264
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:   44-block 265
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+    %%%%%:   44-block 266
+call   12 never executed
+call   13 never executed
+call   14 never executed
+branch 15 never executed (fallthrough)
+branch 16 never executed (throw)
+    %%%%%:   44-block 269
+call   17 never executed
+branch 18 never executed (fallthrough)
+branch 19 never executed (throw)
+    %%%%%:   44-block 270
+    %%%%%:   44-block 272
+call   20 never executed
+branch 21 never executed (fallthrough)
+branch 22 never executed (throw)
+    %%%%%:   44-block 273
+call   23 never executed
+branch 24 never executed (fallthrough)
+branch 25 never executed (throw)
+    %%%%%:   44-block 274
+call   26 never executed
+branch 27 never executed (fallthrough)
+branch 28 never executed (throw)
+    %%%%%:   44-block 275
+call   29 never executed
+branch 30 never executed (fallthrough)
+branch 31 never executed (throw)
+    %%%%%:   44-block 276
+call   32 never executed
+branch 33 never executed (fallthrough)
+branch 34 never executed (throw)
+    %%%%%:   44-block 277
+call   35 never executed
+branch 36 never executed (fallthrough)
+branch 37 never executed (throw)
+    %%%%%:   44-block 278
+call   38 never executed
+call   39 never executed
+    %%%%%:   44-block 281
+call   40 never executed
+call   41 never executed
+    %%%%%:   44-block 284
+call   42 never executed
+branch 43 never executed
+branch 44 never executed (fallthrough)
+    $$$$$:   44-block 593
+call   45 never executed
+    $$$$$:   44-block 595
+call   46 never executed
+    $$$$$:   44-block 599
+    $$$$$:   44-block 600
+    $$$$$:   44-block 601
+    $$$$$:   44-block 602
+call   47 never executed
+    $$$$$:   44-block 604
+    $$$$$:   44-block 605
+call   48 never executed
+    $$$$$:   44-block 607
+call   49 never executed
+    #####:   45:            tinyfd_messageBox("Memory Protection Error!", "Attempt to write to memory location which does not have fetch"
+    %%%%%:   45-block 286
+call    0 never executed
+        -:   46:                                                          " permission enabled!!", "ok", "error", 0);
+        -:   47:        }
+        -:   48:    }
+    #####:   49:    else if ((err > UC_ERR_ARG) && (err < UC_ERR_HOOK_EXIST)){
+    %%%%%:   49-block 288
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:   49-block 289
+branch  2 never executed (fallthrough)
+branch  3 never executed
+        -:   50:        // Unaligned error
+    #####:   51:        LOG_ERROR("Unaligned Memory Access Error!");
+    %%%%%:   51-block 290
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:   51-block 292
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:   51-block 294
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:   51-block 295
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+    %%%%%:   51-block 296
+call   12 never executed
+call   13 never executed
+call   14 never executed
+branch 15 never executed (fallthrough)
+branch 16 never executed (throw)
+    %%%%%:   51-block 299
+call   17 never executed
+branch 18 never executed (fallthrough)
+branch 19 never executed (throw)
+    %%%%%:   51-block 300
+    %%%%%:   51-block 302
+call   20 never executed
+branch 21 never executed (fallthrough)
+branch 22 never executed (throw)
+    %%%%%:   51-block 303
+call   23 never executed
+branch 24 never executed (fallthrough)
+branch 25 never executed (throw)
+    %%%%%:   51-block 304
+call   26 never executed
+branch 27 never executed (fallthrough)
+branch 28 never executed (throw)
+    %%%%%:   51-block 305
+call   29 never executed
+branch 30 never executed (fallthrough)
+branch 31 never executed (throw)
+    %%%%%:   51-block 306
+call   32 never executed
+branch 33 never executed (fallthrough)
+branch 34 never executed (throw)
+    %%%%%:   51-block 307
+call   35 never executed
+branch 36 never executed (fallthrough)
+branch 37 never executed (throw)
+    %%%%%:   51-block 308
+call   38 never executed
+call   39 never executed
+    %%%%%:   51-block 311
+call   40 never executed
+call   41 never executed
+    %%%%%:   51-block 314
+call   42 never executed
+branch 43 never executed
+branch 44 never executed (fallthrough)
+    $$$$$:   51-block 608
+call   45 never executed
+    $$$$$:   51-block 610
+call   46 never executed
+    $$$$$:   51-block 614
+    $$$$$:   51-block 615
+    $$$$$:   51-block 616
+    $$$$$:   51-block 617
+call   47 never executed
+    $$$$$:   51-block 619
+    $$$$$:   51-block 620
+call   48 never executed
+    $$$$$:   51-block 622
+call   49 never executed
+    #####:   52:        if (err == UC_ERR_READ_UNALIGNED){
+    %%%%%:   52-block 316
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:   53:            LOG_ERROR("Failed on uc_emu_start(): Attempt to read data from memory at an address that is not properly "
+    %%%%%:   53-block 317
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:   53-block 319
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:   53-block 321
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:   53-block 322
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+    %%%%%:   53-block 323
+call   12 never executed
+call   13 never executed
+call   14 never executed
+branch 15 never executed (fallthrough)
+branch 16 never executed (throw)
+    %%%%%:   53-block 326
+call   17 never executed
+branch 18 never executed (fallthrough)
+branch 19 never executed (throw)
+    %%%%%:   53-block 327
+    %%%%%:   53-block 329
+call   20 never executed
+branch 21 never executed (fallthrough)
+branch 22 never executed (throw)
+    %%%%%:   53-block 330
+call   23 never executed
+branch 24 never executed (fallthrough)
+branch 25 never executed (throw)
+    %%%%%:   53-block 331
+call   26 never executed
+branch 27 never executed (fallthrough)
+branch 28 never executed (throw)
+    %%%%%:   53-block 332
+call   29 never executed
+branch 30 never executed (fallthrough)
+branch 31 never executed (throw)
+    %%%%%:   53-block 333
+call   32 never executed
+branch 33 never executed (fallthrough)
+branch 34 never executed (throw)
+    %%%%%:   53-block 334
+call   35 never executed
+branch 36 never executed (fallthrough)
+branch 37 never executed (throw)
+    %%%%%:   53-block 335
+call   38 never executed
+call   39 never executed
+    %%%%%:   53-block 338
+call   40 never executed
+call   41 never executed
+    %%%%%:   53-block 341
+call   42 never executed
+branch 43 never executed
+branch 44 never executed (fallthrough)
+    $$$$$:   53-block 623
+call   45 never executed
+    $$$$$:   53-block 625
+call   46 never executed
+    $$$$$:   53-block 629
+    $$$$$:   53-block 630
+    $$$$$:   53-block 631
+    $$$$$:   53-block 632
+call   47 never executed
+    $$$$$:   53-block 634
+    $$$$$:   53-block 635
+call   48 never executed
+    $$$$$:   53-block 637
+call   49 never executed
+        -:   54:                      "aligned for the data type being accessed");
+    #####:   55:            tinyfd_messageBox("Unaligned Memory Access Error!", "Attempt to read data from memory at an address that is not properly "
+    %%%%%:   55-block 343
+call    0 never executed
+        -:   56:                                                                "aligned for the data type being accessed", "ok", "error", 0);
+        -:   57:        }
+    #####:   58:        else if (err == UC_ERR_WRITE_UNALIGNED){
+    %%%%%:   58-block 344
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:   59:            LOG_ERROR("Failed on uc_emu_start(): Attempt to write data to memory at an address that is not properly "
+    %%%%%:   59-block 345
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:   59-block 347
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:   59-block 349
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:   59-block 350
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+    %%%%%:   59-block 351
+call   12 never executed
+call   13 never executed
+call   14 never executed
+branch 15 never executed (fallthrough)
+branch 16 never executed (throw)
+    %%%%%:   59-block 354
+call   17 never executed
+branch 18 never executed (fallthrough)
+branch 19 never executed (throw)
+    %%%%%:   59-block 355
+    %%%%%:   59-block 357
+call   20 never executed
+branch 21 never executed (fallthrough)
+branch 22 never executed (throw)
+    %%%%%:   59-block 358
+call   23 never executed
+branch 24 never executed (fallthrough)
+branch 25 never executed (throw)
+    %%%%%:   59-block 359
+call   26 never executed
+branch 27 never executed (fallthrough)
+branch 28 never executed (throw)
+    %%%%%:   59-block 360
+call   29 never executed
+branch 30 never executed (fallthrough)
+branch 31 never executed (throw)
+    %%%%%:   59-block 361
+call   32 never executed
+branch 33 never executed (fallthrough)
+branch 34 never executed (throw)
+    %%%%%:   59-block 362
+call   35 never executed
+branch 36 never executed (fallthrough)
+branch 37 never executed (throw)
+    %%%%%:   59-block 363
+call   38 never executed
+call   39 never executed
+    %%%%%:   59-block 366
+call   40 never executed
+call   41 never executed
+    %%%%%:   59-block 369
+call   42 never executed
+branch 43 never executed
+branch 44 never executed (fallthrough)
+    $$$$$:   59-block 638
+call   45 never executed
+    $$$$$:   59-block 640
+call   46 never executed
+    $$$$$:   59-block 644
+    $$$$$:   59-block 645
+    $$$$$:   59-block 646
+    $$$$$:   59-block 647
+call   47 never executed
+    $$$$$:   59-block 649
+    $$$$$:   59-block 650
+call   48 never executed
+    $$$$$:   59-block 652
+call   49 never executed
+        -:   60:                      "aligned for the data type being accessed");
+    #####:   61:            tinyfd_messageBox("Unaligned Memory Access Error!", "Attempt to write data to memory at an address that is not properly "
+    %%%%%:   61-block 371
+call    0 never executed
+        -:   62:                                                                "aligned for the data type being accessed", "ok", "error", 0);
+        -:   63:        }
+    #####:   64:        else if (err == UC_ERR_FETCH_UNALIGNED){
+    %%%%%:   64-block 372
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:   65:            LOG_ERROR("Failed on uc_emu_start(): Attempt to fetch data from memory at an address that is not properly "
+    %%%%%:   65-block 373
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:   65-block 375
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:   65-block 377
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:   65-block 378
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+    %%%%%:   65-block 379
+call   12 never executed
+call   13 never executed
+call   14 never executed
+branch 15 never executed (fallthrough)
+branch 16 never executed (throw)
+    %%%%%:   65-block 382
+call   17 never executed
+branch 18 never executed (fallthrough)
+branch 19 never executed (throw)
+    %%%%%:   65-block 383
+    %%%%%:   65-block 385
+call   20 never executed
+branch 21 never executed (fallthrough)
+branch 22 never executed (throw)
+    %%%%%:   65-block 386
+call   23 never executed
+branch 24 never executed (fallthrough)
+branch 25 never executed (throw)
+    %%%%%:   65-block 387
+call   26 never executed
+branch 27 never executed (fallthrough)
+branch 28 never executed (throw)
+    %%%%%:   65-block 388
+call   29 never executed
+branch 30 never executed (fallthrough)
+branch 31 never executed (throw)
+    %%%%%:   65-block 389
+call   32 never executed
+branch 33 never executed (fallthrough)
+branch 34 never executed (throw)
+    %%%%%:   65-block 390
+call   35 never executed
+branch 36 never executed (fallthrough)
+branch 37 never executed (throw)
+    %%%%%:   65-block 391
+call   38 never executed
+call   39 never executed
+    %%%%%:   65-block 394
+call   40 never executed
+call   41 never executed
+    %%%%%:   65-block 397
+call   42 never executed
+branch 43 never executed
+branch 44 never executed (fallthrough)
+    $$$$$:   65-block 653
+call   45 never executed
+    $$$$$:   65-block 655
+call   46 never executed
+    $$$$$:   65-block 659
+    $$$$$:   65-block 660
+    $$$$$:   65-block 661
+    $$$$$:   65-block 662
+call   47 never executed
+    $$$$$:   65-block 664
+    $$$$$:   65-block 665
+call   48 never executed
+    $$$$$:   65-block 667
+call   49 never executed
+        -:   66:                      "aligned for the data type being accessed");
+    #####:   67:            tinyfd_messageBox("Unaligned Memory Access Error!", "Attempt to fetch data from memory at an address that is not properly "
+    %%%%%:   67-block 399
+call    0 never executed
+        -:   68:                                                                "aligned for the data type being accessed", "ok", "error", 0);
+        -:   69:        }
+        -:   70:    }
+    #####:   71:    else if (err == UC_ERR_MAP){
+    %%%%%:   71-block 401
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:   72:        LOG_ERROR("Failed on uc_emu_start(): Attempt to access memory that is not mapped.");
+    %%%%%:   72-block 402
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:   72-block 404
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:   72-block 406
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:   72-block 407
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+    %%%%%:   72-block 408
+call   12 never executed
+call   13 never executed
+call   14 never executed
+branch 15 never executed (fallthrough)
+branch 16 never executed (throw)
+    %%%%%:   72-block 411
+call   17 never executed
+branch 18 never executed (fallthrough)
+branch 19 never executed (throw)
+    %%%%%:   72-block 412
+    %%%%%:   72-block 414
+call   20 never executed
+branch 21 never executed (fallthrough)
+branch 22 never executed (throw)
+    %%%%%:   72-block 415
+call   23 never executed
+branch 24 never executed (fallthrough)
+branch 25 never executed (throw)
+    %%%%%:   72-block 416
+call   26 never executed
+branch 27 never executed (fallthrough)
+branch 28 never executed (throw)
+    %%%%%:   72-block 417
+call   29 never executed
+branch 30 never executed (fallthrough)
+branch 31 never executed (throw)
+    %%%%%:   72-block 418
+call   32 never executed
+branch 33 never executed (fallthrough)
+branch 34 never executed (throw)
+    %%%%%:   72-block 419
+call   35 never executed
+branch 36 never executed (fallthrough)
+branch 37 never executed (throw)
+    %%%%%:   72-block 420
+call   38 never executed
+call   39 never executed
+    %%%%%:   72-block 423
+call   40 never executed
+call   41 never executed
+    %%%%%:   72-block 426
+call   42 never executed
+branch 43 never executed
+branch 44 never executed (fallthrough)
+    $$$$$:   72-block 668
+call   45 never executed
+    $$$$$:   72-block 670
+call   46 never executed
+    $$$$$:   72-block 674
+    $$$$$:   72-block 675
+    $$$$$:   72-block 676
+    $$$$$:   72-block 677
+call   47 never executed
+    $$$$$:   72-block 679
+    $$$$$:   72-block 680
+call   48 never executed
+    $$$$$:   72-block 682
+call   49 never executed
+    #####:   73:        tinyfd_messageBox("Memory Access Error!", "Attempt to access memory that is not mapped.", "ok", "error", 0);
+    %%%%%:   73-block 428
+call    0 never executed
+        -:   74:    }
+    #####:   75:    else if (err == UC_ERR_EXCEPTION){
+    %%%%%:   75-block 429
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:   76:        LOG_ERROR("Failed on uc_emu_start(): Exception occurred during emulation.");
+    %%%%%:   76-block 430
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:   76-block 432
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:   76-block 434
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    %%%%%:   76-block 435
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+    %%%%%:   76-block 436
+call   12 never executed
+call   13 never executed
+call   14 never executed
+branch 15 never executed (fallthrough)
+branch 16 never executed (throw)
+    %%%%%:   76-block 439
+call   17 never executed
+branch 18 never executed (fallthrough)
+branch 19 never executed (throw)
+    %%%%%:   76-block 440
+    %%%%%:   76-block 442
+call   20 never executed
+branch 21 never executed (fallthrough)
+branch 22 never executed (throw)
+    %%%%%:   76-block 443
+call   23 never executed
+branch 24 never executed (fallthrough)
+branch 25 never executed (throw)
+    %%%%%:   76-block 444
+call   26 never executed
+branch 27 never executed (fallthrough)
+branch 28 never executed (throw)
+    %%%%%:   76-block 445
+call   29 never executed
+branch 30 never executed (fallthrough)
+branch 31 never executed (throw)
+    %%%%%:   76-block 446
+call   32 never executed
+branch 33 never executed (fallthrough)
+branch 34 never executed (throw)
+    %%%%%:   76-block 447
+call   35 never executed
+branch 36 never executed (fallthrough)
+branch 37 never executed (throw)
+    %%%%%:   76-block 448
+call   38 never executed
+call   39 never executed
+    %%%%%:   76-block 451
+call   40 never executed
+call   41 never executed
+    %%%%%:   76-block 454
+call   42 never executed
+branch 43 never executed
+branch 44 never executed (fallthrough)
+    $$$$$:   76-block 683
+call   45 never executed
+    $$$$$:   76-block 685
+call   46 never executed
+    $$$$$:   76-block 689
+    $$$$$:   76-block 690
+    $$$$$:   76-block 691
+    $$$$$:   76-block 692
+call   47 never executed
+    $$$$$:   76-block 694
+    $$$$$:   76-block 695
+call   48 never executed
+    #####:   77:        tinyfd_messageBox("Exception Error!", "Exception occurred during emulation which is not manually handled.", "ok", "error", 0);
+    %%%%%:   77-block 456
+call    0 never executed
+        -:   78:    }
+    #####:   79:}
+    %%%%%:   79-block 457

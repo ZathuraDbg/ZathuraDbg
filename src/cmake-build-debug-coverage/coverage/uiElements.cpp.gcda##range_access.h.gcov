@@ -1,0 +1,382 @@
+        -:    0:Source:/usr/include/c++/14.2.1/bits/range_access.h
+        -:    0:Graph:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/utils/uiElements.cpp.gcno
+        -:    0:Data:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/utils/uiElements.cpp.gcda
+        -:    0:Runs:1
+        -:    1:// Range access functions for containers -*- C++ -*-
+        -:    2:
+        -:    3:// Copyright (C) 2010-2024 Free Software Foundation, Inc.
+        -:    4://
+        -:    5:// This file is part of the GNU ISO C++ Library.  This library is free
+        -:    6:// software; you can redistribute it and/or modify it under the
+        -:    7:// terms of the GNU General Public License as published by the
+        -:    8:// Free Software Foundation; either version 3, or (at your option)
+        -:    9:// any later version.
+        -:   10:
+        -:   11:// This library is distributed in the hope that it will be useful,
+        -:   12:// but WITHOUT ANY WARRANTY; without even the implied warranty of
+        -:   13:// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+        -:   14:// GNU General Public License for more details.
+        -:   15:
+        -:   16:// Under Section 7 of GPL version 3, you are granted additional
+        -:   17:// permissions described in the GCC Runtime Library Exception, version
+        -:   18:// 3.1, as published by the Free Software Foundation.
+        -:   19:
+        -:   20:// You should have received a copy of the GNU General Public License and
+        -:   21:// a copy of the GCC Runtime Library Exception along with this program;
+        -:   22:// see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+        -:   23:// <http://www.gnu.org/licenses/>.
+        -:   24:
+        -:   25:/** @file bits/range_access.h
+        -:   26: *  This is an internal header file, included by other library headers.
+        -:   27: *  Do not attempt to use it directly. @headername{iterator}
+        -:   28: */
+        -:   29:
+        -:   30:#ifndef _GLIBCXX_RANGE_ACCESS_H
+        -:   31:#define _GLIBCXX_RANGE_ACCESS_H 1
+        -:   32:
+        -:   33:#pragma GCC system_header
+        -:   34:
+        -:   35:#if __cplusplus >= 201103L
+        -:   36:#include <initializer_list>
+        -:   37:#include <type_traits>	    // common_type_t, make_signed_t
+        -:   38:#include <bits/stl_iterator.h> // reverse_iterator
+        -:   39:
+        -:   40:namespace std _GLIBCXX_VISIBILITY(default)
+        -:   41:{
+        -:   42:_GLIBCXX_BEGIN_NAMESPACE_VERSION
+        -:   43:
+        -:   44:  /**
+        -:   45:   *  @brief  Return an iterator pointing to the first element of
+        -:   46:   *          the container.
+        -:   47:   *  @param  __cont  Container.
+        -:   48:   */
+        -:   49:  template<typename _Container>
+        -:   50:    [[__nodiscard__, __gnu__::__always_inline__]]
+        -:   51:    inline _GLIBCXX17_CONSTEXPR auto
+        -:   52:    begin(_Container& __cont) -> decltype(__cont.begin())
+        -:   53:    { return __cont.begin(); }
+        -:   54:
+        -:   55:  /**
+        -:   56:   *  @brief  Return an iterator pointing to the first element of
+        -:   57:   *          the const container.
+        -:   58:   *  @param  __cont  Container.
+        -:   59:   */
+        -:   60:  template<typename _Container>
+        -:   61:    [[__nodiscard__, __gnu__::__always_inline__]]
+        -:   62:    inline _GLIBCXX17_CONSTEXPR auto
+        -:   63:    begin(const _Container& __cont) -> decltype(__cont.begin())
+        -:   64:    { return __cont.begin(); }
+        -:   65:
+        -:   66:  /**
+        -:   67:   *  @brief  Return an iterator pointing to one past the last element of
+        -:   68:   *          the container.
+        -:   69:   *  @param  __cont  Container.
+        -:   70:   */
+        -:   71:  template<typename _Container>
+        -:   72:    [[__nodiscard__, __gnu__::__always_inline__]]
+        -:   73:    inline _GLIBCXX17_CONSTEXPR auto
+        -:   74:    end(_Container& __cont) -> decltype(__cont.end())
+        -:   75:    { return __cont.end(); }
+        -:   76:
+        -:   77:  /**
+        -:   78:   *  @brief  Return an iterator pointing to one past the last element of
+        -:   79:   *          the const container.
+        -:   80:   *  @param  __cont  Container.
+        -:   81:   */
+        -:   82:  template<typename _Container>
+        -:   83:    [[__nodiscard__, __gnu__::__always_inline__]]
+        -:   84:    inline _GLIBCXX17_CONSTEXPR auto
+        -:   85:    end(const _Container& __cont) -> decltype(__cont.end())
+        -:   86:    { return __cont.end(); }
+        -:   87:
+        -:   88:  /**
+        -:   89:   *  @brief  Return an iterator pointing to the first element of the array.
+        -:   90:   *  @param  __arr  Array.
+        -:   91:   */
+        -:   92:  template<typename _Tp, size_t _Nm>
+        -:   93:    [[__nodiscard__, __gnu__::__always_inline__]]
+        -:   94:    inline _GLIBCXX14_CONSTEXPR _Tp*
+        -:   95:    begin(_Tp (&__arr)[_Nm]) noexcept
+        -:   96:    { return __arr; }
+        -:   97:
+        -:   98:  /**
+        -:   99:   *  @brief  Return an iterator pointing to one past the last element
+        -:  100:   *          of the array.
+        -:  101:   *  @param  __arr  Array.
+        -:  102:   */
+        -:  103:  template<typename _Tp, size_t _Nm>
+        -:  104:    [[__nodiscard__, __gnu__::__always_inline__]]
+        -:  105:    inline _GLIBCXX14_CONSTEXPR _Tp*
+        -:  106:    end(_Tp (&__arr)[_Nm]) noexcept
+    #####:  107:    { return __arr + _Nm; }
+    %%%%%:  107-block 2
+    %%%%%:  107-block 4
+    %%%%%:  107-block 4
+    %%%%%:  107-block 2
+    %%%%%:  107-block 2
+    %%%%%:  107-block 4
+        -:  108:
+        -:  109:#if __cplusplus >= 201402L
+        -:  110:
+        -:  111:  template<typename _Tp> class valarray;
+        -:  112:  // These overloads must be declared for cbegin and cend to use them.
+        -:  113:  template<typename _Tp> _Tp* begin(valarray<_Tp>&) noexcept;
+        -:  114:  template<typename _Tp> const _Tp* begin(const valarray<_Tp>&) noexcept;
+        -:  115:  template<typename _Tp> _Tp* end(valarray<_Tp>&) noexcept;
+        -:  116:  template<typename _Tp> const _Tp* end(const valarray<_Tp>&) noexcept;
+        -:  117:
+        -:  118:  /**
+        -:  119:   *  @brief  Return an iterator pointing to the first element of
+        -:  120:   *          the const container.
+        -:  121:   *  @param  __cont  Container.
+        -:  122:   */
+        -:  123:  template<typename _Container>
+        -:  124:    [[__nodiscard__, __gnu__::__always_inline__]]
+        -:  125:    constexpr auto
+        -:  126:    cbegin(const _Container& __cont) noexcept(noexcept(std::begin(__cont)))
+        -:  127:      -> decltype(std::begin(__cont))
+        -:  128:    { return std::begin(__cont); }
+        -:  129:
+        -:  130:  /**
+        -:  131:   *  @brief  Return an iterator pointing to one past the last element of
+        -:  132:   *          the const container.
+        -:  133:   *  @param  __cont  Container.
+        -:  134:   */
+        -:  135:  template<typename _Container>
+        -:  136:    [[__nodiscard__, __gnu__::__always_inline__]]
+        -:  137:    constexpr auto
+        -:  138:    cend(const _Container& __cont) noexcept(noexcept(std::end(__cont)))
+        -:  139:      -> decltype(std::end(__cont))
+        -:  140:    { return std::end(__cont); }
+        -:  141:
+        -:  142:  /**
+        -:  143:   *  @brief  Return a reverse iterator pointing to the last element of
+        -:  144:   *          the container.
+        -:  145:   *  @param  __cont  Container.
+        -:  146:   */
+        -:  147:  template<typename _Container>
+        -:  148:    [[__nodiscard__, __gnu__::__always_inline__]]
+        -:  149:    inline _GLIBCXX17_CONSTEXPR auto
+        -:  150:    rbegin(_Container& __cont) -> decltype(__cont.rbegin())
+        -:  151:    { return __cont.rbegin(); }
+        -:  152:
+        -:  153:  /**
+        -:  154:   *  @brief  Return a reverse iterator pointing to the last element of
+        -:  155:   *          the const container.
+        -:  156:   *  @param  __cont  Container.
+        -:  157:   */
+        -:  158:  template<typename _Container>
+        -:  159:    [[__nodiscard__, __gnu__::__always_inline__]]
+        -:  160:    inline _GLIBCXX17_CONSTEXPR auto
+        -:  161:    rbegin(const _Container& __cont) -> decltype(__cont.rbegin())
+        -:  162:    { return __cont.rbegin(); }
+        -:  163:
+        -:  164:  /**
+        -:  165:   *  @brief  Return a reverse iterator pointing one past the first element of
+        -:  166:   *          the container.
+        -:  167:   *  @param  __cont  Container.
+        -:  168:   */
+        -:  169:  template<typename _Container>
+        -:  170:    [[__nodiscard__, __gnu__::__always_inline__]]
+        -:  171:    inline _GLIBCXX17_CONSTEXPR auto
+        -:  172:    rend(_Container& __cont) -> decltype(__cont.rend())
+        -:  173:    { return __cont.rend(); }
+        -:  174:
+        -:  175:  /**
+        -:  176:   *  @brief  Return a reverse iterator pointing one past the first element of
+        -:  177:   *          the const container.
+        -:  178:   *  @param  __cont  Container.
+        -:  179:   */
+        -:  180:  template<typename _Container>
+        -:  181:    [[__nodiscard__, __gnu__::__always_inline__]]
+        -:  182:    inline _GLIBCXX17_CONSTEXPR auto
+        -:  183:    rend(const _Container& __cont) -> decltype(__cont.rend())
+        -:  184:    { return __cont.rend(); }
+        -:  185:
+        -:  186:  /**
+        -:  187:   *  @brief  Return a reverse iterator pointing to the last element of
+        -:  188:   *          the array.
+        -:  189:   *  @param  __arr  Array.
+        -:  190:   */
+        -:  191:  template<typename _Tp, size_t _Nm>
+        -:  192:    [[__nodiscard__]]
+        -:  193:    inline _GLIBCXX17_CONSTEXPR reverse_iterator<_Tp*>
+        -:  194:    rbegin(_Tp (&__arr)[_Nm]) noexcept
+        -:  195:    { return reverse_iterator<_Tp*>(__arr + _Nm); }
+        -:  196:
+        -:  197:  /**
+        -:  198:   *  @brief  Return a reverse iterator pointing one past the first element of
+        -:  199:   *          the array.
+        -:  200:   *  @param  __arr  Array.
+        -:  201:   */
+        -:  202:  template<typename _Tp, size_t _Nm>
+        -:  203:    [[__nodiscard__]]
+        -:  204:    inline _GLIBCXX17_CONSTEXPR reverse_iterator<_Tp*>
+        -:  205:    rend(_Tp (&__arr)[_Nm]) noexcept
+        -:  206:    { return reverse_iterator<_Tp*>(__arr); }
+        -:  207:
+        -:  208:  /**
+        -:  209:   *  @brief  Return a reverse iterator pointing to the last element of
+        -:  210:   *          the initializer_list.
+        -:  211:   *  @param  __il  initializer_list.
+        -:  212:   */
+        -:  213:  template<typename _Tp>
+        -:  214:    [[__nodiscard__]]
+        -:  215:    inline _GLIBCXX17_CONSTEXPR reverse_iterator<const _Tp*>
+        -:  216:    rbegin(initializer_list<_Tp> __il) noexcept
+        -:  217:    { return reverse_iterator<const _Tp*>(__il.end()); }
+        -:  218:
+        -:  219:  /**
+        -:  220:   *  @brief  Return a reverse iterator pointing one past the first element of
+        -:  221:   *          the initializer_list.
+        -:  222:   *  @param  __il  initializer_list.
+        -:  223:   */
+        -:  224:  template<typename _Tp>
+        -:  225:    [[__nodiscard__]]
+        -:  226:    inline _GLIBCXX17_CONSTEXPR reverse_iterator<const _Tp*>
+        -:  227:    rend(initializer_list<_Tp> __il) noexcept
+        -:  228:    { return reverse_iterator<const _Tp*>(__il.begin()); }
+        -:  229:
+        -:  230:  /**
+        -:  231:   *  @brief  Return a reverse iterator pointing to the last element of
+        -:  232:   *          the const container.
+        -:  233:   *  @param  __cont  Container.
+        -:  234:   */
+        -:  235:  template<typename _Container>
+        -:  236:    [[__nodiscard__, __gnu__::__always_inline__]]
+        -:  237:    inline _GLIBCXX17_CONSTEXPR auto
+        -:  238:    crbegin(const _Container& __cont) -> decltype(std::rbegin(__cont))
+        -:  239:    { return std::rbegin(__cont); }
+        -:  240:
+        -:  241:  /**
+        -:  242:   *  @brief  Return a reverse iterator pointing one past the first element of
+        -:  243:   *          the const container.
+        -:  244:   *  @param  __cont  Container.
+        -:  245:   */
+        -:  246:  template<typename _Container>
+        -:  247:    [[__nodiscard__, __gnu__::__always_inline__]]
+        -:  248:    inline _GLIBCXX17_CONSTEXPR auto
+        -:  249:    crend(const _Container& __cont) -> decltype(std::rend(__cont))
+        -:  250:    { return std::rend(__cont); }
+        -:  251:
+        -:  252:#endif // C++14
+        -:  253:
+        -:  254:#ifdef __glibcxx_nonmember_container_access // C++ >= 17
+        -:  255:  /**
+        -:  256:   *  @brief  Return the size of a container.
+        -:  257:   *  @param  __cont  Container.
+        -:  258:   */
+        -:  259:  template <typename _Container>
+        -:  260:    [[nodiscard, __gnu__::__always_inline__]]
+        -:  261:    constexpr auto
+        -:  262:    size(const _Container& __cont) noexcept(noexcept(__cont.size()))
+        -:  263:    -> decltype(__cont.size())
+        -:  264:    { return __cont.size(); }
+        -:  265:
+        -:  266:  /**
+        -:  267:   *  @brief  Return the size of an array.
+        -:  268:   */
+        -:  269:  template <typename _Tp, size_t _Nm>
+        -:  270:    [[nodiscard, __gnu__::__always_inline__]]
+        -:  271:    constexpr size_t
+        -:  272:    size(const _Tp (&)[_Nm]) noexcept
+        -:  273:    { return _Nm; }
+        -:  274:
+        -:  275:  /**
+        -:  276:   *  @brief  Return whether a container is empty.
+        -:  277:   *  @param  __cont  Container.
+        -:  278:   */
+        -:  279:  template <typename _Container>
+        -:  280:    [[nodiscard, __gnu__::__always_inline__]]
+        -:  281:    constexpr auto
+        -:  282:    empty(const _Container& __cont) noexcept(noexcept(__cont.empty()))
+        -:  283:    -> decltype(__cont.empty())
+        -:  284:    { return __cont.empty(); }
+        -:  285:
+        -:  286:  /**
+        -:  287:   *  @brief  Return whether an array is empty (always false).
+        -:  288:   */
+        -:  289:  template <typename _Tp, size_t _Nm>
+        -:  290:    [[nodiscard, __gnu__::__always_inline__]]
+        -:  291:    constexpr bool
+        -:  292:    empty(const _Tp (&)[_Nm]) noexcept
+        -:  293:    { return false; }
+        -:  294:
+        -:  295:  /**
+        -:  296:   *  @brief  Return whether an initializer_list is empty.
+        -:  297:   *  @param  __il  Initializer list.
+        -:  298:   */
+        -:  299:  template <typename _Tp>
+        -:  300:    [[nodiscard, __gnu__::__always_inline__]]
+        -:  301:    constexpr bool
+        -:  302:    empty(initializer_list<_Tp> __il) noexcept
+        -:  303:    { return __il.size() == 0;}
+        -:  304:
+        -:  305:  /**
+        -:  306:   *  @brief  Return the data pointer of a container.
+        -:  307:   *  @param  __cont  Container.
+        -:  308:   */
+        -:  309:  template <typename _Container>
+        -:  310:    [[nodiscard, __gnu__::__always_inline__]]
+        -:  311:    constexpr auto
+        -:  312:    data(_Container& __cont) noexcept(noexcept(__cont.data()))
+        -:  313:    -> decltype(__cont.data())
+        -:  314:    { return __cont.data(); }
+        -:  315:
+        -:  316:  /**
+        -:  317:   *  @brief  Return the data pointer of a const container.
+        -:  318:   *  @param  __cont  Container.
+        -:  319:   */
+        -:  320:  template <typename _Container>
+        -:  321:    [[nodiscard, __gnu__::__always_inline__]]
+        -:  322:    constexpr auto
+        -:  323:    data(const _Container& __cont) noexcept(noexcept(__cont.data()))
+        -:  324:    -> decltype(__cont.data())
+        -:  325:    { return __cont.data(); }
+        -:  326:
+        -:  327:  /**
+        -:  328:   *  @brief  Return the data pointer of an array.
+        -:  329:   *  @param  __array  Array.
+        -:  330:   */
+        -:  331:  template <typename _Tp, size_t _Nm>
+        -:  332:    [[nodiscard, __gnu__::__always_inline__]]
+        -:  333:    constexpr _Tp*
+        -:  334:    data(_Tp (&__array)[_Nm]) noexcept
+        -:  335:    { return __array; }
+        -:  336:
+        -:  337:  /**
+        -:  338:   *  @brief  Return the data pointer of an initializer list.
+        -:  339:   *  @param  __il  Initializer list.
+        -:  340:   */
+        -:  341:  template <typename _Tp>
+        -:  342:    [[nodiscard, __gnu__::__always_inline__]]
+        -:  343:    constexpr const _Tp*
+        -:  344:    data(initializer_list<_Tp> __il) noexcept
+        -:  345:    { return __il.begin(); }
+        -:  346:#endif // __glibcxx_nonmember_container_access
+        -:  347:
+        -:  348:#ifdef __glibcxx_ssize // C++ >= 20
+        -:  349:  template<typename _Container>
+        -:  350:    [[nodiscard, __gnu__::__always_inline__]]
+        -:  351:    constexpr auto
+        -:  352:    ssize(const _Container& __cont)
+        -:  353:    noexcept(noexcept(__cont.size()))
+        -:  354:    -> common_type_t<ptrdiff_t, make_signed_t<decltype(__cont.size())>>
+        -:  355:    {
+        -:  356:      using type = make_signed_t<decltype(__cont.size())>;
+    #####:  357:      return static_cast<common_type_t<ptrdiff_t, type>>(__cont.size());
+call    0 never executed
+    %%%%%:  357-block 8
+        -:  358:    }
+        -:  359:
+        -:  360:  template<typename _Tp, ptrdiff_t _Num>
+        -:  361:    [[nodiscard, __gnu__::__always_inline__]]
+        -:  362:    constexpr ptrdiff_t
+        -:  363:    ssize(const _Tp (&)[_Num]) noexcept
+        -:  364:    { return _Num; }
+        -:  365:#endif // __glibcxx_ssize
+        -:  366:_GLIBCXX_END_NAMESPACE_VERSION
+        -:  367:} // namespace
+        -:  368:
+        -:  369:#endif // C++11
+        -:  370:#endif // _GLIBCXX_RANGE_ACCESS_H

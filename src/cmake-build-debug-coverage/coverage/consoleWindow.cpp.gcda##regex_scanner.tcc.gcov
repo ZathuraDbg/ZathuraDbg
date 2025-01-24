@@ -1,0 +1,1139 @@
+        -:    0:Source:/usr/include/c++/14.2.1/bits/regex_scanner.tcc
+        -:    0:Graph:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/app/windows/consoleWindow.cpp.gcno
+        -:    0:Data:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/app/windows/consoleWindow.cpp.gcda
+        -:    0:Runs:1
+        -:    1:// class template regex -*- C++ -*-
+        -:    2:
+        -:    3:// Copyright (C) 2013-2024 Free Software Foundation, Inc.
+        -:    4://
+        -:    5:// This file is part of the GNU ISO C++ Library.  This library is free
+        -:    6:// software; you can redistribute it and/or modify it under the
+        -:    7:// terms of the GNU General Public License as published by the
+        -:    8:// Free Software Foundation; either version 3, or (at your option)
+        -:    9:// any later version.
+        -:   10:
+        -:   11:// This library is distributed in the hope that it will be useful,
+        -:   12:// but WITHOUT ANY WARRANTY; without even the implied warranty of
+        -:   13:// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+        -:   14:// GNU General Public License for more details.
+        -:   15:
+        -:   16:// Under Section 7 of GPL version 3, you are granted additional
+        -:   17:// permissions described in the GCC Runtime Library Exception, version
+        -:   18:// 3.1, as published by the Free Software Foundation.
+        -:   19:
+        -:   20:// You should have received a copy of the GNU General Public License and
+        -:   21:// a copy of the GCC Runtime Library Exception along with this program;
+        -:   22:// see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+        -:   23:// <http://www.gnu.org/licenses/>.
+        -:   24:
+        -:   25:/**
+        -:   26: *  @file bits/regex_scanner.tcc
+        -:   27: *  This is an internal header file, included by other library headers.
+        -:   28: *  Do not attempt to use it directly. @headername{regex}
+        -:   29: */
+        -:   30:
+        -:   31:// FIXME make comments doxygen format.
+        -:   32:
+        -:   33:// N3376 specified 6 regex styles: ECMAScript, basic, extended, grep, egrep
+        -:   34:// and awk
+        -:   35:// 1) grep is basic except '\n' is treated as '|'
+        -:   36:// 2) egrep is extended except '\n' is treated as '|'
+        -:   37:// 3) awk is extended except special escaping rules, and there's no
+        -:   38://    back-reference.
+        -:   39://
+        -:   40:// References:
+        -:   41://
+        -:   42:// ECMAScript: ECMA-262 15.10
+        -:   43://
+        -:   44:// basic, extended:
+        -:   45:// http://pubs.opengroup.org/onlinepubs/009695399/basedefs/xbd_chap09.html
+        -:   46://
+        -:   47:// awk: http://pubs.opengroup.org/onlinepubs/000095399/utilities/awk.html
+        -:   48:
+        -:   49:namespace std _GLIBCXX_VISIBILITY(default)
+        -:   50:{
+        -:   51:_GLIBCXX_BEGIN_NAMESPACE_VERSION
+        -:   52:
+        -:   53:namespace __detail
+        -:   54:{
+        -:   55:  template<typename _CharT>
+function _ZNSt8__detail8_ScannerIcEC2EPKcS3_NSt15regex_constants18syntax_option_typeESt6locale called 0 returned 0% blocks executed 0%
+    #####:   56:    _Scanner<_CharT>::
+        -:   57:    _Scanner(const _CharT* __begin, const _CharT* __end,
+        -:   58:	     _FlagT __flags, std::locale __loc)
+        -:   59:    : _ScannerBase(__flags),
+    #####:   60:      _M_current(__begin), _M_end(__end),
+    #####:   61:      _M_ctype(std::use_facet<_CtypeT>(__loc)),
+call    0 never executed
+    #####:   62:      _M_eat_escape(_M_is_ecma()
+call    0 never executed
+    %%%%%:   62-block 7
+    %%%%%:   62-block 8
+    #####:   63:		    ? &_Scanner::_M_eat_escape_ecma
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:   64:		    : &_Scanner::_M_eat_escape_posix)
+    %%%%%:   64-block 2
+call    0 never executed
+call    1 never executed
+    #####:   65:    { _M_advance(); }
+    %%%%%:   65-block 9
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:   65-block 10
+    $$$$$:   65-block 11
+call    3 never executed
+        -:   66:
+        -:   67:  template<typename _CharT>
+        -:   68:    void
+function _ZNSt8__detail8_ScannerIcE10_M_advanceEv called 0 returned 0% blocks executed 0%
+    #####:   69:    _Scanner<_CharT>::
+        -:   70:    _M_advance()
+        -:   71:    {
+    #####:   72:      if (_M_current == _M_end)
+    %%%%%:   72-block 2
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:   73:	{
+    #####:   74:	  _M_token = _S_token_eof;
+    #####:   75:	  return;
+    %%%%%:   75-block 3
+        -:   76:	}
+        -:   77:
+    #####:   78:      if (_M_state == _S_state_normal)
+    %%%%%:   78-block 4
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:   79:	_M_scan_normal();
+    %%%%%:   79-block 5
+call    0 never executed
+    #####:   80:      else if (_M_state == _S_state_in_bracket)
+    %%%%%:   80-block 6
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:   81:	_M_scan_in_bracket();
+    %%%%%:   81-block 7
+call    0 never executed
+    #####:   82:      else if (_M_state == _S_state_in_brace)
+    %%%%%:   82-block 8
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:   83:	_M_scan_in_brace();
+    %%%%%:   83-block 9
+call    0 never executed
+        -:   84:      else
+        -:   85:	{
+    #####:   86:	  __glibcxx_assert(!"unexpected state while processing regex");
+    %%%%%:   86-block 12
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:   87:	}
+        -:   88:    }
+        -:   89:
+        -:   90:  // Differences between styles:
+        -:   91:  // 1) "\(", "\)", "\{" in basic. It's not escaping.
+        -:   92:  // 2) "(?:", "(?=", "(?!" in ECMAScript.
+        -:   93:  template<typename _CharT>
+        -:   94:    void
+function _ZNSt8__detail8_ScannerIcE14_M_scan_normalEv called 0 returned 0% blocks executed 0%
+    #####:   95:    _Scanner<_CharT>::
+        -:   96:    _M_scan_normal()
+        -:   97:    {
+    #####:   98:      auto __c = *_M_current++;
+        -:   99:
+    #####:  100:      if (__builtin_strchr(_M_spec_char, _M_ctype.narrow(__c, ' ')) == nullptr)
+    %%%%%:  100-block 2
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+        -:  101:	{
+    #####:  102:	  _M_token = _S_token_ord_char;
+    #####:  103:	  _M_value.assign(1, __c);
+    %%%%%:  103-block 4
+call    0 never executed
+    #####:  104:	  return;
+        -:  105:	}
+    #####:  106:      if (__c == '\\')
+    %%%%%:  106-block 6
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  107:	{
+    #####:  108:	  if (_M_current == _M_end)
+    %%%%%:  108-block 7
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  109:	    __throw_regex_error(
+    %%%%%:  109-block 8
+call    0 never executed
+        -:  110:	      regex_constants::error_escape,
+        -:  111:	      "Invalid escape at end of regular expression");
+        -:  112:
+    #####:  113:	  if (!_M_is_basic()
+    %%%%%:  113-block 9
+call    0 never executed
+    #####:  114:	      || (*_M_current != '('
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  114-block 11
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    %%%%%:  114-block 14
+    %%%%%:  114-block 15
+    %%%%%:  114-block 16
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    #####:  115:		  && *_M_current != ')'
+    %%%%%:  115-block 12
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  116:		  && *_M_current != '{'))
+    %%%%%:  116-block 13
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  117:	    {
+    #####:  118:	      (this->*_M_eat_escape)();
+    %%%%%:  118-block 17
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  118-block 18
+    %%%%%:  118-block 19
+    %%%%%:  118-block 20
+call    2 never executed
+    #####:  119:	      return;
+        -:  120:	    }
+    #####:  121:	  __c = *_M_current++;
+    %%%%%:  121-block 22
+        -:  122:	}
+    #####:  123:      if (__c == '(')
+    %%%%%:  123-block 23
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  124:	{
+    #####:  125:	  if (_M_is_ecma() && *_M_current == '?')
+    %%%%%:  125-block 24
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:  125-block 26
+branch  3 never executed (fallthrough)
+branch  4 never executed
+    %%%%%:  125-block 27
+    %%%%%:  125-block 28
+    %%%%%:  125-block 29
+branch  5 never executed (fallthrough)
+branch  6 never executed
+        -:  126:	    {
+    #####:  127:	      if (++_M_current == _M_end)
+    %%%%%:  127-block 30
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  128:		__throw_regex_error(regex_constants::error_paren);
+    %%%%%:  128-block 31
+call    0 never executed
+        -:  129:
+    #####:  130:	      if (*_M_current == ':')
+    %%%%%:  130-block 32
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  131:		{
+    #####:  132:		  ++_M_current;
+    #####:  133:		  _M_token = _S_token_subexpr_no_group_begin;
+    %%%%%:  133-block 33
+        -:  134:		}
+    #####:  135:	      else if (*_M_current == '=')
+    %%%%%:  135-block 34
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  136:		{
+    #####:  137:		  ++_M_current;
+    #####:  138:		  _M_token = _S_token_subexpr_lookahead_begin;
+    #####:  139:		  _M_value.assign(1, 'p');
+    %%%%%:  139-block 35
+call    0 never executed
+        -:  140:		}
+    #####:  141:	      else if (*_M_current == '!')
+    %%%%%:  141-block 36
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  142:		{
+    #####:  143:		  ++_M_current;
+    #####:  144:		  _M_token = _S_token_subexpr_lookahead_begin;
+    #####:  145:		  _M_value.assign(1, 'n');
+    %%%%%:  145-block 37
+call    0 never executed
+        -:  146:		}
+        -:  147:	      else
+    #####:  148:		__throw_regex_error(regex_constants::error_paren,
+    %%%%%:  148-block 38
+call    0 never executed
+        -:  149:				    "Invalid '(?...)' zero-width assertion "
+        -:  150:				    "in regular expression");
+        -:  151:	    }
+    #####:  152:	  else if (_M_flags & regex_constants::nosubs)
+    %%%%%:  152-block 39
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  153:	    _M_token = _S_token_subexpr_no_group_begin;
+    %%%%%:  153-block 41
+        -:  154:	  else
+    #####:  155:	    _M_token = _S_token_subexpr_begin;
+    %%%%%:  155-block 42
+        -:  156:	}
+    #####:  157:      else if (__c == ')')
+    %%%%%:  157-block 43
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  158:	_M_token = _S_token_subexpr_end;
+    %%%%%:  158-block 44
+    #####:  159:      else if (__c == '[')
+    %%%%%:  159-block 45
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  160:	{
+    #####:  161:	  _M_state = _S_state_in_bracket;
+    #####:  162:	  _M_at_bracket_start = true;
+    #####:  163:	  if (_M_current != _M_end && *_M_current == '^')
+    %%%%%:  163-block 46
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  163-block 47
+branch  2 never executed (fallthrough)
+branch  3 never executed
+        -:  164:	    {
+    #####:  165:	      _M_token = _S_token_bracket_neg_begin;
+    #####:  166:	      ++_M_current;
+    %%%%%:  166-block 48
+        -:  167:	    }
+        -:  168:	  else
+    #####:  169:	    _M_token = _S_token_bracket_begin;
+    %%%%%:  169-block 49
+        -:  170:	}
+    #####:  171:      else if (__c == '{')
+    %%%%%:  171-block 51
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  172:	{
+    #####:  173:	  _M_state = _S_state_in_brace;
+    #####:  174:	  _M_token = _S_token_interval_begin;
+    %%%%%:  174-block 52
+        -:  175:	}
+    #####:  176:      else if (__builtin_expect(__c == _CharT(0), false))
+    %%%%%:  176-block 53
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  177:	{
+    #####:  178:	  if (!_M_is_ecma())
+    %%%%%:  178-block 54
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  179:	    __throw_regex_error(regex_constants::_S_null);
+    %%%%%:  179-block 56
+call    0 never executed
+    #####:  180:	  _M_token = _S_token_ord_char;
+    #####:  181:	  _M_value.assign(1, __c);
+    %%%%%:  181-block 57
+call    0 never executed
+        -:  182:	}
+    #####:  183:      else if (__c != ']' && __c != '}')
+    %%%%%:  183-block 58
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  183-block 59
+branch  2 never executed (fallthrough)
+branch  3 never executed
+        -:  184:	{
+    #####:  185:	  auto __it = _M_token_tbl;
+    #####:  186:	  auto __narrowc = _M_ctype.narrow(__c, '\0');
+    %%%%%:  186-block 60
+call    0 never executed
+    #####:  187:	  for (; __it->first != '\0'; ++__it)
+    %%%%%:  187-block 64
+    %%%%%:  187-block 65
+branch  0 never executed
+branch  1 never executed (fallthrough)
+    #####:  188:	    if (__it->first == __narrowc)
+    %%%%%:  188-block 62
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  189:	      {
+    #####:  190:		_M_token = __it->second;
+    #####:  191:		return;
+    %%%%%:  191-block 63
+        -:  192:	      }
+    #####:  193:	  __glibcxx_assert(!"unexpected special character in regex");
+    %%%%%:  193-block 68
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  194:	}
+    %%%%%:  194-block 71
+        -:  195:      else
+        -:  196:	{
+    #####:  197:	  _M_token = _S_token_ord_char;
+    #####:  198:	  _M_value.assign(1, __c);
+    %%%%%:  198-block 72
+call    0 never executed
+        -:  199:	}
+        -:  200:    }
+        -:  201:
+        -:  202:  // Differences between styles:
+        -:  203:  // 1) different semantics of "[]" and "[^]".
+        -:  204:  // 2) Escaping in bracket expr.
+        -:  205:  template<typename _CharT>
+        -:  206:    void
+function _ZNSt8__detail8_ScannerIcE18_M_scan_in_bracketEv called 0 returned 0% blocks executed 0%
+    #####:  207:    _Scanner<_CharT>::
+        -:  208:    _M_scan_in_bracket()
+        -:  209:    {
+    #####:  210:      if (_M_current == _M_end)
+    %%%%%:  210-block 2
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  211:	__throw_regex_error(regex_constants::error_brack);
+    %%%%%:  211-block 3
+call    0 never executed
+        -:  212:
+    #####:  213:      auto __c = *_M_current++;
+        -:  214:
+    #####:  215:      if (__c == '-')
+    %%%%%:  215-block 4
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  216:	_M_token = _S_token_bracket_dash;
+    %%%%%:  216-block 5
+    #####:  217:      else if (__c == '[')
+    %%%%%:  217-block 6
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  218:	{
+    #####:  219:	  if (_M_current == _M_end)
+    %%%%%:  219-block 7
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  220:	    __throw_regex_error(regex_constants::error_brack,
+    %%%%%:  220-block 8
+call    0 never executed
+        -:  221:				"Incomplete '[[' character class in "
+        -:  222:				"regular expression");
+        -:  223:
+    #####:  224:	  if (*_M_current == '.')
+    %%%%%:  224-block 9
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  225:	    {
+    #####:  226:	      _M_token = _S_token_collsymbol;
+    #####:  227:	      _M_eat_class(*_M_current++);
+    %%%%%:  227-block 10
+call    0 never executed
+        -:  228:	    }
+    #####:  229:	  else if (*_M_current == ':')
+    %%%%%:  229-block 11
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  230:	    {
+    #####:  231:	      _M_token = _S_token_char_class_name;
+    #####:  232:	      _M_eat_class(*_M_current++);
+    %%%%%:  232-block 12
+call    0 never executed
+        -:  233:	    }
+    #####:  234:	  else if (*_M_current == '=')
+    %%%%%:  234-block 13
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  235:	    {
+    #####:  236:	      _M_token = _S_token_equiv_class_name;
+    #####:  237:	      _M_eat_class(*_M_current++);
+    %%%%%:  237-block 14
+call    0 never executed
+        -:  238:	    }
+        -:  239:	  else
+        -:  240:	    {
+    #####:  241:	      _M_token = _S_token_ord_char;
+    #####:  242:	      _M_value.assign(1, __c);
+    %%%%%:  242-block 15
+call    0 never executed
+        -:  243:	    }
+        -:  244:	}
+        -:  245:      // In POSIX, when encountering "[]" or "[^]", the ']' is interpreted
+        -:  246:      // literally. So "[]]" and "[^]]" are valid regexes. See the testcases
+        -:  247:      // `.../empty_range.cc`.
+    #####:  248:      else if (__c == ']' && (_M_is_ecma() || !_M_at_bracket_start))
+    %%%%%:  248-block 16
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  248-block 17
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed
+    %%%%%:  248-block 19
+branch  5 never executed (fallthrough)
+branch  6 never executed
+    %%%%%:  248-block 20
+    %%%%%:  248-block 21
+    %%%%%:  248-block 22
+branch  7 never executed (fallthrough)
+branch  8 never executed
+        -:  249:	{
+    #####:  250:	  _M_token = _S_token_bracket_end;
+    #####:  251:	  _M_state = _S_state_normal;
+    %%%%%:  251-block 23
+        -:  252:	}
+        -:  253:      // ECMAScript and awk permits escaping in bracket.
+    #####:  254:      else if (__c == '\\' && (_M_is_ecma() || _M_is_awk()))
+    %%%%%:  254-block 24
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  254-block 25
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed
+    %%%%%:  254-block 27
+call    5 never executed
+branch  6 never executed (fallthrough)
+branch  7 never executed
+    %%%%%:  254-block 29
+    %%%%%:  254-block 30
+    %%%%%:  254-block 31
+branch  8 never executed (fallthrough)
+branch  9 never executed
+    #####:  255:	(this->*_M_eat_escape)();
+    %%%%%:  255-block 32
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  255-block 33
+    %%%%%:  255-block 34
+    %%%%%:  255-block 35
+call    2 never executed
+        -:  256:      else
+        -:  257:	{
+    #####:  258:	  _M_token = _S_token_ord_char;
+    #####:  259:	  _M_value.assign(1, __c);
+    %%%%%:  259-block 36
+call    0 never executed
+        -:  260:	}
+    #####:  261:      _M_at_bracket_start = false;
+    #####:  262:    }
+        -:  263:
+        -:  264:  // Differences between styles:
+        -:  265:  // 1) "\}" in basic style.
+        -:  266:  template<typename _CharT>
+        -:  267:    void
+function _ZNSt8__detail8_ScannerIcE16_M_scan_in_braceEv called 0 returned 0% blocks executed 0%
+    #####:  268:    _Scanner<_CharT>::
+        -:  269:    _M_scan_in_brace()
+        -:  270:    {
+    #####:  271:      if (_M_current == _M_end)
+    %%%%%:  271-block 2
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  272:	__throw_regex_error(regex_constants::error_brace);
+    %%%%%:  272-block 3
+call    0 never executed
+        -:  273:
+    #####:  274:      auto __c = *_M_current++;
+        -:  275:
+    #####:  276:      if (_M_ctype.is(_CtypeT::digit, __c))
+    %%%%%:  276-block 4
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+        -:  277:	{
+    #####:  278:	  _M_token = _S_token_dup_count;
+    #####:  279:	  _M_value.assign(1, __c);
+    %%%%%:  279-block 6
+call    0 never executed
+    #####:  280:	  while (_M_current != _M_end
+    #####:  281:		 && _M_ctype.is(_CtypeT::digit, *_M_current))
+    %%%%%:  281-block 9
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  281-block 10
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed
+    %%%%%:  281-block 12
+    %%%%%:  281-block 13
+    %%%%%:  281-block 14
+branch  5 never executed
+branch  6 never executed
+    #####:  282:	    _M_value += *_M_current++;
+    %%%%%:  282-block 8
+call    0 never executed
+        -:  283:	}
+    #####:  284:      else if (__c == ',')
+    %%%%%:  284-block 15
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  285:	_M_token = _S_token_comma;
+    %%%%%:  285-block 16
+        -:  286:      // basic use \}.
+    #####:  287:      else if (_M_is_basic())
+    %%%%%:  287-block 17
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+        -:  288:	{
+    #####:  289:	  if (__c == '\\' && _M_current != _M_end && *_M_current == '}')
+    %%%%%:  289-block 19
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  289-block 20
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    %%%%%:  289-block 21
+branch  4 never executed (fallthrough)
+branch  5 never executed
+        -:  290:	    {
+    #####:  291:	      _M_state = _S_state_normal;
+    #####:  292:	      _M_token = _S_token_interval_end;
+    #####:  293:	      ++_M_current;
+    %%%%%:  293-block 22
+        -:  294:	    }
+        -:  295:	  else
+    #####:  296:	    __throw_regex_error(regex_constants::error_badbrace);
+    %%%%%:  296-block 23
+call    0 never executed
+        -:  297:	}
+    #####:  298:      else if (__c == '}')
+    %%%%%:  298-block 24
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  299:	{
+    #####:  300:	  _M_state = _S_state_normal;
+    #####:  301:	  _M_token = _S_token_interval_end;
+    %%%%%:  301-block 25
+        -:  302:	}
+        -:  303:      else
+    #####:  304:	__throw_regex_error(regex_constants::error_badbrace);
+    %%%%%:  304-block 26
+call    0 never executed
+    #####:  305:    }
+        -:  306:
+        -:  307:  template<typename _CharT>
+        -:  308:    void
+function _ZNSt8__detail8_ScannerIcE18_M_eat_escape_ecmaEv called 0 returned 0% blocks executed 0%
+    #####:  309:    _Scanner<_CharT>::
+        -:  310:    _M_eat_escape_ecma()
+        -:  311:    {
+    #####:  312:      if (_M_current == _M_end)
+    %%%%%:  312-block 2
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  313:	__throw_regex_error(regex_constants::error_escape);
+    %%%%%:  313-block 3
+call    0 never executed
+        -:  314:
+    #####:  315:      auto __c = *_M_current++;
+    #####:  316:      auto __pos = _M_find_escape(_M_ctype.narrow(__c, '\0'));
+    %%%%%:  316-block 4
+call    0 never executed
+call    1 never executed
+        -:  317:
+    #####:  318:      if (__pos != nullptr && (__c != 'b' || _M_state == _S_state_in_bracket))
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  318-block 7
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    %%%%%:  318-block 8
+branch  4 never executed (fallthrough)
+branch  5 never executed
+        -:  319:	{
+    #####:  320:	  _M_token = _S_token_ord_char;
+    #####:  321:	  _M_value.assign(1, *__pos);
+    %%%%%:  321-block 9
+call    0 never executed
+        -:  322:	}
+    #####:  323:      else if (__c == 'b')
+    %%%%%:  323-block 10
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  324:	{
+    #####:  325:	  _M_token = _S_token_word_bound;
+    #####:  326:	  _M_value.assign(1, 'p');
+    %%%%%:  326-block 11
+call    0 never executed
+        -:  327:	}
+    #####:  328:      else if (__c == 'B')
+    %%%%%:  328-block 12
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  329:	{
+    #####:  330:	  _M_token = _S_token_word_bound;
+    #####:  331:	  _M_value.assign(1, 'n');
+    %%%%%:  331-block 13
+call    0 never executed
+        -:  332:	}
+        -:  333:      // N3376 28.13
+    #####:  334:      else if (__c == 'd'
+    %%%%%:  334-block 14
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  335:	       || __c == 'D'
+    %%%%%:  335-block 15
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  336:	       || __c == 's'
+    %%%%%:  336-block 16
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  337:	       || __c == 'S'
+    %%%%%:  337-block 17
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  338:	       || __c == 'w'
+    %%%%%:  338-block 18
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  339:	       || __c == 'W')
+    %%%%%:  339-block 19
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  340:	{
+    #####:  341:	  _M_token = _S_token_quoted_class;
+    #####:  342:	  _M_value.assign(1, __c);
+    %%%%%:  342-block 20
+call    0 never executed
+        -:  343:	}
+    #####:  344:      else if (__c == 'c')
+    %%%%%:  344-block 21
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  345:	{
+    #####:  346:	  if (_M_current == _M_end)
+    %%%%%:  346-block 22
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  347:	    __throw_regex_error(regex_constants::error_escape,
+    %%%%%:  347-block 23
+call    0 never executed
+        -:  348:				"invalid '\\cX' control character in "
+        -:  349:				"regular expression");
+    #####:  350:	  _M_token = _S_token_ord_char;
+    #####:  351:	  _M_value.assign(1, *_M_current++);
+    %%%%%:  351-block 24
+call    0 never executed
+        -:  352:	}
+    #####:  353:      else if (__c == 'x' || __c == 'u')
+    %%%%%:  353-block 25
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  353-block 26
+branch  2 never executed (fallthrough)
+branch  3 never executed
+        -:  354:	{
+    #####:  355:	  _M_value.clear();
+    %%%%%:  355-block 27
+call    0 never executed
+    #####:  356:	  const int __n = __c == 'x' ? 2 : 4;
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  356-block 29
+    %%%%%:  356-block 30
+    #####:  357:	  for (int __i = 0; __i < __n; __i++)
+    %%%%%:  357-block 31
+    %%%%%:  357-block 44
+branch  0 never executed
+branch  1 never executed (fallthrough)
+        -:  358:	    {
+    #####:  359:	      if (_M_current == _M_end
+    #####:  360:		  || !_M_ctype.is(_CtypeT::xdigit, *_M_current))
+    %%%%%:  360-block 32
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  360-block 33
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed
+    %%%%%:  360-block 35
+    %%%%%:  360-block 36
+    %%%%%:  360-block 37
+branch  5 never executed (fallthrough)
+branch  6 never executed
+    #####:  361:		__throw_regex_error(regex_constants::error_escape,
+    %%%%%:  361-block 38
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  361-block 39
+    %%%%%:  361-block 40
+    %%%%%:  361-block 41
+call    2 never executed
+        -:  362:				    __n == 2
+        -:  363:				    ? "Invalid '\\xNN' control character in "
+        -:  364:				      "regular expression"
+        -:  365:				    : "Invalid '\\uNNNN' control character in "
+        -:  366:				      "regular expression");
+    #####:  367:	      _M_value += *_M_current++;
+    %%%%%:  367-block 42
+call    0 never executed
+        -:  368:	    }
+    #####:  369:	  _M_token = _S_token_hex_num;
+    #####:  370:	}
+    %%%%%:  370-block 45
+        -:  371:      // ECMAScript recognizes multi-digit back-references.
+    #####:  372:      else if (_M_ctype.is(_CtypeT::digit, __c))
+    %%%%%:  372-block 46
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+        -:  373:	{
+    #####:  374:	  _M_value.assign(1, __c);
+    %%%%%:  374-block 48
+call    0 never executed
+    #####:  375:	  while (_M_current != _M_end
+    #####:  376:		 && _M_ctype.is(_CtypeT::digit, *_M_current))
+    %%%%%:  376-block 51
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  376-block 52
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed
+    %%%%%:  376-block 54
+    %%%%%:  376-block 55
+    %%%%%:  376-block 56
+branch  5 never executed
+branch  6 never executed (fallthrough)
+    #####:  377:	    _M_value += *_M_current++;
+    %%%%%:  377-block 50
+call    0 never executed
+    #####:  378:	  _M_token = _S_token_backref;
+    %%%%%:  378-block 57
+        -:  379:	}
+        -:  380:      else
+        -:  381:	{
+    #####:  382:	  _M_token = _S_token_ord_char;
+    #####:  383:	  _M_value.assign(1, __c);
+    %%%%%:  383-block 58
+call    0 never executed
+        -:  384:	}
+    #####:  385:    }
+        -:  386:
+        -:  387:  // Differences between styles:
+        -:  388:  // 1) Extended doesn't support backref, but basic does.
+        -:  389:  template<typename _CharT>
+        -:  390:    void
+function _ZNSt8__detail8_ScannerIcE19_M_eat_escape_posixEv called 0 returned 0% blocks executed 0%
+    #####:  391:    _Scanner<_CharT>::
+        -:  392:    _M_eat_escape_posix()
+        -:  393:    {
+    #####:  394:      if (_M_current == _M_end)
+    %%%%%:  394-block 2
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  395:	__throw_regex_error(regex_constants::error_escape);
+    %%%%%:  395-block 3
+call    0 never executed
+        -:  396:
+    #####:  397:      auto __c = *_M_current;
+    #####:  398:      auto __pos = __builtin_strchr(_M_spec_char, _M_ctype.narrow(__c, '\0'));
+    %%%%%:  398-block 4
+call    0 never executed
+        -:  399:
+    #####:  400:      if (__pos != nullptr && *__pos != '\0')
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  400-block 6
+branch  2 never executed (fallthrough)
+branch  3 never executed
+        -:  401:	{
+    #####:  402:	  _M_token = _S_token_ord_char;
+    #####:  403:	  _M_value.assign(1, __c);
+    %%%%%:  403-block 7
+call    0 never executed
+        -:  404:	}
+        -:  405:      // We MUST judge awk before handling backrefs. There's no backref in awk.
+    #####:  406:      else if (_M_is_awk())
+    %%%%%:  406-block 8
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+        -:  407:	{
+    #####:  408:	  _M_eat_escape_awk();
+    %%%%%:  408-block 10
+call    0 never executed
+    #####:  409:	  return;
+        -:  410:	}
+    #####:  411:      else if (_M_is_basic() && _M_ctype.is(_CtypeT::digit, __c) && __c != '0')
+    %%%%%:  411-block 12
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:  411-block 14
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:  411-block 16
+branch  6 never executed (fallthrough)
+branch  7 never executed
+    %%%%%:  411-block 17
+    %%%%%:  411-block 18
+    %%%%%:  411-block 19
+branch  8 never executed (fallthrough)
+branch  9 never executed
+        -:  412:	{
+    #####:  413:	  _M_token = _S_token_backref;
+    #####:  414:	  _M_value.assign(1, __c);
+    %%%%%:  414-block 20
+call    0 never executed
+        -:  415:	}
+        -:  416:      else
+        -:  417:	{
+        -:  418:#ifdef __STRICT_ANSI__
+        -:  419:	  // POSIX says it is undefined to escape ordinary characters
+        -:  420:	  __throw_regex_error(regex_constants::error_escape);
+        -:  421:#else
+    #####:  422:	  _M_token = _S_token_ord_char;
+    #####:  423:	  _M_value.assign(1, __c);
+    %%%%%:  423-block 21
+call    0 never executed
+        -:  424:#endif
+        -:  425:	}
+    #####:  426:      ++_M_current;
+    %%%%%:  426-block 22
+        -:  427:    }
+        -:  428:
+        -:  429:  template<typename _CharT>
+        -:  430:    void
+function _ZNSt8__detail8_ScannerIcE17_M_eat_escape_awkEv called 0 returned 0% blocks executed 0%
+    #####:  431:    _Scanner<_CharT>::
+        -:  432:    _M_eat_escape_awk()
+        -:  433:    {
+    #####:  434:      auto __c = *_M_current++;
+    #####:  435:      auto __pos = _M_find_escape(_M_ctype.narrow(__c, '\0'));
+    %%%%%:  435-block 2
+call    0 never executed
+call    1 never executed
+        -:  436:
+    #####:  437:      if (__pos != nullptr)
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  438:	{
+    #####:  439:	  _M_token = _S_token_ord_char;
+    #####:  440:	  _M_value.assign(1, *__pos);
+    %%%%%:  440-block 5
+call    0 never executed
+        -:  441:	}
+        -:  442:      // \ddd for oct representation
+    #####:  443:      else if (_M_ctype.is(_CtypeT::digit, __c)
+    %%%%%:  443-block 6
+call    0 never executed
+    #####:  444:	       && __c != '8'
+    %%%%%:  444-block 8
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  445:	       && __c != '9')
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  445-block 9
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    %%%%%:  445-block 10
+    %%%%%:  445-block 11
+    %%%%%:  445-block 12
+branch  4 never executed (fallthrough)
+branch  5 never executed
+        -:  446:	{
+    #####:  447:	  _M_value.assign(1,  __c);
+    %%%%%:  447-block 13
+call    0 never executed
+    #####:  448:	  for (int __i = 0;
+        -:  449:	       __i < 2
+    #####:  450:	       && _M_current != _M_end
+    %%%%%:  450-block 18
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  451:	       && _M_ctype.is(_CtypeT::digit, *_M_current)
+    %%%%%:  451-block 19
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  452:	       && *_M_current != '8'
+    %%%%%:  452-block 21
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  453:	       && *_M_current != '9';
+    %%%%%:  453-block 17
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  453-block 22
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    %%%%%:  453-block 23
+    %%%%%:  453-block 24
+    %%%%%:  453-block 25
+branch  4 never executed
+branch  5 never executed (fallthrough)
+        -:  454:	       __i++)
+    #####:  455:	    _M_value += *_M_current++;
+    %%%%%:  455-block 15
+call    0 never executed
+    #####:  456:	  _M_token = _S_token_oct_num;
+    #####:  457:	  return;
+    %%%%%:  457-block 26
+        -:  458:	}
+        -:  459:      else
+    #####:  460:	__throw_regex_error(regex_constants::error_escape);
+    %%%%%:  460-block 27
+call    0 never executed
+        -:  461:    }
+        -:  462:
+        -:  463:  // Eats a character class or throws an exception.
+        -:  464:  // __ch could be ':', '.' or '=', _M_current is the char after ']' when
+        -:  465:  // returning.
+        -:  466:  template<typename _CharT>
+        -:  467:    void
+function _ZNSt8__detail8_ScannerIcE12_M_eat_classEc called 0 returned 0% blocks executed 0%
+    #####:  468:    _Scanner<_CharT>::
+        -:  469:    _M_eat_class(char __ch)
+        -:  470:    {
+    #####:  471:      for (_M_value.clear(); _M_current != _M_end && *_M_current != __ch;)
+    %%%%%:  471-block 2
+call    0 never executed
+    %%%%%:  471-block 4
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:  471-block 5
+branch  3 never executed
+branch  4 never executed (fallthrough)
+    #####:  472:	_M_value += *_M_current++;
+    %%%%%:  472-block 3
+call    0 never executed
+    #####:  473:      if (_M_current == _M_end
+    #####:  474:	  || *_M_current++ != __ch
+    %%%%%:  474-block 7
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  475:	  || _M_current == _M_end // skip __ch
+    %%%%%:  475-block 8
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  476:	  || *_M_current++ != ']') // skip ']'
+    %%%%%:  476-block 6
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  476-block 9
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    %%%%%:  476-block 10
+    %%%%%:  476-block 11
+    %%%%%:  476-block 12
+branch  4 never executed (fallthrough)
+branch  5 never executed
+        -:  477:	{
+    #####:  478:	  __throw_regex_error(__ch == ':' ? regex_constants::error_ctype
+    %%%%%:  478-block 13
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  478-block 14
+    %%%%%:  478-block 15
+    %%%%%:  478-block 16
+call    2 never executed
+        -:  479:					  : regex_constants::error_collate);
+        -:  480:	}
+    #####:  481:    }
+        -:  482:
+        -:  483:#ifdef _GLIBCXX_DEBUG
+        -:  484:  template<typename _CharT>
+        -:  485:    std::ostream&
+        -:  486:    _Scanner<_CharT>::
+        -:  487:    _M_print(std::ostream& __ostr)
+        -:  488:    {
+        -:  489:      switch (_M_token)
+        -:  490:      {
+        -:  491:      case _S_token_anychar:
+        -:  492:	__ostr << "any-character\n";
+        -:  493:	break;
+        -:  494:      case _S_token_backref:
+        -:  495:	__ostr << "backref\n";
+        -:  496:	break;
+        -:  497:      case _S_token_bracket_begin:
+        -:  498:	__ostr << "bracket-begin\n";
+        -:  499:	break;
+        -:  500:      case _S_token_bracket_neg_begin:
+        -:  501:	__ostr << "bracket-neg-begin\n";
+        -:  502:	break;
+        -:  503:      case _S_token_bracket_end:
+        -:  504:	__ostr << "bracket-end\n";
+        -:  505:	break;
+        -:  506:      case _S_token_char_class_name:
+        -:  507:	__ostr << "char-class-name \"" << _M_value << "\"\n";
+        -:  508:	break;
+        -:  509:      case _S_token_closure0:
+        -:  510:	__ostr << "closure0\n";
+        -:  511:	break;
+        -:  512:      case _S_token_closure1:
+        -:  513:	__ostr << "closure1\n";
+        -:  514:	break;
+        -:  515:      case _S_token_collsymbol:
+        -:  516:	__ostr << "collsymbol \"" << _M_value << "\"\n";
+        -:  517:	break;
+        -:  518:      case _S_token_comma:
+        -:  519:	__ostr << "comma\n";
+        -:  520:	break;
+        -:  521:      case _S_token_dup_count:
+        -:  522:	__ostr << "dup count: " << _M_value << "\n";
+        -:  523:	break;
+        -:  524:      case _S_token_eof:
+        -:  525:	__ostr << "EOF\n";
+        -:  526:	break;
+        -:  527:      case _S_token_equiv_class_name:
+        -:  528:	__ostr << "equiv-class-name \"" << _M_value << "\"\n";
+        -:  529:	break;
+        -:  530:      case _S_token_interval_begin:
+        -:  531:	__ostr << "interval begin\n";
+        -:  532:	break;
+        -:  533:      case _S_token_interval_end:
+        -:  534:	__ostr << "interval end\n";
+        -:  535:	break;
+        -:  536:      case _S_token_line_begin:
+        -:  537:	__ostr << "line begin\n";
+        -:  538:	break;
+        -:  539:      case _S_token_line_end:
+        -:  540:	__ostr << "line end\n";
+        -:  541:	break;
+        -:  542:      case _S_token_opt:
+        -:  543:	__ostr << "opt\n";
+        -:  544:	break;
+        -:  545:      case _S_token_or:
+        -:  546:	__ostr << "or\n";
+        -:  547:	break;
+        -:  548:      case _S_token_ord_char:
+        -:  549:	__ostr << "ordinary character: \"" << _M_value << "\"\n";
+        -:  550:	break;
+        -:  551:      case _S_token_subexpr_begin:
+        -:  552:	__ostr << "subexpr begin\n";
+        -:  553:	break;
+        -:  554:      case _S_token_subexpr_no_group_begin:
+        -:  555:	__ostr << "no grouping subexpr begin\n";
+        -:  556:	break;
+        -:  557:      case _S_token_subexpr_lookahead_begin:
+        -:  558:	__ostr << "lookahead subexpr begin\n";
+        -:  559:	break;
+        -:  560:      case _S_token_subexpr_end:
+        -:  561:	__ostr << "subexpr end\n";
+        -:  562:	break;
+        -:  563:      case _S_token_unknown:
+        -:  564:	__ostr << "-- unknown token --\n";
+        -:  565:	break;
+        -:  566:      case _S_token_oct_num:
+        -:  567:	__ostr << "oct number " << _M_value << "\n";
+        -:  568:	break;
+        -:  569:      case _S_token_hex_num:
+        -:  570:	__ostr << "hex number " << _M_value << "\n";
+        -:  571:	break;
+        -:  572:      case _S_token_quoted_class:
+        -:  573:	__ostr << "quoted class " << "\\" << _M_value << "\n";
+        -:  574:	break;
+        -:  575:      default:
+        -:  576:	_GLIBCXX_DEBUG_ASSERT(false);
+        -:  577:      }
+        -:  578:      return __ostr;
+        -:  579:    }
+        -:  580:#endif
+        -:  581:
+        -:  582:} // namespace __detail
+        -:  583:_GLIBCXX_END_NAMESPACE_VERSION
+        -:  584:} // namespace

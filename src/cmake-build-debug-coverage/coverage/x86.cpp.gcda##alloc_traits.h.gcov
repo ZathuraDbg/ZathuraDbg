@@ -1,0 +1,197 @@
+        -:    0:Source:/usr/include/c++/14.2.1/ext/alloc_traits.h
+        -:    0:Graph:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/app/arch/x86.cpp.gcno
+        -:    0:Data:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/app/arch/x86.cpp.gcda
+        -:    0:Runs:1
+        -:    1:// Allocator traits -*- C++ -*-
+        -:    2:
+        -:    3:// Copyright (C) 2011-2024 Free Software Foundation, Inc.
+        -:    4://
+        -:    5:// This file is part of the GNU ISO C++ Library.  This library is free
+        -:    6:// software; you can redistribute it and/or modify it under the
+        -:    7:// terms of the GNU General Public License as published by the
+        -:    8:// Free Software Foundation; either version 3, or (at your option)
+        -:    9:// any later version.
+        -:   10:
+        -:   11:// This library is distributed in the hope that it will be useful,
+        -:   12:// but WITHOUT ANY WARRANTY; without even the implied warranty of
+        -:   13:// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+        -:   14:// GNU General Public License for more details.
+        -:   15:
+        -:   16:// Under Section 7 of GPL version 3, you are granted additional
+        -:   17:// permissions described in the GCC Runtime Library Exception, version
+        -:   18:// 3.1, as published by the Free Software Foundation.
+        -:   19:
+        -:   20:// You should have received a copy of the GNU General Public License and
+        -:   21:// a copy of the GCC Runtime Library Exception along with this program;
+        -:   22:// see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+        -:   23:// <http://www.gnu.org/licenses/>.
+        -:   24:
+        -:   25:/** @file ext/alloc_traits.h
+        -:   26: *  This file is a GNU extension to the Standard C++ Library.
+        -:   27: */
+        -:   28:
+        -:   29:#ifndef _EXT_ALLOC_TRAITS_H
+        -:   30:#define _EXT_ALLOC_TRAITS_H 1
+        -:   31:
+        -:   32:#pragma GCC system_header
+        -:   33:
+        -:   34:# include <bits/alloc_traits.h>
+        -:   35:
+        -:   36:namespace __gnu_cxx _GLIBCXX_VISIBILITY(default)
+        -:   37:{
+        -:   38:_GLIBCXX_BEGIN_NAMESPACE_VERSION
+        -:   39:
+        -:   40:/**
+        -:   41: * @brief  Uniform interface to C++98 and C++11 allocators.
+        -:   42: * @ingroup allocators
+        -:   43:*/
+        -:   44:template<typename _Alloc, typename = typename _Alloc::value_type>
+        -:   45:  struct __alloc_traits
+        -:   46:#if __cplusplus >= 201103L
+        -:   47:  : std::allocator_traits<_Alloc>
+        -:   48:#endif
+        -:   49:  {
+        -:   50:    typedef _Alloc allocator_type;
+        -:   51:#if __cplusplus >= 201103L
+        -:   52:    typedef std::allocator_traits<_Alloc>           _Base_type;
+        -:   53:    typedef typename _Base_type::value_type         value_type;
+        -:   54:    typedef typename _Base_type::pointer            pointer;
+        -:   55:    typedef typename _Base_type::const_pointer      const_pointer;
+        -:   56:    typedef typename _Base_type::size_type          size_type;
+        -:   57:    typedef typename _Base_type::difference_type    difference_type;
+        -:   58:    // C++11 allocators do not define reference or const_reference
+        -:   59:    typedef value_type&                             reference;
+        -:   60:    typedef const value_type&                       const_reference;
+        -:   61:    using _Base_type::allocate;
+        -:   62:    using _Base_type::deallocate;
+        -:   63:    using _Base_type::construct;
+        -:   64:    using _Base_type::destroy;
+        -:   65:    using _Base_type::max_size;
+        -:   66:
+        -:   67:  private:
+        -:   68:    template<typename _Ptr>
+        -:   69:      using __is_custom_pointer
+        -:   70:	= std::__and_<std::is_same<pointer, _Ptr>,
+        -:   71:		      std::__not_<std::is_pointer<_Ptr>>>;
+        -:   72:
+        -:   73:  public:
+        -:   74:    // overload construct for non-standard pointer types
+        -:   75:    template<typename _Ptr, typename... _Args>
+        -:   76:      [[__gnu__::__always_inline__]]
+        -:   77:      static _GLIBCXX14_CONSTEXPR
+        -:   78:      std::__enable_if_t<__is_custom_pointer<_Ptr>::value>
+        -:   79:      construct(_Alloc& __a, _Ptr __p, _Args&&... __args)
+        -:   80:      noexcept(noexcept(_Base_type::construct(__a, std::__to_address(__p),
+        -:   81:					      std::forward<_Args>(__args)...)))
+        -:   82:      {
+        -:   83:	_Base_type::construct(__a, std::__to_address(__p),
+        -:   84:			      std::forward<_Args>(__args)...);
+        -:   85:      }
+        -:   86:
+        -:   87:    // overload destroy for non-standard pointer types
+        -:   88:    template<typename _Ptr>
+        -:   89:      [[__gnu__::__always_inline__]]
+        -:   90:      static _GLIBCXX14_CONSTEXPR
+        -:   91:      std::__enable_if_t<__is_custom_pointer<_Ptr>::value>
+        -:   92:      destroy(_Alloc& __a, _Ptr __p)
+        -:   93:      noexcept(noexcept(_Base_type::destroy(__a, std::__to_address(__p))))
+        -:   94:      { _Base_type::destroy(__a, std::__to_address(__p)); }
+        -:   95:
+        -:   96:    [[__gnu__::__always_inline__]]
+        -:   97:    static constexpr _Alloc _S_select_on_copy(const _Alloc& __a)
+    #####:   98:    { return _Base_type::select_on_container_copy_construction(__a); }
+    %%%%%:   98-block 7
+    %%%%%:   98-block 8
+        -:   99:
+        -:  100:    [[__gnu__::__always_inline__]]
+        -:  101:    static _GLIBCXX14_CONSTEXPR void _S_on_swap(_Alloc& __a, _Alloc& __b)
+        -:  102:    { std::__alloc_on_swap(__a, __b); }
+        -:  103:
+        -:  104:    [[__gnu__::__always_inline__]]
+        -:  105:    static constexpr bool _S_propagate_on_copy_assign()
+    #####:  106:    { return _Base_type::propagate_on_container_copy_assignment::value; }
+    %%%%%:  106-block 2
+    %%%%%:  106-block 4
+        -:  107:
+        -:  108:    [[__gnu__::__always_inline__]]
+        -:  109:    static constexpr bool _S_propagate_on_move_assign()
+    #####:  110:    { return _Base_type::propagate_on_container_move_assignment::value; }
+    %%%%%:  110-block 4
+    %%%%%:  110-block 30
+        -:  111:
+        -:  112:    [[__gnu__::__always_inline__]]
+        -:  113:    static constexpr bool _S_propagate_on_swap()
+        -:  114:    { return _Base_type::propagate_on_container_swap::value; }
+        -:  115:
+        -:  116:    [[__gnu__::__always_inline__]]
+        -:  117:    static constexpr bool _S_always_equal()
+    #####:  118:    { return _Base_type::is_always_equal::value; }
+    %%%%%:  118-block 5
+    %%%%%:  118-block 7
+        -:  119:
+        -:  120:    __attribute__((__always_inline__))
+        -:  121:    static constexpr bool _S_nothrow_move()
+        -:  122:    { return _S_propagate_on_move_assign() || _S_always_equal(); }
+        -:  123:
+        -:  124:    template<typename _Tp>
+        -:  125:      struct rebind
+        -:  126:      { typedef typename _Base_type::template rebind_alloc<_Tp> other; };
+        -:  127:#else // ! C++11
+        -:  128:
+        -:  129:    typedef typename _Alloc::pointer                pointer;
+        -:  130:    typedef typename _Alloc::const_pointer          const_pointer;
+        -:  131:    typedef typename _Alloc::value_type             value_type;
+        -:  132:    typedef typename _Alloc::reference              reference;
+        -:  133:    typedef typename _Alloc::const_reference        const_reference;
+        -:  134:    typedef typename _Alloc::size_type              size_type;
+        -:  135:    typedef typename _Alloc::difference_type        difference_type;
+        -:  136:
+        -:  137:    __attribute__((__always_inline__)) _GLIBCXX_NODISCARD
+        -:  138:    static pointer
+        -:  139:    allocate(_Alloc& __a, size_type __n)
+        -:  140:    { return __a.allocate(__n); }
+        -:  141:
+        -:  142:    template<typename _Hint>
+        -:  143:      __attribute__((__always_inline__)) _GLIBCXX_NODISCARD
+        -:  144:      static pointer
+        -:  145:      allocate(_Alloc& __a, size_type __n, _Hint __hint)
+        -:  146:      { return __a.allocate(__n, __hint); }
+        -:  147:
+        -:  148:    __attribute__((__always_inline__))
+        -:  149:    static void deallocate(_Alloc& __a, pointer __p, size_type __n)
+        -:  150:    { __a.deallocate(__p, __n); }
+        -:  151:
+        -:  152:    template<typename _Tp>
+        -:  153:      __attribute__((__always_inline__))
+        -:  154:      static void construct(_Alloc& __a, pointer __p, const _Tp& __arg)
+        -:  155:      { __a.construct(__p, __arg); }
+        -:  156:
+        -:  157:    __attribute__((__always_inline__))
+        -:  158:    static void destroy(_Alloc& __a, pointer __p)
+        -:  159:    { __a.destroy(__p); }
+        -:  160:
+        -:  161:    __attribute__((__always_inline__))
+        -:  162:    static size_type max_size(const _Alloc& __a)
+        -:  163:    { return __a.max_size(); }
+        -:  164:
+        -:  165:    __attribute__((__always_inline__))
+        -:  166:    static const _Alloc& _S_select_on_copy(const _Alloc& __a) { return __a; }
+        -:  167:
+        -:  168:    __attribute__((__always_inline__))
+        -:  169:    static void _S_on_swap(_Alloc& __a, _Alloc& __b)
+        -:  170:    {
+        -:  171:      // _GLIBCXX_RESOLVE_LIB_DEFECTS
+        -:  172:      // 431. Swapping containers with unequal allocators.
+        -:  173:      std::__alloc_swap<_Alloc>::_S_do_it(__a, __b);
+        -:  174:    }
+        -:  175:
+        -:  176:    template<typename _Tp>
+        -:  177:      struct rebind
+        -:  178:      { typedef typename _Alloc::template rebind<_Tp>::other other; };
+        -:  179:#endif // C++11
+        -:  180:  };
+        -:  181:
+        -:  182:_GLIBCXX_END_NAMESPACE_VERSION
+        -:  183:} // namespace __gnu_cxx
+        -:  184:
+        -:  185:#endif

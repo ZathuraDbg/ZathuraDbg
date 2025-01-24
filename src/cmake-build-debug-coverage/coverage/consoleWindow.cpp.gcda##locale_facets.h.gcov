@@ -1,0 +1,2721 @@
+        -:    0:Source:/usr/include/c++/14.2.1/bits/locale_facets.h
+        -:    0:Graph:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/app/windows/consoleWindow.cpp.gcno
+        -:    0:Data:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/app/windows/consoleWindow.cpp.gcda
+        -:    0:Runs:1
+        -:    1:// Locale support -*- C++ -*-
+        -:    2:
+        -:    3:// Copyright (C) 1997-2024 Free Software Foundation, Inc.
+        -:    4://
+        -:    5:// This file is part of the GNU ISO C++ Library.  This library is free
+        -:    6:// software; you can redistribute it and/or modify it under the
+        -:    7:// terms of the GNU General Public License as published by the
+        -:    8:// Free Software Foundation; either version 3, or (at your option)
+        -:    9:// any later version.
+        -:   10:
+        -:   11:// This library is distributed in the hope that it will be useful,
+        -:   12:// but WITHOUT ANY WARRANTY; without even the implied warranty of
+        -:   13:// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+        -:   14:// GNU General Public License for more details.
+        -:   15:
+        -:   16:// Under Section 7 of GPL version 3, you are granted additional
+        -:   17:// permissions described in the GCC Runtime Library Exception, version
+        -:   18:// 3.1, as published by the Free Software Foundation.
+        -:   19:
+        -:   20:// You should have received a copy of the GNU General Public License and
+        -:   21:// a copy of the GCC Runtime Library Exception along with this program;
+        -:   22:// see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+        -:   23:// <http://www.gnu.org/licenses/>.
+        -:   24:
+        -:   25:/** @file bits/locale_facets.h
+        -:   26: *  This is an internal header file, included by other library headers.
+        -:   27: *  Do not attempt to use it directly. @headername{locale}
+        -:   28: */
+        -:   29:
+        -:   30://
+        -:   31:// ISO C++ 14882: 22.1  Locales
+        -:   32://
+        -:   33:
+        -:   34:#ifndef _LOCALE_FACETS_H
+        -:   35:#define _LOCALE_FACETS_H 1
+        -:   36:
+        -:   37:#pragma GCC system_header
+        -:   38:
+        -:   39:#include <cwctype>	// For wctype_t
+        -:   40:#include <cctype>
+        -:   41:#include <bits/ctype_base.h>
+        -:   42:#include <iosfwd>
+        -:   43:#include <bits/ios_base.h>  // For ios_base, ios_base::iostate
+        -:   44:#include <streambuf>
+        -:   45:#include <bits/cpp_type_traits.h>
+        -:   46:#include <ext/type_traits.h>
+        -:   47:#include <ext/numeric_traits.h>
+        -:   48:#include <bits/streambuf_iterator.h>
+        -:   49:
+        -:   50:namespace std _GLIBCXX_VISIBILITY(default)
+        -:   51:{
+        -:   52:_GLIBCXX_BEGIN_NAMESPACE_VERSION
+        -:   53:
+        -:   54:// Number of standard facets (for narrow characters only)
+        -:   55:#define  _GLIBCXX_NUM_FACETS 14
+        -:   56:
+        -:   57:// Number of duplicated facets for cxx11 ABI
+        -:   58:#define  _GLIBCXX_NUM_CXX11_FACETS (_GLIBCXX_USE_DUAL_ABI ? 8 : 0)
+        -:   59:
+        -:   60:// codecvt<char16_t> and codecvt<char32_t>
+        -:   61:#ifdef _GLIBCXX_USE_CHAR8_T
+        -:   62:# define _GLIBCXX_NUM_UNICODE_FACETS 4
+        -:   63:#else
+        -:   64:# define _GLIBCXX_NUM_UNICODE_FACETS 2
+        -:   65:#endif
+        -:   66:
+        -:   67:// Facets duplicated for alt128 long double format
+        -:   68:// num_get, num_put, money_get, money_put (+ cxx11 money_get, money_put)
+        -:   69:#define _GLIBCXX_NUM_LBDL_ALT128_FACETS (4 + (_GLIBCXX_USE_DUAL_ABI ? 2 : 0))
+        -:   70:
+        -:   71:  // Convert string to numeric value of type _Tp and store results.
+        -:   72:  // NB: This is specialized for all required types, there is no
+        -:   73:  // generic definition.
+        -:   74:  template<typename _Tp>
+        -:   75:    void
+        -:   76:    __convert_to_v(const char*, _Tp&, ios_base::iostate&,
+        -:   77:		   const __c_locale&) throw();
+        -:   78:
+        -:   79:  // Explicit specializations for required types.
+        -:   80:  template<>
+        -:   81:    void
+        -:   82:    __convert_to_v(const char*, float&, ios_base::iostate&,
+        -:   83:		   const __c_locale&) throw();
+        -:   84:
+        -:   85:  template<>
+        -:   86:    void
+        -:   87:    __convert_to_v(const char*, double&, ios_base::iostate&,
+        -:   88:		   const __c_locale&) throw();
+        -:   89:
+        -:   90:  template<>
+        -:   91:    void
+        -:   92:    __convert_to_v(const char*, long double&, ios_base::iostate&,
+        -:   93:		   const __c_locale&) throw();
+        -:   94:
+        -:   95:  // NB: __pad is a struct, rather than a function, so it can be
+        -:   96:  // partially-specialized.
+        -:   97:  template<typename _CharT, typename _Traits>
+        -:   98:    struct __pad
+        -:   99:    {
+        -:  100:      static void
+        -:  101:      _S_pad(ios_base& __io, _CharT __fill, _CharT* __news,
+        -:  102:	     const _CharT* __olds, streamsize __newlen, streamsize __oldlen);
+        -:  103:    };
+        -:  104:
+        -:  105:  // Used by both numeric and monetary facets.
+        -:  106:  // Inserts "group separator" characters into an array of characters.
+        -:  107:  // It's recursive, one iteration per group.  It moves the characters
+        -:  108:  // in the buffer this way: "xxxx12345" -> "12,345xxx".  Call this
+        -:  109:  // only with __gsize != 0.
+        -:  110:  template<typename _CharT>
+        -:  111:    _CharT*
+        -:  112:    __add_grouping(_CharT* __s, _CharT __sep,
+        -:  113:		   const char* __gbeg, size_t __gsize,
+        -:  114:		   const _CharT* __first, const _CharT* __last);
+        -:  115:
+        -:  116:  // This template permits specializing facet output code for
+        -:  117:  // ostreambuf_iterator.  For ostreambuf_iterator, sputn is
+        -:  118:  // significantly more efficient than incrementing iterators.
+        -:  119:  template<typename _CharT>
+        -:  120:    inline
+        -:  121:    ostreambuf_iterator<_CharT>
+        -:  122:    __write(ostreambuf_iterator<_CharT> __s, const _CharT* __ws, int __len)
+        -:  123:    {
+        -:  124:      __s._M_put(__ws, __len);
+        -:  125:      return __s;
+        -:  126:    }
+        -:  127:
+        -:  128:  // This is the unspecialized form of the template.
+        -:  129:  template<typename _CharT, typename _OutIter>
+        -:  130:    inline
+        -:  131:    _OutIter
+        -:  132:    __write(_OutIter __s, const _CharT* __ws, int __len)
+        -:  133:    {
+        -:  134:      for (int __j = 0; __j < __len; __j++, ++__s)
+        -:  135:	*__s = __ws[__j];
+        -:  136:      return __s;
+        -:  137:    }
+        -:  138:
+        -:  139:
+        -:  140:  // 22.2.1.1  Template class ctype
+        -:  141:  // Include host and configuration specific ctype enums for ctype_base.
+        -:  142:
+        -:  143:  /**
+        -:  144:   *  @brief  Common base for ctype facet
+        -:  145:   *
+        -:  146:   *  This template class provides implementations of the public functions
+        -:  147:   *  that forward to the protected virtual functions.
+        -:  148:   *
+        -:  149:   *  This template also provides abstract stubs for the protected virtual
+        -:  150:   *  functions.
+        -:  151:  */
+        -:  152:  template<typename _CharT>
+        -:  153:    class __ctype_abstract_base : public locale::facet, public ctype_base
+        -:  154:    {
+        -:  155:    public:
+        -:  156:      // Types:
+        -:  157:      /// Typedef for the template parameter
+        -:  158:      typedef _CharT char_type;
+        -:  159:
+        -:  160:      /**
+        -:  161:       *  @brief  Test char_type classification.
+        -:  162:       *
+        -:  163:       *  This function finds a mask M for @a __c and compares it to
+        -:  164:       *  mask @a __m.  It does so by returning the value of
+        -:  165:       *  ctype<char_type>::do_is().
+        -:  166:       *
+        -:  167:       *  @param __c  The char_type to compare the mask of.
+        -:  168:       *  @param __m  The mask to compare against.
+        -:  169:       *  @return  (M & __m) != 0.
+        -:  170:      */
+        -:  171:      bool
+        -:  172:      is(mask __m, char_type __c) const
+        -:  173:      { return this->do_is(__m, __c); }
+        -:  174:
+        -:  175:      /**
+        -:  176:       *  @brief  Return a mask array.
+        -:  177:       *
+        -:  178:       *  This function finds the mask for each char_type in the range [lo,hi)
+        -:  179:       *  and successively writes it to vec.  vec must have as many elements
+        -:  180:       *  as the char array.  It does so by returning the value of
+        -:  181:       *  ctype<char_type>::do_is().
+        -:  182:       *
+        -:  183:       *  @param __lo  Pointer to start of range.
+        -:  184:       *  @param __hi  Pointer to end of range.
+        -:  185:       *  @param __vec  Pointer to an array of mask storage.
+        -:  186:       *  @return  @a __hi.
+        -:  187:      */
+        -:  188:      const char_type*
+        -:  189:      is(const char_type *__lo, const char_type *__hi, mask *__vec) const
+        -:  190:      { return this->do_is(__lo, __hi, __vec); }
+        -:  191:
+        -:  192:      /**
+        -:  193:       *  @brief  Find char_type matching a mask
+        -:  194:       *
+        -:  195:       *  This function searches for and returns the first char_type c in
+        -:  196:       *  [lo,hi) for which is(m,c) is true.  It does so by returning
+        -:  197:       *  ctype<char_type>::do_scan_is().
+        -:  198:       *
+        -:  199:       *  @param __m  The mask to compare against.
+        -:  200:       *  @param __lo  Pointer to start of range.
+        -:  201:       *  @param __hi  Pointer to end of range.
+        -:  202:       *  @return  Pointer to matching char_type if found, else @a __hi.
+        -:  203:      */
+        -:  204:      const char_type*
+        -:  205:      scan_is(mask __m, const char_type* __lo, const char_type* __hi) const
+        -:  206:      { return this->do_scan_is(__m, __lo, __hi); }
+        -:  207:
+        -:  208:      /**
+        -:  209:       *  @brief  Find char_type not matching a mask
+        -:  210:       *
+        -:  211:       *  This function searches for and returns the first char_type c in
+        -:  212:       *  [lo,hi) for which is(m,c) is false.  It does so by returning
+        -:  213:       *  ctype<char_type>::do_scan_not().
+        -:  214:       *
+        -:  215:       *  @param __m  The mask to compare against.
+        -:  216:       *  @param __lo  Pointer to first char in range.
+        -:  217:       *  @param __hi  Pointer to end of range.
+        -:  218:       *  @return  Pointer to non-matching char if found, else @a __hi.
+        -:  219:      */
+        -:  220:      const char_type*
+        -:  221:      scan_not(mask __m, const char_type* __lo, const char_type* __hi) const
+        -:  222:      { return this->do_scan_not(__m, __lo, __hi); }
+        -:  223:
+        -:  224:      /**
+        -:  225:       *  @brief  Convert to uppercase.
+        -:  226:       *
+        -:  227:       *  This function converts the argument to uppercase if possible.
+        -:  228:       *  If not possible (for example, '2'), returns the argument.  It does
+        -:  229:       *  so by returning ctype<char_type>::do_toupper().
+        -:  230:       *
+        -:  231:       *  @param __c  The char_type to convert.
+        -:  232:       *  @return  The uppercase char_type if convertible, else @a __c.
+        -:  233:      */
+        -:  234:      char_type
+        -:  235:      toupper(char_type __c) const
+        -:  236:      { return this->do_toupper(__c); }
+        -:  237:
+        -:  238:      /**
+        -:  239:       *  @brief  Convert array to uppercase.
+        -:  240:       *
+        -:  241:       *  This function converts each char_type in the range [lo,hi) to
+        -:  242:       *  uppercase if possible.  Other elements remain untouched.  It does so
+        -:  243:       *  by returning ctype<char_type>:: do_toupper(lo, hi).
+        -:  244:       *
+        -:  245:       *  @param __lo  Pointer to start of range.
+        -:  246:       *  @param __hi  Pointer to end of range.
+        -:  247:       *  @return  @a __hi.
+        -:  248:      */
+        -:  249:      const char_type*
+        -:  250:      toupper(char_type *__lo, const char_type* __hi) const
+        -:  251:      { return this->do_toupper(__lo, __hi); }
+        -:  252:
+        -:  253:      /**
+        -:  254:       *  @brief  Convert to lowercase.
+        -:  255:       *
+        -:  256:       *  This function converts the argument to lowercase if possible.  If
+        -:  257:       *  not possible (for example, '2'), returns the argument.  It does so
+        -:  258:       *  by returning ctype<char_type>::do_tolower(c).
+        -:  259:       *
+        -:  260:       *  @param __c  The char_type to convert.
+        -:  261:       *  @return  The lowercase char_type if convertible, else @a __c.
+        -:  262:      */
+        -:  263:      char_type
+        -:  264:      tolower(char_type __c) const
+        -:  265:      { return this->do_tolower(__c); }
+        -:  266:
+        -:  267:      /**
+        -:  268:       *  @brief  Convert array to lowercase.
+        -:  269:       *
+        -:  270:       *  This function converts each char_type in the range [__lo,__hi) to
+        -:  271:       *  lowercase if possible.  Other elements remain untouched.  It does so
+        -:  272:       *  by returning ctype<char_type>:: do_tolower(__lo, __hi).
+        -:  273:       *
+        -:  274:       *  @param __lo  Pointer to start of range.
+        -:  275:       *  @param __hi  Pointer to end of range.
+        -:  276:       *  @return  @a __hi.
+        -:  277:      */
+        -:  278:      const char_type*
+        -:  279:      tolower(char_type* __lo, const char_type* __hi) const
+        -:  280:      { return this->do_tolower(__lo, __hi); }
+        -:  281:
+        -:  282:      /**
+        -:  283:       *  @brief  Widen char to char_type
+        -:  284:       *
+        -:  285:       *  This function converts the char argument to char_type using the
+        -:  286:       *  simplest reasonable transformation.  It does so by returning
+        -:  287:       *  ctype<char_type>::do_widen(c).
+        -:  288:       *
+        -:  289:       *  Note: this is not what you want for codepage conversions.  See
+        -:  290:       *  codecvt for that.
+        -:  291:       *
+        -:  292:       *  @param __c  The char to convert.
+        -:  293:       *  @return  The converted char_type.
+        -:  294:      */
+        -:  295:      char_type
+        -:  296:      widen(char __c) const
+        -:  297:      { return this->do_widen(__c); }
+        -:  298:
+        -:  299:      /**
+        -:  300:       *  @brief  Widen array to char_type
+        -:  301:       *
+        -:  302:       *  This function converts each char in the input to char_type using the
+        -:  303:       *  simplest reasonable transformation.  It does so by returning
+        -:  304:       *  ctype<char_type>::do_widen(c).
+        -:  305:       *
+        -:  306:       *  Note: this is not what you want for codepage conversions.  See
+        -:  307:       *  codecvt for that.
+        -:  308:       *
+        -:  309:       *  @param __lo  Pointer to start of range.
+        -:  310:       *  @param __hi  Pointer to end of range.
+        -:  311:       *  @param __to  Pointer to the destination array.
+        -:  312:       *  @return  @a __hi.
+        -:  313:      */
+        -:  314:      const char*
+        -:  315:      widen(const char* __lo, const char* __hi, char_type* __to) const
+        -:  316:      { return this->do_widen(__lo, __hi, __to); }
+        -:  317:
+        -:  318:      /**
+        -:  319:       *  @brief  Narrow char_type to char
+        -:  320:       *
+        -:  321:       *  This function converts the char_type to char using the simplest
+        -:  322:       *  reasonable transformation.  If the conversion fails, dfault is
+        -:  323:       *  returned instead.  It does so by returning
+        -:  324:       *  ctype<char_type>::do_narrow(__c).
+        -:  325:       *
+        -:  326:       *  Note: this is not what you want for codepage conversions.  See
+        -:  327:       *  codecvt for that.
+        -:  328:       *
+        -:  329:       *  @param __c  The char_type to convert.
+        -:  330:       *  @param __dfault  Char to return if conversion fails.
+        -:  331:       *  @return  The converted char.
+        -:  332:      */
+        -:  333:      char
+        -:  334:      narrow(char_type __c, char __dfault) const
+        -:  335:      { return this->do_narrow(__c, __dfault); }
+        -:  336:
+        -:  337:      /**
+        -:  338:       *  @brief  Narrow array to char array
+        -:  339:       *
+        -:  340:       *  This function converts each char_type in the input to char using the
+        -:  341:       *  simplest reasonable transformation and writes the results to the
+        -:  342:       *  destination array.  For any char_type in the input that cannot be
+        -:  343:       *  converted, @a dfault is used instead.  It does so by returning
+        -:  344:       *  ctype<char_type>::do_narrow(__lo, __hi, __dfault, __to).
+        -:  345:       *
+        -:  346:       *  Note: this is not what you want for codepage conversions.  See
+        -:  347:       *  codecvt for that.
+        -:  348:       *
+        -:  349:       *  @param __lo  Pointer to start of range.
+        -:  350:       *  @param __hi  Pointer to end of range.
+        -:  351:       *  @param __dfault  Char to use if conversion fails.
+        -:  352:       *  @param __to  Pointer to the destination array.
+        -:  353:       *  @return  @a __hi.
+        -:  354:      */
+        -:  355:      const char_type*
+        -:  356:      narrow(const char_type* __lo, const char_type* __hi,
+        -:  357:	      char __dfault, char* __to) const
+        -:  358:      { return this->do_narrow(__lo, __hi, __dfault, __to); }
+        -:  359:
+        -:  360:    protected:
+        -:  361:      explicit
+        -:  362:      __ctype_abstract_base(size_t __refs = 0): facet(__refs) { }
+        -:  363:
+        -:  364:      virtual
+        -:  365:      ~__ctype_abstract_base() { }
+        -:  366:
+        -:  367:      /**
+        -:  368:       *  @brief  Test char_type classification.
+        -:  369:       *
+        -:  370:       *  This function finds a mask M for @a c and compares it to mask @a m.
+        -:  371:       *
+        -:  372:       *  do_is() is a hook for a derived facet to change the behavior of
+        -:  373:       *  classifying.  do_is() must always return the same result for the
+        -:  374:       *  same input.
+        -:  375:       *
+        -:  376:       *  @param __c  The char_type to find the mask of.
+        -:  377:       *  @param __m  The mask to compare against.
+        -:  378:       *  @return  (M & __m) != 0.
+        -:  379:      */
+        -:  380:      virtual bool
+        -:  381:      do_is(mask __m, char_type __c) const = 0;
+        -:  382:
+        -:  383:      /**
+        -:  384:       *  @brief  Return a mask array.
+        -:  385:       *
+        -:  386:       *  This function finds the mask for each char_type in the range [lo,hi)
+        -:  387:       *  and successively writes it to vec.  vec must have as many elements
+        -:  388:       *  as the input.
+        -:  389:       *
+        -:  390:       *  do_is() is a hook for a derived facet to change the behavior of
+        -:  391:       *  classifying.  do_is() must always return the same result for the
+        -:  392:       *  same input.
+        -:  393:       *
+        -:  394:       *  @param __lo  Pointer to start of range.
+        -:  395:       *  @param __hi  Pointer to end of range.
+        -:  396:       *  @param __vec  Pointer to an array of mask storage.
+        -:  397:       *  @return  @a __hi.
+        -:  398:      */
+        -:  399:      virtual const char_type*
+        -:  400:      do_is(const char_type* __lo, const char_type* __hi,
+        -:  401:	    mask* __vec) const = 0;
+        -:  402:
+        -:  403:      /**
+        -:  404:       *  @brief  Find char_type matching mask
+        -:  405:       *
+        -:  406:       *  This function searches for and returns the first char_type c in
+        -:  407:       *  [__lo,__hi) for which is(__m,c) is true.
+        -:  408:       *
+        -:  409:       *  do_scan_is() is a hook for a derived facet to change the behavior of
+        -:  410:       *  match searching.  do_is() must always return the same result for the
+        -:  411:       *  same input.
+        -:  412:       *
+        -:  413:       *  @param __m  The mask to compare against.
+        -:  414:       *  @param __lo  Pointer to start of range.
+        -:  415:       *  @param __hi  Pointer to end of range.
+        -:  416:       *  @return  Pointer to a matching char_type if found, else @a __hi.
+        -:  417:      */
+        -:  418:      virtual const char_type*
+        -:  419:      do_scan_is(mask __m, const char_type* __lo,
+        -:  420:		 const char_type* __hi) const = 0;
+        -:  421:
+        -:  422:      /**
+        -:  423:       *  @brief  Find char_type not matching mask
+        -:  424:       *
+        -:  425:       *  This function searches for and returns a pointer to the first
+        -:  426:       *  char_type c of [lo,hi) for which is(m,c) is false.
+        -:  427:       *
+        -:  428:       *  do_scan_is() is a hook for a derived facet to change the behavior of
+        -:  429:       *  match searching.  do_is() must always return the same result for the
+        -:  430:       *  same input.
+        -:  431:       *
+        -:  432:       *  @param __m  The mask to compare against.
+        -:  433:       *  @param __lo  Pointer to start of range.
+        -:  434:       *  @param __hi  Pointer to end of range.
+        -:  435:       *  @return  Pointer to a non-matching char_type if found, else @a __hi.
+        -:  436:      */
+        -:  437:      virtual const char_type*
+        -:  438:      do_scan_not(mask __m, const char_type* __lo,
+        -:  439:		  const char_type* __hi) const = 0;
+        -:  440:
+        -:  441:      /**
+        -:  442:       *  @brief  Convert to uppercase.
+        -:  443:       *
+        -:  444:       *  This virtual function converts the char_type argument to uppercase
+        -:  445:       *  if possible.  If not possible (for example, '2'), returns the
+        -:  446:       *  argument.
+        -:  447:       *
+        -:  448:       *  do_toupper() is a hook for a derived facet to change the behavior of
+        -:  449:       *  uppercasing.  do_toupper() must always return the same result for
+        -:  450:       *  the same input.
+        -:  451:       *
+        -:  452:       *  @param __c  The char_type to convert.
+        -:  453:       *  @return  The uppercase char_type if convertible, else @a __c.
+        -:  454:      */
+        -:  455:      virtual char_type
+        -:  456:      do_toupper(char_type __c) const = 0;
+        -:  457:
+        -:  458:      /**
+        -:  459:       *  @brief  Convert array to uppercase.
+        -:  460:       *
+        -:  461:       *  This virtual function converts each char_type in the range [__lo,__hi)
+        -:  462:       *  to uppercase if possible.  Other elements remain untouched.
+        -:  463:       *
+        -:  464:       *  do_toupper() is a hook for a derived facet to change the behavior of
+        -:  465:       *  uppercasing.  do_toupper() must always return the same result for
+        -:  466:       *  the same input.
+        -:  467:       *
+        -:  468:       *  @param __lo  Pointer to start of range.
+        -:  469:       *  @param __hi  Pointer to end of range.
+        -:  470:       *  @return  @a __hi.
+        -:  471:      */
+        -:  472:      virtual const char_type*
+        -:  473:      do_toupper(char_type* __lo, const char_type* __hi) const = 0;
+        -:  474:
+        -:  475:      /**
+        -:  476:       *  @brief  Convert to lowercase.
+        -:  477:       *
+        -:  478:       *  This virtual function converts the argument to lowercase if
+        -:  479:       *  possible.  If not possible (for example, '2'), returns the argument.
+        -:  480:       *
+        -:  481:       *  do_tolower() is a hook for a derived facet to change the behavior of
+        -:  482:       *  lowercasing.  do_tolower() must always return the same result for
+        -:  483:       *  the same input.
+        -:  484:       *
+        -:  485:       *  @param __c  The char_type to convert.
+        -:  486:       *  @return  The lowercase char_type if convertible, else @a __c.
+        -:  487:      */
+        -:  488:      virtual char_type
+        -:  489:      do_tolower(char_type __c) const = 0;
+        -:  490:
+        -:  491:      /**
+        -:  492:       *  @brief  Convert array to lowercase.
+        -:  493:       *
+        -:  494:       *  This virtual function converts each char_type in the range [__lo,__hi)
+        -:  495:       *  to lowercase if possible.  Other elements remain untouched.
+        -:  496:       *
+        -:  497:       *  do_tolower() is a hook for a derived facet to change the behavior of
+        -:  498:       *  lowercasing.  do_tolower() must always return the same result for
+        -:  499:       *  the same input.
+        -:  500:       *
+        -:  501:       *  @param __lo  Pointer to start of range.
+        -:  502:       *  @param __hi  Pointer to end of range.
+        -:  503:       *  @return  @a __hi.
+        -:  504:      */
+        -:  505:      virtual const char_type*
+        -:  506:      do_tolower(char_type* __lo, const char_type* __hi) const = 0;
+        -:  507:
+        -:  508:      /**
+        -:  509:       *  @brief  Widen char
+        -:  510:       *
+        -:  511:       *  This virtual function converts the char to char_type using the
+        -:  512:       *  simplest reasonable transformation.
+        -:  513:       *
+        -:  514:       *  do_widen() is a hook for a derived facet to change the behavior of
+        -:  515:       *  widening.  do_widen() must always return the same result for the
+        -:  516:       *  same input.
+        -:  517:       *
+        -:  518:       *  Note: this is not what you want for codepage conversions.  See
+        -:  519:       *  codecvt for that.
+        -:  520:       *
+        -:  521:       *  @param __c  The char to convert.
+        -:  522:       *  @return  The converted char_type
+        -:  523:      */
+        -:  524:      virtual char_type
+        -:  525:      do_widen(char __c) const = 0;
+        -:  526:
+        -:  527:      /**
+        -:  528:       *  @brief  Widen char array
+        -:  529:       *
+        -:  530:       *  This function converts each char in the input to char_type using the
+        -:  531:       *  simplest reasonable transformation.
+        -:  532:       *
+        -:  533:       *  do_widen() is a hook for a derived facet to change the behavior of
+        -:  534:       *  widening.  do_widen() must always return the same result for the
+        -:  535:       *  same input.
+        -:  536:       *
+        -:  537:       *  Note: this is not what you want for codepage conversions.  See
+        -:  538:       *  codecvt for that.
+        -:  539:       *
+        -:  540:       *  @param __lo  Pointer to start range.
+        -:  541:       *  @param __hi  Pointer to end of range.
+        -:  542:       *  @param __to  Pointer to the destination array.
+        -:  543:       *  @return  @a __hi.
+        -:  544:      */
+        -:  545:      virtual const char*
+        -:  546:      do_widen(const char* __lo, const char* __hi, char_type* __to) const = 0;
+        -:  547:
+        -:  548:      /**
+        -:  549:       *  @brief  Narrow char_type to char
+        -:  550:       *
+        -:  551:       *  This virtual function converts the argument to char using the
+        -:  552:       *  simplest reasonable transformation.  If the conversion fails, dfault
+        -:  553:       *  is returned instead.
+        -:  554:       *
+        -:  555:       *  do_narrow() is a hook for a derived facet to change the behavior of
+        -:  556:       *  narrowing.  do_narrow() must always return the same result for the
+        -:  557:       *  same input.
+        -:  558:       *
+        -:  559:       *  Note: this is not what you want for codepage conversions.  See
+        -:  560:       *  codecvt for that.
+        -:  561:       *
+        -:  562:       *  @param __c  The char_type to convert.
+        -:  563:       *  @param __dfault  Char to return if conversion fails.
+        -:  564:       *  @return  The converted char.
+        -:  565:      */
+        -:  566:      virtual char
+        -:  567:      do_narrow(char_type __c, char __dfault) const = 0;
+        -:  568:
+        -:  569:      /**
+        -:  570:       *  @brief  Narrow char_type array to char
+        -:  571:       *
+        -:  572:       *  This virtual function converts each char_type in the range
+        -:  573:       *  [__lo,__hi) to char using the simplest reasonable
+        -:  574:       *  transformation and writes the results to the destination
+        -:  575:       *  array.  For any element in the input that cannot be
+        -:  576:       *  converted, @a __dfault is used instead.
+        -:  577:       *
+        -:  578:       *  do_narrow() is a hook for a derived facet to change the behavior of
+        -:  579:       *  narrowing.  do_narrow() must always return the same result for the
+        -:  580:       *  same input.
+        -:  581:       *
+        -:  582:       *  Note: this is not what you want for codepage conversions.  See
+        -:  583:       *  codecvt for that.
+        -:  584:       *
+        -:  585:       *  @param __lo  Pointer to start of range.
+        -:  586:       *  @param __hi  Pointer to end of range.
+        -:  587:       *  @param __dfault  Char to use if conversion fails.
+        -:  588:       *  @param __to  Pointer to the destination array.
+        -:  589:       *  @return  @a __hi.
+        -:  590:      */
+        -:  591:      virtual const char_type*
+        -:  592:      do_narrow(const char_type* __lo, const char_type* __hi,
+        -:  593:		char __dfault, char* __to) const = 0;
+        -:  594:    };
+        -:  595:
+        -:  596:  /**
+        -:  597:   *  @brief  Primary class template ctype facet.
+        -:  598:   *  @ingroup locales
+        -:  599:   *
+        -:  600:   *  This template class defines classification and conversion functions for
+        -:  601:   *  character sets.  It wraps cctype functionality.  Ctype gets used by
+        -:  602:   *  streams for many I/O operations.
+        -:  603:   *
+        -:  604:   *  This template provides the protected virtual functions the developer
+        -:  605:   *  will have to replace in a derived class or specialization to make a
+        -:  606:   *  working facet.  The public functions that access them are defined in
+        -:  607:   *  __ctype_abstract_base, to allow for implementation flexibility.  See
+        -:  608:   *  ctype<wchar_t> for an example.  The functions are documented in
+        -:  609:   *  __ctype_abstract_base.
+        -:  610:   *
+        -:  611:   *  Note: implementations are provided for all the protected virtual
+        -:  612:   *  functions, but will likely not be useful.
+        -:  613:  */
+        -:  614:  template<typename _CharT>
+        -:  615:    class ctype : public __ctype_abstract_base<_CharT>
+        -:  616:    {
+        -:  617:    public:
+        -:  618:      // Types:
+        -:  619:      typedef _CharT			char_type;
+        -:  620:      typedef typename __ctype_abstract_base<_CharT>::mask mask;
+        -:  621:
+        -:  622:      /// The facet id for ctype<char_type>
+        -:  623:      static locale::id			id;
+        -:  624:
+        -:  625:      explicit
+        -:  626:      ctype(size_t __refs = 0) : __ctype_abstract_base<_CharT>(__refs) { }
+        -:  627:
+        -:  628:   protected:
+        -:  629:      virtual
+        -:  630:      ~ctype();
+        -:  631:
+        -:  632:      virtual bool
+        -:  633:      do_is(mask __m, char_type __c) const;
+        -:  634:
+        -:  635:      virtual const char_type*
+        -:  636:      do_is(const char_type* __lo, const char_type* __hi, mask* __vec) const;
+        -:  637:
+        -:  638:      virtual const char_type*
+        -:  639:      do_scan_is(mask __m, const char_type* __lo, const char_type* __hi) const;
+        -:  640:
+        -:  641:      virtual const char_type*
+        -:  642:      do_scan_not(mask __m, const char_type* __lo,
+        -:  643:		  const char_type* __hi) const;
+        -:  644:
+        -:  645:      virtual char_type
+        -:  646:      do_toupper(char_type __c) const;
+        -:  647:
+        -:  648:      virtual const char_type*
+        -:  649:      do_toupper(char_type* __lo, const char_type* __hi) const;
+        -:  650:
+        -:  651:      virtual char_type
+        -:  652:      do_tolower(char_type __c) const;
+        -:  653:
+        -:  654:      virtual const char_type*
+        -:  655:      do_tolower(char_type* __lo, const char_type* __hi) const;
+        -:  656:
+        -:  657:      virtual char_type
+        -:  658:      do_widen(char __c) const;
+        -:  659:
+        -:  660:      virtual const char*
+        -:  661:      do_widen(const char* __lo, const char* __hi, char_type* __dest) const;
+        -:  662:
+        -:  663:      virtual char
+        -:  664:      do_narrow(char_type, char __dfault) const;
+        -:  665:
+        -:  666:      virtual const char_type*
+        -:  667:      do_narrow(const char_type* __lo, const char_type* __hi,
+        -:  668:		char __dfault, char* __to) const;
+        -:  669:    };
+        -:  670:
+        -:  671:  template<typename _CharT>
+        -:  672:    locale::id ctype<_CharT>::id;
+        -:  673:
+        -:  674:  // Incomplete to provide a compile time diagnostics for common misuse
+        -:  675:  // of [locale.convenience] functions with basic_string as a character type.
+        -:  676:  template<typename _CharT, typename _Traits, typename _Alloc>
+        -:  677:    class ctype<basic_string<_CharT, _Traits, _Alloc> >;
+        -:  678:
+        -:  679:  /**
+        -:  680:   *  @brief  The ctype<char> specialization.
+        -:  681:   *  @ingroup locales
+        -:  682:   *
+        -:  683:   *  This class defines classification and conversion functions for
+        -:  684:   *  the char type.  It gets used by char streams for many I/O
+        -:  685:   *  operations.  The char specialization provides a number of
+        -:  686:   *  optimizations as well.
+        -:  687:  */
+        -:  688:  template<>
+        -:  689:    class ctype<char> : public locale::facet, public ctype_base
+        -:  690:    {
+        -:  691:    public:
+        -:  692:      // Types:
+        -:  693:      /// Typedef for the template parameter char.
+        -:  694:      typedef char		char_type;
+        -:  695:
+        -:  696:    protected:
+        -:  697:      // Data Members:
+        -:  698:      __c_locale		_M_c_locale_ctype;
+        -:  699:      bool			_M_del;
+        -:  700:      __to_type			_M_toupper;
+        -:  701:      __to_type			_M_tolower;
+        -:  702:      const mask*		_M_table;
+        -:  703:      mutable char		_M_widen_ok;
+        -:  704:      mutable char		_M_widen[1 + static_cast<unsigned char>(-1)];
+        -:  705:      mutable char		_M_narrow[1 + static_cast<unsigned char>(-1)];
+        -:  706:      mutable char		_M_narrow_ok;	// 0 uninitialized, 1 init,
+        -:  707:						// 2 memcpy can't be used
+        -:  708:
+        -:  709:    public:
+        -:  710:      /// The facet id for ctype<char>
+        -:  711:      static locale::id        id;
+        -:  712:      /// The size of the mask table.  It is SCHAR_MAX + 1.
+        -:  713:      static const size_t      table_size = 1 + static_cast<unsigned char>(-1);
+        -:  714:
+        -:  715:      /**
+        -:  716:       *  @brief  Constructor performs initialization.
+        -:  717:       *
+        -:  718:       *  This is the constructor provided by the standard.
+        -:  719:       *
+        -:  720:       *  @param __table If non-zero, table is used as the per-char mask.
+        -:  721:       *               Else classic_table() is used.
+        -:  722:       *  @param __del   If true, passes ownership of table to this facet.
+        -:  723:       *  @param __refs  Passed to the base facet class.
+        -:  724:      */
+        -:  725:      explicit
+        -:  726:      ctype(const mask* __table = 0, bool __del = false, size_t __refs = 0);
+        -:  727:
+        -:  728:      /**
+        -:  729:       *  @brief  Constructor performs static initialization.
+        -:  730:       *
+        -:  731:       *  This constructor is used to construct the initial C locale facet.
+        -:  732:       *
+        -:  733:       *  @param __cloc  Handle to C locale data.
+        -:  734:       *  @param __table If non-zero, table is used as the per-char mask.
+        -:  735:       *  @param __del   If true, passes ownership of table to this facet.
+        -:  736:       *  @param __refs  Passed to the base facet class.
+        -:  737:      */
+        -:  738:      explicit
+        -:  739:      ctype(__c_locale __cloc, const mask* __table = 0, bool __del = false,
+        -:  740:	    size_t __refs = 0);
+        -:  741:
+        -:  742:      /**
+        -:  743:       *  @brief  Test char classification.
+        -:  744:       *
+        -:  745:       *  This function compares the mask table[c] to @a __m.
+        -:  746:       *
+        -:  747:       *  @param __c  The char to compare the mask of.
+        -:  748:       *  @param __m  The mask to compare against.
+        -:  749:       *  @return  True if __m & table[__c] is true, false otherwise.
+        -:  750:      */
+        -:  751:      inline bool
+        -:  752:      is(mask __m, char __c) const;
+        -:  753:
+        -:  754:      /**
+        -:  755:       *  @brief  Return a mask array.
+        -:  756:       *
+        -:  757:       *  This function finds the mask for each char in the range [lo, hi) and
+        -:  758:       *  successively writes it to vec.  vec must have as many elements as
+        -:  759:       *  the char array.
+        -:  760:       *
+        -:  761:       *  @param __lo  Pointer to start of range.
+        -:  762:       *  @param __hi  Pointer to end of range.
+        -:  763:       *  @param __vec  Pointer to an array of mask storage.
+        -:  764:       *  @return  @a __hi.
+        -:  765:      */
+        -:  766:      inline const char*
+        -:  767:      is(const char* __lo, const char* __hi, mask* __vec) const;
+        -:  768:
+        -:  769:      /**
+        -:  770:       *  @brief  Find char matching a mask
+        -:  771:       *
+        -:  772:       *  This function searches for and returns the first char in [lo,hi) for
+        -:  773:       *  which is(m,char) is true.
+        -:  774:       *
+        -:  775:       *  @param __m  The mask to compare against.
+        -:  776:       *  @param __lo  Pointer to start of range.
+        -:  777:       *  @param __hi  Pointer to end of range.
+        -:  778:       *  @return  Pointer to a matching char if found, else @a __hi.
+        -:  779:      */
+        -:  780:      inline const char*
+        -:  781:      scan_is(mask __m, const char* __lo, const char* __hi) const;
+        -:  782:
+        -:  783:      /**
+        -:  784:       *  @brief  Find char not matching a mask
+        -:  785:       *
+        -:  786:       *  This function searches for and returns a pointer to the first char
+        -:  787:       *  in [__lo,__hi) for which is(m,char) is false.
+        -:  788:       *
+        -:  789:       *  @param __m  The mask to compare against.
+        -:  790:       *  @param __lo  Pointer to start of range.
+        -:  791:       *  @param __hi  Pointer to end of range.
+        -:  792:       *  @return  Pointer to a non-matching char if found, else @a __hi.
+        -:  793:      */
+        -:  794:      inline const char*
+        -:  795:      scan_not(mask __m, const char* __lo, const char* __hi) const;
+        -:  796:
+        -:  797:      /**
+        -:  798:       *  @brief  Convert to uppercase.
+        -:  799:       *
+        -:  800:       *  This function converts the char argument to uppercase if possible.
+        -:  801:       *  If not possible (for example, '2'), returns the argument.
+        -:  802:       *
+        -:  803:       *  toupper() acts as if it returns ctype<char>::do_toupper(c).
+        -:  804:       *  do_toupper() must always return the same result for the same input.
+        -:  805:       *
+        -:  806:       *  @param __c  The char to convert.
+        -:  807:       *  @return  The uppercase char if convertible, else @a __c.
+        -:  808:      */
+        -:  809:      char_type
+function _ZNKSt5ctypeIcE7toupperEc called 0 returned 0% blocks executed 0%
+    #####:  810:      toupper(char_type __c) const
+    #####:  811:      { return this->do_toupper(__c); }
+    %%%%%:  811-block 2
+call    0 never executed
+        -:  812:
+        -:  813:      /**
+        -:  814:       *  @brief  Convert array to uppercase.
+        -:  815:       *
+        -:  816:       *  This function converts each char in the range [__lo,__hi) to uppercase
+        -:  817:       *  if possible.  Other chars remain untouched.
+        -:  818:       *
+        -:  819:       *  toupper() acts as if it returns ctype<char>:: do_toupper(__lo, __hi).
+        -:  820:       *  do_toupper() must always return the same result for the same input.
+        -:  821:       *
+        -:  822:       *  @param __lo  Pointer to first char in range.
+        -:  823:       *  @param __hi  Pointer to end of range.
+        -:  824:       *  @return  @a __hi.
+        -:  825:      */
+        -:  826:      const char_type*
+        -:  827:      toupper(char_type *__lo, const char_type* __hi) const
+        -:  828:      { return this->do_toupper(__lo, __hi); }
+        -:  829:
+        -:  830:      /**
+        -:  831:       *  @brief  Convert to lowercase.
+        -:  832:       *
+        -:  833:       *  This function converts the char argument to lowercase if possible.
+        -:  834:       *  If not possible (for example, '2'), returns the argument.
+        -:  835:       *
+        -:  836:       *  tolower() acts as if it returns ctype<char>::do_tolower(__c).
+        -:  837:       *  do_tolower() must always return the same result for the same input.
+        -:  838:       *
+        -:  839:       *  @param __c  The char to convert.
+        -:  840:       *  @return  The lowercase char if convertible, else @a __c.
+        -:  841:      */
+        -:  842:      char_type
+function _ZNKSt5ctypeIcE7tolowerEc called 0 returned 0% blocks executed 0%
+    #####:  843:      tolower(char_type __c) const
+    #####:  844:      { return this->do_tolower(__c); }
+    %%%%%:  844-block 2
+call    0 never executed
+        -:  845:
+        -:  846:      /**
+        -:  847:       *  @brief  Convert array to lowercase.
+        -:  848:       *
+        -:  849:       *  This function converts each char in the range [lo,hi) to lowercase
+        -:  850:       *  if possible.  Other chars remain untouched.
+        -:  851:       *
+        -:  852:       *  tolower() acts as if it returns ctype<char>:: do_tolower(__lo, __hi).
+        -:  853:       *  do_tolower() must always return the same result for the same input.
+        -:  854:       *
+        -:  855:       *  @param __lo  Pointer to first char in range.
+        -:  856:       *  @param __hi  Pointer to end of range.
+        -:  857:       *  @return  @a __hi.
+        -:  858:      */
+        -:  859:      const char_type*
+function _ZNKSt5ctypeIcE7tolowerEPcPKc called 0 returned 0% blocks executed 0%
+    #####:  860:      tolower(char_type* __lo, const char_type* __hi) const
+    #####:  861:      { return this->do_tolower(__lo, __hi); }
+    %%%%%:  861-block 2
+call    0 never executed
+        -:  862:
+        -:  863:      /**
+        -:  864:       *  @brief  Widen char
+        -:  865:       *
+        -:  866:       *  This function converts the char to char_type using the simplest
+        -:  867:       *  reasonable transformation.  For an underived ctype<char> facet, the
+        -:  868:       *  argument will be returned unchanged.
+        -:  869:       *
+        -:  870:       *  This function works as if it returns ctype<char>::do_widen(c).
+        -:  871:       *  do_widen() must always return the same result for the same input.
+        -:  872:       *
+        -:  873:       *  Note: this is not what you want for codepage conversions.  See
+        -:  874:       *  codecvt for that.
+        -:  875:       *
+        -:  876:       *  @param __c  The char to convert.
+        -:  877:       *  @return  The converted character.
+        -:  878:      */
+        -:  879:      char_type
+function _ZNKSt5ctypeIcE5widenEc called 0 returned 0% blocks executed 0%
+    #####:  880:      widen(char __c) const
+        -:  881:      {
+    #####:  882:	if (_M_widen_ok)
+    %%%%%:  882-block 2
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  883:	  return _M_widen[static_cast<unsigned char>(__c)];
+    %%%%%:  883-block 3
+    #####:  884:	this->_M_widen_init();
+    %%%%%:  884-block 4
+call    0 never executed
+    #####:  885:	return this->do_widen(__c);
+call    0 never executed
+        -:  886:      }
+        -:  887:
+        -:  888:      /**
+        -:  889:       *  @brief  Widen char array
+        -:  890:       *
+        -:  891:       *  This function converts each char in the input to char using the
+        -:  892:       *  simplest reasonable transformation.  For an underived ctype<char>
+        -:  893:       *  facet, the argument will be copied unchanged.
+        -:  894:       *
+        -:  895:       *  This function works as if it returns ctype<char>::do_widen(c).
+        -:  896:       *  do_widen() must always return the same result for the same input.
+        -:  897:       *
+        -:  898:       *  Note: this is not what you want for codepage conversions.  See
+        -:  899:       *  codecvt for that.
+        -:  900:       *
+        -:  901:       *  @param __lo  Pointer to first char in range.
+        -:  902:       *  @param __hi  Pointer to end of range.
+        -:  903:       *  @param __to  Pointer to the destination array.
+        -:  904:       *  @return  @a __hi.
+        -:  905:      */
+        -:  906:      const char*
+        -:  907:      widen(const char* __lo, const char* __hi, char_type* __to) const
+        -:  908:      {
+        -:  909:	if (_M_widen_ok == 1)
+        -:  910:	  {
+        -:  911:	    if (__builtin_expect(__hi != __lo, true))
+        -:  912:	      __builtin_memcpy(__to, __lo, __hi - __lo);
+        -:  913:	    return __hi;
+        -:  914:	  }
+        -:  915:	if (!_M_widen_ok)
+        -:  916:	  _M_widen_init();
+        -:  917:	return this->do_widen(__lo, __hi, __to);
+        -:  918:      }
+        -:  919:
+        -:  920:      /**
+        -:  921:       *  @brief  Narrow char
+        -:  922:       *
+        -:  923:       *  This function converts the char to char using the simplest
+        -:  924:       *  reasonable transformation.  If the conversion fails, dfault is
+        -:  925:       *  returned instead.  For an underived ctype<char> facet, @a c
+        -:  926:       *  will be returned unchanged.
+        -:  927:       *
+        -:  928:       *  This function works as if it returns ctype<char>::do_narrow(c).
+        -:  929:       *  do_narrow() must always return the same result for the same input.
+        -:  930:       *
+        -:  931:       *  Note: this is not what you want for codepage conversions.  See
+        -:  932:       *  codecvt for that.
+        -:  933:       *
+        -:  934:       *  @param __c  The char to convert.
+        -:  935:       *  @param __dfault  Char to return if conversion fails.
+        -:  936:       *  @return  The converted character.
+        -:  937:      */
+        -:  938:      char
+function _ZNKSt5ctypeIcE6narrowEcc called 0 returned 0% blocks executed 0%
+    #####:  939:      narrow(char_type __c, char __dfault) const
+        -:  940:      {
+    #####:  941:	if (_M_narrow[static_cast<unsigned char>(__c)])
+    %%%%%:  941-block 2
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  942:	  return _M_narrow[static_cast<unsigned char>(__c)];
+    %%%%%:  942-block 3
+    #####:  943:	const char __t = do_narrow(__c, __dfault);
+    %%%%%:  943-block 4
+call    0 never executed
+    #####:  944:	if (__t != __dfault)
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  945:	  _M_narrow[static_cast<unsigned char>(__c)] = __t;
+    %%%%%:  945-block 6
+    #####:  946:	return __t;
+    %%%%%:  946-block 7
+        -:  947:      }
+        -:  948:
+        -:  949:      /**
+        -:  950:       *  @brief  Narrow char array
+        -:  951:       *
+        -:  952:       *  This function converts each char in the input to char using the
+        -:  953:       *  simplest reasonable transformation and writes the results to the
+        -:  954:       *  destination array.  For any char in the input that cannot be
+        -:  955:       *  converted, @a dfault is used instead.  For an underived ctype<char>
+        -:  956:       *  facet, the argument will be copied unchanged.
+        -:  957:       *
+        -:  958:       *  This function works as if it returns ctype<char>::do_narrow(lo, hi,
+        -:  959:       *  dfault, to).  do_narrow() must always return the same result for the
+        -:  960:       *  same input.
+        -:  961:       *
+        -:  962:       *  Note: this is not what you want for codepage conversions.  See
+        -:  963:       *  codecvt for that.
+        -:  964:       *
+        -:  965:       *  @param __lo  Pointer to start of range.
+        -:  966:       *  @param __hi  Pointer to end of range.
+        -:  967:       *  @param __dfault  Char to use if conversion fails.
+        -:  968:       *  @param __to  Pointer to the destination array.
+        -:  969:       *  @return  @a __hi.
+        -:  970:      */
+        -:  971:      const char_type*
+        -:  972:      narrow(const char_type* __lo, const char_type* __hi,
+        -:  973:	     char __dfault, char* __to) const
+        -:  974:      {
+        -:  975:	if (__builtin_expect(_M_narrow_ok == 1, true))
+        -:  976:	  {
+        -:  977:	    if (__builtin_expect(__hi != __lo, true))
+        -:  978:	      __builtin_memcpy(__to, __lo, __hi - __lo);
+        -:  979:	    return __hi;
+        -:  980:	  }
+        -:  981:	if (!_M_narrow_ok)
+        -:  982:	  _M_narrow_init();
+        -:  983:	return this->do_narrow(__lo, __hi, __dfault, __to);
+        -:  984:      }
+        -:  985:
+        -:  986:      // _GLIBCXX_RESOLVE_LIB_DEFECTS
+        -:  987:      // DR 695. ctype<char>::classic_table() not accessible.
+        -:  988:      /// Returns a pointer to the mask table provided to the constructor, or
+        -:  989:      /// the default from classic_table() if none was provided.
+        -:  990:      const mask*
+        -:  991:      table() const throw()
+        -:  992:      { return _M_table; }
+        -:  993:
+        -:  994:      /// Returns a pointer to the C locale mask table.
+        -:  995:      static const mask*
+        -:  996:      classic_table() throw();
+        -:  997:    protected:
+        -:  998:
+        -:  999:      /**
+        -: 1000:       *  @brief  Destructor.
+        -: 1001:       *
+        -: 1002:       *  This function deletes table() if @a del was true in the
+        -: 1003:       *  constructor.
+        -: 1004:      */
+        -: 1005:      virtual
+        -: 1006:      ~ctype();
+        -: 1007:
+        -: 1008:      /**
+        -: 1009:       *  @brief  Convert to uppercase.
+        -: 1010:       *
+        -: 1011:       *  This virtual function converts the char argument to uppercase if
+        -: 1012:       *  possible.  If not possible (for example, '2'), returns the argument.
+        -: 1013:       *
+        -: 1014:       *  do_toupper() is a hook for a derived facet to change the behavior of
+        -: 1015:       *  uppercasing.  do_toupper() must always return the same result for
+        -: 1016:       *  the same input.
+        -: 1017:       *
+        -: 1018:       *  @param __c  The char to convert.
+        -: 1019:       *  @return  The uppercase char if convertible, else @a __c.
+        -: 1020:      */
+        -: 1021:      virtual char_type
+        -: 1022:      do_toupper(char_type __c) const;
+        -: 1023:
+        -: 1024:      /**
+        -: 1025:       *  @brief  Convert array to uppercase.
+        -: 1026:       *
+        -: 1027:       *  This virtual function converts each char in the range [lo,hi) to
+        -: 1028:       *  uppercase if possible.  Other chars remain untouched.
+        -: 1029:       *
+        -: 1030:       *  do_toupper() is a hook for a derived facet to change the behavior of
+        -: 1031:       *  uppercasing.  do_toupper() must always return the same result for
+        -: 1032:       *  the same input.
+        -: 1033:       *
+        -: 1034:       *  @param __lo  Pointer to start of range.
+        -: 1035:       *  @param __hi  Pointer to end of range.
+        -: 1036:       *  @return  @a __hi.
+        -: 1037:      */
+        -: 1038:      virtual const char_type*
+        -: 1039:      do_toupper(char_type* __lo, const char_type* __hi) const;
+        -: 1040:
+        -: 1041:      /**
+        -: 1042:       *  @brief  Convert to lowercase.
+        -: 1043:       *
+        -: 1044:       *  This virtual function converts the char argument to lowercase if
+        -: 1045:       *  possible.  If not possible (for example, '2'), returns the argument.
+        -: 1046:       *
+        -: 1047:       *  do_tolower() is a hook for a derived facet to change the behavior of
+        -: 1048:       *  lowercasing.  do_tolower() must always return the same result for
+        -: 1049:       *  the same input.
+        -: 1050:       *
+        -: 1051:       *  @param __c  The char to convert.
+        -: 1052:       *  @return  The lowercase char if convertible, else @a __c.
+        -: 1053:      */
+        -: 1054:      virtual char_type
+        -: 1055:      do_tolower(char_type __c) const;
+        -: 1056:
+        -: 1057:      /**
+        -: 1058:       *  @brief  Convert array to lowercase.
+        -: 1059:       *
+        -: 1060:       *  This virtual function converts each char in the range [lo,hi) to
+        -: 1061:       *  lowercase if possible.  Other chars remain untouched.
+        -: 1062:       *
+        -: 1063:       *  do_tolower() is a hook for a derived facet to change the behavior of
+        -: 1064:       *  lowercasing.  do_tolower() must always return the same result for
+        -: 1065:       *  the same input.
+        -: 1066:       *
+        -: 1067:       *  @param __lo  Pointer to first char in range.
+        -: 1068:       *  @param __hi  Pointer to end of range.
+        -: 1069:       *  @return  @a __hi.
+        -: 1070:      */
+        -: 1071:      virtual const char_type*
+        -: 1072:      do_tolower(char_type* __lo, const char_type* __hi) const;
+        -: 1073:
+        -: 1074:      /**
+        -: 1075:       *  @brief  Widen char
+        -: 1076:       *
+        -: 1077:       *  This virtual function converts the char to char using the simplest
+        -: 1078:       *  reasonable transformation.  For an underived ctype<char> facet, the
+        -: 1079:       *  argument will be returned unchanged.
+        -: 1080:       *
+        -: 1081:       *  do_widen() is a hook for a derived facet to change the behavior of
+        -: 1082:       *  widening.  do_widen() must always return the same result for the
+        -: 1083:       *  same input.
+        -: 1084:       *
+        -: 1085:       *  Note: this is not what you want for codepage conversions.  See
+        -: 1086:       *  codecvt for that.
+        -: 1087:       *
+        -: 1088:       *  @param __c  The char to convert.
+        -: 1089:       *  @return  The converted character.
+        -: 1090:      */
+        -: 1091:      virtual char_type
+        -: 1092:      do_widen(char __c) const
+        -: 1093:      { return __c; }
+        -: 1094:
+        -: 1095:      /**
+        -: 1096:       *  @brief  Widen char array
+        -: 1097:       *
+        -: 1098:       *  This function converts each char in the range [lo,hi) to char using
+        -: 1099:       *  the simplest reasonable transformation.  For an underived
+        -: 1100:       *  ctype<char> facet, the argument will be copied unchanged.
+        -: 1101:       *
+        -: 1102:       *  do_widen() is a hook for a derived facet to change the behavior of
+        -: 1103:       *  widening.  do_widen() must always return the same result for the
+        -: 1104:       *  same input.
+        -: 1105:       *
+        -: 1106:       *  Note: this is not what you want for codepage conversions.  See
+        -: 1107:       *  codecvt for that.
+        -: 1108:       *
+        -: 1109:       *  @param __lo  Pointer to start of range.
+        -: 1110:       *  @param __hi  Pointer to end of range.
+        -: 1111:       *  @param __to  Pointer to the destination array.
+        -: 1112:       *  @return  @a __hi.
+        -: 1113:      */
+        -: 1114:      virtual const char*
+        -: 1115:      do_widen(const char* __lo, const char* __hi, char_type* __to) const
+        -: 1116:      {
+        -: 1117:	if (__builtin_expect(__hi != __lo, true))
+        -: 1118:	  __builtin_memcpy(__to, __lo, __hi - __lo);
+        -: 1119:	return __hi;
+        -: 1120:      }
+        -: 1121:
+        -: 1122:      /**
+        -: 1123:       *  @brief  Narrow char
+        -: 1124:       *
+        -: 1125:       *  This virtual function converts the char to char using the simplest
+        -: 1126:       *  reasonable transformation.  If the conversion fails, dfault is
+        -: 1127:       *  returned instead.  For an underived ctype<char> facet, @a c will be
+        -: 1128:       *  returned unchanged.
+        -: 1129:       *
+        -: 1130:       *  do_narrow() is a hook for a derived facet to change the behavior of
+        -: 1131:       *  narrowing.  do_narrow() must always return the same result for the
+        -: 1132:       *  same input.
+        -: 1133:       *
+        -: 1134:       *  Note: this is not what you want for codepage conversions.  See
+        -: 1135:       *  codecvt for that.
+        -: 1136:       *
+        -: 1137:       *  @param __c  The char to convert.
+        -: 1138:       *  @param __dfault  Char to return if conversion fails.
+        -: 1139:       *  @return  The converted char.
+        -: 1140:      */
+        -: 1141:      virtual char
+        -: 1142:      do_narrow(char_type __c, char __dfault __attribute__((__unused__))) const
+        -: 1143:      { return __c; }
+        -: 1144:
+        -: 1145:      /**
+        -: 1146:       *  @brief  Narrow char array to char array
+        -: 1147:       *
+        -: 1148:       *  This virtual function converts each char in the range [lo,hi) to
+        -: 1149:       *  char using the simplest reasonable transformation and writes the
+        -: 1150:       *  results to the destination array.  For any char in the input that
+        -: 1151:       *  cannot be converted, @a dfault is used instead.  For an underived
+        -: 1152:       *  ctype<char> facet, the argument will be copied unchanged.
+        -: 1153:       *
+        -: 1154:       *  do_narrow() is a hook for a derived facet to change the behavior of
+        -: 1155:       *  narrowing.  do_narrow() must always return the same result for the
+        -: 1156:       *  same input.
+        -: 1157:       *
+        -: 1158:       *  Note: this is not what you want for codepage conversions.  See
+        -: 1159:       *  codecvt for that.
+        -: 1160:       *
+        -: 1161:       *  @param __lo  Pointer to start of range.
+        -: 1162:       *  @param __hi  Pointer to end of range.
+        -: 1163:       *  @param __dfault  Char to use if conversion fails.
+        -: 1164:       *  @param __to  Pointer to the destination array.
+        -: 1165:       *  @return  @a __hi.
+        -: 1166:      */
+        -: 1167:      virtual const char_type*
+        -: 1168:      do_narrow(const char_type* __lo, const char_type* __hi,
+        -: 1169:		char __dfault __attribute__((__unused__)), char* __to) const
+        -: 1170:      {
+        -: 1171:	if (__builtin_expect(__hi != __lo, true))
+        -: 1172:	  __builtin_memcpy(__to, __lo, __hi - __lo);
+        -: 1173:	return __hi;
+        -: 1174:      }
+        -: 1175:
+        -: 1176:    private:
+        -: 1177:      void _M_narrow_init() const;
+        -: 1178:      void _M_widen_init() const;
+        -: 1179:    };
+        -: 1180:
+        -: 1181:#ifdef _GLIBCXX_USE_WCHAR_T
+        -: 1182:  /**
+        -: 1183:   *  @brief  The ctype<wchar_t> specialization.
+        -: 1184:   *  @ingroup locales
+        -: 1185:   *
+        -: 1186:   *  This class defines classification and conversion functions for the
+        -: 1187:   *  wchar_t type.  It gets used by wchar_t streams for many I/O operations.
+        -: 1188:   *  The wchar_t specialization provides a number of optimizations as well.
+        -: 1189:   *
+        -: 1190:   *  ctype<wchar_t> inherits its public methods from
+        -: 1191:   *  __ctype_abstract_base<wchar_t>.
+        -: 1192:  */
+        -: 1193:  template<>
+        -: 1194:    class ctype<wchar_t> : public __ctype_abstract_base<wchar_t>
+        -: 1195:    {
+        -: 1196:    public:
+        -: 1197:      // Types:
+        -: 1198:      /// Typedef for the template parameter wchar_t.
+        -: 1199:      typedef wchar_t		char_type;
+        -: 1200:      typedef wctype_t		__wmask_type;
+        -: 1201:
+        -: 1202:    protected:
+        -: 1203:      __c_locale		_M_c_locale_ctype;
+        -: 1204:
+        -: 1205:      // Pre-computed narrowed and widened chars.
+        -: 1206:      bool                      _M_narrow_ok;
+        -: 1207:      char                      _M_narrow[128];
+        -: 1208:      wint_t                    _M_widen[1 + static_cast<unsigned char>(-1)];
+        -: 1209:
+        -: 1210:      // Pre-computed elements for do_is.
+        -: 1211:      mask                      _M_bit[16];
+        -: 1212:      __wmask_type              _M_wmask[16];
+        -: 1213:
+        -: 1214:    public:
+        -: 1215:      // Data Members:
+        -: 1216:      /// The facet id for ctype<wchar_t>
+        -: 1217:      static locale::id		id;
+        -: 1218:
+        -: 1219:      /**
+        -: 1220:       *  @brief  Constructor performs initialization.
+        -: 1221:       *
+        -: 1222:       *  This is the constructor provided by the standard.
+        -: 1223:       *
+        -: 1224:       *  @param __refs  Passed to the base facet class.
+        -: 1225:      */
+        -: 1226:      explicit
+        -: 1227:      ctype(size_t __refs = 0);
+        -: 1228:
+        -: 1229:      /**
+        -: 1230:       *  @brief  Constructor performs static initialization.
+        -: 1231:       *
+        -: 1232:       *  This constructor is used to construct the initial C locale facet.
+        -: 1233:       *
+        -: 1234:       *  @param __cloc  Handle to C locale data.
+        -: 1235:       *  @param __refs  Passed to the base facet class.
+        -: 1236:      */
+        -: 1237:      explicit
+        -: 1238:      ctype(__c_locale __cloc, size_t __refs = 0);
+        -: 1239:
+        -: 1240:    protected:
+        -: 1241:      __wmask_type
+        -: 1242:      _M_convert_to_wmask(const mask __m) const throw();
+        -: 1243:
+        -: 1244:      /// Destructor
+        -: 1245:      virtual
+        -: 1246:      ~ctype();
+        -: 1247:
+        -: 1248:      /**
+        -: 1249:       *  @brief  Test wchar_t classification.
+        -: 1250:       *
+        -: 1251:       *  This function finds a mask M for @a c and compares it to mask @a m.
+        -: 1252:       *
+        -: 1253:       *  do_is() is a hook for a derived facet to change the behavior of
+        -: 1254:       *  classifying.  do_is() must always return the same result for the
+        -: 1255:       *  same input.
+        -: 1256:       *
+        -: 1257:       *  @param __c  The wchar_t to find the mask of.
+        -: 1258:       *  @param __m  The mask to compare against.
+        -: 1259:       *  @return  (M & __m) != 0.
+        -: 1260:      */
+        -: 1261:      virtual bool
+        -: 1262:      do_is(mask __m, char_type __c) const;
+        -: 1263:
+        -: 1264:      /**
+        -: 1265:       *  @brief  Return a mask array.
+        -: 1266:       *
+        -: 1267:       *  This function finds the mask for each wchar_t in the range [lo,hi)
+        -: 1268:       *  and successively writes it to vec.  vec must have as many elements
+        -: 1269:       *  as the input.
+        -: 1270:       *
+        -: 1271:       *  do_is() is a hook for a derived facet to change the behavior of
+        -: 1272:       *  classifying.  do_is() must always return the same result for the
+        -: 1273:       *  same input.
+        -: 1274:       *
+        -: 1275:       *  @param __lo  Pointer to start of range.
+        -: 1276:       *  @param __hi  Pointer to end of range.
+        -: 1277:       *  @param __vec  Pointer to an array of mask storage.
+        -: 1278:       *  @return  @a __hi.
+        -: 1279:      */
+        -: 1280:      virtual const char_type*
+        -: 1281:      do_is(const char_type* __lo, const char_type* __hi, mask* __vec) const;
+        -: 1282:
+        -: 1283:      /**
+        -: 1284:       *  @brief  Find wchar_t matching mask
+        -: 1285:       *
+        -: 1286:       *  This function searches for and returns the first wchar_t c in
+        -: 1287:       *  [__lo,__hi) for which is(__m,c) is true.
+        -: 1288:       *
+        -: 1289:       *  do_scan_is() is a hook for a derived facet to change the behavior of
+        -: 1290:       *  match searching.  do_is() must always return the same result for the
+        -: 1291:       *  same input.
+        -: 1292:       *
+        -: 1293:       *  @param __m  The mask to compare against.
+        -: 1294:       *  @param __lo  Pointer to start of range.
+        -: 1295:       *  @param __hi  Pointer to end of range.
+        -: 1296:       *  @return  Pointer to a matching wchar_t if found, else @a __hi.
+        -: 1297:      */
+        -: 1298:      virtual const char_type*
+        -: 1299:      do_scan_is(mask __m, const char_type* __lo, const char_type* __hi) const;
+        -: 1300:
+        -: 1301:      /**
+        -: 1302:       *  @brief  Find wchar_t not matching mask
+        -: 1303:       *
+        -: 1304:       *  This function searches for and returns a pointer to the first
+        -: 1305:       *  wchar_t c of [__lo,__hi) for which is(__m,c) is false.
+        -: 1306:       *
+        -: 1307:       *  do_scan_is() is a hook for a derived facet to change the behavior of
+        -: 1308:       *  match searching.  do_is() must always return the same result for the
+        -: 1309:       *  same input.
+        -: 1310:       *
+        -: 1311:       *  @param __m  The mask to compare against.
+        -: 1312:       *  @param __lo  Pointer to start of range.
+        -: 1313:       *  @param __hi  Pointer to end of range.
+        -: 1314:       *  @return  Pointer to a non-matching wchar_t if found, else @a __hi.
+        -: 1315:      */
+        -: 1316:      virtual const char_type*
+        -: 1317:      do_scan_not(mask __m, const char_type* __lo,
+        -: 1318:		  const char_type* __hi) const;
+        -: 1319:
+        -: 1320:      /**
+        -: 1321:       *  @brief  Convert to uppercase.
+        -: 1322:       *
+        -: 1323:       *  This virtual function converts the wchar_t argument to uppercase if
+        -: 1324:       *  possible.  If not possible (for example, '2'), returns the argument.
+        -: 1325:       *
+        -: 1326:       *  do_toupper() is a hook for a derived facet to change the behavior of
+        -: 1327:       *  uppercasing.  do_toupper() must always return the same result for
+        -: 1328:       *  the same input.
+        -: 1329:       *
+        -: 1330:       *  @param __c  The wchar_t to convert.
+        -: 1331:       *  @return  The uppercase wchar_t if convertible, else @a __c.
+        -: 1332:      */
+        -: 1333:      virtual char_type
+        -: 1334:      do_toupper(char_type __c) const;
+        -: 1335:
+        -: 1336:      /**
+        -: 1337:       *  @brief  Convert array to uppercase.
+        -: 1338:       *
+        -: 1339:       *  This virtual function converts each wchar_t in the range [lo,hi) to
+        -: 1340:       *  uppercase if possible.  Other elements remain untouched.
+        -: 1341:       *
+        -: 1342:       *  do_toupper() is a hook for a derived facet to change the behavior of
+        -: 1343:       *  uppercasing.  do_toupper() must always return the same result for
+        -: 1344:       *  the same input.
+        -: 1345:       *
+        -: 1346:       *  @param __lo  Pointer to start of range.
+        -: 1347:       *  @param __hi  Pointer to end of range.
+        -: 1348:       *  @return  @a __hi.
+        -: 1349:      */
+        -: 1350:      virtual const char_type*
+        -: 1351:      do_toupper(char_type* __lo, const char_type* __hi) const;
+        -: 1352:
+        -: 1353:      /**
+        -: 1354:       *  @brief  Convert to lowercase.
+        -: 1355:       *
+        -: 1356:       *  This virtual function converts the argument to lowercase if
+        -: 1357:       *  possible.  If not possible (for example, '2'), returns the argument.
+        -: 1358:       *
+        -: 1359:       *  do_tolower() is a hook for a derived facet to change the behavior of
+        -: 1360:       *  lowercasing.  do_tolower() must always return the same result for
+        -: 1361:       *  the same input.
+        -: 1362:       *
+        -: 1363:       *  @param __c  The wchar_t to convert.
+        -: 1364:       *  @return  The lowercase wchar_t if convertible, else @a __c.
+        -: 1365:      */
+        -: 1366:      virtual char_type
+        -: 1367:      do_tolower(char_type __c) const;
+        -: 1368:
+        -: 1369:      /**
+        -: 1370:       *  @brief  Convert array to lowercase.
+        -: 1371:       *
+        -: 1372:       *  This virtual function converts each wchar_t in the range [lo,hi) to
+        -: 1373:       *  lowercase if possible.  Other elements remain untouched.
+        -: 1374:       *
+        -: 1375:       *  do_tolower() is a hook for a derived facet to change the behavior of
+        -: 1376:       *  lowercasing.  do_tolower() must always return the same result for
+        -: 1377:       *  the same input.
+        -: 1378:       *
+        -: 1379:       *  @param __lo  Pointer to start of range.
+        -: 1380:       *  @param __hi  Pointer to end of range.
+        -: 1381:       *  @return  @a __hi.
+        -: 1382:      */
+        -: 1383:      virtual const char_type*
+        -: 1384:      do_tolower(char_type* __lo, const char_type* __hi) const;
+        -: 1385:
+        -: 1386:      /**
+        -: 1387:       *  @brief  Widen char to wchar_t
+        -: 1388:       *
+        -: 1389:       *  This virtual function converts the char to wchar_t using the
+        -: 1390:       *  simplest reasonable transformation.  For an underived ctype<wchar_t>
+        -: 1391:       *  facet, the argument will be cast to wchar_t.
+        -: 1392:       *
+        -: 1393:       *  do_widen() is a hook for a derived facet to change the behavior of
+        -: 1394:       *  widening.  do_widen() must always return the same result for the
+        -: 1395:       *  same input.
+        -: 1396:       *
+        -: 1397:       *  Note: this is not what you want for codepage conversions.  See
+        -: 1398:       *  codecvt for that.
+        -: 1399:       *
+        -: 1400:       *  @param __c  The char to convert.
+        -: 1401:       *  @return  The converted wchar_t.
+        -: 1402:      */
+        -: 1403:      virtual char_type
+        -: 1404:      do_widen(char __c) const;
+        -: 1405:
+        -: 1406:      /**
+        -: 1407:       *  @brief  Widen char array to wchar_t array
+        -: 1408:       *
+        -: 1409:       *  This function converts each char in the input to wchar_t using the
+        -: 1410:       *  simplest reasonable transformation.  For an underived ctype<wchar_t>
+        -: 1411:       *  facet, the argument will be copied, casting each element to wchar_t.
+        -: 1412:       *
+        -: 1413:       *  do_widen() is a hook for a derived facet to change the behavior of
+        -: 1414:       *  widening.  do_widen() must always return the same result for the
+        -: 1415:       *  same input.
+        -: 1416:       *
+        -: 1417:       *  Note: this is not what you want for codepage conversions.  See
+        -: 1418:       *  codecvt for that.
+        -: 1419:       *
+        -: 1420:       *  @param __lo  Pointer to start range.
+        -: 1421:       *  @param __hi  Pointer to end of range.
+        -: 1422:       *  @param __to  Pointer to the destination array.
+        -: 1423:       *  @return  @a __hi.
+        -: 1424:      */
+        -: 1425:      virtual const char*
+        -: 1426:      do_widen(const char* __lo, const char* __hi, char_type* __to) const;
+        -: 1427:
+        -: 1428:      /**
+        -: 1429:       *  @brief  Narrow wchar_t to char
+        -: 1430:       *
+        -: 1431:       *  This virtual function converts the argument to char using
+        -: 1432:       *  the simplest reasonable transformation.  If the conversion
+        -: 1433:       *  fails, dfault is returned instead.  For an underived
+        -: 1434:       *  ctype<wchar_t> facet, @a c will be cast to char and
+        -: 1435:       *  returned.
+        -: 1436:       *
+        -: 1437:       *  do_narrow() is a hook for a derived facet to change the
+        -: 1438:       *  behavior of narrowing.  do_narrow() must always return the
+        -: 1439:       *  same result for the same input.
+        -: 1440:       *
+        -: 1441:       *  Note: this is not what you want for codepage conversions.  See
+        -: 1442:       *  codecvt for that.
+        -: 1443:       *
+        -: 1444:       *  @param __c  The wchar_t to convert.
+        -: 1445:       *  @param __dfault  Char to return if conversion fails.
+        -: 1446:       *  @return  The converted char.
+        -: 1447:      */
+        -: 1448:      virtual char
+        -: 1449:      do_narrow(char_type __c, char __dfault) const;
+        -: 1450:
+        -: 1451:      /**
+        -: 1452:       *  @brief  Narrow wchar_t array to char array
+        -: 1453:       *
+        -: 1454:       *  This virtual function converts each wchar_t in the range [lo,hi) to
+        -: 1455:       *  char using the simplest reasonable transformation and writes the
+        -: 1456:       *  results to the destination array.  For any wchar_t in the input that
+        -: 1457:       *  cannot be converted, @a dfault is used instead.  For an underived
+        -: 1458:       *  ctype<wchar_t> facet, the argument will be copied, casting each
+        -: 1459:       *  element to char.
+        -: 1460:       *
+        -: 1461:       *  do_narrow() is a hook for a derived facet to change the behavior of
+        -: 1462:       *  narrowing.  do_narrow() must always return the same result for the
+        -: 1463:       *  same input.
+        -: 1464:       *
+        -: 1465:       *  Note: this is not what you want for codepage conversions.  See
+        -: 1466:       *  codecvt for that.
+        -: 1467:       *
+        -: 1468:       *  @param __lo  Pointer to start of range.
+        -: 1469:       *  @param __hi  Pointer to end of range.
+        -: 1470:       *  @param __dfault  Char to use if conversion fails.
+        -: 1471:       *  @param __to  Pointer to the destination array.
+        -: 1472:       *  @return  @a __hi.
+        -: 1473:      */
+        -: 1474:      virtual const char_type*
+        -: 1475:      do_narrow(const char_type* __lo, const char_type* __hi,
+        -: 1476:		char __dfault, char* __to) const;
+        -: 1477:
+        -: 1478:      // For use at construction time only.
+        -: 1479:      void
+        -: 1480:      _M_initialize_ctype() throw();
+        -: 1481:    };
+        -: 1482:#endif //_GLIBCXX_USE_WCHAR_T
+        -: 1483:
+        -: 1484:  /// class ctype_byname [22.2.1.2].
+        -: 1485:  template<typename _CharT>
+        -: 1486:    class ctype_byname : public ctype<_CharT>
+        -: 1487:    {
+        -: 1488:    public:
+        -: 1489:      typedef typename ctype<_CharT>::mask  mask;
+        -: 1490:
+        -: 1491:      explicit
+        -: 1492:      ctype_byname(const char* __s, size_t __refs = 0);
+        -: 1493:
+        -: 1494:#if __cplusplus >= 201103L
+        -: 1495:      explicit
+        -: 1496:      ctype_byname(const string& __s, size_t __refs = 0)
+        -: 1497:      : ctype_byname(__s.c_str(), __refs) { }
+        -: 1498:#endif
+        -: 1499:
+        -: 1500:    protected:
+        -: 1501:      virtual
+        -: 1502:      ~ctype_byname() { }
+        -: 1503:    };
+        -: 1504:
+        -: 1505:  /// 22.2.1.4  Class ctype_byname specializations.
+        -: 1506:  template<>
+        -: 1507:    class ctype_byname<char> : public ctype<char>
+        -: 1508:    {
+        -: 1509:    public:
+        -: 1510:      explicit
+        -: 1511:      ctype_byname(const char* __s, size_t __refs = 0);
+        -: 1512:
+        -: 1513:#if __cplusplus >= 201103L
+        -: 1514:      explicit
+        -: 1515:      ctype_byname(const string& __s, size_t __refs = 0);
+        -: 1516:#endif
+        -: 1517:
+        -: 1518:    protected:
+        -: 1519:      virtual
+        -: 1520:      ~ctype_byname();
+        -: 1521:    };
+        -: 1522:
+        -: 1523:#ifdef _GLIBCXX_USE_WCHAR_T
+        -: 1524:  template<>
+        -: 1525:    class ctype_byname<wchar_t> : public ctype<wchar_t>
+        -: 1526:    {
+        -: 1527:    public:
+        -: 1528:      explicit
+        -: 1529:      ctype_byname(const char* __s, size_t __refs = 0);
+        -: 1530:
+        -: 1531:#if __cplusplus >= 201103L
+        -: 1532:      explicit
+        -: 1533:      ctype_byname(const string& __s, size_t __refs = 0);
+        -: 1534:#endif
+        -: 1535:
+        -: 1536:    protected:
+        -: 1537:      virtual
+        -: 1538:      ~ctype_byname();
+        -: 1539:    };
+        -: 1540:#endif
+        -: 1541:
+        -: 1542:_GLIBCXX_END_NAMESPACE_VERSION
+        -: 1543:} // namespace
+        -: 1544:
+        -: 1545:// Include host and configuration specific ctype inlines.
+        -: 1546:#include <bits/ctype_inline.h>
+        -: 1547:
+        -: 1548:namespace std _GLIBCXX_VISIBILITY(default)
+        -: 1549:{
+        -: 1550:_GLIBCXX_BEGIN_NAMESPACE_VERSION
+        -: 1551:
+        -: 1552:  // 22.2.2  The numeric category.
+        -: 1553:  class __num_base
+        -: 1554:  {
+        -: 1555:  public:
+        -: 1556:    // NB: Code depends on the order of _S_atoms_out elements.
+        -: 1557:    // Below are the indices into _S_atoms_out.
+        -: 1558:    enum
+        -: 1559:      {
+        -: 1560:	_S_ominus,
+        -: 1561:	_S_oplus,
+        -: 1562:	_S_ox,
+        -: 1563:	_S_oX,
+        -: 1564:	_S_odigits,
+        -: 1565:	_S_odigits_end = _S_odigits + 16,
+        -: 1566:	_S_oudigits = _S_odigits_end,
+        -: 1567:	_S_oudigits_end = _S_oudigits + 16,
+        -: 1568:	_S_oe = _S_odigits + 14,  // For scientific notation, 'e'
+        -: 1569:	_S_oE = _S_oudigits + 14, // For scientific notation, 'E'
+        -: 1570:	_S_oend = _S_oudigits_end
+        -: 1571:      };
+        -: 1572:
+        -: 1573:    // A list of valid numeric literals for output.  This array
+        -: 1574:    // contains chars that will be passed through the current locale's
+        -: 1575:    // ctype<_CharT>.widen() and then used to render numbers.
+        -: 1576:    // For the standard "C" locale, this is
+        -: 1577:    // "-+xX0123456789abcdef0123456789ABCDEF".
+        -: 1578:    static const char* _S_atoms_out;
+        -: 1579:
+        -: 1580:    // String literal of acceptable (narrow) input, for num_get.
+        -: 1581:    // "-+xX0123456789abcdefABCDEF"
+        -: 1582:    static const char* _S_atoms_in;
+        -: 1583:
+        -: 1584:    enum
+        -: 1585:    {
+        -: 1586:      _S_iminus,
+        -: 1587:      _S_iplus,
+        -: 1588:      _S_ix,
+        -: 1589:      _S_iX,
+        -: 1590:      _S_izero,
+        -: 1591:      _S_ie = _S_izero + 14,
+        -: 1592:      _S_iE = _S_izero + 20,
+        -: 1593:      _S_iend = 26
+        -: 1594:    };
+        -: 1595:
+        -: 1596:    // num_put
+        -: 1597:    // Construct and return valid scanf format for floating point types.
+        -: 1598:    static void
+        -: 1599:    _S_format_float(const ios_base& __io, char* __fptr, char __mod) throw();
+        -: 1600:  };
+        -: 1601:
+        -: 1602:  template<typename _CharT>
+        -: 1603:    struct __numpunct_cache : public locale::facet
+        -: 1604:    {
+        -: 1605:      const char*			_M_grouping;
+        -: 1606:      size_t                            _M_grouping_size;
+        -: 1607:      bool				_M_use_grouping;
+        -: 1608:      const _CharT*			_M_truename;
+        -: 1609:      size_t                            _M_truename_size;
+        -: 1610:      const _CharT*			_M_falsename;
+        -: 1611:      size_t                            _M_falsename_size;
+        -: 1612:      _CharT				_M_decimal_point;
+        -: 1613:      _CharT				_M_thousands_sep;
+        -: 1614:
+        -: 1615:      // A list of valid numeric literals for output: in the standard
+        -: 1616:      // "C" locale, this is "-+xX0123456789abcdef0123456789ABCDEF".
+        -: 1617:      // This array contains the chars after having been passed
+        -: 1618:      // through the current locale's ctype<_CharT>.widen().
+        -: 1619:      _CharT				_M_atoms_out[__num_base::_S_oend];
+        -: 1620:
+        -: 1621:      // A list of valid numeric literals for input: in the standard
+        -: 1622:      // "C" locale, this is "-+xX0123456789abcdefABCDEF"
+        -: 1623:      // This array contains the chars after having been passed
+        -: 1624:      // through the current locale's ctype<_CharT>.widen().
+        -: 1625:      _CharT				_M_atoms_in[__num_base::_S_iend];
+        -: 1626:
+        -: 1627:      bool				_M_allocated;
+        -: 1628:
+        -: 1629:      __numpunct_cache(size_t __refs = 0)
+        -: 1630:      : facet(__refs), _M_grouping(0), _M_grouping_size(0),
+        -: 1631:	_M_use_grouping(false),
+        -: 1632:	_M_truename(0), _M_truename_size(0), _M_falsename(0),
+        -: 1633:	_M_falsename_size(0), _M_decimal_point(_CharT()),
+        -: 1634:	_M_thousands_sep(_CharT()), _M_allocated(false)
+        -: 1635:	{ }
+        -: 1636:
+        -: 1637:      ~__numpunct_cache();
+        -: 1638:
+        -: 1639:      void
+        -: 1640:      _M_cache(const locale& __loc);
+        -: 1641:
+        -: 1642:    private:
+        -: 1643:      __numpunct_cache&
+        -: 1644:      operator=(const __numpunct_cache&);
+        -: 1645:
+        -: 1646:      explicit
+        -: 1647:      __numpunct_cache(const __numpunct_cache&);
+        -: 1648:    };
+        -: 1649:
+        -: 1650:  template<typename _CharT>
+        -: 1651:    __numpunct_cache<_CharT>::~__numpunct_cache()
+        -: 1652:    {
+        -: 1653:      if (_M_allocated)
+        -: 1654:	{
+        -: 1655:	  delete [] _M_grouping;
+        -: 1656:	  delete [] _M_truename;
+        -: 1657:	  delete [] _M_falsename;
+        -: 1658:	}
+        -: 1659:    }
+        -: 1660:
+        -: 1661:_GLIBCXX_BEGIN_NAMESPACE_CXX11
+        -: 1662:
+        -: 1663:  /**
+        -: 1664:   *  @brief  Primary class template numpunct.
+        -: 1665:   *  @ingroup locales
+        -: 1666:   *
+        -: 1667:   *  This facet stores several pieces of information related to printing and
+        -: 1668:   *  scanning numbers, such as the decimal point character.  It takes a
+        -: 1669:   *  template parameter specifying the char type.  The numpunct facet is
+        -: 1670:   *  used by streams for many I/O operations involving numbers.
+        -: 1671:   *
+        -: 1672:   *  The numpunct template uses protected virtual functions to provide the
+        -: 1673:   *  actual results.  The public accessors forward the call to the virtual
+        -: 1674:   *  functions.  These virtual functions are hooks for developers to
+        -: 1675:   *  implement the behavior they require from a numpunct facet.
+        -: 1676:  */
+        -: 1677:  template<typename _CharT>
+        -: 1678:    class numpunct : public locale::facet
+        -: 1679:    {
+        -: 1680:    public:
+        -: 1681:      // Types:
+        -: 1682:      ///@{
+        -: 1683:      /// Public typedefs
+        -: 1684:      typedef _CharT			char_type;
+        -: 1685:      typedef basic_string<_CharT>	string_type;
+        -: 1686:      ///@}
+        -: 1687:      typedef __numpunct_cache<_CharT>  __cache_type;
+        -: 1688:
+        -: 1689:    protected:
+        -: 1690:      __cache_type*			_M_data;
+        -: 1691:
+        -: 1692:    public:
+        -: 1693:      /// Numpunct facet id.
+        -: 1694:      static locale::id			id;
+        -: 1695:
+        -: 1696:      /**
+        -: 1697:       *  @brief  Numpunct constructor.
+        -: 1698:       *
+        -: 1699:       *  @param  __refs  Refcount to pass to the base class.
+        -: 1700:       */
+        -: 1701:      explicit
+        -: 1702:      numpunct(size_t __refs = 0)
+        -: 1703:      : facet(__refs), _M_data(0)
+        -: 1704:      { _M_initialize_numpunct(); }
+        -: 1705:
+        -: 1706:      /**
+        -: 1707:       *  @brief  Internal constructor.  Not for general use.
+        -: 1708:       *
+        -: 1709:       *  This is a constructor for use by the library itself to set up the
+        -: 1710:       *  predefined locale facets.
+        -: 1711:       *
+        -: 1712:       *  @param  __cache  __numpunct_cache object.
+        -: 1713:       *  @param  __refs  Refcount to pass to the base class.
+        -: 1714:       */
+        -: 1715:      explicit
+        -: 1716:      numpunct(__cache_type* __cache, size_t __refs = 0)
+        -: 1717:      : facet(__refs), _M_data(__cache)
+        -: 1718:      { _M_initialize_numpunct(); }
+        -: 1719:
+        -: 1720:      /**
+        -: 1721:       *  @brief  Internal constructor.  Not for general use.
+        -: 1722:       *
+        -: 1723:       *  This is a constructor for use by the library itself to set up new
+        -: 1724:       *  locales.
+        -: 1725:       *
+        -: 1726:       *  @param  __cloc  The C locale.
+        -: 1727:       *  @param  __refs  Refcount to pass to the base class.
+        -: 1728:       */
+        -: 1729:      explicit
+        -: 1730:      numpunct(__c_locale __cloc, size_t __refs = 0)
+        -: 1731:      : facet(__refs), _M_data(0)
+        -: 1732:      { _M_initialize_numpunct(__cloc); }
+        -: 1733:
+        -: 1734:      /**
+        -: 1735:       *  @brief  Return decimal point character.
+        -: 1736:       *
+        -: 1737:       *  This function returns a char_type to use as a decimal point.  It
+        -: 1738:       *  does so by returning returning
+        -: 1739:       *  numpunct<char_type>::do_decimal_point().
+        -: 1740:       *
+        -: 1741:       *  @return  @a char_type representing a decimal point.
+        -: 1742:      */
+        -: 1743:      char_type
+        -: 1744:      decimal_point() const
+        -: 1745:      { return this->do_decimal_point(); }
+        -: 1746:
+        -: 1747:      /**
+        -: 1748:       *  @brief  Return thousands separator character.
+        -: 1749:       *
+        -: 1750:       *  This function returns a char_type to use as a thousands
+        -: 1751:       *  separator.  It does so by returning returning
+        -: 1752:       *  numpunct<char_type>::do_thousands_sep().
+        -: 1753:       *
+        -: 1754:       *  @return  char_type representing a thousands separator.
+        -: 1755:      */
+        -: 1756:      char_type
+        -: 1757:      thousands_sep() const
+        -: 1758:      { return this->do_thousands_sep(); }
+        -: 1759:
+        -: 1760:      /**
+        -: 1761:       *  @brief  Return grouping specification.
+        -: 1762:       *
+        -: 1763:       *  This function returns a string representing groupings for the
+        -: 1764:       *  integer part of a number.  Groupings indicate where thousands
+        -: 1765:       *  separators should be inserted in the integer part of a number.
+        -: 1766:       *
+        -: 1767:       *  Each char in the return string is interpret as an integer
+        -: 1768:       *  rather than a character.  These numbers represent the number
+        -: 1769:       *  of digits in a group.  The first char in the string
+        -: 1770:       *  represents the number of digits in the least significant
+        -: 1771:       *  group.  If a char is negative, it indicates an unlimited
+        -: 1772:       *  number of digits for the group.  If more chars from the
+        -: 1773:       *  string are required to group a number, the last char is used
+        -: 1774:       *  repeatedly.
+        -: 1775:       *
+        -: 1776:       *  For example, if the grouping() returns "\003\002" and is
+        -: 1777:       *  applied to the number 123456789, this corresponds to
+        -: 1778:       *  12,34,56,789.  Note that if the string was "32", this would
+        -: 1779:       *  put more than 50 digits into the least significant group if
+        -: 1780:       *  the character set is ASCII.
+        -: 1781:       *
+        -: 1782:       *  The string is returned by calling
+        -: 1783:       *  numpunct<char_type>::do_grouping().
+        -: 1784:       *
+        -: 1785:       *  @return  string representing grouping specification.
+        -: 1786:      */
+        -: 1787:      string
+        -: 1788:      grouping() const
+        -: 1789:      { return this->do_grouping(); }
+        -: 1790:
+        -: 1791:      /**
+        -: 1792:       *  @brief  Return string representation of bool true.
+        -: 1793:       *
+        -: 1794:       *  This function returns a string_type containing the text
+        -: 1795:       *  representation for true bool variables.  It does so by calling
+        -: 1796:       *  numpunct<char_type>::do_truename().
+        -: 1797:       *
+        -: 1798:       *  @return  string_type representing printed form of true.
+        -: 1799:      */
+        -: 1800:      string_type
+        -: 1801:      truename() const
+        -: 1802:      { return this->do_truename(); }
+        -: 1803:
+        -: 1804:      /**
+        -: 1805:       *  @brief  Return string representation of bool false.
+        -: 1806:       *
+        -: 1807:       *  This function returns a string_type containing the text
+        -: 1808:       *  representation for false bool variables.  It does so by calling
+        -: 1809:       *  numpunct<char_type>::do_falsename().
+        -: 1810:       *
+        -: 1811:       *  @return  string_type representing printed form of false.
+        -: 1812:      */
+        -: 1813:      string_type
+        -: 1814:      falsename() const
+        -: 1815:      { return this->do_falsename(); }
+        -: 1816:
+        -: 1817:    protected:
+        -: 1818:      /// Destructor.
+        -: 1819:      virtual
+        -: 1820:      ~numpunct();
+        -: 1821:
+        -: 1822:      /**
+        -: 1823:       *  @brief  Return decimal point character.
+        -: 1824:       *
+        -: 1825:       *  Returns a char_type to use as a decimal point.  This function is a
+        -: 1826:       *  hook for derived classes to change the value returned.
+        -: 1827:       *
+        -: 1828:       *  @return  @a char_type representing a decimal point.
+        -: 1829:      */
+        -: 1830:      virtual char_type
+        -: 1831:      do_decimal_point() const
+        -: 1832:      { return _M_data->_M_decimal_point; }
+        -: 1833:
+        -: 1834:      /**
+        -: 1835:       *  @brief  Return thousands separator character.
+        -: 1836:       *
+        -: 1837:       *  Returns a char_type to use as a thousands separator.  This function
+        -: 1838:       *  is a hook for derived classes to change the value returned.
+        -: 1839:       *
+        -: 1840:       *  @return  @a char_type representing a thousands separator.
+        -: 1841:      */
+        -: 1842:      virtual char_type
+        -: 1843:      do_thousands_sep() const
+        -: 1844:      { return _M_data->_M_thousands_sep; }
+        -: 1845:
+        -: 1846:      /**
+        -: 1847:       *  @brief  Return grouping specification.
+        -: 1848:       *
+        -: 1849:       *  Returns a string representing groupings for the integer part of a
+        -: 1850:       *  number.  This function is a hook for derived classes to change the
+        -: 1851:       *  value returned.  @see grouping() for details.
+        -: 1852:       *
+        -: 1853:       *  @return  String representing grouping specification.
+        -: 1854:      */
+        -: 1855:      virtual string
+        -: 1856:      do_grouping() const
+        -: 1857:      { return _M_data->_M_grouping; }
+        -: 1858:
+        -: 1859:      /**
+        -: 1860:       *  @brief  Return string representation of bool true.
+        -: 1861:       *
+        -: 1862:       *  Returns a string_type containing the text representation for true
+        -: 1863:       *  bool variables.  This function is a hook for derived classes to
+        -: 1864:       *  change the value returned.
+        -: 1865:       *
+        -: 1866:       *  @return  string_type representing printed form of true.
+        -: 1867:      */
+        -: 1868:      virtual string_type
+        -: 1869:      do_truename() const
+        -: 1870:      { return _M_data->_M_truename; }
+        -: 1871:
+        -: 1872:      /**
+        -: 1873:       *  @brief  Return string representation of bool false.
+        -: 1874:       *
+        -: 1875:       *  Returns a string_type containing the text representation for false
+        -: 1876:       *  bool variables.  This function is a hook for derived classes to
+        -: 1877:       *  change the value returned.
+        -: 1878:       *
+        -: 1879:       *  @return  string_type representing printed form of false.
+        -: 1880:      */
+        -: 1881:      virtual string_type
+        -: 1882:      do_falsename() const
+        -: 1883:      { return _M_data->_M_falsename; }
+        -: 1884:
+        -: 1885:      // For use at construction time only.
+        -: 1886:      void
+        -: 1887:      _M_initialize_numpunct(__c_locale __cloc = 0);
+        -: 1888:    };
+        -: 1889:
+        -: 1890:  template<typename _CharT>
+        -: 1891:    locale::id numpunct<_CharT>::id;
+        -: 1892:
+        -: 1893:  template<>
+        -: 1894:    numpunct<char>::~numpunct();
+        -: 1895:
+        -: 1896:  template<>
+        -: 1897:    void
+        -: 1898:    numpunct<char>::_M_initialize_numpunct(__c_locale __cloc);
+        -: 1899:
+        -: 1900:#ifdef _GLIBCXX_USE_WCHAR_T
+        -: 1901:  template<>
+        -: 1902:    numpunct<wchar_t>::~numpunct();
+        -: 1903:
+        -: 1904:  template<>
+        -: 1905:    void
+        -: 1906:    numpunct<wchar_t>::_M_initialize_numpunct(__c_locale __cloc);
+        -: 1907:#endif
+        -: 1908:
+        -: 1909:  /// class numpunct_byname [22.2.3.2].
+        -: 1910:  template<typename _CharT>
+        -: 1911:    class numpunct_byname : public numpunct<_CharT>
+        -: 1912:    {
+        -: 1913:    public:
+        -: 1914:      typedef _CharT			char_type;
+        -: 1915:      typedef basic_string<_CharT>	string_type;
+        -: 1916:
+        -: 1917:      explicit
+        -: 1918:      numpunct_byname(const char* __s, size_t __refs = 0)
+        -: 1919:      : numpunct<_CharT>(__refs)
+        -: 1920:      {
+        -: 1921:	if (__builtin_strcmp(__s, "C") != 0
+        -: 1922:	    && __builtin_strcmp(__s, "POSIX") != 0)
+        -: 1923:	  {
+        -: 1924:	    __c_locale __tmp;
+        -: 1925:	    this->_S_create_c_locale(__tmp, __s);
+        -: 1926:	    this->_M_initialize_numpunct(__tmp);
+        -: 1927:	    this->_S_destroy_c_locale(__tmp);
+        -: 1928:	  }
+        -: 1929:      }
+        -: 1930:
+        -: 1931:#if __cplusplus >= 201103L
+        -: 1932:      explicit
+        -: 1933:      numpunct_byname(const string& __s, size_t __refs = 0)
+        -: 1934:      : numpunct_byname(__s.c_str(), __refs) { }
+        -: 1935:#endif
+        -: 1936:
+        -: 1937:    protected:
+        -: 1938:      virtual
+        -: 1939:      ~numpunct_byname() { }
+        -: 1940:    };
+        -: 1941:
+        -: 1942:_GLIBCXX_END_NAMESPACE_CXX11
+        -: 1943:
+        -: 1944:_GLIBCXX_BEGIN_NAMESPACE_LDBL
+        -: 1945:
+        -: 1946:  /**
+        -: 1947:   *  @brief  Primary class template num_get.
+        -: 1948:   *  @ingroup locales
+        -: 1949:   *
+        -: 1950:   *  This facet encapsulates the code to parse and return a number
+        -: 1951:   *  from a string.  It is used by the istream numeric extraction
+        -: 1952:   *  operators.
+        -: 1953:   *
+        -: 1954:   *  The num_get template uses protected virtual functions to provide the
+        -: 1955:   *  actual results.  The public accessors forward the call to the virtual
+        -: 1956:   *  functions.  These virtual functions are hooks for developers to
+        -: 1957:   *  implement the behavior they require from the num_get facet.
+        -: 1958:  */
+        -: 1959:  template<typename _CharT, typename _InIter>
+        -: 1960:    class num_get : public locale::facet
+        -: 1961:    {
+        -: 1962:    public:
+        -: 1963:      // Types:
+        -: 1964:      ///@{
+        -: 1965:      /// Public typedefs
+        -: 1966:      typedef _CharT			char_type;
+        -: 1967:      typedef _InIter			iter_type;
+        -: 1968:      ///@}
+        -: 1969:
+        -: 1970:      /// Numpunct facet id.
+        -: 1971:      static locale::id			id;
+        -: 1972:
+        -: 1973:      /**
+        -: 1974:       *  @brief  Constructor performs initialization.
+        -: 1975:       *
+        -: 1976:       *  This is the constructor provided by the standard.
+        -: 1977:       *
+        -: 1978:       *  @param __refs  Passed to the base facet class.
+        -: 1979:      */
+        -: 1980:      explicit
+        -: 1981:      num_get(size_t __refs = 0) : facet(__refs) { }
+        -: 1982:
+        -: 1983:      /**
+        -: 1984:       *  @brief  Numeric parsing.
+        -: 1985:       *
+        -: 1986:       *  Parses the input stream into the bool @a v.  It does so by calling
+        -: 1987:       *  num_get::do_get().
+        -: 1988:       *
+        -: 1989:       *  If ios_base::boolalpha is set, attempts to read
+        -: 1990:       *  ctype<CharT>::truename() or ctype<CharT>::falsename().  Sets
+        -: 1991:       *  @a v to true or false if successful.  Sets err to
+        -: 1992:       *  ios_base::failbit if reading the string fails.  Sets err to
+        -: 1993:       *  ios_base::eofbit if the stream is emptied.
+        -: 1994:       *
+        -: 1995:       *  If ios_base::boolalpha is not set, proceeds as with reading a long,
+        -: 1996:       *  except if the value is 1, sets @a v to true, if the value is 0, sets
+        -: 1997:       *  @a v to false, and otherwise set err to ios_base::failbit.
+        -: 1998:       *
+        -: 1999:       *  @param  __in  Start of input stream.
+        -: 2000:       *  @param  __end  End of input stream.
+        -: 2001:       *  @param  __io  Source of locale and flags.
+        -: 2002:       *  @param  __err  Error flags to set.
+        -: 2003:       *  @param  __v  Value to format and insert.
+        -: 2004:       *  @return  Iterator after reading.
+        -: 2005:      */
+        -: 2006:      iter_type
+        -: 2007:      get(iter_type __in, iter_type __end, ios_base& __io,
+        -: 2008:	  ios_base::iostate& __err, bool& __v) const
+        -: 2009:      { return this->do_get(__in, __end, __io, __err, __v); }
+        -: 2010:
+        -: 2011:      ///@{
+        -: 2012:      /**
+        -: 2013:       *  @brief  Numeric parsing.
+        -: 2014:       *
+        -: 2015:       *  Parses the input stream into the integral variable @a v.  It does so
+        -: 2016:       *  by calling num_get::do_get().
+        -: 2017:       *
+        -: 2018:       *  Parsing is affected by the flag settings in @a io.
+        -: 2019:       *
+        -: 2020:       *  The basic parse is affected by the value of io.flags() &
+        -: 2021:       *  ios_base::basefield.  If equal to ios_base::oct, parses like the
+        -: 2022:       *  scanf %o specifier.  Else if equal to ios_base::hex, parses like %X
+        -: 2023:       *  specifier.  Else if basefield equal to 0, parses like the %i
+        -: 2024:       *  specifier.  Otherwise, parses like %d for signed and %u for unsigned
+        -: 2025:       *  types.  The matching type length modifier is also used.
+        -: 2026:       *
+        -: 2027:       *  Digit grouping is interpreted according to
+        -: 2028:       *  numpunct::grouping() and numpunct::thousands_sep().  If the
+        -: 2029:       *  pattern of digit groups isn't consistent, sets err to
+        -: 2030:       *  ios_base::failbit.
+        -: 2031:       *
+        -: 2032:       *  If parsing the string yields a valid value for @a v, @a v is set.
+        -: 2033:       *  Otherwise, sets err to ios_base::failbit and leaves @a v unaltered.
+        -: 2034:       *  Sets err to ios_base::eofbit if the stream is emptied.
+        -: 2035:       *
+        -: 2036:       *  @param  __in  Start of input stream.
+        -: 2037:       *  @param  __end  End of input stream.
+        -: 2038:       *  @param  __io  Source of locale and flags.
+        -: 2039:       *  @param  __err  Error flags to set.
+        -: 2040:       *  @param  __v  Value to format and insert.
+        -: 2041:       *  @return  Iterator after reading.
+        -: 2042:      */
+        -: 2043:      iter_type
+        -: 2044:      get(iter_type __in, iter_type __end, ios_base& __io,
+        -: 2045:	  ios_base::iostate& __err, long& __v) const
+        -: 2046:      { return this->do_get(__in, __end, __io, __err, __v); }
+        -: 2047:
+        -: 2048:      iter_type
+        -: 2049:      get(iter_type __in, iter_type __end, ios_base& __io,
+        -: 2050:	  ios_base::iostate& __err, unsigned short& __v) const
+        -: 2051:      { return this->do_get(__in, __end, __io, __err, __v); }
+        -: 2052:
+        -: 2053:      iter_type
+        -: 2054:      get(iter_type __in, iter_type __end, ios_base& __io,
+        -: 2055:	  ios_base::iostate& __err, unsigned int& __v)   const
+        -: 2056:      { return this->do_get(__in, __end, __io, __err, __v); }
+        -: 2057:
+        -: 2058:      iter_type
+        -: 2059:      get(iter_type __in, iter_type __end, ios_base& __io,
+        -: 2060:	  ios_base::iostate& __err, unsigned long& __v)  const
+        -: 2061:      { return this->do_get(__in, __end, __io, __err, __v); }
+        -: 2062:
+        -: 2063:#ifdef _GLIBCXX_USE_LONG_LONG
+        -: 2064:      iter_type
+        -: 2065:      get(iter_type __in, iter_type __end, ios_base& __io,
+        -: 2066:	  ios_base::iostate& __err, long long& __v) const
+        -: 2067:      { return this->do_get(__in, __end, __io, __err, __v); }
+        -: 2068:
+        -: 2069:      iter_type
+        -: 2070:      get(iter_type __in, iter_type __end, ios_base& __io,
+        -: 2071:	  ios_base::iostate& __err, unsigned long long& __v)  const
+        -: 2072:      { return this->do_get(__in, __end, __io, __err, __v); }
+        -: 2073:#endif
+        -: 2074:      ///@}
+        -: 2075:
+        -: 2076:      ///@{
+        -: 2077:      /**
+        -: 2078:       *  @brief  Numeric parsing.
+        -: 2079:       *
+        -: 2080:       *  Parses the input stream into the integral variable @a v.  It does so
+        -: 2081:       *  by calling num_get::do_get().
+        -: 2082:       *
+        -: 2083:       *  The input characters are parsed like the scanf %g specifier.  The
+        -: 2084:       *  matching type length modifier is also used.
+        -: 2085:       *
+        -: 2086:       *  The decimal point character used is numpunct::decimal_point().
+        -: 2087:       *  Digit grouping is interpreted according to
+        -: 2088:       *  numpunct::grouping() and numpunct::thousands_sep().  If the
+        -: 2089:       *  pattern of digit groups isn't consistent, sets err to
+        -: 2090:       *  ios_base::failbit.
+        -: 2091:       *
+        -: 2092:       *  If parsing the string yields a valid value for @a v, @a v is set.
+        -: 2093:       *  Otherwise, sets err to ios_base::failbit and leaves @a v unaltered.
+        -: 2094:       *  Sets err to ios_base::eofbit if the stream is emptied.
+        -: 2095:       *
+        -: 2096:       *  @param  __in  Start of input stream.
+        -: 2097:       *  @param  __end  End of input stream.
+        -: 2098:       *  @param  __io  Source of locale and flags.
+        -: 2099:       *  @param  __err  Error flags to set.
+        -: 2100:       *  @param  __v  Value to format and insert.
+        -: 2101:       *  @return  Iterator after reading.
+        -: 2102:      */
+        -: 2103:      iter_type
+        -: 2104:      get(iter_type __in, iter_type __end, ios_base& __io,
+        -: 2105:	  ios_base::iostate& __err, float& __v) const
+        -: 2106:      { return this->do_get(__in, __end, __io, __err, __v); }
+        -: 2107:
+        -: 2108:      iter_type
+        -: 2109:      get(iter_type __in, iter_type __end, ios_base& __io,
+        -: 2110:	  ios_base::iostate& __err, double& __v) const
+        -: 2111:      { return this->do_get(__in, __end, __io, __err, __v); }
+        -: 2112:
+        -: 2113:      iter_type
+        -: 2114:      get(iter_type __in, iter_type __end, ios_base& __io,
+        -: 2115:	  ios_base::iostate& __err, long double& __v) const
+        -: 2116:      { return this->do_get(__in, __end, __io, __err, __v); }
+        -: 2117:      ///@}
+        -: 2118:
+        -: 2119:      /**
+        -: 2120:       *  @brief  Numeric parsing.
+        -: 2121:       *
+        -: 2122:       *  Parses the input stream into the pointer variable @a v.  It does so
+        -: 2123:       *  by calling num_get::do_get().
+        -: 2124:       *
+        -: 2125:       *  The input characters are parsed like the scanf %p specifier.
+        -: 2126:       *
+        -: 2127:       *  Digit grouping is interpreted according to
+        -: 2128:       *  numpunct::grouping() and numpunct::thousands_sep().  If the
+        -: 2129:       *  pattern of digit groups isn't consistent, sets err to
+        -: 2130:       *  ios_base::failbit.
+        -: 2131:       *
+        -: 2132:       *  Note that the digit grouping effect for pointers is a bit ambiguous
+        -: 2133:       *  in the standard and shouldn't be relied on.  See DR 344.
+        -: 2134:       *
+        -: 2135:       *  If parsing the string yields a valid value for @a v, @a v is set.
+        -: 2136:       *  Otherwise, sets err to ios_base::failbit and leaves @a v unaltered.
+        -: 2137:       *  Sets err to ios_base::eofbit if the stream is emptied.
+        -: 2138:       *
+        -: 2139:       *  @param  __in  Start of input stream.
+        -: 2140:       *  @param  __end  End of input stream.
+        -: 2141:       *  @param  __io  Source of locale and flags.
+        -: 2142:       *  @param  __err  Error flags to set.
+        -: 2143:       *  @param  __v  Value to format and insert.
+        -: 2144:       *  @return  Iterator after reading.
+        -: 2145:      */
+        -: 2146:      iter_type
+        -: 2147:      get(iter_type __in, iter_type __end, ios_base& __io,
+        -: 2148:	  ios_base::iostate& __err, void*& __v) const
+        -: 2149:      { return this->do_get(__in, __end, __io, __err, __v); }
+        -: 2150:
+        -: 2151:    protected:
+        -: 2152:      /// Destructor.
+        -: 2153:      virtual ~num_get() { }
+        -: 2154:
+        -: 2155:      _GLIBCXX_DEFAULT_ABI_TAG
+        -: 2156:      iter_type
+        -: 2157:      _M_extract_float(iter_type, iter_type, ios_base&, ios_base::iostate&,
+        -: 2158:		       string&) const;
+        -: 2159:
+        -: 2160:      template<typename _ValueT>
+        -: 2161:	_GLIBCXX_DEFAULT_ABI_TAG
+        -: 2162:	iter_type
+        -: 2163:	_M_extract_int(iter_type, iter_type, ios_base&, ios_base::iostate&,
+        -: 2164:		       _ValueT&) const;
+        -: 2165:
+        -: 2166:      template<typename _CharT2>
+        -: 2167:      typename __gnu_cxx::__enable_if<__is_char<_CharT2>::__value, int>::__type
+        -: 2168:	_M_find(const _CharT2*, size_t __len, _CharT2 __c) const
+        -: 2169:	{
+        -: 2170:	  int __ret = -1;
+        -: 2171:	  if (__len <= 10)
+        -: 2172:	    {
+        -: 2173:	      if (__c >= _CharT2('0') && __c < _CharT2(_CharT2('0') + __len))
+        -: 2174:		__ret = __c - _CharT2('0');
+        -: 2175:	    }
+        -: 2176:	  else
+        -: 2177:	    {
+        -: 2178:	      if (__c >= _CharT2('0') && __c <= _CharT2('9'))
+        -: 2179:		__ret = __c - _CharT2('0');
+        -: 2180:	      else if (__c >= _CharT2('a') && __c <= _CharT2('f'))
+        -: 2181:		__ret = 10 + (__c - _CharT2('a'));
+        -: 2182:	      else if (__c >= _CharT2('A') && __c <= _CharT2('F'))
+        -: 2183:		__ret = 10 + (__c - _CharT2('A'));
+        -: 2184:	    }
+        -: 2185:	  return __ret;
+        -: 2186:	}
+        -: 2187:
+        -: 2188:      template<typename _CharT2>
+        -: 2189:      typename __gnu_cxx::__enable_if<!__is_char<_CharT2>::__value,
+        -: 2190:				      int>::__type
+        -: 2191:	_M_find(const _CharT2* __zero, size_t __len, _CharT2 __c) const
+        -: 2192:	{
+        -: 2193:	  int __ret = -1;
+        -: 2194:	  const char_type* __q = char_traits<_CharT2>::find(__zero, __len, __c);
+        -: 2195:	  if (__q)
+        -: 2196:	    {
+        -: 2197:	      __ret = __q - __zero;
+        -: 2198:	      if (__ret > 15)
+        -: 2199:		__ret -= 6;
+        -: 2200:	    }
+        -: 2201:	  return __ret;
+        -: 2202:	}
+        -: 2203:
+        -: 2204:      ///@{
+        -: 2205:      /**
+        -: 2206:       *  @brief  Numeric parsing.
+        -: 2207:       *
+        -: 2208:       *  Parses the input stream into the variable @a v.  This function is a
+        -: 2209:       *  hook for derived classes to change the value returned.  @see get()
+        -: 2210:       *  for more details.
+        -: 2211:       *
+        -: 2212:       *  @param  __beg  Start of input stream.
+        -: 2213:       *  @param  __end  End of input stream.
+        -: 2214:       *  @param  __io  Source of locale and flags.
+        -: 2215:       *  @param  __err  Error flags to set.
+        -: 2216:       *  @param  __v  Value to format and insert.
+        -: 2217:       *  @return  Iterator after reading.
+        -: 2218:      */
+        -: 2219:      virtual iter_type
+        -: 2220:      do_get(iter_type, iter_type, ios_base&, ios_base::iostate&, bool&) const;
+        -: 2221:
+        -: 2222:      virtual iter_type
+        -: 2223:      do_get(iter_type __beg, iter_type __end, ios_base& __io,
+        -: 2224:	     ios_base::iostate& __err, long& __v) const
+        -: 2225:      { return _M_extract_int(__beg, __end, __io, __err, __v); }
+        -: 2226:
+        -: 2227:      virtual iter_type
+        -: 2228:      do_get(iter_type __beg, iter_type __end, ios_base& __io,
+        -: 2229:	     ios_base::iostate& __err, unsigned short& __v) const
+        -: 2230:      { return _M_extract_int(__beg, __end, __io, __err, __v); }
+        -: 2231:
+        -: 2232:      virtual iter_type
+        -: 2233:      do_get(iter_type __beg, iter_type __end, ios_base& __io,
+        -: 2234:	     ios_base::iostate& __err, unsigned int& __v) const
+        -: 2235:      { return _M_extract_int(__beg, __end, __io, __err, __v); }
+        -: 2236:
+        -: 2237:      virtual iter_type
+        -: 2238:      do_get(iter_type __beg, iter_type __end, ios_base& __io,
+        -: 2239:	     ios_base::iostate& __err, unsigned long& __v) const
+        -: 2240:      { return _M_extract_int(__beg, __end, __io, __err, __v); }
+        -: 2241:
+        -: 2242:#ifdef _GLIBCXX_USE_LONG_LONG
+        -: 2243:      virtual iter_type
+        -: 2244:      do_get(iter_type __beg, iter_type __end, ios_base& __io,
+        -: 2245:	     ios_base::iostate& __err, long long& __v) const
+        -: 2246:      { return _M_extract_int(__beg, __end, __io, __err, __v); }
+        -: 2247:
+        -: 2248:      virtual iter_type
+        -: 2249:      do_get(iter_type __beg, iter_type __end, ios_base& __io,
+        -: 2250:	     ios_base::iostate& __err, unsigned long long& __v) const
+        -: 2251:      { return _M_extract_int(__beg, __end, __io, __err, __v); }
+        -: 2252:#endif
+        -: 2253:
+        -: 2254:      virtual iter_type
+        -: 2255:      do_get(iter_type, iter_type, ios_base&, ios_base::iostate&, float&) const;
+        -: 2256:
+        -: 2257:      virtual iter_type
+        -: 2258:      do_get(iter_type, iter_type, ios_base&, ios_base::iostate&,
+        -: 2259:	     double&) const;
+        -: 2260:
+        -: 2261:      // XXX GLIBCXX_ABI Deprecated
+        -: 2262:#if defined _GLIBCXX_LONG_DOUBLE_COMPAT && defined __LONG_DOUBLE_128__
+        -: 2263:      // For __gnu_cxx_ldbl128::num_get and __gnu_cxx_ieee128::num_get
+        -: 2264:      // this entry in the vtable is for a 64-bit "long double" with the
+        -: 2265:      // same format as double. This keeps the vtable layout consistent
+        -: 2266:      // with std::num_get (visible when -mlong-double-64 is used).
+        -: 2267:      virtual iter_type
+        -: 2268:      __do_get(iter_type, iter_type, ios_base&, ios_base::iostate&,
+        -: 2269:	       double&) const;
+        -: 2270:#else
+        -: 2271:      virtual iter_type
+        -: 2272:      do_get(iter_type, iter_type, ios_base&, ios_base::iostate&,
+        -: 2273:	     long double&) const;
+        -: 2274:#endif
+        -: 2275:
+        -: 2276:      virtual iter_type
+        -: 2277:      do_get(iter_type, iter_type, ios_base&, ios_base::iostate&, void*&) const;
+        -: 2278:
+        -: 2279:      // XXX GLIBCXX_ABI Deprecated
+        -: 2280:#if defined _GLIBCXX_LONG_DOUBLE_ALT128_COMPAT \
+        -: 2281:      && defined __LONG_DOUBLE_IEEE128__
+        -: 2282:      // For __gnu_cxx_ieee128::num_get this entry in the vtable is for
+        -: 2283:      // the non-IEEE 128-bit "long double" (aka "double double"). This
+        -: 2284:      // is consistent with __gnu_cxx_ldbl128::num_get (-mabi=ibmlongdouble)
+        -: 2285:      virtual iter_type
+        -: 2286:      __do_get(iter_type, iter_type, ios_base&, ios_base::iostate&,
+        -: 2287:	       __ibm128&) const;
+        -: 2288:#endif
+        -: 2289:
+        -: 2290:      // XXX GLIBCXX_ABI Deprecated
+        -: 2291:#if defined _GLIBCXX_LONG_DOUBLE_COMPAT && defined __LONG_DOUBLE_128__
+        -: 2292:      // For __gnu_cxx_ldbl128::num_get and __gnu_cxx_ieee128::num_get
+        -: 2293:      // this entry in the vtable is for the 128-bit "long double" type.
+        -: 2294:      virtual iter_type
+        -: 2295:      do_get(iter_type, iter_type, ios_base&, ios_base::iostate&,
+        -: 2296:	     long double&) const;
+        -: 2297:#endif
+        -: 2298:      ///@}
+        -: 2299:    };
+        -: 2300:
+        -: 2301:  template<typename _CharT, typename _InIter>
+        -: 2302:    locale::id num_get<_CharT, _InIter>::id;
+        -: 2303:
+        -: 2304:
+        -: 2305:  /**
+        -: 2306:   *  @brief  Primary class template num_put.
+        -: 2307:   *  @ingroup locales
+        -: 2308:   *
+        -: 2309:   *  This facet encapsulates the code to convert a number to a string.  It is
+        -: 2310:   *  used by the ostream numeric insertion operators.
+        -: 2311:   *
+        -: 2312:   *  The num_put template uses protected virtual functions to provide the
+        -: 2313:   *  actual results.  The public accessors forward the call to the virtual
+        -: 2314:   *  functions.  These virtual functions are hooks for developers to
+        -: 2315:   *  implement the behavior they require from the num_put facet.
+        -: 2316:  */
+        -: 2317:  template<typename _CharT, typename _OutIter>
+        -: 2318:    class num_put : public locale::facet
+        -: 2319:    {
+        -: 2320:    public:
+        -: 2321:      // Types:
+        -: 2322:      ///@{
+        -: 2323:      /// Public typedefs
+        -: 2324:      typedef _CharT		char_type;
+        -: 2325:      typedef _OutIter		iter_type;
+        -: 2326:      ///@}
+        -: 2327:
+        -: 2328:      /// Numpunct facet id.
+        -: 2329:      static locale::id		id;
+        -: 2330:
+        -: 2331:      /**
+        -: 2332:       *  @brief  Constructor performs initialization.
+        -: 2333:       *
+        -: 2334:       *  This is the constructor provided by the standard.
+        -: 2335:       *
+        -: 2336:       *  @param __refs  Passed to the base facet class.
+        -: 2337:      */
+        -: 2338:      explicit
+        -: 2339:      num_put(size_t __refs = 0) : facet(__refs) { }
+        -: 2340:
+        -: 2341:      /**
+        -: 2342:       *  @brief  Numeric formatting.
+        -: 2343:       *
+        -: 2344:       *  Formats the boolean @a v and inserts it into a stream.  It does so
+        -: 2345:       *  by calling num_put::do_put().
+        -: 2346:       *
+        -: 2347:       *  If ios_base::boolalpha is set, writes ctype<CharT>::truename() or
+        -: 2348:       *  ctype<CharT>::falsename().  Otherwise formats @a v as an int.
+        -: 2349:       *
+        -: 2350:       *  @param  __s  Stream to write to.
+        -: 2351:       *  @param  __io  Source of locale and flags.
+        -: 2352:       *  @param  __fill  Char_type to use for filling.
+        -: 2353:       *  @param  __v  Value to format and insert.
+        -: 2354:       *  @return  Iterator after writing.
+        -: 2355:      */
+        -: 2356:      iter_type
+        -: 2357:      put(iter_type __s, ios_base& __io, char_type __fill, bool __v) const
+        -: 2358:      { return this->do_put(__s, __io, __fill, __v); }
+        -: 2359:
+        -: 2360:      ///@{
+        -: 2361:      /**
+        -: 2362:       *  @brief  Numeric formatting.
+        -: 2363:       *
+        -: 2364:       *  Formats the integral value @a v and inserts it into a
+        -: 2365:       *  stream.  It does so by calling num_put::do_put().
+        -: 2366:       *
+        -: 2367:       *  Formatting is affected by the flag settings in @a io.
+        -: 2368:       *
+        -: 2369:       *  The basic format is affected by the value of io.flags() &
+        -: 2370:       *  ios_base::basefield.  If equal to ios_base::oct, formats like the
+        -: 2371:       *  printf %o specifier.  Else if equal to ios_base::hex, formats like
+        -: 2372:       *  %x or %X with ios_base::uppercase unset or set respectively.
+        -: 2373:       *  Otherwise, formats like %d, %ld, %lld for signed and %u, %lu, %llu
+        -: 2374:       *  for unsigned values.  Note that if both oct and hex are set, neither
+        -: 2375:       *  will take effect.
+        -: 2376:       *
+        -: 2377:       *  If ios_base::showpos is set, '+' is output before positive values.
+        -: 2378:       *  If ios_base::showbase is set, '0' precedes octal values (except 0)
+        -: 2379:       *  and '0[xX]' precedes hex values.
+        -: 2380:       *
+        -: 2381:       *  The decimal point character used is numpunct::decimal_point().
+        -: 2382:       *  Thousands separators are inserted according to
+        -: 2383:       *  numpunct::grouping() and numpunct::thousands_sep().
+        -: 2384:       *
+        -: 2385:       *  If io.width() is non-zero, enough @a fill characters are inserted to
+        -: 2386:       *  make the result at least that wide.  If
+        -: 2387:       *  (io.flags() & ios_base::adjustfield) == ios_base::left, result is
+        -: 2388:       *  padded at the end.  If ios_base::internal, then padding occurs
+        -: 2389:       *  immediately after either a '+' or '-' or after '0x' or '0X'.
+        -: 2390:       *  Otherwise, padding occurs at the beginning.
+        -: 2391:       *
+        -: 2392:       *  @param  __s  Stream to write to.
+        -: 2393:       *  @param  __io  Source of locale and flags.
+        -: 2394:       *  @param  __fill  Char_type to use for filling.
+        -: 2395:       *  @param  __v  Value to format and insert.
+        -: 2396:       *  @return  Iterator after writing.
+        -: 2397:      */
+        -: 2398:      iter_type
+        -: 2399:      put(iter_type __s, ios_base& __io, char_type __fill, long __v) const
+        -: 2400:      { return this->do_put(__s, __io, __fill, __v); }
+        -: 2401:
+        -: 2402:      iter_type
+        -: 2403:      put(iter_type __s, ios_base& __io, char_type __fill,
+        -: 2404:	  unsigned long __v) const
+        -: 2405:      { return this->do_put(__s, __io, __fill, __v); }
+        -: 2406:
+        -: 2407:#ifdef _GLIBCXX_USE_LONG_LONG
+        -: 2408:      iter_type
+        -: 2409:      put(iter_type __s, ios_base& __io, char_type __fill, long long __v) const
+        -: 2410:      { return this->do_put(__s, __io, __fill, __v); }
+        -: 2411:
+        -: 2412:      iter_type
+        -: 2413:      put(iter_type __s, ios_base& __io, char_type __fill,
+        -: 2414:	  unsigned long long __v) const
+        -: 2415:      { return this->do_put(__s, __io, __fill, __v); }
+        -: 2416:#endif
+        -: 2417:      ///@}
+        -: 2418:
+        -: 2419:      ///@{
+        -: 2420:      /**
+        -: 2421:       *  @brief  Numeric formatting.
+        -: 2422:       *
+        -: 2423:       *  Formats the floating point value @a v and inserts it into a stream.
+        -: 2424:       *  It does so by calling num_put::do_put().
+        -: 2425:       *
+        -: 2426:       *  Formatting is affected by the flag settings in @a io.
+        -: 2427:       *
+        -: 2428:       *  The basic format is affected by the value of io.flags() &
+        -: 2429:       *  ios_base::floatfield.  If equal to ios_base::fixed, formats like the
+        -: 2430:       *  printf %f specifier.  Else if equal to ios_base::scientific, formats
+        -: 2431:       *  like %e or %E with ios_base::uppercase unset or set respectively.
+        -: 2432:       *  Otherwise, formats like %g or %G depending on uppercase.  Note that
+        -: 2433:       *  if both fixed and scientific are set, the effect will also be like
+        -: 2434:       *  %g or %G.
+        -: 2435:       *
+        -: 2436:       *  The output precision is given by io.precision().  This precision is
+        -: 2437:       *  capped at numeric_limits::digits10 + 2 (different for double and
+        -: 2438:       *  long double).  The default precision is 6.
+        -: 2439:       *
+        -: 2440:       *  If ios_base::showpos is set, '+' is output before positive values.
+        -: 2441:       *  If ios_base::showpoint is set, a decimal point will always be
+        -: 2442:       *  output.
+        -: 2443:       *
+        -: 2444:       *  The decimal point character used is numpunct::decimal_point().
+        -: 2445:       *  Thousands separators are inserted according to
+        -: 2446:       *  numpunct::grouping() and numpunct::thousands_sep().
+        -: 2447:       *
+        -: 2448:       *  If io.width() is non-zero, enough @a fill characters are inserted to
+        -: 2449:       *  make the result at least that wide.  If
+        -: 2450:       *  (io.flags() & ios_base::adjustfield) == ios_base::left, result is
+        -: 2451:       *  padded at the end.  If ios_base::internal, then padding occurs
+        -: 2452:       *  immediately after either a '+' or '-' or after '0x' or '0X'.
+        -: 2453:       *  Otherwise, padding occurs at the beginning.
+        -: 2454:       *
+        -: 2455:       *  @param  __s  Stream to write to.
+        -: 2456:       *  @param  __io  Source of locale and flags.
+        -: 2457:       *  @param  __fill  Char_type to use for filling.
+        -: 2458:       *  @param  __v  Value to format and insert.
+        -: 2459:       *  @return  Iterator after writing.
+        -: 2460:      */
+        -: 2461:      iter_type
+        -: 2462:      put(iter_type __s, ios_base& __io, char_type __fill, double __v) const
+        -: 2463:      { return this->do_put(__s, __io, __fill, __v); }
+        -: 2464:
+        -: 2465:      iter_type
+        -: 2466:      put(iter_type __s, ios_base& __io, char_type __fill,
+        -: 2467:	  long double __v) const
+        -: 2468:      { return this->do_put(__s, __io, __fill, __v); }
+        -: 2469:      ///@}
+        -: 2470:
+        -: 2471:      /**
+        -: 2472:       *  @brief  Numeric formatting.
+        -: 2473:       *
+        -: 2474:       *  Formats the pointer value @a v and inserts it into a stream.  It
+        -: 2475:       *  does so by calling num_put::do_put().
+        -: 2476:       *
+        -: 2477:       *  This function formats @a v as an unsigned long with ios_base::hex
+        -: 2478:       *  and ios_base::showbase set.
+        -: 2479:       *
+        -: 2480:       *  @param  __s  Stream to write to.
+        -: 2481:       *  @param  __io  Source of locale and flags.
+        -: 2482:       *  @param  __fill  Char_type to use for filling.
+        -: 2483:       *  @param  __v  Value to format and insert.
+        -: 2484:       *  @return  Iterator after writing.
+        -: 2485:      */
+        -: 2486:      iter_type
+        -: 2487:      put(iter_type __s, ios_base& __io, char_type __fill,
+        -: 2488:	  const void* __v) const
+        -: 2489:      { return this->do_put(__s, __io, __fill, __v); }
+        -: 2490:
+        -: 2491:    protected:
+        -: 2492:      template<typename _ValueT>
+        -: 2493:	iter_type
+        -: 2494:	_M_insert_float(iter_type, ios_base& __io, char_type __fill,
+        -: 2495:			char __mod, _ValueT __v) const;
+        -: 2496:
+        -: 2497:      void
+        -: 2498:      _M_group_float(const char* __grouping, size_t __grouping_size,
+        -: 2499:		     char_type __sep, const char_type* __p, char_type* __new,
+        -: 2500:		     char_type* __cs, int& __len) const;
+        -: 2501:
+        -: 2502:      template<typename _ValueT>
+        -: 2503:	iter_type
+        -: 2504:	_M_insert_int(iter_type, ios_base& __io, char_type __fill,
+        -: 2505:		      _ValueT __v) const;
+        -: 2506:
+        -: 2507:      void
+        -: 2508:      _M_group_int(const char* __grouping, size_t __grouping_size,
+        -: 2509:		   char_type __sep, ios_base& __io, char_type* __new,
+        -: 2510:		   char_type* __cs, int& __len) const;
+        -: 2511:
+        -: 2512:      void
+        -: 2513:      _M_pad(char_type __fill, streamsize __w, ios_base& __io,
+        -: 2514:	     char_type* __new, const char_type* __cs, int& __len) const;
+        -: 2515:
+        -: 2516:      /// Destructor.
+        -: 2517:      virtual
+        -: 2518:      ~num_put() { }
+        -: 2519:
+        -: 2520:      ///@{
+        -: 2521:      /**
+        -: 2522:       *  @brief  Numeric formatting.
+        -: 2523:       *
+        -: 2524:       *  These functions do the work of formatting numeric values and
+        -: 2525:       *  inserting them into a stream. This function is a hook for derived
+        -: 2526:       *  classes to change the value returned.
+        -: 2527:       *
+        -: 2528:       *  @param  __s  Stream to write to.
+        -: 2529:       *  @param  __io  Source of locale and flags.
+        -: 2530:       *  @param  __fill  Char_type to use for filling.
+        -: 2531:       *  @param  __v  Value to format and insert.
+        -: 2532:       *  @return  Iterator after writing.
+        -: 2533:      */
+        -: 2534:      virtual iter_type
+        -: 2535:      do_put(iter_type __s, ios_base& __io, char_type __fill, bool __v) const;
+        -: 2536:
+        -: 2537:      virtual iter_type
+        -: 2538:      do_put(iter_type __s, ios_base& __io, char_type __fill, long __v) const
+        -: 2539:      { return _M_insert_int(__s, __io, __fill, __v); }
+        -: 2540:
+        -: 2541:      virtual iter_type
+        -: 2542:      do_put(iter_type __s, ios_base& __io, char_type __fill,
+        -: 2543:	     unsigned long __v) const
+        -: 2544:      { return _M_insert_int(__s, __io, __fill, __v); }
+        -: 2545:
+        -: 2546:#ifdef _GLIBCXX_USE_LONG_LONG
+        -: 2547:      virtual iter_type
+        -: 2548:      do_put(iter_type __s, ios_base& __io, char_type __fill,
+        -: 2549:	     long long __v) const
+        -: 2550:      { return _M_insert_int(__s, __io, __fill, __v); }
+        -: 2551:
+        -: 2552:      virtual iter_type
+        -: 2553:      do_put(iter_type __s, ios_base& __io, char_type __fill,
+        -: 2554:	     unsigned long long __v) const
+        -: 2555:      { return _M_insert_int(__s, __io, __fill, __v); }
+        -: 2556:#endif
+        -: 2557:
+        -: 2558:      virtual iter_type
+        -: 2559:      do_put(iter_type, ios_base&, char_type, double) const;
+        -: 2560:
+        -: 2561:      // XXX GLIBCXX_ABI Deprecated
+        -: 2562:#if defined _GLIBCXX_LONG_DOUBLE_COMPAT && defined __LONG_DOUBLE_128__
+        -: 2563:      virtual iter_type
+        -: 2564:      __do_put(iter_type, ios_base&, char_type, double) const;
+        -: 2565:#else
+        -: 2566:      virtual iter_type
+        -: 2567:      do_put(iter_type, ios_base&, char_type, long double) const;
+        -: 2568:#endif
+        -: 2569:
+        -: 2570:      virtual iter_type
+        -: 2571:      do_put(iter_type, ios_base&, char_type, const void*) const;
+        -: 2572:
+        -: 2573:      // XXX GLIBCXX_ABI Deprecated
+        -: 2574:#if defined _GLIBCXX_LONG_DOUBLE_ALT128_COMPAT \
+        -: 2575:      && defined __LONG_DOUBLE_IEEE128__
+        -: 2576:      virtual iter_type
+        -: 2577:      __do_put(iter_type, ios_base&, char_type, __ibm128) const;
+        -: 2578:#endif
+        -: 2579:
+        -: 2580:      // XXX GLIBCXX_ABI Deprecated
+        -: 2581:#if defined _GLIBCXX_LONG_DOUBLE_COMPAT && defined __LONG_DOUBLE_128__
+        -: 2582:      virtual iter_type
+        -: 2583:      do_put(iter_type, ios_base&, char_type, long double) const;
+        -: 2584:#endif
+        -: 2585:      ///@}
+        -: 2586:    };
+        -: 2587:
+        -: 2588:  template <typename _CharT, typename _OutIter>
+        -: 2589:    locale::id num_put<_CharT, _OutIter>::id;
+        -: 2590:
+        -: 2591:_GLIBCXX_END_NAMESPACE_LDBL
+        -: 2592:
+        -: 2593:  // Subclause convenience interfaces, inlines.
+        -: 2594:  // NB: These are inline because, when used in a loop, some compilers
+        -: 2595:  // can hoist the body out of the loop; then it's just as fast as the
+        -: 2596:  // C is*() function.
+        -: 2597:
+        -: 2598:  /// Convenience interface to ctype.is(ctype_base::space, __c).
+        -: 2599:  template<typename _CharT>
+        -: 2600:    inline bool
+        -: 2601:    isspace(_CharT __c, const locale& __loc)
+        -: 2602:    { return use_facet<ctype<_CharT> >(__loc).is(ctype_base::space, __c); }
+        -: 2603:
+        -: 2604:  /// Convenience interface to ctype.is(ctype_base::print, __c).
+        -: 2605:  template<typename _CharT>
+        -: 2606:    inline bool
+        -: 2607:    isprint(_CharT __c, const locale& __loc)
+        -: 2608:    { return use_facet<ctype<_CharT> >(__loc).is(ctype_base::print, __c); }
+        -: 2609:
+        -: 2610:  /// Convenience interface to ctype.is(ctype_base::cntrl, __c).
+        -: 2611:  template<typename _CharT>
+        -: 2612:    inline bool
+        -: 2613:    iscntrl(_CharT __c, const locale& __loc)
+        -: 2614:    { return use_facet<ctype<_CharT> >(__loc).is(ctype_base::cntrl, __c); }
+        -: 2615:
+        -: 2616:  /// Convenience interface to ctype.is(ctype_base::upper, __c).
+        -: 2617:  template<typename _CharT>
+        -: 2618:    inline bool
+        -: 2619:    isupper(_CharT __c, const locale& __loc)
+        -: 2620:    { return use_facet<ctype<_CharT> >(__loc).is(ctype_base::upper, __c); }
+        -: 2621:
+        -: 2622:  /// Convenience interface to ctype.is(ctype_base::lower, __c).
+        -: 2623:  template<typename _CharT>
+        -: 2624:    inline bool
+        -: 2625:    islower(_CharT __c, const locale& __loc)
+        -: 2626:    { return use_facet<ctype<_CharT> >(__loc).is(ctype_base::lower, __c); }
+        -: 2627:
+        -: 2628:  /// Convenience interface to ctype.is(ctype_base::alpha, __c).
+        -: 2629:  template<typename _CharT>
+        -: 2630:    inline bool
+        -: 2631:    isalpha(_CharT __c, const locale& __loc)
+        -: 2632:    { return use_facet<ctype<_CharT> >(__loc).is(ctype_base::alpha, __c); }
+        -: 2633:
+        -: 2634:  /// Convenience interface to ctype.is(ctype_base::digit, __c).
+        -: 2635:  template<typename _CharT>
+        -: 2636:    inline bool
+        -: 2637:    isdigit(_CharT __c, const locale& __loc)
+        -: 2638:    { return use_facet<ctype<_CharT> >(__loc).is(ctype_base::digit, __c); }
+        -: 2639:
+        -: 2640:  /// Convenience interface to ctype.is(ctype_base::punct, __c).
+        -: 2641:  template<typename _CharT>
+        -: 2642:    inline bool
+        -: 2643:    ispunct(_CharT __c, const locale& __loc)
+        -: 2644:    { return use_facet<ctype<_CharT> >(__loc).is(ctype_base::punct, __c); }
+        -: 2645:
+        -: 2646:  /// Convenience interface to ctype.is(ctype_base::xdigit, __c).
+        -: 2647:  template<typename _CharT>
+        -: 2648:    inline bool
+        -: 2649:    isxdigit(_CharT __c, const locale& __loc)
+        -: 2650:    { return use_facet<ctype<_CharT> >(__loc).is(ctype_base::xdigit, __c); }
+        -: 2651:
+        -: 2652:  /// Convenience interface to ctype.is(ctype_base::alnum, __c).
+        -: 2653:  template<typename _CharT>
+        -: 2654:    inline bool
+        -: 2655:    isalnum(_CharT __c, const locale& __loc)
+        -: 2656:    { return use_facet<ctype<_CharT> >(__loc).is(ctype_base::alnum, __c); }
+        -: 2657:
+        -: 2658:  /// Convenience interface to ctype.is(ctype_base::graph, __c).
+        -: 2659:  template<typename _CharT>
+        -: 2660:    inline bool
+        -: 2661:    isgraph(_CharT __c, const locale& __loc)
+        -: 2662:    { return use_facet<ctype<_CharT> >(__loc).is(ctype_base::graph, __c); }
+        -: 2663:
+        -: 2664:#if __cplusplus >= 201103L
+        -: 2665:  /// Convenience interface to ctype.is(ctype_base::blank, __c).
+        -: 2666:  template<typename _CharT>
+        -: 2667:    inline bool
+        -: 2668:    isblank(_CharT __c, const locale& __loc)
+        -: 2669:    { return use_facet<ctype<_CharT> >(__loc).is(ctype_base::blank, __c); }
+        -: 2670:#endif
+        -: 2671:
+        -: 2672:  /// Convenience interface to ctype.toupper(__c).
+        -: 2673:  template<typename _CharT>
+        -: 2674:    inline _CharT
+        -: 2675:    toupper(_CharT __c, const locale& __loc)
+        -: 2676:    { return use_facet<ctype<_CharT> >(__loc).toupper(__c); }
+        -: 2677:
+        -: 2678:  /// Convenience interface to ctype.tolower(__c).
+        -: 2679:  template<typename _CharT>
+        -: 2680:    inline _CharT
+        -: 2681:    tolower(_CharT __c, const locale& __loc)
+        -: 2682:    { return use_facet<ctype<_CharT> >(__loc).tolower(__c); }
+        -: 2683:
+        -: 2684:_GLIBCXX_END_NAMESPACE_VERSION
+        -: 2685:} // namespace std
+        -: 2686:
+        -: 2687:# include <bits/locale_facets.tcc>
+        -: 2688:
+        -: 2689:#endif

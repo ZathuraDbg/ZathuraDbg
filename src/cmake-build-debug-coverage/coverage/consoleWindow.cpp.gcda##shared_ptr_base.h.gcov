@@ -1,0 +1,2540 @@
+        -:    0:Source:/usr/include/c++/14.2.1/bits/shared_ptr_base.h
+        -:    0:Graph:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/app/windows/consoleWindow.cpp.gcno
+        -:    0:Data:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/app/windows/consoleWindow.cpp.gcda
+        -:    0:Runs:1
+        -:    1:// shared_ptr and weak_ptr implementation details -*- C++ -*-
+        -:    2:
+        -:    3:// Copyright (C) 2007-2024 Free Software Foundation, Inc.
+        -:    4://
+        -:    5:// This file is part of the GNU ISO C++ Library.  This library is free
+        -:    6:// software; you can redistribute it and/or modify it under the
+        -:    7:// terms of the GNU General Public License as published by the
+        -:    8:// Free Software Foundation; either version 3, or (at your option)
+        -:    9:// any later version.
+        -:   10:
+        -:   11:// This library is distributed in the hope that it will be useful,
+        -:   12:// but WITHOUT ANY WARRANTY; without even the implied warranty of
+        -:   13:// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+        -:   14:// GNU General Public License for more details.
+        -:   15:
+        -:   16:// Under Section 7 of GPL version 3, you are granted additional
+        -:   17:// permissions described in the GCC Runtime Library Exception, version
+        -:   18:// 3.1, as published by the Free Software Foundation.
+        -:   19:
+        -:   20:// You should have received a copy of the GNU General Public License and
+        -:   21:// a copy of the GCC Runtime Library Exception along with this program;
+        -:   22:// see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+        -:   23:// <http://www.gnu.org/licenses/>.
+        -:   24:
+        -:   25:// GCC Note: Based on files from version 1.32.0 of the Boost library.
+        -:   26:
+        -:   27://  shared_count.hpp
+        -:   28://  Copyright (c) 2001, 2002, 2003 Peter Dimov and Multi Media Ltd.
+        -:   29:
+        -:   30://  shared_ptr.hpp
+        -:   31://  Copyright (C) 1998, 1999 Greg Colvin and Beman Dawes.
+        -:   32://  Copyright (C) 2001, 2002, 2003 Peter Dimov
+        -:   33:
+        -:   34://  weak_ptr.hpp
+        -:   35://  Copyright (C) 2001, 2002, 2003 Peter Dimov
+        -:   36:
+        -:   37://  enable_shared_from_this.hpp
+        -:   38://  Copyright (C) 2002 Peter Dimov
+        -:   39:
+        -:   40:// Distributed under the Boost Software License, Version 1.0. (See
+        -:   41:// accompanying file LICENSE_1_0.txt or copy at
+        -:   42:// http://www.boost.org/LICENSE_1_0.txt)
+        -:   43:
+        -:   44:/** @file bits/shared_ptr_base.h
+        -:   45: *  This is an internal header file, included by other library headers.
+        -:   46: *  Do not attempt to use it directly. @headername{memory}
+        -:   47: */
+        -:   48:
+        -:   49:#ifndef _SHARED_PTR_BASE_H
+        -:   50:#define _SHARED_PTR_BASE_H 1
+        -:   51:
+        -:   52:#include <typeinfo>
+        -:   53:#include <bits/allocated_ptr.h>
+        -:   54:#include <bits/allocator.h>
+        -:   55:#include <bits/exception_defines.h>
+        -:   56:#include <bits/functional_hash.h>
+        -:   57:#include <bits/refwrap.h>
+        -:   58:#include <bits/stl_function.h>  // std::less
+        -:   59:#include <bits/unique_ptr.h>
+        -:   60:#include <ext/aligned_buffer.h>
+        -:   61:#include <ext/atomicity.h>
+        -:   62:#include <ext/concurrence.h>
+        -:   63:#if __cplusplus >= 202002L
+        -:   64:# include <bit>          // __bit_floor
+        -:   65:# include <compare>
+        -:   66:# include <bits/align.h> // std::align
+        -:   67:# include <bits/stl_uninitialized.h>
+        -:   68:#endif
+        -:   69:
+        -:   70:namespace std _GLIBCXX_VISIBILITY(default)
+        -:   71:{
+        -:   72:_GLIBCXX_BEGIN_NAMESPACE_VERSION
+        -:   73:
+        -:   74:#if _GLIBCXX_USE_DEPRECATED
+        -:   75:#pragma GCC diagnostic push
+        -:   76:#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+        -:   77:  template<typename> class auto_ptr;
+        -:   78:#pragma GCC diagnostic pop
+        -:   79:#endif
+        -:   80:
+        -:   81: /**
+        -:   82:   *  @brief  Exception possibly thrown by @c shared_ptr.
+        -:   83:   *  @ingroup exceptions
+        -:   84:   */
+        -:   85:  class bad_weak_ptr : public std::exception
+        -:   86:  {
+        -:   87:  public:
+        -:   88:    virtual char const* what() const noexcept;
+        -:   89:
+        -:   90:    virtual ~bad_weak_ptr() noexcept;
+        -:   91:  };
+        -:   92:
+        -:   93:  // Substitute for bad_weak_ptr object in the case of -fno-exceptions.
+        -:   94:  inline void
+        -:   95:  __throw_bad_weak_ptr()
+        -:   96:  { _GLIBCXX_THROW_OR_ABORT(bad_weak_ptr()); }
+        -:   97:
+        -:   98:  using __gnu_cxx::_Lock_policy;
+        -:   99:  using __gnu_cxx::__default_lock_policy;
+        -:  100:  using __gnu_cxx::_S_single;
+        -:  101:  using __gnu_cxx::_S_mutex;
+        -:  102:  using __gnu_cxx::_S_atomic;
+        -:  103:
+        -:  104:  // Empty helper class except when the template argument is _S_mutex.
+        -:  105:  template<_Lock_policy _Lp>
+        -:  106:    class _Mutex_base
+        -:  107:    {
+        -:  108:    protected:
+        -:  109:      // The atomic policy uses fully-fenced builtins, single doesn't care.
+        -:  110:      enum { _S_need_barriers = 0 };
+        -:  111:    };
+        -:  112:
+        -:  113:  template<>
+        -:  114:    class _Mutex_base<_S_mutex>
+        -:  115:    : public __gnu_cxx::__mutex
+        -:  116:    {
+        -:  117:    protected:
+        -:  118:      // This policy is used when atomic builtins are not available.
+        -:  119:      // The replacement atomic operations might not have the necessary
+        -:  120:      // memory barriers.
+        -:  121:      enum { _S_need_barriers = 1 };
+        -:  122:    };
+        -:  123:
+        -:  124:  template<_Lock_policy _Lp = __default_lock_policy>
+        -:  125:    class _Sp_counted_base
+        -:  126:    : public _Mutex_base<_Lp>
+        -:  127:    {
+        -:  128:    public:
+function _ZNSt16_Sp_counted_baseILN9__gnu_cxx12_Lock_policyE2EEC2Ev called 0 returned 0% blocks executed 0%
+    #####:  129:      _Sp_counted_base() noexcept
+    #####:  130:      : _M_use_count(1), _M_weak_count(1) { }
+        -:  131:
+        -:  132:      virtual
+    #####:  133:      ~_Sp_counted_base() noexcept
+    #####:  134:      { }
+------------------
+_ZNSt16_Sp_counted_baseILN9__gnu_cxx12_Lock_policyE2EED0Ev:
+function _ZNSt16_Sp_counted_baseILN9__gnu_cxx12_Lock_policyE2EED0Ev called 0 returned 0% blocks executed 0%
+    #####:  133:      ~_Sp_counted_base() noexcept
+    #####:  134:      { }
+    %%%%%:  134-block 2
+call    0 never executed
+call    1 never executed
+------------------
+_ZNSt16_Sp_counted_baseILN9__gnu_cxx12_Lock_policyE2EED2Ev:
+function _ZNSt16_Sp_counted_baseILN9__gnu_cxx12_Lock_policyE2EED2Ev called 0 returned 0% blocks executed 0%
+    #####:  133:      ~_Sp_counted_base() noexcept
+    #####:  134:      { }
+------------------
+        -:  135:
+        -:  136:      // Called when _M_use_count drops to zero, to release the resources
+        -:  137:      // managed by *this.
+        -:  138:      virtual void
+        -:  139:      _M_dispose() noexcept = 0;
+        -:  140:
+        -:  141:      // Called when _M_weak_count drops to zero.
+        -:  142:      virtual void
+function _ZNSt16_Sp_counted_baseILN9__gnu_cxx12_Lock_policyE2EE10_M_destroyEv called 0 returned 0% blocks executed 0%
+    #####:  143:      _M_destroy() noexcept
+    #####:  144:      { delete this; }
+    %%%%%:  144-block 2
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  144-block 3
+call    2 never executed
+        -:  145:
+        -:  146:      virtual void*
+        -:  147:      _M_get_deleter(const std::type_info&) noexcept = 0;
+        -:  148:
+        -:  149:      // Increment the use count (used when the count is greater than zero).
+        -:  150:      void
+        -:  151:      _M_add_ref_copy()
+        -:  152:      { __gnu_cxx::__atomic_add_dispatch(&_M_use_count, 1); }
+        -:  153:
+        -:  154:      // Increment the use count if it is non-zero, throw otherwise.
+        -:  155:      void
+        -:  156:      _M_add_ref_lock()
+        -:  157:      {
+        -:  158:	if (!_M_add_ref_lock_nothrow())
+        -:  159:	  __throw_bad_weak_ptr();
+        -:  160:      }
+        -:  161:
+        -:  162:      // Increment the use count if it is non-zero.
+        -:  163:      bool
+        -:  164:      _M_add_ref_lock_nothrow() noexcept;
+        -:  165:
+        -:  166:      // Decrement the use count.
+        -:  167:      void
+        -:  168:      _M_release() noexcept;
+        -:  169:
+        -:  170:      // Called by _M_release() when the use count reaches zero.
+        -:  171:      void
+function _ZNSt16_Sp_counted_baseILN9__gnu_cxx12_Lock_policyE2EE19_M_release_last_useEv called 0 returned 0% blocks executed 0%
+    #####:  172:      _M_release_last_use() noexcept
+        -:  173:      {
+        -:  174:	_GLIBCXX_SYNCHRONIZATION_HAPPENS_AFTER(&_M_use_count);
+    #####:  175:	_M_dispose();
+    %%%%%:  175-block 2
+call    0 never executed
+        -:  176:	// There must be a memory barrier between dispose() and destroy()
+        -:  177:	// to ensure that the effects of dispose() are observed in the
+        -:  178:	// thread that runs destroy().
+        -:  179:	// See http://gcc.gnu.org/ml/libstdc++/2005-11/msg00136.html
+        -:  180:	if (_Mutex_base<_Lp>::_S_need_barriers)
+        -:  181:	  {
+        -:  182:	    __atomic_thread_fence (__ATOMIC_ACQ_REL);
+        -:  183:	  }
+        -:  184:
+        -:  185:	// Be race-detector-friendly.  For more info see bits/c++config.
+        -:  186:	_GLIBCXX_SYNCHRONIZATION_HAPPENS_BEFORE(&_M_weak_count);
+    #####:  187:	if (__gnu_cxx::__exchange_and_add_dispatch(&_M_weak_count,
+    #####:  188:						   -1) == 1)
+    %%%%%:  188-block 12
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  189:	  {
+        -:  190:	    _GLIBCXX_SYNCHRONIZATION_HAPPENS_AFTER(&_M_weak_count);
+    #####:  191:	    _M_destroy();
+    %%%%%:  191-block 13
+call    0 never executed
+        -:  192:	  }
+    #####:  193:      }
+        -:  194:
+        -:  195:      // As above, but 'noinline' to reduce code size on the cold path.
+        -:  196:      __attribute__((__noinline__))
+        -:  197:      void
+function _ZNSt16_Sp_counted_baseILN9__gnu_cxx12_Lock_policyE2EE24_M_release_last_use_coldEv called 0 returned 0% blocks executed 0%
+    #####:  198:      _M_release_last_use_cold() noexcept
+    #####:  199:      { _M_release_last_use(); }
+    %%%%%:  199-block 2
+call    0 never executed
+        -:  200:
+        -:  201:      // Increment the weak count.
+        -:  202:      void
+        -:  203:      _M_weak_add_ref() noexcept
+        -:  204:      { __gnu_cxx::__atomic_add_dispatch(&_M_weak_count, 1); }
+        -:  205:
+        -:  206:      // Decrement the weak count.
+        -:  207:      void
+        -:  208:      _M_weak_release() noexcept
+        -:  209:      {
+        -:  210:        // Be race-detector-friendly. For more info see bits/c++config.
+        -:  211:        _GLIBCXX_SYNCHRONIZATION_HAPPENS_BEFORE(&_M_weak_count);
+        -:  212:	if (__gnu_cxx::__exchange_and_add_dispatch(&_M_weak_count, -1) == 1)
+        -:  213:	  {
+        -:  214:            _GLIBCXX_SYNCHRONIZATION_HAPPENS_AFTER(&_M_weak_count);
+        -:  215:	    if (_Mutex_base<_Lp>::_S_need_barriers)
+        -:  216:	      {
+        -:  217:	        // See _M_release(),
+        -:  218:	        // destroy() must observe results of dispose()
+        -:  219:		__atomic_thread_fence (__ATOMIC_ACQ_REL);
+        -:  220:	      }
+        -:  221:	    _M_destroy();
+        -:  222:	  }
+        -:  223:      }
+        -:  224:
+        -:  225:      long
+        -:  226:      _M_get_use_count() const noexcept
+        -:  227:      {
+        -:  228:        // No memory barrier is used here so there is no synchronization
+        -:  229:        // with other threads.
+        -:  230:        return __atomic_load_n(&_M_use_count, __ATOMIC_RELAXED);
+        -:  231:      }
+        -:  232:
+        -:  233:    private:
+        -:  234:      _Sp_counted_base(_Sp_counted_base const&) = delete;
+        -:  235:      _Sp_counted_base& operator=(_Sp_counted_base const&) = delete;
+        -:  236:
+        -:  237:      _Atomic_word  _M_use_count;     // #shared
+        -:  238:      _Atomic_word  _M_weak_count;    // #weak + (#shared != 0)
+        -:  239:    };
+        -:  240:
+        -:  241:  template<>
+        -:  242:    inline bool
+        -:  243:    _Sp_counted_base<_S_single>::
+        -:  244:    _M_add_ref_lock_nothrow() noexcept
+        -:  245:    {
+        -:  246:      if (_M_use_count == 0)
+        -:  247:	return false;
+        -:  248:      ++_M_use_count;
+        -:  249:      return true;
+        -:  250:    }
+        -:  251:
+        -:  252:  template<>
+        -:  253:    inline bool
+        -:  254:    _Sp_counted_base<_S_mutex>::
+        -:  255:    _M_add_ref_lock_nothrow() noexcept
+        -:  256:    {
+        -:  257:      __gnu_cxx::__scoped_lock sentry(*this);
+        -:  258:      if (__gnu_cxx::__exchange_and_add_dispatch(&_M_use_count, 1) == 0)
+        -:  259:	{
+        -:  260:	  _M_use_count = 0;
+        -:  261:	  return false;
+        -:  262:	}
+        -:  263:      return true;
+        -:  264:    }
+        -:  265:
+        -:  266:  template<>
+        -:  267:    inline bool
+        -:  268:    _Sp_counted_base<_S_atomic>::
+        -:  269:    _M_add_ref_lock_nothrow() noexcept
+        -:  270:    {
+        -:  271:      // Perform lock-free add-if-not-zero operation.
+        -:  272:      _Atomic_word __count = _M_get_use_count();
+        -:  273:      do
+        -:  274:	{
+        -:  275:	  if (__count == 0)
+        -:  276:	    return false;
+        -:  277:	  // Replace the current counter value with the old value + 1, as
+        -:  278:	  // long as it's not changed meanwhile.
+        -:  279:	}
+        -:  280:      while (!__atomic_compare_exchange_n(&_M_use_count, &__count, __count + 1,
+        -:  281:					  true, __ATOMIC_ACQ_REL,
+        -:  282:					  __ATOMIC_RELAXED));
+        -:  283:      return true;
+        -:  284:    }
+        -:  285:
+        -:  286:  template<>
+        -:  287:    inline void
+        -:  288:    _Sp_counted_base<_S_single>::_M_add_ref_copy()
+        -:  289:    { ++_M_use_count; }
+        -:  290:
+        -:  291:  template<>
+        -:  292:    inline void
+        -:  293:    _Sp_counted_base<_S_single>::_M_release() noexcept
+        -:  294:    {
+        -:  295:      if (--_M_use_count == 0)
+        -:  296:        {
+        -:  297:          _M_dispose();
+        -:  298:          if (--_M_weak_count == 0)
+        -:  299:            _M_destroy();
+        -:  300:        }
+        -:  301:    }
+        -:  302:
+        -:  303:  template<>
+        -:  304:    inline void
+        -:  305:    _Sp_counted_base<_S_mutex>::_M_release() noexcept
+        -:  306:    {
+        -:  307:      // Be race-detector-friendly.  For more info see bits/c++config.
+        -:  308:      _GLIBCXX_SYNCHRONIZATION_HAPPENS_BEFORE(&_M_use_count);
+        -:  309:      if (__gnu_cxx::__exchange_and_add_dispatch(&_M_use_count, -1) == 1)
+        -:  310:	{
+        -:  311:	  _M_release_last_use();
+        -:  312:	}
+        -:  313:    }
+        -:  314:
+        -:  315:  template<>
+        -:  316:    inline void
+function _ZNSt16_Sp_counted_baseILN9__gnu_cxx12_Lock_policyE2EE10_M_releaseEv called 0 returned 0% blocks executed 0%
+    #####:  317:    _Sp_counted_base<_S_atomic>::_M_release() noexcept
+        -:  318:    {
+        -:  319:      _GLIBCXX_SYNCHRONIZATION_HAPPENS_BEFORE(&_M_use_count);
+        -:  320:#if ! _GLIBCXX_TSAN
+    #####:  321:      constexpr bool __lock_free
+        -:  322:	= __atomic_always_lock_free(sizeof(long long), 0)
+        -:  323:	&& __atomic_always_lock_free(sizeof(_Atomic_word), 0);
+    #####:  324:      constexpr bool __double_word
+        -:  325:	= sizeof(long long) == 2 * sizeof(_Atomic_word);
+        -:  326:      // The ref-count members follow the vptr, so are aligned to
+        -:  327:      // alignof(void*).
+    #####:  328:      constexpr bool __aligned = __alignof(long long) <= alignof(void*);
+        -:  329:      if _GLIBCXX17_CONSTEXPR (__lock_free && __double_word && __aligned)
+        -:  330:	{
+    #####:  331:	  constexpr int __wordbits = __CHAR_BIT__ * sizeof(_Atomic_word);
+    #####:  332:	  constexpr int __shiftbits = __double_word ? __wordbits : 0;
+    #####:  333:	  constexpr long long __unique_ref = 1LL + (1LL << __shiftbits);
+    #####:  334:	  auto __both_counts = reinterpret_cast<long long*>(&_M_use_count);
+        -:  335:
+        -:  336:	  _GLIBCXX_SYNCHRONIZATION_HAPPENS_BEFORE(&_M_weak_count);
+    #####:  337:	  if (__atomic_load_n(__both_counts, __ATOMIC_ACQUIRE) == __unique_ref)
+    %%%%%:  337-block 2
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  338:	    {
+        -:  339:	      // Both counts are 1, so there are no weak references and
+        -:  340:	      // we are releasing the last strong reference. No other
+        -:  341:	      // threads can observe the effects of this _M_release()
+        -:  342:	      // call (e.g. calling use_count()) without a data race.
+    #####:  343:	      _M_weak_count = _M_use_count = 0;
+        -:  344:	      _GLIBCXX_SYNCHRONIZATION_HAPPENS_AFTER(&_M_use_count);
+        -:  345:	      _GLIBCXX_SYNCHRONIZATION_HAPPENS_AFTER(&_M_weak_count);
+    #####:  346:	      _M_dispose();
+    %%%%%:  346-block 3
+call    0 never executed
+    #####:  347:	      _M_destroy();
+call    0 never executed
+    #####:  348:	      return;
+        -:  349:	    }
+    #####:  350:	  if (__gnu_cxx::__exchange_and_add_dispatch(&_M_use_count, -1) == 1)
+    %%%%%:  350-block 6
+    %%%%%:  350-block 15
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  351:	    [[__unlikely__]]
+        -:  352:	    {
+    #####:  353:	      _M_release_last_use_cold();
+    %%%%%:  353-block 16
+call    0 never executed
+    #####:  354:	      return;
+        -:  355:	    }
+        -:  356:	}
+        -:  357:      else
+        -:  358:#endif
+        -:  359:      if (__gnu_cxx::__exchange_and_add_dispatch(&_M_use_count, -1) == 1)
+        -:  360:	{
+        -:  361:	  _M_release_last_use();
+        -:  362:	}
+        -:  363:    }
+        -:  364:
+        -:  365:  template<>
+        -:  366:    inline void
+        -:  367:    _Sp_counted_base<_S_single>::_M_weak_add_ref() noexcept
+        -:  368:    { ++_M_weak_count; }
+        -:  369:
+        -:  370:  template<>
+        -:  371:    inline void
+        -:  372:    _Sp_counted_base<_S_single>::_M_weak_release() noexcept
+        -:  373:    {
+        -:  374:      if (--_M_weak_count == 0)
+        -:  375:        _M_destroy();
+        -:  376:    }
+        -:  377:
+        -:  378:  template<>
+        -:  379:    inline long
+        -:  380:    _Sp_counted_base<_S_single>::_M_get_use_count() const noexcept
+        -:  381:    { return _M_use_count; }
+        -:  382:
+        -:  383:
+        -:  384:  // Forward declarations.
+        -:  385:  template<typename _Tp, _Lock_policy _Lp = __default_lock_policy>
+        -:  386:    class __shared_ptr;
+        -:  387:
+        -:  388:  template<typename _Tp, _Lock_policy _Lp = __default_lock_policy>
+        -:  389:    class __weak_ptr;
+        -:  390:
+        -:  391:  template<typename _Tp, _Lock_policy _Lp = __default_lock_policy>
+        -:  392:    class __enable_shared_from_this;
+        -:  393:
+        -:  394:  template<typename _Tp>
+        -:  395:    class shared_ptr;
+        -:  396:
+        -:  397:  template<typename _Tp>
+        -:  398:    class weak_ptr;
+        -:  399:
+        -:  400:  template<typename _Tp>
+        -:  401:    struct owner_less;
+        -:  402:
+        -:  403:  template<typename _Tp>
+        -:  404:    class enable_shared_from_this;
+        -:  405:
+        -:  406:  template<_Lock_policy _Lp = __default_lock_policy>
+        -:  407:    class __weak_count;
+        -:  408:
+        -:  409:  template<_Lock_policy _Lp = __default_lock_policy>
+        -:  410:    class __shared_count;
+        -:  411:
+        -:  412:#ifdef __glibcxx_atomic_shared_ptr
+        -:  413:  template<typename>
+        -:  414:    class _Sp_atomic;
+        -:  415:#endif
+        -:  416:
+        -:  417:  // Counted ptr with no deleter or allocator support
+        -:  418:  template<typename _Ptr, _Lock_policy _Lp>
+        -:  419:    class _Sp_counted_ptr final : public _Sp_counted_base<_Lp>
+        -:  420:    {
+        -:  421:    public:
+        -:  422:      explicit
+        -:  423:      _Sp_counted_ptr(_Ptr __p) noexcept
+        -:  424:      : _M_ptr(__p) { }
+        -:  425:
+        -:  426:      virtual void
+        -:  427:      _M_dispose() noexcept
+        -:  428:      { delete _M_ptr; }
+        -:  429:
+        -:  430:      virtual void
+        -:  431:      _M_destroy() noexcept
+        -:  432:      { delete this; }
+        -:  433:
+        -:  434:      virtual void*
+        -:  435:      _M_get_deleter(const std::type_info&) noexcept
+        -:  436:      { return nullptr; }
+        -:  437:
+        -:  438:      _Sp_counted_ptr(const _Sp_counted_ptr&) = delete;
+        -:  439:      _Sp_counted_ptr& operator=(const _Sp_counted_ptr&) = delete;
+        -:  440:
+        -:  441:    private:
+        -:  442:      _Ptr             _M_ptr;
+        -:  443:    };
+        -:  444:
+        -:  445:  template<>
+        -:  446:    inline void
+        -:  447:    _Sp_counted_ptr<nullptr_t, _S_single>::_M_dispose() noexcept { }
+        -:  448:
+        -:  449:  template<>
+        -:  450:    inline void
+        -:  451:    _Sp_counted_ptr<nullptr_t, _S_mutex>::_M_dispose() noexcept { }
+        -:  452:
+        -:  453:  template<>
+        -:  454:    inline void
+        -:  455:    _Sp_counted_ptr<nullptr_t, _S_atomic>::_M_dispose() noexcept { }
+        -:  456:
+        -:  457:  // FIXME: once __has_cpp_attribute(__no_unique_address__)) is true for
+        -:  458:  // all supported compilers we can greatly simplify _Sp_ebo_helper.
+        -:  459:  // N.B. unconditionally applying the attribute could change layout for
+        -:  460:  // final types, which currently cannot use EBO so have a unique address.
+        -:  461:
+        -:  462:  template<int _Nm, typename _Tp,
+        -:  463:	   bool __use_ebo = !__is_final(_Tp) && __is_empty(_Tp)>
+        -:  464:    struct _Sp_ebo_helper;
+        -:  465:
+        -:  466:  /// Specialization using EBO.
+        -:  467:  template<int _Nm, typename _Tp>
+        -:  468:    struct _Sp_ebo_helper<_Nm, _Tp, true> : private _Tp
+        -:  469:    {
+function _ZNSt14_Sp_ebo_helperILi0ESaIvELb1EEC2ERKS0_ called 0 returned 0% blocks executed 0%
+    #####:  470:      explicit _Sp_ebo_helper(const _Tp& __tp) : _Tp(__tp) { }
+        -:  471:      explicit _Sp_ebo_helper(_Tp&& __tp) : _Tp(std::move(__tp)) { }
+        -:  472:
+        -:  473:      static _Tp&
+function _ZNSt14_Sp_ebo_helperILi0ESaIvELb1EE6_S_getERS1_ called 0 returned 0% blocks executed 0%
+    #####:  474:      _S_get(_Sp_ebo_helper& __eboh) { return static_cast<_Tp&>(__eboh); }
+    %%%%%:  474-block 2
+        -:  475:    };
+        -:  476:
+        -:  477:  /// Specialization not using EBO.
+        -:  478:  template<int _Nm, typename _Tp>
+        -:  479:    struct _Sp_ebo_helper<_Nm, _Tp, false>
+        -:  480:    {
+        -:  481:      explicit _Sp_ebo_helper(const _Tp& __tp) : _M_tp(__tp) { }
+        -:  482:      explicit _Sp_ebo_helper(_Tp&& __tp) : _M_tp(std::move(__tp)) { }
+        -:  483:
+        -:  484:      static _Tp&
+        -:  485:      _S_get(_Sp_ebo_helper& __eboh)
+        -:  486:      { return __eboh._M_tp; }
+        -:  487:
+        -:  488:    private:
+        -:  489:      _Tp _M_tp;
+        -:  490:    };
+        -:  491:
+        -:  492:  // Support for custom deleter and/or allocator
+        -:  493:  template<typename _Ptr, typename _Deleter, typename _Alloc, _Lock_policy _Lp>
+        -:  494:    class _Sp_counted_deleter final : public _Sp_counted_base<_Lp>
+        -:  495:    {
+        -:  496:      class _Impl : _Sp_ebo_helper<0, _Deleter>, _Sp_ebo_helper<1, _Alloc>
+        -:  497:      {
+        -:  498:	typedef _Sp_ebo_helper<0, _Deleter>	_Del_base;
+        -:  499:	typedef _Sp_ebo_helper<1, _Alloc>	_Alloc_base;
+        -:  500:
+        -:  501:      public:
+        -:  502:	_Impl(_Ptr __p, _Deleter __d, const _Alloc& __a) noexcept
+        -:  503:	: _Del_base(std::move(__d)), _Alloc_base(__a), _M_ptr(__p)
+        -:  504:	{ }
+        -:  505:
+        -:  506:	_Deleter& _M_del() noexcept { return _Del_base::_S_get(*this); }
+        -:  507:	_Alloc& _M_alloc() noexcept { return _Alloc_base::_S_get(*this); }
+        -:  508:
+        -:  509:	_Ptr _M_ptr;
+        -:  510:      };
+        -:  511:
+        -:  512:    public:
+        -:  513:      using __allocator_type = __alloc_rebind<_Alloc, _Sp_counted_deleter>;
+        -:  514:
+        -:  515:      // __d(__p) must not throw.
+        -:  516:      _Sp_counted_deleter(_Ptr __p, _Deleter __d) noexcept
+        -:  517:      : _M_impl(__p, std::move(__d), _Alloc()) { }
+        -:  518:
+        -:  519:      // __d(__p) must not throw.
+        -:  520:      _Sp_counted_deleter(_Ptr __p, _Deleter __d, const _Alloc& __a) noexcept
+        -:  521:      : _M_impl(__p, std::move(__d), __a) { }
+        -:  522:
+        -:  523:      ~_Sp_counted_deleter() noexcept { }
+        -:  524:
+        -:  525:      virtual void
+        -:  526:      _M_dispose() noexcept
+        -:  527:      { _M_impl._M_del()(_M_impl._M_ptr); }
+        -:  528:
+        -:  529:      virtual void
+        -:  530:      _M_destroy() noexcept
+        -:  531:      {
+        -:  532:	__allocator_type __a(_M_impl._M_alloc());
+        -:  533:	__allocated_ptr<__allocator_type> __guard_ptr{ __a, this };
+        -:  534:	this->~_Sp_counted_deleter();
+        -:  535:      }
+        -:  536:
+        -:  537:      virtual void*
+        -:  538:      _M_get_deleter(const type_info& __ti [[__gnu__::__unused__]]) noexcept
+        -:  539:      {
+        -:  540:#if __cpp_rtti
+        -:  541:	// _GLIBCXX_RESOLVE_LIB_DEFECTS
+        -:  542:	// 2400. shared_ptr's get_deleter() should use addressof()
+        -:  543:        return __ti == typeid(_Deleter)
+        -:  544:	  ? std::__addressof(_M_impl._M_del())
+        -:  545:	  : nullptr;
+        -:  546:#else
+        -:  547:        return nullptr;
+        -:  548:#endif
+        -:  549:      }
+        -:  550:
+        -:  551:    private:
+        -:  552:#ifdef __glibcxx_out_ptr
+        -:  553:      template<typename, typename, typename...> friend class out_ptr_t;
+        -:  554:#endif
+        -:  555:      _Impl _M_impl;
+        -:  556:    };
+        -:  557:
+        -:  558:  // helpers for make_shared / allocate_shared
+        -:  559:
+        -:  560:  struct _Sp_make_shared_tag
+        -:  561:  {
+        -:  562:  private:
+        -:  563:    template<typename _Tp, typename _Alloc, _Lock_policy _Lp>
+        -:  564:      friend class _Sp_counted_ptr_inplace;
+        -:  565:
+        -:  566:    static const type_info&
+function _ZNSt19_Sp_make_shared_tag5_S_tiEv called 0 returned 0% blocks executed 0%
+    #####:  567:    _S_ti() noexcept _GLIBCXX_VISIBILITY(default)
+        -:  568:    {
+        -:  569:      alignas(type_info) static constexpr char __tag[sizeof(type_info)] = { };
+    #####:  570:      return reinterpret_cast<const type_info&>(__tag);
+    %%%%%:  570-block 2
+        -:  571:    }
+        -:  572:
+        -:  573:    static bool _S_eq(const type_info&) noexcept;
+        -:  574:  };
+        -:  575:
+        -:  576:  template<typename _Alloc>
+        -:  577:    struct _Sp_alloc_shared_tag
+        -:  578:    {
+        -:  579:      const _Alloc& _M_a;
+        -:  580:    };
+        -:  581:
+        -:  582:  template<typename _Tp, typename _Alloc, _Lock_policy _Lp>
+        -:  583:    class _Sp_counted_ptr_inplace final : public _Sp_counted_base<_Lp>
+        -:  584:    {
+        -:  585:      class _Impl : _Sp_ebo_helper<0, _Alloc>
+        -:  586:      {
+        -:  587:	typedef _Sp_ebo_helper<0, _Alloc>	_A_base;
+        -:  588:
+        -:  589:      public:
+function _ZNSt23_Sp_counted_ptr_inplaceINSt8__detail4_NFAINSt7__cxx1112regex_traitsIcEEEESaIvELN9__gnu_cxx12_Lock_policyE2EE5_ImplC2ES6_ called 0 returned 0% blocks executed 0%
+    #####:  590:	explicit _Impl(_Alloc __a) noexcept : _A_base(__a) { }
+    %%%%%:  590-block 2
+call    0 never executed
+        -:  591:
+function _ZNSt23_Sp_counted_ptr_inplaceINSt8__detail4_NFAINSt7__cxx1112regex_traitsIcEEEESaIvELN9__gnu_cxx12_Lock_policyE2EE5_Impl8_M_allocEv called 0 returned 0% blocks executed 0%
+    #####:  592:	_Alloc& _M_alloc() noexcept { return _A_base::_S_get(*this); }
+    %%%%%:  592-block 2
+call    0 never executed
+        -:  593:
+        -:  594:	__gnu_cxx::__aligned_buffer<_Tp> _M_storage;
+        -:  595:      };
+        -:  596:
+        -:  597:    public:
+        -:  598:      using __allocator_type = __alloc_rebind<_Alloc, _Sp_counted_ptr_inplace>;
+        -:  599:
+        -:  600:      // Alloc parameter is not a reference so doesn't alias anything in __args
+        -:  601:      template<typename... _Args>
+function _ZNSt23_Sp_counted_ptr_inplaceINSt8__detail4_NFAINSt7__cxx1112regex_traitsIcEEEESaIvELN9__gnu_cxx12_Lock_policyE2EEC2IJRKSt6localeRNSt15regex_constants18syntax_option_typeEEEES6_DpOT_ called 0 returned 0% blocks executed 0%
+    #####:  602:	_Sp_counted_ptr_inplace(_Alloc __a, _Args&&... __args)
+    #####:  603:	: _M_impl(__a)
+    %%%%%:  603-block 2
+call    0 never executed
+call    1 never executed
+        -:  604:	{
+        -:  605:	  // _GLIBCXX_RESOLVE_LIB_DEFECTS
+        -:  606:	  // 2070.  allocate_shared should use allocator_traits<A>::construct
+    #####:  607:	  allocator_traits<_Alloc>::construct(__a, _M_ptr(),
+call    0 never executed
+call    1 never executed
+call    2 never executed
+        -:  608:	      std::forward<_Args>(__args)...); // might throw
+    #####:  609:	}
+    %%%%%:  609-block 10
+    $$$$$:  609-block 11
+call    0 never executed
+        -:  610:
+    #####:  611:      ~_Sp_counted_ptr_inplace() noexcept { }
+------------------
+_ZNSt23_Sp_counted_ptr_inplaceINSt8__detail4_NFAINSt7__cxx1112regex_traitsIcEEEESaIvELN9__gnu_cxx12_Lock_policyE2EED0Ev:
+function _ZNSt23_Sp_counted_ptr_inplaceINSt8__detail4_NFAINSt7__cxx1112regex_traitsIcEEEESaIvELN9__gnu_cxx12_Lock_policyE2EED0Ev called 0 returned 0% blocks executed 0%
+    #####:  611:      ~_Sp_counted_ptr_inplace() noexcept { }
+    %%%%%:  611-block 2
+call    0 never executed
+call    1 never executed
+------------------
+_ZNSt23_Sp_counted_ptr_inplaceINSt8__detail4_NFAINSt7__cxx1112regex_traitsIcEEEESaIvELN9__gnu_cxx12_Lock_policyE2EED2Ev:
+function _ZNSt23_Sp_counted_ptr_inplaceINSt8__detail4_NFAINSt7__cxx1112regex_traitsIcEEEESaIvELN9__gnu_cxx12_Lock_policyE2EED2Ev called 0 returned 0% blocks executed 0%
+    #####:  611:      ~_Sp_counted_ptr_inplace() noexcept { }
+    %%%%%:  611-block 2
+call    0 never executed
+------------------
+        -:  612:
+        -:  613:      virtual void
+function _ZNSt23_Sp_counted_ptr_inplaceINSt8__detail4_NFAINSt7__cxx1112regex_traitsIcEEEESaIvELN9__gnu_cxx12_Lock_policyE2EE10_M_disposeEv called 0 returned 0% blocks executed 0%
+    #####:  614:      _M_dispose() noexcept
+        -:  615:      {
+    #####:  616:	allocator_traits<_Alloc>::destroy(_M_impl._M_alloc(), _M_ptr());
+    %%%%%:  616-block 2
+call    0 never executed
+call    1 never executed
+    #####:  617:      }
+        -:  618:
+        -:  619:      // Override because the allocator needs to know the dynamic type
+        -:  620:      virtual void
+function _ZNSt23_Sp_counted_ptr_inplaceINSt8__detail4_NFAINSt7__cxx1112regex_traitsIcEEEESaIvELN9__gnu_cxx12_Lock_policyE2EE10_M_destroyEv called 0 returned 0% blocks executed 0%
+    #####:  621:      _M_destroy() noexcept
+        -:  622:      {
+    #####:  623:	__allocator_type __a(_M_impl._M_alloc());
+    %%%%%:  623-block 2
+call    0 never executed
+    #####:  624:	__allocated_ptr<__allocator_type> __guard_ptr{ __a, this };
+    %%%%%:  624-block 5
+call    0 never executed
+    #####:  625:	this->~_Sp_counted_ptr_inplace();
+call    0 never executed
+    #####:  626:      }
+call    0 never executed
+        -:  627:
+        -:  628:    private:
+        -:  629:      friend class __shared_count<_Lp>; // To be able to call _M_ptr().
+        -:  630:
+        -:  631:      // No longer used, but code compiled against old libstdc++ headers
+        -:  632:      // might still call it from __shared_ptr ctor to get the pointer out.
+        -:  633:      virtual void*
+function _ZNSt23_Sp_counted_ptr_inplaceINSt8__detail4_NFAINSt7__cxx1112regex_traitsIcEEEESaIvELN9__gnu_cxx12_Lock_policyE2EE14_M_get_deleterERKSt9type_info called 0 returned 0% blocks executed 0%
+    #####:  634:      _M_get_deleter(const std::type_info& __ti) noexcept override
+        -:  635:      {
+    #####:  636:	auto __ptr = const_cast<typename remove_cv<_Tp>::type*>(_M_ptr());
+    %%%%%:  636-block 2
+call    0 never executed
+        -:  637:	// Check for the fake type_info first, so we don't try to access it
+        -:  638:	// as a real type_info object. Otherwise, check if it's the real
+        -:  639:	// type_info for this class. With RTTI enabled we can check directly,
+        -:  640:	// or call a library function to do it.
+    #####:  641:	if (&__ti == &_Sp_make_shared_tag::_S_ti()
+call    0 never executed
+    #####:  642:	    ||
+branch  0 never executed (fallthrough)
+branch  1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    %%%%%:  642-block 7
+    %%%%%:  642-block 8
+    %%%%%:  642-block 9
+branch  4 never executed (fallthrough)
+branch  5 never executed
+        -:  643:#if __cpp_rtti
+    #####:  644:	    __ti == typeid(_Sp_make_shared_tag)
+    %%%%%:  644-block 5
+call    0 never executed
+        -:  645:#else
+        -:  646:	    _Sp_make_shared_tag::_S_eq(__ti)
+        -:  647:#endif
+        -:  648:	   )
+    #####:  649:	  return __ptr;
+    %%%%%:  649-block 10
+    #####:  650:	return nullptr;
+    %%%%%:  650-block 11
+        -:  651:      }
+        -:  652:
+function _ZNSt23_Sp_counted_ptr_inplaceINSt8__detail4_NFAINSt7__cxx1112regex_traitsIcEEEESaIvELN9__gnu_cxx12_Lock_policyE2EE6_M_ptrEv called 0 returned 0% blocks executed 0%
+    #####:  653:      _Tp* _M_ptr() noexcept { return _M_impl._M_storage._M_ptr(); }
+    %%%%%:  653-block 2
+call    0 never executed
+        -:  654:
+        -:  655:      _Impl _M_impl;
+        -:  656:    };
+        -:  657:
+        -:  658:#ifdef __glibcxx_smart_ptr_for_overwrite // C++ >= 20 && HOSTED
+        -:  659:  struct _Sp_overwrite_tag { };
+        -:  660:
+        -:  661:  // Partial specialization used for make_shared_for_overwrite<non-array>().
+        -:  662:  // This partial specialization is used when the allocator's value type
+        -:  663:  // is the special _Sp_overwrite_tag type.
+        -:  664:#if __cpp_concepts
+        -:  665:  template<typename _Tp, typename _Alloc, _Lock_policy _Lp>
+        -:  666:    requires is_same_v<typename _Alloc::value_type, _Sp_overwrite_tag>
+        -:  667:    class _Sp_counted_ptr_inplace<_Tp, _Alloc, _Lp> final
+        -:  668:#else
+        -:  669:  template<typename _Tp, template<typename> class _Alloc, _Lock_policy _Lp>
+        -:  670:    class _Sp_counted_ptr_inplace<_Tp, _Alloc<_Sp_overwrite_tag>, _Lp> final
+        -:  671:#endif
+        -:  672:    : public _Sp_counted_base<_Lp>
+        -:  673:    {
+        -:  674:      [[no_unique_address]] _Alloc _M_alloc;
+        -:  675:
+        -:  676:      union {
+        -:  677:	_Tp _M_obj;
+        -:  678:	char _M_unused;
+        -:  679:      };
+        -:  680:
+        -:  681:      friend class __shared_count<_Lp>; // To be able to call _M_ptr().
+        -:  682:
+        -:  683:      _Tp* _M_ptr() noexcept { return std::__addressof(_M_obj); }
+        -:  684:
+        -:  685:    public:
+        -:  686:      using __allocator_type = __alloc_rebind<_Alloc, _Sp_counted_ptr_inplace>;
+        -:  687:
+        -:  688:      _Sp_counted_ptr_inplace(const _Alloc& __a)
+        -:  689:      : _M_alloc(__a)
+        -:  690:      {
+        -:  691:	::new((void*)_M_ptr()) _Tp; // default-initialized, for overwrite.
+        -:  692:      }
+        -:  693:
+        -:  694:      ~_Sp_counted_ptr_inplace() noexcept { }
+        -:  695:
+        -:  696:      virtual void
+        -:  697:      _M_dispose() noexcept
+        -:  698:      {
+        -:  699:	_M_obj.~_Tp();
+        -:  700:      }
+        -:  701:
+        -:  702:      // Override because the allocator needs to know the dynamic type
+        -:  703:      virtual void
+        -:  704:      _M_destroy() noexcept
+        -:  705:      {
+        -:  706:	using pointer = typename allocator_traits<__allocator_type>::pointer;
+        -:  707:	__allocator_type __a(_M_alloc);
+        -:  708:	auto __p = pointer_traits<pointer>::pointer_to(*this);
+        -:  709:	__allocated_ptr<__allocator_type> __guard_ptr{ __a, __p };
+        -:  710:	this->~_Sp_counted_ptr_inplace();
+        -:  711:      }
+        -:  712:
+        -:  713:      void*
+        -:  714:      _M_get_deleter(const std::type_info&) noexcept override
+        -:  715:      { return nullptr; }
+        -:  716:    };
+        -:  717:#endif // __glibcxx_smart_ptr_for_overwrite
+        -:  718:
+        -:  719:#if __glibcxx_shared_ptr_arrays >= 201707L // C++ >= 20 && HOSTED
+        -:  720:  struct _Sp_overwrite_tag;
+        -:  721:
+        -:  722:  // For make_shared<T[]>, make_shared<T[N]>, allocate_shared<T[]> etc.
+        -:  723:  template<typename _Alloc>
+        -:  724:    struct _Sp_counted_array_base
+        -:  725:    {
+        -:  726:      [[no_unique_address]] _Alloc _M_alloc{};
+        -:  727:      size_t _M_n = 0;
+        -:  728:      bool _M_overwrite = false;
+        -:  729:
+        -:  730:      typename allocator_traits<_Alloc>::pointer
+        -:  731:      _M_alloc_array(size_t __tail)
+        -:  732:      {
+        -:  733:	return allocator_traits<_Alloc>::allocate(_M_alloc, _M_n + __tail);
+        -:  734:      }
+        -:  735:
+        -:  736:      void
+        -:  737:      _M_dealloc_array(typename allocator_traits<_Alloc>::pointer __p,
+        -:  738:		       size_t __tail)
+        -:  739:      {
+        -:  740:	allocator_traits<_Alloc>::deallocate(_M_alloc, __p, _M_n + __tail);
+        -:  741:      }
+        -:  742:
+        -:  743:      // Init the array elements
+        -:  744:      template<typename _Init>
+        -:  745:	void
+        -:  746:	_M_init(typename allocator_traits<_Alloc>::value_type* __p,
+        -:  747:		_Init __init)
+        -:  748:	{
+        -:  749:	  using _Tp = remove_pointer_t<_Init>;
+        -:  750:	  using _Up = typename allocator_traits<_Alloc>::value_type;
+        -:  751:
+        -:  752:	  if constexpr (is_same_v<_Init, _Sp_overwrite_tag>)
+        -:  753:	    {
+        -:  754:	      std::uninitialized_default_construct_n(__p, _M_n);
+        -:  755:	      _M_overwrite = true;
+        -:  756:	    }
+        -:  757:	  else if (__init == nullptr)
+        -:  758:	    std::__uninitialized_default_n_a(__p, _M_n, _M_alloc);
+        -:  759:	  else if constexpr (!is_array_v<_Tp>)
+        -:  760:	    std::__uninitialized_fill_n_a(__p, _M_n, *__init, _M_alloc);
+        -:  761:	  else
+        -:  762:	    {
+        -:  763:#pragma GCC diagnostic push
+        -:  764:#pragma GCC diagnostic ignored "-Wunused-local-typedefs"
+        -:  765:	      struct _Iter
+        -:  766:	      {
+        -:  767:		using value_type = _Up;
+        -:  768:		using difference_type = ptrdiff_t;
+        -:  769:		using pointer = const _Up*;
+        -:  770:		using reference = const _Up&;
+        -:  771:		using iterator_category = forward_iterator_tag;
+        -:  772:
+        -:  773:		const _Up* _M_p;
+        -:  774:		size_t _M_len;
+        -:  775:		size_t _M_pos;
+        -:  776:
+        -:  777:		_Iter& operator++() { ++_M_pos; return *this; }
+        -:  778:		_Iter operator++(int) { auto __i(*this); ++_M_pos; return __i; }
+        -:  779:
+        -:  780:		reference operator*() const { return _M_p[_M_pos % _M_len]; }
+        -:  781:		pointer operator->() const { return _M_p + (_M_pos % _M_len); }
+        -:  782:
+        -:  783:		bool operator==(const _Iter& __i) const
+        -:  784:		{ return _M_pos == __i._M_pos; }
+        -:  785:	      };
+        -:  786:#pragma GCC diagnostic pop
+        -:  787:
+        -:  788:	      _Iter __first{_S_first_elem(__init), sizeof(_Tp) / sizeof(_Up)};
+        -:  789:	      _Iter __last = __first;
+        -:  790:	      __last._M_pos = _M_n;
+        -:  791:	      std::__uninitialized_copy_a(__first, __last, __p, _M_alloc);
+        -:  792:	    }
+        -:  793:	}
+        -:  794:
+        -:  795:    protected:
+        -:  796:      // Destroy the array elements
+        -:  797:      void
+        -:  798:      _M_dispose_array(typename allocator_traits<_Alloc>::value_type* __p)
+        -:  799:      {
+        -:  800:	if (_M_overwrite)
+        -:  801:	  std::destroy_n(__p, _M_n);
+        -:  802:	else
+        -:  803:	  {
+        -:  804:	    size_t __n = _M_n;
+        -:  805:	    while (__n--)
+        -:  806:	      allocator_traits<_Alloc>::destroy(_M_alloc, __p + __n);
+        -:  807:	  }
+        -:  808:      }
+        -:  809:
+        -:  810:    private:
+        -:  811:      template<typename _Tp>
+        -:  812:	static _Tp*
+        -:  813:	_S_first_elem(_Tp* __p) { return __p; }
+        -:  814:
+        -:  815:      template<typename _Tp, size_t _Nm>
+        -:  816:	static auto
+        -:  817:	_S_first_elem(_Tp (*__p)[_Nm]) { return _S_first_elem(*__p); }
+        -:  818:    };
+        -:  819:
+        -:  820:  // Control block for make_shared<T[]>, make_shared<T[N]> etc. that will be
+        -:  821:  // placed into unused memory at the end of the array.
+        -:  822:  template<typename _Alloc, _Lock_policy _Lp>
+        -:  823:    class _Sp_counted_array final
+        -:  824:    : public _Sp_counted_base<_Lp>, _Sp_counted_array_base<_Alloc>
+        -:  825:    {
+        -:  826:      using pointer = typename allocator_traits<_Alloc>::pointer;
+        -:  827:
+        -:  828:      pointer _M_alloc_ptr;
+        -:  829:
+        -:  830:      auto _M_ptr() const noexcept { return std::to_address(_M_alloc_ptr); }
+        -:  831:
+        -:  832:      friend class __shared_count<_Lp>; // To be able to call _M_ptr().
+        -:  833:
+        -:  834:    public:
+        -:  835:      _Sp_counted_array(const _Sp_counted_array_base<_Alloc>& __a,
+        -:  836:			pointer __p) noexcept
+        -:  837:      : _Sp_counted_array_base<_Alloc>(__a), _M_alloc_ptr(__p)
+        -:  838:      { }
+        -:  839:
+        -:  840:      ~_Sp_counted_array() = default;
+        -:  841:
+        -:  842:      virtual void
+        -:  843:      _M_dispose() noexcept
+        -:  844:      {
+        -:  845:	if (this->_M_n)
+        -:  846:	  this->_M_dispose_array(_M_ptr());
+        -:  847:      }
+        -:  848:
+        -:  849:      // Override because the allocator needs to know the dynamic type
+        -:  850:      virtual void
+        -:  851:      _M_destroy() noexcept
+        -:  852:      {
+        -:  853:	_Sp_counted_array_base<_Alloc> __a = *this;
+        -:  854:	pointer __p = _M_alloc_ptr;
+        -:  855:	this->~_Sp_counted_array();
+        -:  856:	__a._M_dealloc_array(__p, _S_tail());
+        -:  857:      }
+        -:  858:
+        -:  859:      // Returns the number of additional array elements that must be
+        -:  860:      // allocated in order to store a _Sp_counted_array at the end.
+        -:  861:      static constexpr size_t
+        -:  862:      _S_tail()
+        -:  863:      {
+        -:  864:	// The array elemenent type.
+        -:  865:	using _Tp = typename allocator_traits<_Alloc>::value_type;
+        -:  866:
+        -:  867:	// The space needed to store a _Sp_counted_array object.
+        -:  868:	size_t __bytes = sizeof(_Sp_counted_array);
+        -:  869:
+        -:  870:	// Add any padding needed for manual alignment within the buffer.
+        -:  871:	if constexpr (alignof(_Tp) < alignof(_Sp_counted_array))
+        -:  872:	  __bytes += alignof(_Sp_counted_array) - alignof(_Tp);
+        -:  873:
+        -:  874:	return (__bytes + sizeof(_Tp) - 1) / sizeof(_Tp);
+        -:  875:      }
+        -:  876:
+        -:  877:      void*
+        -:  878:      _M_get_deleter(const std::type_info&) noexcept override
+        -:  879:      { return nullptr; }
+        -:  880:    };
+        -:  881:#endif // __glibcxx_shared_ptr_arrays >= 201707L
+        -:  882:
+        -:  883:  // The default deleter for shared_ptr<T[]> and shared_ptr<T[N]>.
+        -:  884:  struct __sp_array_delete
+        -:  885:  {
+        -:  886:    template<typename _Yp>
+        -:  887:      void operator()(_Yp* __p) const { delete[] __p; }
+        -:  888:  };
+        -:  889:
+        -:  890:  template<_Lock_policy _Lp>
+        -:  891:    class __shared_count
+        -:  892:    {
+        -:  893:      // Prevent _Sp_alloc_shared_tag from matching the shared_ptr(P, D) ctor.
+        -:  894:      template<typename _Tp>
+        -:  895:	struct __not_alloc_shared_tag { using type = void; };
+        -:  896:
+        -:  897:      template<typename _Tp>
+        -:  898:	struct __not_alloc_shared_tag<_Sp_alloc_shared_tag<_Tp>> { };
+        -:  899:
+        -:  900:#if __glibcxx_shared_ptr_arrays >= 201707L // C++ >= 20 && HOSTED
+        -:  901:      template<typename _Alloc>
+        -:  902:	struct __not_alloc_shared_tag<_Sp_counted_array_base<_Alloc>> { };
+        -:  903:#endif
+        -:  904:
+        -:  905:    public:
+function _ZNSt14__shared_countILN9__gnu_cxx12_Lock_policyE2EEC2Ev called 0 returned 0% blocks executed 0%
+    #####:  906:      constexpr __shared_count() noexcept : _M_pi(0)
+    #####:  907:      { }
+        -:  908:
+        -:  909:      template<typename _Ptr>
+        -:  910:        explicit
+        -:  911:	__shared_count(_Ptr __p) : _M_pi(0)
+        -:  912:	{
+        -:  913:	  __try
+        -:  914:	    {
+        -:  915:	      _M_pi = new _Sp_counted_ptr<_Ptr, _Lp>(__p);
+        -:  916:	    }
+        -:  917:	  __catch(...)
+        -:  918:	    {
+        -:  919:	      delete __p;
+        -:  920:	      __throw_exception_again;
+        -:  921:	    }
+        -:  922:	}
+        -:  923:
+        -:  924:      template<typename _Ptr>
+        -:  925:	__shared_count(_Ptr __p, /* is_array = */ false_type)
+        -:  926:	: __shared_count(__p)
+        -:  927:	{ }
+        -:  928:
+        -:  929:      template<typename _Ptr>
+        -:  930:	__shared_count(_Ptr __p, /* is_array = */ true_type)
+        -:  931:	: __shared_count(__p, __sp_array_delete{}, allocator<void>())
+        -:  932:	{ }
+        -:  933:
+        -:  934:      template<typename _Ptr, typename _Deleter,
+        -:  935:	       typename = typename __not_alloc_shared_tag<_Deleter>::type>
+        -:  936:	__shared_count(_Ptr __p, _Deleter __d)
+        -:  937:	: __shared_count(__p, std::move(__d), allocator<void>())
+        -:  938:	{ }
+        -:  939:
+        -:  940:      template<typename _Ptr, typename _Deleter, typename _Alloc,
+        -:  941:	       typename = typename __not_alloc_shared_tag<_Deleter>::type>
+        -:  942:	__shared_count(_Ptr __p, _Deleter __d, _Alloc __a) : _M_pi(0)
+        -:  943:	{
+        -:  944:	  typedef _Sp_counted_deleter<_Ptr, _Deleter, _Alloc, _Lp> _Sp_cd_type;
+        -:  945:	  __try
+        -:  946:	    {
+        -:  947:	      typename _Sp_cd_type::__allocator_type __a2(__a);
+        -:  948:	      auto __guard = std::__allocate_guarded(__a2);
+        -:  949:	      _Sp_cd_type* __mem = __guard.get();
+        -:  950:	      ::new (__mem) _Sp_cd_type(__p, std::move(__d), std::move(__a));
+        -:  951:	      _M_pi = __mem;
+        -:  952:	      __guard = nullptr;
+        -:  953:	    }
+        -:  954:	  __catch(...)
+        -:  955:	    {
+        -:  956:	      __d(__p); // Call _Deleter on __p.
+        -:  957:	      __throw_exception_again;
+        -:  958:	    }
+        -:  959:	}
+        -:  960:
+        -:  961:      template<typename _Tp, typename _Alloc, typename... _Args>
+function _ZNSt14__shared_countILN9__gnu_cxx12_Lock_policyE2EEC2INSt8__detail4_NFAINSt7__cxx1112regex_traitsIcEEEESaIvEJRKSt6localeRNSt15regex_constants18syntax_option_typeEEEERPT_St20_Sp_alloc_shared_tagIT0_EDpOT1_ called 0 returned 0% blocks executed 0%
+    #####:  962:	__shared_count(_Tp*& __p, _Sp_alloc_shared_tag<_Alloc> __a,
+        -:  963:		       _Args&&... __args)
+        -:  964:	{
+        -:  965:	  typedef _Sp_counted_ptr_inplace<_Tp, _Alloc, _Lp> _Sp_cp_type;
+    #####:  966:	  typename _Sp_cp_type::__allocator_type __a2(__a._M_a);
+    %%%%%:  966-block 2
+    #####:  967:	  auto __guard = std::__allocate_guarded(__a2);
+    %%%%%:  967-block 4
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  968:	  _Sp_cp_type* __mem = __guard.get();
+    %%%%%:  968-block 5
+call    0 never executed
+    #####:  969:	  auto __pi = ::new (__mem)
+call    0 never executed
+call    1 never executed
+call    2 never executed
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+    $$$$$:  969-block 15
+branch  6 never executed (fallthrough)
+branch  7 never executed
+    $$$$$:  969-block 16
+call    8 never executed
+        -:  970:	    _Sp_cp_type(__a._M_a, std::forward<_Args>(__args)...);
+    #####:  971:	  __guard = nullptr;
+    %%%%%:  971-block 10
+call    0 never executed
+    #####:  972:	  _M_pi = __pi;
+    #####:  973:	  __p = __pi->_M_ptr();
+call    0 never executed
+    #####:  974:	}
+call    0 never executed
+    %%%%%:  974-block 14
+    $$$$$:  974-block 18
+call    1 never executed
+        -:  975:
+        -:  976:#if __glibcxx_shared_ptr_arrays >= 201707L // C++ >= 20 && HOSTED
+        -:  977:      template<typename _Tp, typename _Alloc, typename _Init>
+        -:  978:	__shared_count(_Tp*& __p, const _Sp_counted_array_base<_Alloc>& __a,
+        -:  979:		       _Init __init)
+        -:  980:	{
+        -:  981:	  using _Up = remove_all_extents_t<_Tp>;
+        -:  982:	  static_assert(is_same_v<_Up, typename _Alloc::value_type>);
+        -:  983:
+        -:  984:	  using _Sp_ca_type = _Sp_counted_array<_Alloc, _Lp>;
+        -:  985:	  const size_t __tail = _Sp_ca_type::_S_tail();
+        -:  986:
+        -:  987:	  struct _Guarded_ptr : _Sp_counted_array_base<_Alloc>
+        -:  988:	  {
+        -:  989:	    typename allocator_traits<_Alloc>::pointer _M_ptr;
+        -:  990:
+        -:  991:	    _Guarded_ptr(_Sp_counted_array_base<_Alloc> __a)
+        -:  992:	    : _Sp_counted_array_base<_Alloc>(__a),
+        -:  993:	      _M_ptr(this->_M_alloc_array(_Sp_ca_type::_S_tail()))
+        -:  994:	    { }
+        -:  995:
+        -:  996:	    ~_Guarded_ptr()
+        -:  997:	    {
+        -:  998:	      if (_M_ptr)
+        -:  999:		this->_M_dealloc_array(_M_ptr, _Sp_ca_type::_S_tail());
+        -: 1000:	    }
+        -: 1001:	  };
+        -: 1002:
+        -: 1003:	  _Guarded_ptr __guard{__a};
+        -: 1004:	  _Up* const __raw = std::to_address(__guard._M_ptr);
+        -: 1005:	  __guard._M_init(__raw, __init); // might throw
+        -: 1006:
+        -: 1007:	  void* __c = __raw + __a._M_n;
+        -: 1008:	  if constexpr (alignof(_Up) < alignof(_Sp_ca_type))
+        -: 1009:	    {
+        -: 1010:	      size_t __space = sizeof(_Up) * __tail;
+        -: 1011:	      __c = std::align(alignof(_Sp_ca_type), sizeof(_Sp_ca_type),
+        -: 1012:			       __c, __space);
+        -: 1013:	    }
+        -: 1014:	  auto __pi = ::new(__c) _Sp_ca_type(__guard, __guard._M_ptr);
+        -: 1015:	  __guard._M_ptr = nullptr;
+        -: 1016:	  _M_pi = __pi;
+        -: 1017:	  __p = reinterpret_cast<_Tp*>(__raw);
+        -: 1018:	}
+        -: 1019:#endif
+        -: 1020:
+        -: 1021:#if _GLIBCXX_USE_DEPRECATED
+        -: 1022:#pragma GCC diagnostic push
+        -: 1023:#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+        -: 1024:      // Special case for auto_ptr<_Tp> to provide the strong guarantee.
+        -: 1025:      template<typename _Tp>
+        -: 1026:        explicit
+        -: 1027:	__shared_count(std::auto_ptr<_Tp>&& __r);
+        -: 1028:#pragma GCC diagnostic pop
+        -: 1029:#endif
+        -: 1030:
+        -: 1031:      // Special case for unique_ptr<_Tp,_Del> to provide the strong guarantee.
+        -: 1032:      template<typename _Tp, typename _Del>
+        -: 1033:        explicit
+        -: 1034:	__shared_count(std::unique_ptr<_Tp, _Del>&& __r) : _M_pi(0)
+        -: 1035:	{
+        -: 1036:	  // _GLIBCXX_RESOLVE_LIB_DEFECTS
+        -: 1037:	  // 2415. Inconsistency between unique_ptr and shared_ptr
+        -: 1038:	  if (__r.get() == nullptr)
+        -: 1039:	    return;
+        -: 1040:
+        -: 1041:	  using _Ptr = typename unique_ptr<_Tp, _Del>::pointer;
+        -: 1042:	  using _Del2 = __conditional_t<is_reference<_Del>::value,
+        -: 1043:	      reference_wrapper<typename remove_reference<_Del>::type>,
+        -: 1044:	      _Del>;
+        -: 1045:	  using _Sp_cd_type
+        -: 1046:	    = _Sp_counted_deleter<_Ptr, _Del2, allocator<void>, _Lp>;
+        -: 1047:	  using _Alloc = allocator<_Sp_cd_type>;
+        -: 1048:	  using _Alloc_traits = allocator_traits<_Alloc>;
+        -: 1049:	  _Alloc __a;
+        -: 1050:	  _Sp_cd_type* __mem = _Alloc_traits::allocate(__a, 1);
+        -: 1051:	  // _GLIBCXX_RESOLVE_LIB_DEFECTS
+        -: 1052:	  // 3548. shared_ptr construction from unique_ptr should move
+        -: 1053:	  // (not copy) the deleter
+        -: 1054:	  _Alloc_traits::construct(__a, __mem, __r.release(),
+        -: 1055:				   std::forward<_Del>(__r.get_deleter()));
+        -: 1056:	  _M_pi = __mem;
+        -: 1057:	}
+        -: 1058:
+        -: 1059:      // Throw bad_weak_ptr when __r._M_get_use_count() == 0.
+        -: 1060:      explicit __shared_count(const __weak_count<_Lp>& __r);
+        -: 1061:
+        -: 1062:      // Does not throw if __r._M_get_use_count() == 0, caller must check.
+        -: 1063:      explicit
+        -: 1064:      __shared_count(const __weak_count<_Lp>& __r, std::nothrow_t) noexcept;
+        -: 1065:
+function _ZNSt14__shared_countILN9__gnu_cxx12_Lock_policyE2EED2Ev called 0 returned 0% blocks executed 0%
+    #####: 1066:      ~__shared_count() noexcept
+        -: 1067:      {
+    #####: 1068:	if (_M_pi != nullptr)
+    %%%%%: 1068-block 2
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####: 1069:	  _M_pi->_M_release();
+    %%%%%: 1069-block 3
+call    0 never executed
+    #####: 1070:      }
+        -: 1071:
+        -: 1072:      __shared_count(const __shared_count& __r) noexcept
+        -: 1073:      : _M_pi(__r._M_pi)
+        -: 1074:      {
+        -: 1075:	if (_M_pi != nullptr)
+        -: 1076:	  _M_pi->_M_add_ref_copy();
+        -: 1077:      }
+        -: 1078:
+        -: 1079:      __shared_count&
+        -: 1080:      operator=(const __shared_count& __r) noexcept
+        -: 1081:      {
+        -: 1082:	_Sp_counted_base<_Lp>* __tmp = __r._M_pi;
+        -: 1083:	if (__tmp != _M_pi)
+        -: 1084:	  {
+        -: 1085:	    if (__tmp != nullptr)
+        -: 1086:	      __tmp->_M_add_ref_copy();
+        -: 1087:	    if (_M_pi != nullptr)
+        -: 1088:	      _M_pi->_M_release();
+        -: 1089:	    _M_pi = __tmp;
+        -: 1090:	  }
+        -: 1091:	return *this;
+        -: 1092:      }
+        -: 1093:
+        -: 1094:      void
+function _ZNSt14__shared_countILN9__gnu_cxx12_Lock_policyE2EE7_M_swapERS2_ called 0 returned 0% blocks executed 0%
+    #####: 1095:      _M_swap(__shared_count& __r) noexcept
+        -: 1096:      {
+    #####: 1097:	_Sp_counted_base<_Lp>* __tmp = __r._M_pi;
+    #####: 1098:	__r._M_pi = _M_pi;
+    #####: 1099:	_M_pi = __tmp;
+    #####: 1100:      }
+        -: 1101:
+        -: 1102:      long
+        -: 1103:      _M_get_use_count() const noexcept
+        -: 1104:      { return _M_pi ? _M_pi->_M_get_use_count() : 0; }
+        -: 1105:
+        -: 1106:      bool
+        -: 1107:      _M_unique() const noexcept
+        -: 1108:      { return this->_M_get_use_count() == 1; }
+        -: 1109:
+        -: 1110:      void*
+        -: 1111:      _M_get_deleter(const std::type_info& __ti) const noexcept
+        -: 1112:      { return _M_pi ? _M_pi->_M_get_deleter(__ti) : nullptr; }
+        -: 1113:
+        -: 1114:      bool
+        -: 1115:      _M_less(const __shared_count& __rhs) const noexcept
+        -: 1116:      { return std::less<_Sp_counted_base<_Lp>*>()(this->_M_pi, __rhs._M_pi); }
+        -: 1117:
+        -: 1118:      bool
+        -: 1119:      _M_less(const __weak_count<_Lp>& __rhs) const noexcept
+        -: 1120:      { return std::less<_Sp_counted_base<_Lp>*>()(this->_M_pi, __rhs._M_pi); }
+        -: 1121:
+        -: 1122:      // Friend function injected into enclosing namespace and found by ADL
+        -: 1123:      friend inline bool
+        -: 1124:      operator==(const __shared_count& __a, const __shared_count& __b) noexcept
+        -: 1125:      { return __a._M_pi == __b._M_pi; }
+        -: 1126:
+        -: 1127:    private:
+        -: 1128:      friend class __weak_count<_Lp>;
+        -: 1129:#ifdef __glibcxx_atomic_shared_ptr
+        -: 1130:      template<typename> friend class _Sp_atomic;
+        -: 1131:#endif
+        -: 1132:#ifdef __glibcxx_out_ptr
+        -: 1133:      template<typename, typename, typename...> friend class out_ptr_t;
+        -: 1134:#endif
+        -: 1135:
+        -: 1136:      _Sp_counted_base<_Lp>*  _M_pi;
+        -: 1137:    };
+        -: 1138:
+        -: 1139:
+        -: 1140:  template<_Lock_policy _Lp>
+        -: 1141:    class __weak_count
+        -: 1142:    {
+        -: 1143:    public:
+        -: 1144:      constexpr __weak_count() noexcept : _M_pi(nullptr)
+        -: 1145:      { }
+        -: 1146:
+        -: 1147:      __weak_count(const __shared_count<_Lp>& __r) noexcept
+        -: 1148:      : _M_pi(__r._M_pi)
+        -: 1149:      {
+        -: 1150:	if (_M_pi != nullptr)
+        -: 1151:	  _M_pi->_M_weak_add_ref();
+        -: 1152:      }
+        -: 1153:
+        -: 1154:      __weak_count(const __weak_count& __r) noexcept
+        -: 1155:      : _M_pi(__r._M_pi)
+        -: 1156:      {
+        -: 1157:	if (_M_pi != nullptr)
+        -: 1158:	  _M_pi->_M_weak_add_ref();
+        -: 1159:      }
+        -: 1160:
+        -: 1161:      __weak_count(__weak_count&& __r) noexcept
+        -: 1162:      : _M_pi(__r._M_pi)
+        -: 1163:      { __r._M_pi = nullptr; }
+        -: 1164:
+        -: 1165:      ~__weak_count() noexcept
+        -: 1166:      {
+        -: 1167:	if (_M_pi != nullptr)
+        -: 1168:	  _M_pi->_M_weak_release();
+        -: 1169:      }
+        -: 1170:
+        -: 1171:      __weak_count&
+        -: 1172:      operator=(const __shared_count<_Lp>& __r) noexcept
+        -: 1173:      {
+        -: 1174:	_Sp_counted_base<_Lp>* __tmp = __r._M_pi;
+        -: 1175:	if (__tmp != nullptr)
+        -: 1176:	  __tmp->_M_weak_add_ref();
+        -: 1177:	if (_M_pi != nullptr)
+        -: 1178:	  _M_pi->_M_weak_release();
+        -: 1179:	_M_pi = __tmp;
+        -: 1180:	return *this;
+        -: 1181:      }
+        -: 1182:
+        -: 1183:      __weak_count&
+        -: 1184:      operator=(const __weak_count& __r) noexcept
+        -: 1185:      {
+        -: 1186:	_Sp_counted_base<_Lp>* __tmp = __r._M_pi;
+        -: 1187:	if (__tmp != nullptr)
+        -: 1188:	  __tmp->_M_weak_add_ref();
+        -: 1189:	if (_M_pi != nullptr)
+        -: 1190:	  _M_pi->_M_weak_release();
+        -: 1191:	_M_pi = __tmp;
+        -: 1192:	return *this;
+        -: 1193:      }
+        -: 1194:
+        -: 1195:      __weak_count&
+        -: 1196:      operator=(__weak_count&& __r) noexcept
+        -: 1197:      {
+        -: 1198:	if (_M_pi != nullptr)
+        -: 1199:	  _M_pi->_M_weak_release();
+        -: 1200:	_M_pi = __r._M_pi;
+        -: 1201:        __r._M_pi = nullptr;
+        -: 1202:	return *this;
+        -: 1203:      }
+        -: 1204:
+        -: 1205:      void
+        -: 1206:      _M_swap(__weak_count& __r) noexcept
+        -: 1207:      {
+        -: 1208:	_Sp_counted_base<_Lp>* __tmp = __r._M_pi;
+        -: 1209:	__r._M_pi = _M_pi;
+        -: 1210:	_M_pi = __tmp;
+        -: 1211:      }
+        -: 1212:
+        -: 1213:      long
+        -: 1214:      _M_get_use_count() const noexcept
+        -: 1215:      { return _M_pi != nullptr ? _M_pi->_M_get_use_count() : 0; }
+        -: 1216:
+        -: 1217:      bool
+        -: 1218:      _M_less(const __weak_count& __rhs) const noexcept
+        -: 1219:      { return std::less<_Sp_counted_base<_Lp>*>()(this->_M_pi, __rhs._M_pi); }
+        -: 1220:
+        -: 1221:      bool
+        -: 1222:      _M_less(const __shared_count<_Lp>& __rhs) const noexcept
+        -: 1223:      { return std::less<_Sp_counted_base<_Lp>*>()(this->_M_pi, __rhs._M_pi); }
+        -: 1224:
+        -: 1225:      // Friend function injected into enclosing namespace and found by ADL
+        -: 1226:      friend inline bool
+        -: 1227:      operator==(const __weak_count& __a, const __weak_count& __b) noexcept
+        -: 1228:      { return __a._M_pi == __b._M_pi; }
+        -: 1229:
+        -: 1230:    private:
+        -: 1231:      friend class __shared_count<_Lp>;
+        -: 1232:#ifdef __glibcxx_atomic_shared_ptr
+        -: 1233:      template<typename> friend class _Sp_atomic;
+        -: 1234:#endif
+        -: 1235:
+        -: 1236:      _Sp_counted_base<_Lp>*  _M_pi;
+        -: 1237:    };
+        -: 1238:
+        -: 1239:  // Now that __weak_count is defined we can define this constructor:
+        -: 1240:  template<_Lock_policy _Lp>
+        -: 1241:    inline
+        -: 1242:    __shared_count<_Lp>::__shared_count(const __weak_count<_Lp>& __r)
+        -: 1243:    : _M_pi(__r._M_pi)
+        -: 1244:    {
+        -: 1245:      if (_M_pi == nullptr || !_M_pi->_M_add_ref_lock_nothrow())
+        -: 1246:	__throw_bad_weak_ptr();
+        -: 1247:    }
+        -: 1248:
+        -: 1249:  // Now that __weak_count is defined we can define this constructor:
+        -: 1250:  template<_Lock_policy _Lp>
+        -: 1251:    inline
+        -: 1252:    __shared_count<_Lp>::
+        -: 1253:    __shared_count(const __weak_count<_Lp>& __r, std::nothrow_t) noexcept
+        -: 1254:    : _M_pi(__r._M_pi)
+        -: 1255:    {
+        -: 1256:      if (_M_pi && !_M_pi->_M_add_ref_lock_nothrow())
+        -: 1257:	_M_pi = nullptr;
+        -: 1258:    }
+        -: 1259:
+        -: 1260:  // Helper traits for shared_ptr of array:
+        -: 1261:
+        -: 1262:  // A pointer type Y* is said to be compatible with a pointer type T* when
+        -: 1263:  // either Y* is convertible to T* or Y is U[N] and T is U cv [].
+        -: 1264:  template<typename _Yp_ptr, typename _Tp_ptr>
+        -: 1265:    struct __sp_compatible_with
+        -: 1266:    : false_type
+        -: 1267:    { };
+        -: 1268:
+        -: 1269:  template<typename _Yp, typename _Tp>
+        -: 1270:    struct __sp_compatible_with<_Yp*, _Tp*>
+        -: 1271:    : is_convertible<_Yp*, _Tp*>::type
+        -: 1272:    { };
+        -: 1273:
+        -: 1274:  template<typename _Up, size_t _Nm>
+        -: 1275:    struct __sp_compatible_with<_Up(*)[_Nm], _Up(*)[]>
+        -: 1276:    : true_type
+        -: 1277:    { };
+        -: 1278:
+        -: 1279:  template<typename _Up, size_t _Nm>
+        -: 1280:    struct __sp_compatible_with<_Up(*)[_Nm], const _Up(*)[]>
+        -: 1281:    : true_type
+        -: 1282:    { };
+        -: 1283:
+        -: 1284:  template<typename _Up, size_t _Nm>
+        -: 1285:    struct __sp_compatible_with<_Up(*)[_Nm], volatile _Up(*)[]>
+        -: 1286:    : true_type
+        -: 1287:    { };
+        -: 1288:
+        -: 1289:  template<typename _Up, size_t _Nm>
+        -: 1290:    struct __sp_compatible_with<_Up(*)[_Nm], const volatile _Up(*)[]>
+        -: 1291:    : true_type
+        -: 1292:    { };
+        -: 1293:
+        -: 1294:  // Test conversion from Y(*)[N] to U(*)[N] without forming invalid type Y[N].
+        -: 1295:  template<typename _Up, size_t _Nm, typename _Yp, typename = void>
+        -: 1296:    struct __sp_is_constructible_arrN
+        -: 1297:    : false_type
+        -: 1298:    { };
+        -: 1299:
+        -: 1300:  template<typename _Up, size_t _Nm, typename _Yp>
+        -: 1301:    struct __sp_is_constructible_arrN<_Up, _Nm, _Yp, __void_t<_Yp[_Nm]>>
+        -: 1302:    : is_convertible<_Yp(*)[_Nm], _Up(*)[_Nm]>::type
+        -: 1303:    { };
+        -: 1304:
+        -: 1305:  // Test conversion from Y(*)[] to U(*)[] without forming invalid type Y[].
+        -: 1306:  template<typename _Up, typename _Yp, typename = void>
+        -: 1307:    struct __sp_is_constructible_arr
+        -: 1308:    : false_type
+        -: 1309:    { };
+        -: 1310:
+        -: 1311:  template<typename _Up, typename _Yp>
+        -: 1312:    struct __sp_is_constructible_arr<_Up, _Yp, __void_t<_Yp[]>>
+        -: 1313:    : is_convertible<_Yp(*)[], _Up(*)[]>::type
+        -: 1314:    { };
+        -: 1315:
+        -: 1316:  // Trait to check if shared_ptr<T> can be constructed from Y*.
+        -: 1317:  template<typename _Tp, typename _Yp>
+        -: 1318:    struct __sp_is_constructible;
+        -: 1319:
+        -: 1320:  // When T is U[N], Y(*)[N] shall be convertible to T*;
+        -: 1321:  template<typename _Up, size_t _Nm, typename _Yp>
+        -: 1322:    struct __sp_is_constructible<_Up[_Nm], _Yp>
+        -: 1323:    : __sp_is_constructible_arrN<_Up, _Nm, _Yp>::type
+        -: 1324:    { };
+        -: 1325:
+        -: 1326:  // when T is U[], Y(*)[] shall be convertible to T*;
+        -: 1327:  template<typename _Up, typename _Yp>
+        -: 1328:    struct __sp_is_constructible<_Up[], _Yp>
+        -: 1329:    : __sp_is_constructible_arr<_Up, _Yp>::type
+        -: 1330:    { };
+        -: 1331:
+        -: 1332:  // otherwise, Y* shall be convertible to T*.
+        -: 1333:  template<typename _Tp, typename _Yp>
+        -: 1334:    struct __sp_is_constructible
+        -: 1335:    : is_convertible<_Yp*, _Tp*>::type
+        -: 1336:    { };
+        -: 1337:
+        -: 1338:
+        -: 1339:  // Define operator* and operator-> for shared_ptr<T>.
+        -: 1340:  template<typename _Tp, _Lock_policy _Lp,
+        -: 1341:	   bool = is_array<_Tp>::value, bool = is_void<_Tp>::value>
+        -: 1342:    class __shared_ptr_access
+        -: 1343:    {
+        -: 1344:    public:
+        -: 1345:      using element_type = _Tp;
+        -: 1346:
+        -: 1347:      element_type&
+    #####: 1348:      operator*() const noexcept
+        -: 1349:      {
+    #####: 1350:	__glibcxx_assert(_M_get() != nullptr);
+    #####: 1351:	return *_M_get();
+        -: 1352:      }
+------------------
+_ZNKSt19__shared_ptr_accessIKNSt8__detail4_NFAINSt7__cxx1112regex_traitsIcEEEELN9__gnu_cxx12_Lock_policyE2ELb0ELb0EEdeEv:
+function _ZNKSt19__shared_ptr_accessIKNSt8__detail4_NFAINSt7__cxx1112regex_traitsIcEEEELN9__gnu_cxx12_Lock_policyE2ELb0ELb0EEdeEv called 0 returned 0% blocks executed 0%
+    #####: 1348:      operator*() const noexcept
+    %%%%%: 1348-block 2
+        -: 1349:      {
+    #####: 1350:	__glibcxx_assert(_M_get() != nullptr);
+    %%%%%: 1350-block 4
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%: 1350-block 5
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed
+    #####: 1351:	return *_M_get();
+    %%%%%: 1351-block 9
+call    0 never executed
+        -: 1352:      }
+------------------
+_ZNKSt19__shared_ptr_accessINSt8__detail4_NFAINSt7__cxx1112regex_traitsIcEEEELN9__gnu_cxx12_Lock_policyE2ELb0ELb0EEdeEv:
+function _ZNKSt19__shared_ptr_accessINSt8__detail4_NFAINSt7__cxx1112regex_traitsIcEEEELN9__gnu_cxx12_Lock_policyE2ELb0ELb0EEdeEv called 0 returned 0% blocks executed 0%
+    #####: 1348:      operator*() const noexcept
+    %%%%%: 1348-block 2
+        -: 1349:      {
+    #####: 1350:	__glibcxx_assert(_M_get() != nullptr);
+    %%%%%: 1350-block 4
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%: 1350-block 5
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed
+    #####: 1351:	return *_M_get();
+    %%%%%: 1351-block 9
+call    0 never executed
+        -: 1352:      }
+------------------
+        -: 1353:
+        -: 1354:      element_type*
+    #####: 1355:      operator->() const noexcept
+        -: 1356:      {
+        -: 1357:	_GLIBCXX_DEBUG_PEDASSERT(_M_get() != nullptr);
+    #####: 1358:	return _M_get();
+        -: 1359:      }
+------------------
+_ZNKSt19__shared_ptr_accessIKNSt8__detail4_NFAINSt7__cxx1112regex_traitsIcEEEELN9__gnu_cxx12_Lock_policyE2ELb0ELb0EEptEv:
+function _ZNKSt19__shared_ptr_accessIKNSt8__detail4_NFAINSt7__cxx1112regex_traitsIcEEEELN9__gnu_cxx12_Lock_policyE2ELb0ELb0EEptEv called 0 returned 0% blocks executed 0%
+    #####: 1355:      operator->() const noexcept
+        -: 1356:      {
+        -: 1357:	_GLIBCXX_DEBUG_PEDASSERT(_M_get() != nullptr);
+    #####: 1358:	return _M_get();
+    %%%%%: 1358-block 2
+call    0 never executed
+        -: 1359:      }
+------------------
+_ZNKSt19__shared_ptr_accessINSt8__detail4_NFAINSt7__cxx1112regex_traitsIcEEEELN9__gnu_cxx12_Lock_policyE2ELb0ELb0EEptEv:
+function _ZNKSt19__shared_ptr_accessINSt8__detail4_NFAINSt7__cxx1112regex_traitsIcEEEELN9__gnu_cxx12_Lock_policyE2ELb0ELb0EEptEv called 0 returned 0% blocks executed 0%
+    #####: 1355:      operator->() const noexcept
+        -: 1356:      {
+        -: 1357:	_GLIBCXX_DEBUG_PEDASSERT(_M_get() != nullptr);
+    #####: 1358:	return _M_get();
+    %%%%%: 1358-block 2
+call    0 never executed
+        -: 1359:      }
+------------------
+        -: 1360:
+        -: 1361:    private:
+        -: 1362:      element_type*
+    #####: 1363:      _M_get() const noexcept
+    #####: 1364:      { return static_cast<const __shared_ptr<_Tp, _Lp>*>(this)->get(); }
+------------------
+_ZNKSt19__shared_ptr_accessIKNSt8__detail4_NFAINSt7__cxx1112regex_traitsIcEEEELN9__gnu_cxx12_Lock_policyE2ELb0ELb0EE6_M_getEv:
+function _ZNKSt19__shared_ptr_accessIKNSt8__detail4_NFAINSt7__cxx1112regex_traitsIcEEEELN9__gnu_cxx12_Lock_policyE2ELb0ELb0EE6_M_getEv called 0 returned 0% blocks executed 0%
+    #####: 1363:      _M_get() const noexcept
+    #####: 1364:      { return static_cast<const __shared_ptr<_Tp, _Lp>*>(this)->get(); }
+    %%%%%: 1364-block 2
+call    0 never executed
+------------------
+_ZNKSt19__shared_ptr_accessINSt8__detail4_NFAINSt7__cxx1112regex_traitsIcEEEELN9__gnu_cxx12_Lock_policyE2ELb0ELb0EE6_M_getEv:
+function _ZNKSt19__shared_ptr_accessINSt8__detail4_NFAINSt7__cxx1112regex_traitsIcEEEELN9__gnu_cxx12_Lock_policyE2ELb0ELb0EE6_M_getEv called 0 returned 0% blocks executed 0%
+    #####: 1363:      _M_get() const noexcept
+    #####: 1364:      { return static_cast<const __shared_ptr<_Tp, _Lp>*>(this)->get(); }
+    %%%%%: 1364-block 2
+call    0 never executed
+------------------
+        -: 1365:    };
+        -: 1366:
+        -: 1367:  // Define operator-> for shared_ptr<cv void>.
+        -: 1368:  template<typename _Tp, _Lock_policy _Lp>
+        -: 1369:    class __shared_ptr_access<_Tp, _Lp, false, true>
+        -: 1370:    {
+        -: 1371:    public:
+        -: 1372:      using element_type = _Tp;
+        -: 1373:
+        -: 1374:      element_type*
+        -: 1375:      operator->() const noexcept
+        -: 1376:      {
+        -: 1377:	auto __ptr = static_cast<const __shared_ptr<_Tp, _Lp>*>(this)->get();
+        -: 1378:	_GLIBCXX_DEBUG_PEDASSERT(__ptr != nullptr);
+        -: 1379:	return __ptr;
+        -: 1380:      }
+        -: 1381:    };
+        -: 1382:
+        -: 1383:  // Define operator[] for shared_ptr<T[]> and shared_ptr<T[N]>.
+        -: 1384:  template<typename _Tp, _Lock_policy _Lp>
+        -: 1385:    class __shared_ptr_access<_Tp, _Lp, true, false>
+        -: 1386:    {
+        -: 1387:    public:
+        -: 1388:      using element_type = typename remove_extent<_Tp>::type;
+        -: 1389:
+        -: 1390:#if __cplusplus <= 201402L
+        -: 1391:      [[__deprecated__("shared_ptr<T[]>::operator* is absent from C++17")]]
+        -: 1392:      element_type&
+        -: 1393:      operator*() const noexcept
+        -: 1394:      {
+        -: 1395:	__glibcxx_assert(_M_get() != nullptr);
+        -: 1396:	return *_M_get();
+        -: 1397:      }
+        -: 1398:
+        -: 1399:      [[__deprecated__("shared_ptr<T[]>::operator-> is absent from C++17")]]
+        -: 1400:      element_type*
+        -: 1401:      operator->() const noexcept
+        -: 1402:      {
+        -: 1403:	_GLIBCXX_DEBUG_PEDASSERT(_M_get() != nullptr);
+        -: 1404:	return _M_get();
+        -: 1405:      }
+        -: 1406:#endif
+        -: 1407:
+        -: 1408:      element_type&
+        -: 1409:      operator[](ptrdiff_t __i) const noexcept
+        -: 1410:      {
+        -: 1411:	__glibcxx_assert(_M_get() != nullptr);
+        -: 1412:	__glibcxx_assert(!extent<_Tp>::value || __i < extent<_Tp>::value);
+        -: 1413:	return _M_get()[__i];
+        -: 1414:      }
+        -: 1415:
+        -: 1416:    private:
+        -: 1417:      element_type*
+        -: 1418:      _M_get() const noexcept
+        -: 1419:      { return static_cast<const __shared_ptr<_Tp, _Lp>*>(this)->get(); }
+        -: 1420:    };
+        -: 1421:
+        -: 1422:  template<typename _Tp, _Lock_policy _Lp>
+        -: 1423:    class __shared_ptr
+        -: 1424:    : public __shared_ptr_access<_Tp, _Lp>
+        -: 1425:    {
+        -: 1426:    public:
+        -: 1427:      using element_type = typename remove_extent<_Tp>::type;
+        -: 1428:
+        -: 1429:    private:
+        -: 1430:      // Constraint for taking ownership of a pointer of type _Yp*:
+        -: 1431:      template<typename _Yp>
+        -: 1432:	using _SafeConv
+        -: 1433:	  = typename enable_if<__sp_is_constructible<_Tp, _Yp>::value>::type;
+        -: 1434:
+        -: 1435:      // Constraint for construction from shared_ptr and weak_ptr:
+        -: 1436:      template<typename _Yp, typename _Res = void>
+        -: 1437:	using _Compatible = typename
+        -: 1438:	  enable_if<__sp_compatible_with<_Yp*, _Tp*>::value, _Res>::type;
+        -: 1439:
+        -: 1440:      // Constraint for assignment from shared_ptr and weak_ptr:
+        -: 1441:      template<typename _Yp>
+        -: 1442:	using _Assignable = _Compatible<_Yp, __shared_ptr&>;
+        -: 1443:
+        -: 1444:      // Constraint for construction from unique_ptr:
+        -: 1445:      template<typename _Yp, typename _Del, typename _Res = void,
+        -: 1446:	       typename _Ptr = typename unique_ptr<_Yp, _Del>::pointer>
+        -: 1447:	using _UniqCompatible = __enable_if_t<__and_<
+        -: 1448:	  __sp_compatible_with<_Yp*, _Tp*>,
+        -: 1449:	  is_convertible<_Ptr, element_type*>,
+        -: 1450:	  is_move_constructible<_Del>
+        -: 1451:	  >::value, _Res>;
+        -: 1452:
+        -: 1453:      // Constraint for assignment from unique_ptr:
+        -: 1454:      template<typename _Yp, typename _Del>
+        -: 1455:	using _UniqAssignable = _UniqCompatible<_Yp, _Del, __shared_ptr&>;
+        -: 1456:
+        -: 1457:    public:
+        -: 1458:
+        -: 1459:#if __cplusplus > 201402L
+        -: 1460:      using weak_type = __weak_ptr<_Tp, _Lp>;
+        -: 1461:#endif
+        -: 1462:
+function _ZNSt12__shared_ptrIKNSt8__detail4_NFAINSt7__cxx1112regex_traitsIcEEEELN9__gnu_cxx12_Lock_policyE2EEC2Ev called 0 returned 0% blocks executed 0%
+    #####: 1463:      constexpr __shared_ptr() noexcept
+    #####: 1464:      : _M_ptr(0), _M_refcount()
+    %%%%%: 1464-block 2
+call    0 never executed
+    #####: 1465:      { }
+        -: 1466:
+        -: 1467:      template<typename _Yp, typename = _SafeConv<_Yp>>
+        -: 1468:	explicit
+        -: 1469:	__shared_ptr(_Yp* __p)
+        -: 1470:	: _M_ptr(__p), _M_refcount(__p, typename is_array<_Tp>::type())
+        -: 1471:	{
+        -: 1472:	  static_assert( !is_void<_Yp>::value, "incomplete type" );
+        -: 1473:	  static_assert( sizeof(_Yp) > 0, "incomplete type" );
+        -: 1474:	  _M_enable_shared_from_this_with(__p);
+        -: 1475:	}
+        -: 1476:
+        -: 1477:      template<typename _Yp, typename _Deleter, typename = _SafeConv<_Yp>>
+        -: 1478:	__shared_ptr(_Yp* __p, _Deleter __d)
+        -: 1479:	: _M_ptr(__p), _M_refcount(__p, std::move(__d))
+        -: 1480:	{
+        -: 1481:	  static_assert(__is_invocable<_Deleter&, _Yp*&>::value,
+        -: 1482:	      "deleter expression d(p) is well-formed");
+        -: 1483:	  _M_enable_shared_from_this_with(__p);
+        -: 1484:	}
+        -: 1485:
+        -: 1486:      template<typename _Yp, typename _Deleter, typename _Alloc,
+        -: 1487:	       typename = _SafeConv<_Yp>>
+        -: 1488:	__shared_ptr(_Yp* __p, _Deleter __d, _Alloc __a)
+        -: 1489:	: _M_ptr(__p), _M_refcount(__p, std::move(__d), std::move(__a))
+        -: 1490:	{
+        -: 1491:	  static_assert(__is_invocable<_Deleter&, _Yp*&>::value,
+        -: 1492:	      "deleter expression d(p) is well-formed");
+        -: 1493:	  _M_enable_shared_from_this_with(__p);
+        -: 1494:	}
+        -: 1495:
+        -: 1496:      template<typename _Deleter>
+        -: 1497:	__shared_ptr(nullptr_t __p, _Deleter __d)
+        -: 1498:	: _M_ptr(0), _M_refcount(__p, std::move(__d))
+        -: 1499:	{ }
+        -: 1500:
+        -: 1501:      template<typename _Deleter, typename _Alloc>
+        -: 1502:        __shared_ptr(nullptr_t __p, _Deleter __d, _Alloc __a)
+        -: 1503:	: _M_ptr(0), _M_refcount(__p, std::move(__d), std::move(__a))
+        -: 1504:	{ }
+        -: 1505:
+        -: 1506:      // Aliasing constructor
+        -: 1507:      template<typename _Yp>
+        -: 1508:	__shared_ptr(const __shared_ptr<_Yp, _Lp>& __r,
+        -: 1509:		     element_type* __p) noexcept
+        -: 1510:	: _M_ptr(__p), _M_refcount(__r._M_refcount) // never throws
+        -: 1511:	{ }
+        -: 1512:
+        -: 1513:      // Aliasing constructor
+        -: 1514:      template<typename _Yp>
+        -: 1515:	__shared_ptr(__shared_ptr<_Yp, _Lp>&& __r,
+        -: 1516:		     element_type* __p) noexcept
+        -: 1517:	: _M_ptr(__p), _M_refcount()
+        -: 1518:	{
+        -: 1519:	  _M_refcount._M_swap(__r._M_refcount);
+        -: 1520:	  __r._M_ptr = nullptr;
+        -: 1521:	}
+        -: 1522:
+        -: 1523:      __shared_ptr(const __shared_ptr&) noexcept = default;
+        -: 1524:      __shared_ptr& operator=(const __shared_ptr&) noexcept = default;
+    #####: 1525:      ~__shared_ptr() = default;
+------------------
+_ZNSt12__shared_ptrINSt8__detail4_NFAINSt7__cxx1112regex_traitsIcEEEELN9__gnu_cxx12_Lock_policyE2EED2Ev:
+function _ZNSt12__shared_ptrINSt8__detail4_NFAINSt7__cxx1112regex_traitsIcEEEELN9__gnu_cxx12_Lock_policyE2EED2Ev called 0 returned 0% blocks executed 0%
+    #####: 1525:      ~__shared_ptr() = default;
+    %%%%%: 1525-block 2
+call    0 never executed
+------------------
+_ZNSt12__shared_ptrIKNSt8__detail4_NFAINSt7__cxx1112regex_traitsIcEEEELN9__gnu_cxx12_Lock_policyE2EED2Ev:
+function _ZNSt12__shared_ptrIKNSt8__detail4_NFAINSt7__cxx1112regex_traitsIcEEEELN9__gnu_cxx12_Lock_policyE2EED2Ev called 0 returned 0% blocks executed 0%
+    #####: 1525:      ~__shared_ptr() = default;
+    %%%%%: 1525-block 2
+call    0 never executed
+------------------
+        -: 1526:
+        -: 1527:      template<typename _Yp, typename = _Compatible<_Yp>>
+        -: 1528:	__shared_ptr(const __shared_ptr<_Yp, _Lp>& __r) noexcept
+        -: 1529:	: _M_ptr(__r._M_ptr), _M_refcount(__r._M_refcount)
+        -: 1530:	{ }
+        -: 1531:
+function _ZNSt12__shared_ptrIKNSt8__detail4_NFAINSt7__cxx1112regex_traitsIcEEEELN9__gnu_cxx12_Lock_policyE2EEC2EOS9_ called 0 returned 0% blocks executed 0%
+    #####: 1532:      __shared_ptr(__shared_ptr&& __r) noexcept
+    #####: 1533:      : _M_ptr(__r._M_ptr), _M_refcount()
+    %%%%%: 1533-block 2
+call    0 never executed
+        -: 1534:      {
+    #####: 1535:	_M_refcount._M_swap(__r._M_refcount);
+call    0 never executed
+    #####: 1536:	__r._M_ptr = nullptr;
+    #####: 1537:      }
+        -: 1538:
+        -: 1539:      template<typename _Yp, typename = _Compatible<_Yp>>
+function _ZNSt12__shared_ptrIKNSt8__detail4_NFAINSt7__cxx1112regex_traitsIcEEEELN9__gnu_cxx12_Lock_policyE2EEC2IS5_vEEOS_IT_LS8_2EE called 0 returned 0% blocks executed 0%
+    #####: 1540:	__shared_ptr(__shared_ptr<_Yp, _Lp>&& __r) noexcept
+    #####: 1541:	: _M_ptr(__r._M_ptr), _M_refcount()
+    %%%%%: 1541-block 2
+call    0 never executed
+        -: 1542:	{
+    #####: 1543:	  _M_refcount._M_swap(__r._M_refcount);
+call    0 never executed
+    #####: 1544:	  __r._M_ptr = nullptr;
+    #####: 1545:	}
+        -: 1546:
+        -: 1547:      template<typename _Yp, typename = _Compatible<_Yp>>
+        -: 1548:	explicit __shared_ptr(const __weak_ptr<_Yp, _Lp>& __r)
+        -: 1549:	: _M_refcount(__r._M_refcount) // may throw
+        -: 1550:	{
+        -: 1551:	  // It is now safe to copy __r._M_ptr, as
+        -: 1552:	  // _M_refcount(__r._M_refcount) did not throw.
+        -: 1553:	  _M_ptr = __r._M_ptr;
+        -: 1554:	}
+        -: 1555:
+        -: 1556:      // If an exception is thrown this constructor has no effect.
+        -: 1557:      template<typename _Yp, typename _Del,
+        -: 1558:	       typename = _UniqCompatible<_Yp, _Del>>
+        -: 1559:	__shared_ptr(unique_ptr<_Yp, _Del>&& __r)
+        -: 1560:	: _M_ptr(__r.get()), _M_refcount()
+        -: 1561:	{
+        -: 1562:	  auto __raw = __to_address(__r.get());
+        -: 1563:	  _M_refcount = __shared_count<_Lp>(std::move(__r));
+        -: 1564:	  _M_enable_shared_from_this_with(__raw);
+        -: 1565:	}
+        -: 1566:
+        -: 1567:#if __cplusplus <= 201402L && _GLIBCXX_USE_DEPRECATED
+        -: 1568:    protected:
+        -: 1569:      // If an exception is thrown this constructor has no effect.
+        -: 1570:      template<typename _Tp1, typename _Del,
+        -: 1571:	       typename enable_if<__and_<
+        -: 1572:		 __not_<is_array<_Tp>>, is_array<_Tp1>,
+        -: 1573:	         is_convertible<typename unique_ptr<_Tp1, _Del>::pointer, _Tp*>
+        -: 1574:	       >::value, bool>::type = true>
+        -: 1575:	__shared_ptr(unique_ptr<_Tp1, _Del>&& __r, __sp_array_delete)
+        -: 1576:	: _M_ptr(__r.get()), _M_refcount()
+        -: 1577:	{
+        -: 1578:	  auto __raw = __to_address(__r.get());
+        -: 1579:	  _M_refcount = __shared_count<_Lp>(std::move(__r));
+        -: 1580:	  _M_enable_shared_from_this_with(__raw);
+        -: 1581:	}
+        -: 1582:    public:
+        -: 1583:#endif
+        -: 1584:
+        -: 1585:#if _GLIBCXX_USE_DEPRECATED
+        -: 1586:#pragma GCC diagnostic push
+        -: 1587:#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+        -: 1588:      // Postcondition: use_count() == 1 and __r.get() == 0
+        -: 1589:      template<typename _Yp, typename = _Compatible<_Yp>>
+        -: 1590:	__shared_ptr(auto_ptr<_Yp>&& __r);
+        -: 1591:#pragma GCC diagnostic pop
+        -: 1592:#endif
+        -: 1593:
+        -: 1594:      constexpr __shared_ptr(nullptr_t) noexcept : __shared_ptr() { }
+        -: 1595:
+        -: 1596:      template<typename _Yp>
+        -: 1597:	_Assignable<_Yp>
+        -: 1598:	operator=(const __shared_ptr<_Yp, _Lp>& __r) noexcept
+        -: 1599:	{
+        -: 1600:	  _M_ptr = __r._M_ptr;
+        -: 1601:	  _M_refcount = __r._M_refcount; // __shared_count::op= doesn't throw
+        -: 1602:	  return *this;
+        -: 1603:	}
+        -: 1604:
+        -: 1605:#if _GLIBCXX_USE_DEPRECATED
+        -: 1606:#pragma GCC diagnostic push
+        -: 1607:#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+        -: 1608:      template<typename _Yp>
+        -: 1609:	_Assignable<_Yp>
+        -: 1610:	operator=(auto_ptr<_Yp>&& __r)
+        -: 1611:	{
+        -: 1612:	  __shared_ptr(std::move(__r)).swap(*this);
+        -: 1613:	  return *this;
+        -: 1614:	}
+        -: 1615:#pragma GCC diagnostic pop
+        -: 1616:#endif
+        -: 1617:
+        -: 1618:      __shared_ptr&
+function _ZNSt12__shared_ptrIKNSt8__detail4_NFAINSt7__cxx1112regex_traitsIcEEEELN9__gnu_cxx12_Lock_policyE2EEaSEOS9_ called 0 returned 0% blocks executed 0%
+    #####: 1619:      operator=(__shared_ptr&& __r) noexcept
+        -: 1620:      {
+    #####: 1621:	__shared_ptr(std::move(__r)).swap(*this);
+    %%%%%: 1621-block 2
+call    0 never executed
+call    1 never executed
+call    2 never executed
+call    3 never executed
+    #####: 1622:	return *this;
+        -: 1623:      }
+        -: 1624:
+        -: 1625:      template<class _Yp>
+        -: 1626:	_Assignable<_Yp>
+        -: 1627:	operator=(__shared_ptr<_Yp, _Lp>&& __r) noexcept
+        -: 1628:	{
+        -: 1629:	  __shared_ptr(std::move(__r)).swap(*this);
+        -: 1630:	  return *this;
+        -: 1631:	}
+        -: 1632:
+        -: 1633:      template<typename _Yp, typename _Del>
+        -: 1634:	_UniqAssignable<_Yp, _Del>
+        -: 1635:	operator=(unique_ptr<_Yp, _Del>&& __r)
+        -: 1636:	{
+        -: 1637:	  __shared_ptr(std::move(__r)).swap(*this);
+        -: 1638:	  return *this;
+        -: 1639:	}
+        -: 1640:
+        -: 1641:      void
+        -: 1642:      reset() noexcept
+        -: 1643:      { __shared_ptr().swap(*this); }
+        -: 1644:
+        -: 1645:      template<typename _Yp>
+        -: 1646:	_SafeConv<_Yp>
+        -: 1647:	reset(_Yp* __p) // _Yp must be complete.
+        -: 1648:	{
+        -: 1649:	  // Catch self-reset errors.
+        -: 1650:	  __glibcxx_assert(__p == nullptr || __p != _M_ptr);
+        -: 1651:	  __shared_ptr(__p).swap(*this);
+        -: 1652:	}
+        -: 1653:
+        -: 1654:      template<typename _Yp, typename _Deleter>
+        -: 1655:	_SafeConv<_Yp>
+        -: 1656:	reset(_Yp* __p, _Deleter __d)
+        -: 1657:	{ __shared_ptr(__p, std::move(__d)).swap(*this); }
+        -: 1658:
+        -: 1659:      template<typename _Yp, typename _Deleter, typename _Alloc>
+        -: 1660:	_SafeConv<_Yp>
+        -: 1661:	reset(_Yp* __p, _Deleter __d, _Alloc __a)
+        -: 1662:        { __shared_ptr(__p, std::move(__d), std::move(__a)).swap(*this); }
+        -: 1663:
+        -: 1664:      /// Return the stored pointer.
+        -: 1665:      element_type*
+    #####: 1666:      get() const noexcept
+    #####: 1667:      { return _M_ptr; }
+------------------
+_ZNKSt12__shared_ptrIKNSt8__detail4_NFAINSt7__cxx1112regex_traitsIcEEEELN9__gnu_cxx12_Lock_policyE2EE3getEv:
+function _ZNKSt12__shared_ptrIKNSt8__detail4_NFAINSt7__cxx1112regex_traitsIcEEEELN9__gnu_cxx12_Lock_policyE2EE3getEv called 0 returned 0% blocks executed 0%
+    #####: 1666:      get() const noexcept
+    #####: 1667:      { return _M_ptr; }
+    %%%%%: 1667-block 2
+------------------
+_ZNKSt12__shared_ptrINSt8__detail4_NFAINSt7__cxx1112regex_traitsIcEEEELN9__gnu_cxx12_Lock_policyE2EE3getEv:
+function _ZNKSt12__shared_ptrINSt8__detail4_NFAINSt7__cxx1112regex_traitsIcEEEELN9__gnu_cxx12_Lock_policyE2EE3getEv called 0 returned 0% blocks executed 0%
+    #####: 1666:      get() const noexcept
+    #####: 1667:      { return _M_ptr; }
+    %%%%%: 1667-block 2
+------------------
+        -: 1668:
+        -: 1669:      /// Return true if the stored pointer is not null.
+function _ZNKSt12__shared_ptrIKNSt8__detail4_NFAINSt7__cxx1112regex_traitsIcEEEELN9__gnu_cxx12_Lock_policyE2EEcvbEv called 0 returned 0% blocks executed 0%
+    #####: 1670:      explicit operator bool() const noexcept
+    #####: 1671:      { return _M_ptr != nullptr; }
+    %%%%%: 1671-block 2
+        -: 1672:
+        -: 1673:      /// Return true if use_count() == 1.
+        -: 1674:      bool
+        -: 1675:      unique() const noexcept
+        -: 1676:      { return _M_refcount._M_unique(); }
+        -: 1677:
+        -: 1678:      /// If *this owns a pointer, return the number of owners, otherwise zero.
+        -: 1679:      long
+        -: 1680:      use_count() const noexcept
+        -: 1681:      { return _M_refcount._M_get_use_count(); }
+        -: 1682:
+        -: 1683:      /// Exchange both the owned pointer and the stored pointer.
+        -: 1684:      void
+function _ZNSt12__shared_ptrIKNSt8__detail4_NFAINSt7__cxx1112regex_traitsIcEEEELN9__gnu_cxx12_Lock_policyE2EE4swapERS9_ called 0 returned 0% blocks executed 0%
+    #####: 1685:      swap(__shared_ptr<_Tp, _Lp>& __other) noexcept
+        -: 1686:      {
+    #####: 1687:	std::swap(_M_ptr, __other._M_ptr);
+    %%%%%: 1687-block 2
+call    0 never executed
+    #####: 1688:	_M_refcount._M_swap(__other._M_refcount);
+call    0 never executed
+    #####: 1689:      }
+        -: 1690:
+        -: 1691:      /** @brief Define an ordering based on ownership.
+        -: 1692:       *
+        -: 1693:       * This function defines a strict weak ordering between two shared_ptr
+        -: 1694:       * or weak_ptr objects, such that one object is less than the other
+        -: 1695:       * unless they share ownership of the same pointer, or are both empty.
+        -: 1696:       * @{
+        -: 1697:      */
+        -: 1698:      template<typename _Tp1>
+        -: 1699:	bool
+        -: 1700:	owner_before(__shared_ptr<_Tp1, _Lp> const& __rhs) const noexcept
+        -: 1701:	{ return _M_refcount._M_less(__rhs._M_refcount); }
+        -: 1702:
+        -: 1703:      template<typename _Tp1>
+        -: 1704:	bool
+        -: 1705:	owner_before(__weak_ptr<_Tp1, _Lp> const& __rhs) const noexcept
+        -: 1706:	{ return _M_refcount._M_less(__rhs._M_refcount); }
+        -: 1707:      /// @}
+        -: 1708:
+        -: 1709:    protected:
+        -: 1710:      // This constructor is non-standard, it is used by allocate_shared.
+        -: 1711:      template<typename _Alloc, typename... _Args>
+function _ZNSt12__shared_ptrINSt8__detail4_NFAINSt7__cxx1112regex_traitsIcEEEELN9__gnu_cxx12_Lock_policyE2EEC2ISaIvEJRKSt6localeRNSt15regex_constants18syntax_option_typeEEEESt20_Sp_alloc_shared_tagIT_EDpOT0_ called 0 returned 0% blocks executed 0%
+    #####: 1712:	__shared_ptr(_Sp_alloc_shared_tag<_Alloc> __tag, _Args&&... __args)
+    #####: 1713:	: _M_ptr(), _M_refcount(_M_ptr, __tag, std::forward<_Args>(__args)...)
+    %%%%%: 1713-block 2
+call    0 never executed
+call    1 never executed
+call    2 never executed
+    #####: 1714:	{ _M_enable_shared_from_this_with(_M_ptr); }
+call    0 never executed
+        -: 1715:
+        -: 1716:      template<typename _Tp1, _Lock_policy _Lp1, typename _Alloc,
+        -: 1717:	       typename... _Args>
+        -: 1718:	friend __shared_ptr<_Tp1, _Lp1>
+        -: 1719:	__allocate_shared(const _Alloc& __a, _Args&&... __args);
+        -: 1720:
+        -: 1721:#if __glibcxx_shared_ptr_arrays >= 201707L // C++ >= 20 && HOSTED
+        -: 1722:      // This constructor is non-standard, it is used by allocate_shared<T[]>.
+        -: 1723:      template<typename _Alloc, typename _Init = const remove_extent_t<_Tp>*>
+        -: 1724:	__shared_ptr(const _Sp_counted_array_base<_Alloc>& __a,
+        -: 1725:		     _Init __init = nullptr)
+        -: 1726:	: _M_ptr(), _M_refcount(_M_ptr, __a, __init)
+        -: 1727:	{ }
+        -: 1728:#endif
+        -: 1729:
+        -: 1730:      // This constructor is used by __weak_ptr::lock() and
+        -: 1731:      // shared_ptr::shared_ptr(const weak_ptr&, std::nothrow_t).
+        -: 1732:      __shared_ptr(const __weak_ptr<_Tp, _Lp>& __r, std::nothrow_t) noexcept
+        -: 1733:      : _M_refcount(__r._M_refcount, std::nothrow)
+        -: 1734:      {
+        -: 1735:	_M_ptr = _M_refcount._M_get_use_count() ? __r._M_ptr : nullptr;
+        -: 1736:      }
+        -: 1737:
+        -: 1738:      friend class __weak_ptr<_Tp, _Lp>;
+        -: 1739:
+        -: 1740:    private:
+        -: 1741:
+        -: 1742:      template<typename _Yp>
+        -: 1743:	using __esft_base_t = decltype(__enable_shared_from_this_base(
+        -: 1744:	      std::declval<const __shared_count<_Lp>&>(),
+        -: 1745:	      std::declval<_Yp*>()));
+        -: 1746:
+        -: 1747:      // Detect an accessible and unambiguous enable_shared_from_this base.
+        -: 1748:      template<typename _Yp, typename = void>
+        -: 1749:	struct __has_esft_base
+        -: 1750:	: false_type { };
+        -: 1751:
+        -: 1752:      template<typename _Yp>
+        -: 1753:	struct __has_esft_base<_Yp, __void_t<__esft_base_t<_Yp>>>
+        -: 1754:	: __not_<is_array<_Tp>> { }; // No enable shared_from_this for arrays
+        -: 1755:
+        -: 1756:      template<typename _Yp, typename _Yp2 = typename remove_cv<_Yp>::type>
+        -: 1757:	typename enable_if<__has_esft_base<_Yp2>::value>::type
+        -: 1758:	_M_enable_shared_from_this_with(_Yp* __p) noexcept
+        -: 1759:	{
+        -: 1760:	  if (auto __base = __enable_shared_from_this_base(_M_refcount, __p))
+        -: 1761:	    __base->_M_weak_assign(const_cast<_Yp2*>(__p), _M_refcount);
+        -: 1762:	}
+        -: 1763:
+        -: 1764:      template<typename _Yp, typename _Yp2 = typename remove_cv<_Yp>::type>
+        -: 1765:	typename enable_if<!__has_esft_base<_Yp2>::value>::type
+function _ZNSt12__shared_ptrINSt8__detail4_NFAINSt7__cxx1112regex_traitsIcEEEELN9__gnu_cxx12_Lock_policyE2EE31_M_enable_shared_from_this_withIS5_S5_EENSt9enable_ifIXntsrNS8_15__has_esft_baseIT0_vEE5valueEvE4typeEPT_ called 0 returned 0% blocks executed 0%
+    #####: 1766:	_M_enable_shared_from_this_with(_Yp*) noexcept
+    #####: 1767:	{ }
+        -: 1768:
+        -: 1769:      void*
+        -: 1770:      _M_get_deleter(const std::type_info& __ti) const noexcept
+        -: 1771:      { return _M_refcount._M_get_deleter(__ti); }
+        -: 1772:
+        -: 1773:      template<typename _Tp1, _Lock_policy _Lp1> friend class __shared_ptr;
+        -: 1774:      template<typename _Tp1, _Lock_policy _Lp1> friend class __weak_ptr;
+        -: 1775:
+        -: 1776:      template<typename _Del, typename _Tp1, _Lock_policy _Lp1>
+        -: 1777:	friend _Del* get_deleter(const __shared_ptr<_Tp1, _Lp1>&) noexcept;
+        -: 1778:
+        -: 1779:      template<typename _Del, typename _Tp1>
+        -: 1780:	friend _Del* get_deleter(const shared_ptr<_Tp1>&) noexcept;
+        -: 1781:
+        -: 1782:#ifdef __glibcxx_atomic_shared_ptr
+        -: 1783:      friend _Sp_atomic<shared_ptr<_Tp>>;
+        -: 1784:#endif
+        -: 1785:#ifdef __glibcxx_out_ptr
+        -: 1786:      template<typename, typename, typename...> friend class out_ptr_t;
+        -: 1787:#endif
+        -: 1788:
+        -: 1789:      element_type*	   _M_ptr;         // Contained pointer.
+        -: 1790:      __shared_count<_Lp>  _M_refcount;    // Reference counter.
+        -: 1791:    };
+        -: 1792:
+        -: 1793:
+        -: 1794:  // 20.7.2.2.7 shared_ptr comparisons
+        -: 1795:  template<typename _Tp1, typename _Tp2, _Lock_policy _Lp>
+        -: 1796:    inline bool
+        -: 1797:    operator==(const __shared_ptr<_Tp1, _Lp>& __a,
+        -: 1798:	       const __shared_ptr<_Tp2, _Lp>& __b) noexcept
+        -: 1799:    { return __a.get() == __b.get(); }
+        -: 1800:
+        -: 1801:  template<typename _Tp, _Lock_policy _Lp>
+        -: 1802:    inline bool
+        -: 1803:    operator==(const __shared_ptr<_Tp, _Lp>& __a, nullptr_t) noexcept
+        -: 1804:    { return !__a; }
+        -: 1805:
+        -: 1806:#ifdef __cpp_lib_three_way_comparison
+        -: 1807:  template<typename _Tp, typename _Up, _Lock_policy _Lp>
+        -: 1808:    inline strong_ordering
+        -: 1809:    operator<=>(const __shared_ptr<_Tp, _Lp>& __a,
+        -: 1810:		const __shared_ptr<_Up, _Lp>& __b) noexcept
+        -: 1811:    { return compare_three_way()(__a.get(), __b.get()); }
+        -: 1812:
+        -: 1813:  template<typename _Tp, _Lock_policy _Lp>
+        -: 1814:    inline strong_ordering
+        -: 1815:    operator<=>(const __shared_ptr<_Tp, _Lp>& __a, nullptr_t) noexcept
+        -: 1816:    {
+        -: 1817:      using pointer = typename __shared_ptr<_Tp, _Lp>::element_type*;
+        -: 1818:      return compare_three_way()(__a.get(), static_cast<pointer>(nullptr));
+        -: 1819:    }
+        -: 1820:#else
+        -: 1821:  template<typename _Tp, _Lock_policy _Lp>
+        -: 1822:    inline bool
+        -: 1823:    operator==(nullptr_t, const __shared_ptr<_Tp, _Lp>& __a) noexcept
+        -: 1824:    { return !__a; }
+        -: 1825:
+        -: 1826:  template<typename _Tp1, typename _Tp2, _Lock_policy _Lp>
+        -: 1827:    inline bool
+        -: 1828:    operator!=(const __shared_ptr<_Tp1, _Lp>& __a,
+        -: 1829:	       const __shared_ptr<_Tp2, _Lp>& __b) noexcept
+        -: 1830:    { return __a.get() != __b.get(); }
+        -: 1831:
+        -: 1832:  template<typename _Tp, _Lock_policy _Lp>
+        -: 1833:    inline bool
+        -: 1834:    operator!=(const __shared_ptr<_Tp, _Lp>& __a, nullptr_t) noexcept
+        -: 1835:    { return (bool)__a; }
+        -: 1836:
+        -: 1837:  template<typename _Tp, _Lock_policy _Lp>
+        -: 1838:    inline bool
+        -: 1839:    operator!=(nullptr_t, const __shared_ptr<_Tp, _Lp>& __a) noexcept
+        -: 1840:    { return (bool)__a; }
+        -: 1841:
+        -: 1842:  template<typename _Tp, typename _Up, _Lock_policy _Lp>
+        -: 1843:    inline bool
+        -: 1844:    operator<(const __shared_ptr<_Tp, _Lp>& __a,
+        -: 1845:	      const __shared_ptr<_Up, _Lp>& __b) noexcept
+        -: 1846:    {
+        -: 1847:      using _Tp_elt = typename __shared_ptr<_Tp, _Lp>::element_type;
+        -: 1848:      using _Up_elt = typename __shared_ptr<_Up, _Lp>::element_type;
+        -: 1849:      using _Vp = typename common_type<_Tp_elt*, _Up_elt*>::type;
+        -: 1850:      return less<_Vp>()(__a.get(), __b.get());
+        -: 1851:    }
+        -: 1852:
+        -: 1853:  template<typename _Tp, _Lock_policy _Lp>
+        -: 1854:    inline bool
+        -: 1855:    operator<(const __shared_ptr<_Tp, _Lp>& __a, nullptr_t) noexcept
+        -: 1856:    {
+        -: 1857:      using _Tp_elt = typename __shared_ptr<_Tp, _Lp>::element_type;
+        -: 1858:      return less<_Tp_elt*>()(__a.get(), nullptr);
+        -: 1859:    }
+        -: 1860:
+        -: 1861:  template<typename _Tp, _Lock_policy _Lp>
+        -: 1862:    inline bool
+        -: 1863:    operator<(nullptr_t, const __shared_ptr<_Tp, _Lp>& __a) noexcept
+        -: 1864:    {
+        -: 1865:      using _Tp_elt = typename __shared_ptr<_Tp, _Lp>::element_type;
+        -: 1866:      return less<_Tp_elt*>()(nullptr, __a.get());
+        -: 1867:    }
+        -: 1868:
+        -: 1869:  template<typename _Tp1, typename _Tp2, _Lock_policy _Lp>
+        -: 1870:    inline bool
+        -: 1871:    operator<=(const __shared_ptr<_Tp1, _Lp>& __a,
+        -: 1872:	       const __shared_ptr<_Tp2, _Lp>& __b) noexcept
+        -: 1873:    { return !(__b < __a); }
+        -: 1874:
+        -: 1875:  template<typename _Tp, _Lock_policy _Lp>
+        -: 1876:    inline bool
+        -: 1877:    operator<=(const __shared_ptr<_Tp, _Lp>& __a, nullptr_t) noexcept
+        -: 1878:    { return !(nullptr < __a); }
+        -: 1879:
+        -: 1880:  template<typename _Tp, _Lock_policy _Lp>
+        -: 1881:    inline bool
+        -: 1882:    operator<=(nullptr_t, const __shared_ptr<_Tp, _Lp>& __a) noexcept
+        -: 1883:    { return !(__a < nullptr); }
+        -: 1884:
+        -: 1885:  template<typename _Tp1, typename _Tp2, _Lock_policy _Lp>
+        -: 1886:    inline bool
+        -: 1887:    operator>(const __shared_ptr<_Tp1, _Lp>& __a,
+        -: 1888:	      const __shared_ptr<_Tp2, _Lp>& __b) noexcept
+        -: 1889:    { return (__b < __a); }
+        -: 1890:
+        -: 1891:  template<typename _Tp, _Lock_policy _Lp>
+        -: 1892:    inline bool
+        -: 1893:    operator>(const __shared_ptr<_Tp, _Lp>& __a, nullptr_t) noexcept
+        -: 1894:    { return nullptr < __a; }
+        -: 1895:
+        -: 1896:  template<typename _Tp, _Lock_policy _Lp>
+        -: 1897:    inline bool
+        -: 1898:    operator>(nullptr_t, const __shared_ptr<_Tp, _Lp>& __a) noexcept
+        -: 1899:    { return __a < nullptr; }
+        -: 1900:
+        -: 1901:  template<typename _Tp1, typename _Tp2, _Lock_policy _Lp>
+        -: 1902:    inline bool
+        -: 1903:    operator>=(const __shared_ptr<_Tp1, _Lp>& __a,
+        -: 1904:	       const __shared_ptr<_Tp2, _Lp>& __b) noexcept
+        -: 1905:    { return !(__a < __b); }
+        -: 1906:
+        -: 1907:  template<typename _Tp, _Lock_policy _Lp>
+        -: 1908:    inline bool
+        -: 1909:    operator>=(const __shared_ptr<_Tp, _Lp>& __a, nullptr_t) noexcept
+        -: 1910:    { return !(__a < nullptr); }
+        -: 1911:
+        -: 1912:  template<typename _Tp, _Lock_policy _Lp>
+        -: 1913:    inline bool
+        -: 1914:    operator>=(nullptr_t, const __shared_ptr<_Tp, _Lp>& __a) noexcept
+        -: 1915:    { return !(nullptr < __a); }
+        -: 1916:#endif // three-way comparison
+        -: 1917:
+        -: 1918:  // 20.7.2.2.8 shared_ptr specialized algorithms.
+        -: 1919:  template<typename _Tp, _Lock_policy _Lp>
+        -: 1920:    inline void
+        -: 1921:    swap(__shared_ptr<_Tp, _Lp>& __a, __shared_ptr<_Tp, _Lp>& __b) noexcept
+        -: 1922:    { __a.swap(__b); }
+        -: 1923:
+        -: 1924:  // 20.7.2.2.9 shared_ptr casts
+        -: 1925:
+        -: 1926:  // The seemingly equivalent code:
+        -: 1927:  // shared_ptr<_Tp, _Lp>(static_cast<_Tp*>(__r.get()))
+        -: 1928:  // will eventually result in undefined behaviour, attempting to
+        -: 1929:  // delete the same object twice.
+        -: 1930:  /// static_pointer_cast
+        -: 1931:  template<typename _Tp, typename _Tp1, _Lock_policy _Lp>
+        -: 1932:    inline __shared_ptr<_Tp, _Lp>
+        -: 1933:    static_pointer_cast(const __shared_ptr<_Tp1, _Lp>& __r) noexcept
+        -: 1934:    {
+        -: 1935:      using _Sp = __shared_ptr<_Tp, _Lp>;
+        -: 1936:      return _Sp(__r, static_cast<typename _Sp::element_type*>(__r.get()));
+        -: 1937:    }
+        -: 1938:
+        -: 1939:  // The seemingly equivalent code:
+        -: 1940:  // shared_ptr<_Tp, _Lp>(const_cast<_Tp*>(__r.get()))
+        -: 1941:  // will eventually result in undefined behaviour, attempting to
+        -: 1942:  // delete the same object twice.
+        -: 1943:  /// const_pointer_cast
+        -: 1944:  template<typename _Tp, typename _Tp1, _Lock_policy _Lp>
+        -: 1945:    inline __shared_ptr<_Tp, _Lp>
+        -: 1946:    const_pointer_cast(const __shared_ptr<_Tp1, _Lp>& __r) noexcept
+        -: 1947:    {
+        -: 1948:      using _Sp = __shared_ptr<_Tp, _Lp>;
+        -: 1949:      return _Sp(__r, const_cast<typename _Sp::element_type*>(__r.get()));
+        -: 1950:    }
+        -: 1951:
+        -: 1952:  // The seemingly equivalent code:
+        -: 1953:  // shared_ptr<_Tp, _Lp>(dynamic_cast<_Tp*>(__r.get()))
+        -: 1954:  // will eventually result in undefined behaviour, attempting to
+        -: 1955:  // delete the same object twice.
+        -: 1956:  /// dynamic_pointer_cast
+        -: 1957:  template<typename _Tp, typename _Tp1, _Lock_policy _Lp>
+        -: 1958:    inline __shared_ptr<_Tp, _Lp>
+        -: 1959:    dynamic_pointer_cast(const __shared_ptr<_Tp1, _Lp>& __r) noexcept
+        -: 1960:    {
+        -: 1961:      using _Sp = __shared_ptr<_Tp, _Lp>;
+        -: 1962:      if (auto* __p = dynamic_cast<typename _Sp::element_type*>(__r.get()))
+        -: 1963:	return _Sp(__r, __p);
+        -: 1964:      return _Sp();
+        -: 1965:    }
+        -: 1966:
+        -: 1967:#if __cplusplus > 201402L
+        -: 1968:  template<typename _Tp, typename _Tp1, _Lock_policy _Lp>
+        -: 1969:    inline __shared_ptr<_Tp, _Lp>
+        -: 1970:    reinterpret_pointer_cast(const __shared_ptr<_Tp1, _Lp>& __r) noexcept
+        -: 1971:    {
+        -: 1972:      using _Sp = __shared_ptr<_Tp, _Lp>;
+        -: 1973:      return _Sp(__r, reinterpret_cast<typename _Sp::element_type*>(__r.get()));
+        -: 1974:    }
+        -: 1975:#endif
+        -: 1976:
+        -: 1977:  template<typename _Tp, _Lock_policy _Lp>
+        -: 1978:    class __weak_ptr
+        -: 1979:    {
+        -: 1980:      template<typename _Yp, typename _Res = void>
+        -: 1981:	using _Compatible = typename
+        -: 1982:	  enable_if<__sp_compatible_with<_Yp*, _Tp*>::value, _Res>::type;
+        -: 1983:
+        -: 1984:      // Constraint for assignment from shared_ptr and weak_ptr:
+        -: 1985:      template<typename _Yp>
+        -: 1986:	using _Assignable = _Compatible<_Yp, __weak_ptr&>;
+        -: 1987:
+        -: 1988:    public:
+        -: 1989:      using element_type = typename remove_extent<_Tp>::type;
+        -: 1990:
+        -: 1991:      constexpr __weak_ptr() noexcept
+        -: 1992:      : _M_ptr(nullptr), _M_refcount()
+        -: 1993:      { }
+        -: 1994:
+        -: 1995:      __weak_ptr(const __weak_ptr&) noexcept = default;
+        -: 1996:
+        -: 1997:      ~__weak_ptr() = default;
+        -: 1998:
+        -: 1999:      // The "obvious" converting constructor implementation:
+        -: 2000:      //
+        -: 2001:      //  template<typename _Tp1>
+        -: 2002:      //    __weak_ptr(const __weak_ptr<_Tp1, _Lp>& __r)
+        -: 2003:      //    : _M_ptr(__r._M_ptr), _M_refcount(__r._M_refcount) // never throws
+        -: 2004:      //    { }
+        -: 2005:      //
+        -: 2006:      // has a serious problem.
+        -: 2007:      //
+        -: 2008:      //  __r._M_ptr may already have been invalidated. The _M_ptr(__r._M_ptr)
+        -: 2009:      //  conversion may require access to *__r._M_ptr (virtual inheritance).
+        -: 2010:      //
+        -: 2011:      // It is not possible to avoid spurious access violations since
+        -: 2012:      // in multithreaded programs __r._M_ptr may be invalidated at any point.
+        -: 2013:      template<typename _Yp, typename = _Compatible<_Yp>>
+        -: 2014:	__weak_ptr(const __weak_ptr<_Yp, _Lp>& __r) noexcept
+        -: 2015:	: _M_refcount(__r._M_refcount)
+        -: 2016:        { _M_ptr = __r.lock().get(); }
+        -: 2017:
+        -: 2018:      template<typename _Yp, typename = _Compatible<_Yp>>
+        -: 2019:	__weak_ptr(const __shared_ptr<_Yp, _Lp>& __r) noexcept
+        -: 2020:	: _M_ptr(__r._M_ptr), _M_refcount(__r._M_refcount)
+        -: 2021:	{ }
+        -: 2022:
+        -: 2023:      __weak_ptr(__weak_ptr&& __r) noexcept
+        -: 2024:      : _M_ptr(__r._M_ptr), _M_refcount(std::move(__r._M_refcount))
+        -: 2025:      { __r._M_ptr = nullptr; }
+        -: 2026:
+        -: 2027:      template<typename _Yp, typename = _Compatible<_Yp>>
+        -: 2028:	__weak_ptr(__weak_ptr<_Yp, _Lp>&& __r) noexcept
+        -: 2029:	: _M_ptr(__r.lock().get()), _M_refcount(std::move(__r._M_refcount))
+        -: 2030:        { __r._M_ptr = nullptr; }
+        -: 2031:
+        -: 2032:      __weak_ptr&
+        -: 2033:      operator=(const __weak_ptr& __r) noexcept = default;
+        -: 2034:
+        -: 2035:      template<typename _Yp>
+        -: 2036:	_Assignable<_Yp>
+        -: 2037:	operator=(const __weak_ptr<_Yp, _Lp>& __r) noexcept
+        -: 2038:	{
+        -: 2039:	  _M_ptr = __r.lock().get();
+        -: 2040:	  _M_refcount = __r._M_refcount;
+        -: 2041:	  return *this;
+        -: 2042:	}
+        -: 2043:
+        -: 2044:      template<typename _Yp>
+        -: 2045:	_Assignable<_Yp>
+        -: 2046:	operator=(const __shared_ptr<_Yp, _Lp>& __r) noexcept
+        -: 2047:	{
+        -: 2048:	  _M_ptr = __r._M_ptr;
+        -: 2049:	  _M_refcount = __r._M_refcount;
+        -: 2050:	  return *this;
+        -: 2051:	}
+        -: 2052:
+        -: 2053:      __weak_ptr&
+        -: 2054:      operator=(__weak_ptr&& __r) noexcept
+        -: 2055:      {
+        -: 2056:	__weak_ptr(std::move(__r)).swap(*this);
+        -: 2057:	return *this;
+        -: 2058:      }
+        -: 2059:
+        -: 2060:      template<typename _Yp>
+        -: 2061:	_Assignable<_Yp>
+        -: 2062:	operator=(__weak_ptr<_Yp, _Lp>&& __r) noexcept
+        -: 2063:	{
+        -: 2064:	  _M_ptr = __r.lock().get();
+        -: 2065:	  _M_refcount = std::move(__r._M_refcount);
+        -: 2066:	  __r._M_ptr = nullptr;
+        -: 2067:	  return *this;
+        -: 2068:	}
+        -: 2069:
+        -: 2070:      __shared_ptr<_Tp, _Lp>
+        -: 2071:      lock() const noexcept
+        -: 2072:      { return __shared_ptr<element_type, _Lp>(*this, std::nothrow); }
+        -: 2073:
+        -: 2074:      long
+        -: 2075:      use_count() const noexcept
+        -: 2076:      { return _M_refcount._M_get_use_count(); }
+        -: 2077:
+        -: 2078:      bool
+        -: 2079:      expired() const noexcept
+        -: 2080:      { return _M_refcount._M_get_use_count() == 0; }
+        -: 2081:
+        -: 2082:      template<typename _Tp1>
+        -: 2083:	bool
+        -: 2084:	owner_before(const __shared_ptr<_Tp1, _Lp>& __rhs) const noexcept
+        -: 2085:	{ return _M_refcount._M_less(__rhs._M_refcount); }
+        -: 2086:
+        -: 2087:      template<typename _Tp1>
+        -: 2088:	bool
+        -: 2089:	owner_before(const __weak_ptr<_Tp1, _Lp>& __rhs) const noexcept
+        -: 2090:	{ return _M_refcount._M_less(__rhs._M_refcount); }
+        -: 2091:
+        -: 2092:      void
+        -: 2093:      reset() noexcept
+        -: 2094:      { __weak_ptr().swap(*this); }
+        -: 2095:
+        -: 2096:      void
+        -: 2097:      swap(__weak_ptr& __s) noexcept
+        -: 2098:      {
+        -: 2099:	std::swap(_M_ptr, __s._M_ptr);
+        -: 2100:	_M_refcount._M_swap(__s._M_refcount);
+        -: 2101:      }
+        -: 2102:
+        -: 2103:    private:
+        -: 2104:      // Used by __enable_shared_from_this.
+        -: 2105:      void
+        -: 2106:      _M_assign(_Tp* __ptr, const __shared_count<_Lp>& __refcount) noexcept
+        -: 2107:      {
+        -: 2108:	if (use_count() == 0)
+        -: 2109:	  {
+        -: 2110:	    _M_ptr = __ptr;
+        -: 2111:	    _M_refcount = __refcount;
+        -: 2112:	  }
+        -: 2113:      }
+        -: 2114:
+        -: 2115:      template<typename _Tp1, _Lock_policy _Lp1> friend class __shared_ptr;
+        -: 2116:      template<typename _Tp1, _Lock_policy _Lp1> friend class __weak_ptr;
+        -: 2117:      friend class __enable_shared_from_this<_Tp, _Lp>;
+        -: 2118:      friend class enable_shared_from_this<_Tp>;
+        -: 2119:#ifdef __glibcxx_atomic_shared_ptr
+        -: 2120:      friend _Sp_atomic<weak_ptr<_Tp>>;
+        -: 2121:#endif
+        -: 2122:
+        -: 2123:      element_type*	 _M_ptr;         // Contained pointer.
+        -: 2124:      __weak_count<_Lp>  _M_refcount;    // Reference counter.
+        -: 2125:    };
+        -: 2126:
+        -: 2127:  // 20.7.2.3.6 weak_ptr specialized algorithms.
+        -: 2128:  template<typename _Tp, _Lock_policy _Lp>
+        -: 2129:    inline void
+        -: 2130:    swap(__weak_ptr<_Tp, _Lp>& __a, __weak_ptr<_Tp, _Lp>& __b) noexcept
+        -: 2131:    { __a.swap(__b); }
+        -: 2132:
+        -: 2133:#pragma GCC diagnostic push
+        -: 2134:#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+        -: 2135:  template<typename _Tp, typename _Tp1>
+        -: 2136:    struct _Sp_owner_less : public binary_function<_Tp, _Tp, bool>
+        -: 2137:    {
+        -: 2138:      bool
+        -: 2139:      operator()(const _Tp& __lhs, const _Tp& __rhs) const noexcept
+        -: 2140:      { return __lhs.owner_before(__rhs); }
+        -: 2141:
+        -: 2142:      bool
+        -: 2143:      operator()(const _Tp& __lhs, const _Tp1& __rhs) const noexcept
+        -: 2144:      { return __lhs.owner_before(__rhs); }
+        -: 2145:
+        -: 2146:      bool
+        -: 2147:      operator()(const _Tp1& __lhs, const _Tp& __rhs) const noexcept
+        -: 2148:      { return __lhs.owner_before(__rhs); }
+        -: 2149:    };
+        -: 2150:#pragma GCC diagnostic pop
+        -: 2151:
+        -: 2152:  template<>
+        -: 2153:    struct _Sp_owner_less<void, void>
+        -: 2154:    {
+        -: 2155:      template<typename _Tp, typename _Up>
+        -: 2156:	auto
+        -: 2157:	operator()(const _Tp& __lhs, const _Up& __rhs) const noexcept
+        -: 2158:	-> decltype(__lhs.owner_before(__rhs))
+        -: 2159:	{ return __lhs.owner_before(__rhs); }
+        -: 2160:
+        -: 2161:      using is_transparent = void;
+        -: 2162:    };
+        -: 2163:
+        -: 2164:  template<typename _Tp, _Lock_policy _Lp>
+        -: 2165:    struct owner_less<__shared_ptr<_Tp, _Lp>>
+        -: 2166:    : public _Sp_owner_less<__shared_ptr<_Tp, _Lp>, __weak_ptr<_Tp, _Lp>>
+        -: 2167:    { };
+        -: 2168:
+        -: 2169:  template<typename _Tp, _Lock_policy _Lp>
+        -: 2170:    struct owner_less<__weak_ptr<_Tp, _Lp>>
+        -: 2171:    : public _Sp_owner_less<__weak_ptr<_Tp, _Lp>, __shared_ptr<_Tp, _Lp>>
+        -: 2172:    { };
+        -: 2173:
+        -: 2174:
+        -: 2175:  template<typename _Tp, _Lock_policy _Lp>
+        -: 2176:    class __enable_shared_from_this
+        -: 2177:    {
+        -: 2178:    protected:
+        -: 2179:      constexpr __enable_shared_from_this() noexcept { }
+        -: 2180:
+        -: 2181:      __enable_shared_from_this(const __enable_shared_from_this&) noexcept { }
+        -: 2182:
+        -: 2183:      __enable_shared_from_this&
+        -: 2184:      operator=(const __enable_shared_from_this&) noexcept
+        -: 2185:      { return *this; }
+        -: 2186:
+        -: 2187:      ~__enable_shared_from_this() { }
+        -: 2188:
+        -: 2189:    public:
+        -: 2190:      __shared_ptr<_Tp, _Lp>
+        -: 2191:      shared_from_this()
+        -: 2192:      { return __shared_ptr<_Tp, _Lp>(this->_M_weak_this); }
+        -: 2193:
+        -: 2194:      __shared_ptr<const _Tp, _Lp>
+        -: 2195:      shared_from_this() const
+        -: 2196:      { return __shared_ptr<const _Tp, _Lp>(this->_M_weak_this); }
+        -: 2197:
+        -: 2198:#if __cplusplus > 201402L || !defined(__STRICT_ANSI__) // c++1z or gnu++11
+        -: 2199:      __weak_ptr<_Tp, _Lp>
+        -: 2200:      weak_from_this() noexcept
+        -: 2201:      { return this->_M_weak_this; }
+        -: 2202:
+        -: 2203:      __weak_ptr<const _Tp, _Lp>
+        -: 2204:      weak_from_this() const noexcept
+        -: 2205:      { return this->_M_weak_this; }
+        -: 2206:#endif
+        -: 2207:
+        -: 2208:    private:
+        -: 2209:      template<typename _Tp1>
+        -: 2210:	void
+        -: 2211:	_M_weak_assign(_Tp1* __p, const __shared_count<_Lp>& __n) const noexcept
+        -: 2212:	{ _M_weak_this._M_assign(__p, __n); }
+        -: 2213:
+        -: 2214:      friend const __enable_shared_from_this*
+        -: 2215:      __enable_shared_from_this_base(const __shared_count<_Lp>&,
+        -: 2216:				     const __enable_shared_from_this* __p)
+        -: 2217:      { return __p; }
+        -: 2218:
+        -: 2219:      template<typename, _Lock_policy>
+        -: 2220:	friend class __shared_ptr;
+        -: 2221:
+        -: 2222:      mutable __weak_ptr<_Tp, _Lp>  _M_weak_this;
+        -: 2223:    };
+        -: 2224:
+        -: 2225:  template<typename _Tp, _Lock_policy _Lp = __default_lock_policy,
+        -: 2226:	   typename _Alloc, typename... _Args>
+        -: 2227:    inline __shared_ptr<_Tp, _Lp>
+        -: 2228:    __allocate_shared(const _Alloc& __a, _Args&&... __args)
+        -: 2229:    {
+        -: 2230:      static_assert(!is_array<_Tp>::value, "make_shared<T[]> not supported");
+        -: 2231:
+        -: 2232:      return __shared_ptr<_Tp, _Lp>(_Sp_alloc_shared_tag<_Alloc>{__a},
+        -: 2233:				    std::forward<_Args>(__args)...);
+        -: 2234:    }
+        -: 2235:
+        -: 2236:  template<typename _Tp, _Lock_policy _Lp = __default_lock_policy,
+        -: 2237:	   typename... _Args>
+        -: 2238:    inline __shared_ptr<_Tp, _Lp>
+        -: 2239:    __make_shared(_Args&&... __args)
+        -: 2240:    {
+        -: 2241:      typedef typename std::remove_const<_Tp>::type _Tp_nc;
+        -: 2242:      return std::__allocate_shared<_Tp, _Lp>(std::allocator<_Tp_nc>(),
+        -: 2243:					      std::forward<_Args>(__args)...);
+        -: 2244:    }
+        -: 2245:
+        -: 2246:  /// std::hash specialization for __shared_ptr.
+        -: 2247:  template<typename _Tp, _Lock_policy _Lp>
+        -: 2248:    struct hash<__shared_ptr<_Tp, _Lp>>
+        -: 2249:    : public __hash_base<size_t, __shared_ptr<_Tp, _Lp>>
+        -: 2250:    {
+        -: 2251:      size_t
+        -: 2252:      operator()(const __shared_ptr<_Tp, _Lp>& __s) const noexcept
+        -: 2253:      {
+        -: 2254:	return hash<typename __shared_ptr<_Tp, _Lp>::element_type*>()(
+        -: 2255:	    __s.get());
+        -: 2256:      }
+        -: 2257:    };
+        -: 2258:
+        -: 2259:_GLIBCXX_END_NAMESPACE_VERSION
+        -: 2260:} // namespace
+        -: 2261:
+        -: 2262:#endif // _SHARED_PTR_BASE_H

@@ -1,0 +1,1517 @@
+        -:    0:Source:/usr/include/c++/14.2.1/bits/stl_pair.h
+        -:    0:Graph:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/app/integration/keystone/assembler.cpp.gcno
+        -:    0:Data:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/app/integration/keystone/assembler.cpp.gcda
+        -:    0:Runs:1
+        -:    1:// Pair implementation -*- C++ -*-
+        -:    2:
+        -:    3:// Copyright (C) 2001-2024 Free Software Foundation, Inc.
+        -:    4://
+        -:    5:// This file is part of the GNU ISO C++ Library.  This library is free
+        -:    6:// software; you can redistribute it and/or modify it under the
+        -:    7:// terms of the GNU General Public License as published by the
+        -:    8:// Free Software Foundation; either version 3, or (at your option)
+        -:    9:// any later version.
+        -:   10:
+        -:   11:// This library is distributed in the hope that it will be useful,
+        -:   12:// but WITHOUT ANY WARRANTY; without even the implied warranty of
+        -:   13:// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+        -:   14:// GNU General Public License for more details.
+        -:   15:
+        -:   16:// Under Section 7 of GPL version 3, you are granted additional
+        -:   17:// permissions described in the GCC Runtime Library Exception, version
+        -:   18:// 3.1, as published by the Free Software Foundation.
+        -:   19:
+        -:   20:// You should have received a copy of the GNU General Public License and
+        -:   21:// a copy of the GCC Runtime Library Exception along with this program;
+        -:   22:// see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+        -:   23:// <http://www.gnu.org/licenses/>.
+        -:   24:
+        -:   25:/*
+        -:   26: *
+        -:   27: * Copyright (c) 1994
+        -:   28: * Hewlett-Packard Company
+        -:   29: *
+        -:   30: * Permission to use, copy, modify, distribute and sell this software
+        -:   31: * and its documentation for any purpose is hereby granted without fee,
+        -:   32: * provided that the above copyright notice appear in all copies and
+        -:   33: * that both that copyright notice and this permission notice appear
+        -:   34: * in supporting documentation.  Hewlett-Packard Company makes no
+        -:   35: * representations about the suitability of this software for any
+        -:   36: * purpose.  It is provided "as is" without express or implied warranty.
+        -:   37: *
+        -:   38: *
+        -:   39: * Copyright (c) 1996,1997
+        -:   40: * Silicon Graphics Computer Systems, Inc.
+        -:   41: *
+        -:   42: * Permission to use, copy, modify, distribute and sell this software
+        -:   43: * and its documentation for any purpose is hereby granted without fee,
+        -:   44: * provided that the above copyright notice appear in all copies and
+        -:   45: * that both that copyright notice and this permission notice appear
+        -:   46: * in supporting documentation.  Silicon Graphics makes no
+        -:   47: * representations about the suitability of this software for any
+        -:   48: * purpose.  It is provided "as is" without express or implied warranty.
+        -:   49: */
+        -:   50:
+        -:   51:/** @file bits/stl_pair.h
+        -:   52: *  This is an internal header file, included by other library headers.
+        -:   53: *  Do not attempt to use it directly. @headername{utility}
+        -:   54: */
+        -:   55:
+        -:   56:#ifndef _STL_PAIR_H
+        -:   57:#define _STL_PAIR_H 1
+        -:   58:
+        -:   59:#if __cplusplus >= 201103L
+        -:   60:# include <type_traits>    // for std::__decay_and_strip
+        -:   61:# include <bits/move.h>    // for std::move / std::forward, and std::swap
+        -:   62:# include <bits/utility.h> // for std::tuple_element, std::tuple_size
+        -:   63:#endif
+        -:   64:#if __cplusplus >= 202002L
+        -:   65:# include <compare>
+        -:   66:#endif
+        -:   67:
+        -:   68:namespace std _GLIBCXX_VISIBILITY(default)
+        -:   69:{
+        -:   70:_GLIBCXX_BEGIN_NAMESPACE_VERSION
+        -:   71:
+        -:   72:  /**
+        -:   73:   *  @addtogroup utilities
+        -:   74:   *  @{
+        -:   75:   */
+        -:   76:
+        -:   77:#if __cplusplus >= 201103L
+        -:   78:  /// Tag type for piecewise construction of std::pair objects.
+        -:   79:  struct piecewise_construct_t { explicit piecewise_construct_t() = default; };
+        -:   80:
+        -:   81:  /// Tag for piecewise construction of std::pair objects.
+        -:   82:  _GLIBCXX17_INLINE constexpr piecewise_construct_t piecewise_construct =
+        -:   83:    piecewise_construct_t();
+        -:   84:
+        -:   85:  /// @cond undocumented
+        -:   86:
+        -:   87:  // Forward declarations.
+        -:   88:  template<typename _T1, typename _T2>
+        -:   89:    struct pair;
+        -:   90:
+        -:   91:  template<typename...>
+        -:   92:    class tuple;
+        -:   93:
+        -:   94:  // Declarations of std::array and its std::get overloads, so that
+        -:   95:  // std::tuple_cat can use them if <tuple> is included before <array>.
+        -:   96:  // We also declare the other std::get overloads here so that they're
+        -:   97:  // visible to the P2165R4 tuple-like constructors of pair and tuple.
+        -:   98:  template<typename _Tp, size_t _Nm>
+        -:   99:    struct array;
+        -:  100:
+        -:  101:  template<size_t...>
+        -:  102:    struct _Index_tuple;
+        -:  103:
+        -:  104:  template<size_t _Int, class _Tp1, class _Tp2>
+        -:  105:    constexpr typename tuple_element<_Int, pair<_Tp1, _Tp2>>::type&
+        -:  106:    get(pair<_Tp1, _Tp2>& __in) noexcept;
+        -:  107:
+        -:  108:  template<size_t _Int, class _Tp1, class _Tp2>
+        -:  109:    constexpr typename tuple_element<_Int, pair<_Tp1, _Tp2>>::type&&
+        -:  110:    get(pair<_Tp1, _Tp2>&& __in) noexcept;
+        -:  111:
+        -:  112:  template<size_t _Int, class _Tp1, class _Tp2>
+        -:  113:    constexpr const typename tuple_element<_Int, pair<_Tp1, _Tp2>>::type&
+        -:  114:    get(const pair<_Tp1, _Tp2>& __in) noexcept;
+        -:  115:
+        -:  116:  template<size_t _Int, class _Tp1, class _Tp2>
+        -:  117:    constexpr const typename tuple_element<_Int, pair<_Tp1, _Tp2>>::type&&
+        -:  118:    get(const pair<_Tp1, _Tp2>&& __in) noexcept;
+        -:  119:
+        -:  120:  template<size_t __i, typename... _Elements>
+        -:  121:    constexpr __tuple_element_t<__i, tuple<_Elements...>>&
+        -:  122:    get(tuple<_Elements...>& __t) noexcept;
+        -:  123:
+        -:  124:  template<size_t __i, typename... _Elements>
+        -:  125:    constexpr const __tuple_element_t<__i, tuple<_Elements...>>&
+        -:  126:    get(const tuple<_Elements...>& __t) noexcept;
+        -:  127:
+        -:  128:  template<size_t __i, typename... _Elements>
+        -:  129:    constexpr __tuple_element_t<__i, tuple<_Elements...>>&&
+        -:  130:    get(tuple<_Elements...>&& __t) noexcept;
+        -:  131:
+        -:  132:  template<size_t __i, typename... _Elements>
+        -:  133:    constexpr const __tuple_element_t<__i, tuple<_Elements...>>&&
+        -:  134:    get(const tuple<_Elements...>&& __t) noexcept;
+        -:  135:
+        -:  136:  template<size_t _Int, typename _Tp, size_t _Nm>
+        -:  137:    constexpr _Tp&
+        -:  138:    get(array<_Tp, _Nm>&) noexcept;
+        -:  139:
+        -:  140:  template<size_t _Int, typename _Tp, size_t _Nm>
+        -:  141:    constexpr _Tp&&
+        -:  142:    get(array<_Tp, _Nm>&&) noexcept;
+        -:  143:
+        -:  144:  template<size_t _Int, typename _Tp, size_t _Nm>
+        -:  145:    constexpr const _Tp&
+        -:  146:    get(const array<_Tp, _Nm>&) noexcept;
+        -:  147:
+        -:  148:  template<size_t _Int, typename _Tp, size_t _Nm>
+        -:  149:    constexpr const _Tp&&
+        -:  150:    get(const array<_Tp, _Nm>&&) noexcept;
+        -:  151:
+        -:  152:#if ! __cpp_lib_concepts
+        -:  153:  // Concept utility functions, reused in conditionally-explicit
+        -:  154:  // constructors.
+        -:  155:  // See PR 70437, don't look at is_constructible or
+        -:  156:  // is_convertible if the types are the same to
+        -:  157:  // avoid querying those properties for incomplete types.
+        -:  158:  template <bool, typename _T1, typename _T2>
+        -:  159:    struct _PCC
+        -:  160:    {
+        -:  161:      template <typename _U1, typename _U2>
+        -:  162:      static constexpr bool _ConstructiblePair()
+        -:  163:      {
+        -:  164:	return __and_<is_constructible<_T1, const _U1&>,
+        -:  165:		      is_constructible<_T2, const _U2&>>::value;
+        -:  166:      }
+        -:  167:
+        -:  168:      template <typename _U1, typename _U2>
+        -:  169:      static constexpr bool _ImplicitlyConvertiblePair()
+        -:  170:      {
+        -:  171:	return __and_<is_convertible<const _U1&, _T1>,
+        -:  172:		      is_convertible<const _U2&, _T2>>::value;
+        -:  173:      }
+        -:  174:
+        -:  175:      template <typename _U1, typename _U2>
+        -:  176:      static constexpr bool _MoveConstructiblePair()
+        -:  177:      {
+        -:  178:	return __and_<is_constructible<_T1, _U1&&>,
+        -:  179:		      is_constructible<_T2, _U2&&>>::value;
+        -:  180:      }
+        -:  181:
+        -:  182:      template <typename _U1, typename _U2>
+        -:  183:      static constexpr bool _ImplicitlyMoveConvertiblePair()
+        -:  184:      {
+        -:  185:	return __and_<is_convertible<_U1&&, _T1>,
+        -:  186:		      is_convertible<_U2&&, _T2>>::value;
+        -:  187:      }
+        -:  188:    };
+        -:  189:
+        -:  190:  template <typename _T1, typename _T2>
+        -:  191:    struct _PCC<false, _T1, _T2>
+        -:  192:    {
+        -:  193:      template <typename _U1, typename _U2>
+        -:  194:      static constexpr bool _ConstructiblePair()
+        -:  195:      {
+        -:  196:	return false;
+        -:  197:      }
+        -:  198:
+        -:  199:      template <typename _U1, typename _U2>
+        -:  200:      static constexpr bool _ImplicitlyConvertiblePair()
+        -:  201:      {
+        -:  202:	return false;
+        -:  203:      }
+        -:  204:
+        -:  205:      template <typename _U1, typename _U2>
+        -:  206:      static constexpr bool _MoveConstructiblePair()
+        -:  207:      {
+        -:  208:	return false;
+        -:  209:      }
+        -:  210:
+        -:  211:      template <typename _U1, typename _U2>
+        -:  212:      static constexpr bool _ImplicitlyMoveConvertiblePair()
+        -:  213:      {
+        -:  214:	return false;
+        -:  215:      }
+        -:  216:    };
+        -:  217:#endif // lib concepts
+        -:  218:#endif // C++11
+        -:  219:
+        -:  220:#if __glibcxx_tuple_like // >= C++23
+        -:  221:  template<typename _Tp>
+        -:  222:    inline constexpr bool __is_tuple_v = false;
+        -:  223:
+        -:  224:  template<typename... _Ts>
+        -:  225:    inline constexpr bool __is_tuple_v<tuple<_Ts...>> = true;
+        -:  226:
+        -:  227:  // TODO: Reuse __is_tuple_like from <type_traits>?
+        -:  228:  template<typename _Tp>
+        -:  229:    inline constexpr bool __is_tuple_like_v = false;
+        -:  230:
+        -:  231:  template<typename... _Elements>
+        -:  232:    inline constexpr bool __is_tuple_like_v<tuple<_Elements...>> = true;
+        -:  233:
+        -:  234:  template<typename _T1, typename _T2>
+        -:  235:    inline constexpr bool __is_tuple_like_v<pair<_T1, _T2>> = true;
+        -:  236:
+        -:  237:  template<typename _Tp, size_t _Nm>
+        -:  238:    inline constexpr bool __is_tuple_like_v<array<_Tp, _Nm>> = true;
+        -:  239:
+        -:  240:  // __is_tuple_like_v<subrange> is defined in <bits/ranges_util.h>.
+        -:  241:
+        -:  242:  template<typename _Tp>
+        -:  243:    concept __tuple_like = __is_tuple_like_v<remove_cvref_t<_Tp>>;
+        -:  244:
+        -:  245:  template<typename _Tp>
+        -:  246:    concept __pair_like = __tuple_like<_Tp> && tuple_size_v<remove_cvref_t<_Tp>> == 2;
+        -:  247:
+        -:  248:  template<typename _Tp, typename _Tuple>
+        -:  249:    concept __eligible_tuple_like
+        -:  250:      = __detail::__different_from<_Tp, _Tuple> && __tuple_like<_Tp>
+        -:  251:	&& (tuple_size_v<remove_cvref_t<_Tp>> == tuple_size_v<_Tuple>)
+        -:  252:	&& !ranges::__detail::__is_subrange<remove_cvref_t<_Tp>>;
+        -:  253:
+        -:  254:  template<typename _Tp, typename _Pair>
+        -:  255:    concept __eligible_pair_like
+        -:  256:      = __detail::__different_from<_Tp, _Pair> && __pair_like<_Tp>
+        -:  257:	&& !ranges::__detail::__is_subrange<remove_cvref_t<_Tp>>;
+        -:  258:#endif // C++23
+        -:  259:
+        -:  260:  template<typename _U1, typename _U2> class __pair_base
+        -:  261:  {
+        -:  262:#if __cplusplus >= 201103L && ! __cpp_lib_concepts
+        -:  263:    template<typename _T1, typename _T2> friend struct pair;
+        -:  264:    __pair_base() = default;
+        -:  265:    ~__pair_base() = default;
+        -:  266:    __pair_base(const __pair_base&) = default;
+        -:  267:    __pair_base& operator=(const __pair_base&) = delete;
+        -:  268:#endif // C++11
+        -:  269:  };
+        -:  270:
+        -:  271:  /// @endcond
+        -:  272:
+        -:  273: /**
+        -:  274:   *  @brief Struct holding two objects of arbitrary type.
+        -:  275:   *
+        -:  276:   *  @tparam _T1  Type of first object.
+        -:  277:   *  @tparam _T2  Type of second object.
+        -:  278:   *
+        -:  279:   *  <https://gcc.gnu.org/onlinedocs/libstdc++/manual/utilities.html>
+        -:  280:   *
+        -:  281:   * @headerfile utility
+        -:  282:   */
+        -:  283:  template<typename _T1, typename _T2>
+        -:  284:    struct pair
+        -:  285:    : public __pair_base<_T1, _T2>
+        -:  286:    {
+        -:  287:      typedef _T1 first_type;    ///< The type of the `first` member
+        -:  288:      typedef _T2 second_type;   ///< The type of the `second` member
+        -:  289:
+        -:  290:      _T1 first;                 ///< The first member
+        -:  291:      _T2 second;                ///< The second member
+        -:  292:
+        -:  293:#if __cplusplus >= 201103L
+        -:  294:      constexpr pair(const pair&) = default;	///< Copy constructor
+      127:  295:      constexpr pair(pair&&) = default;		///< Move constructor
+------------------
+_ZNSt4pairIKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEES5_EC2EOS7_:
+function _ZNSt4pairIKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEES5_EC2EOS7_ called 87 returned 100% blocks executed 100%
+       87:  295:      constexpr pair(pair&&) = default;		///< Move constructor
+       87:  295-block 2
+call    0 returned 87
+call    1 returned 87
+------------------
+_ZNSt4pairIKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEiEC2EOS7_:
+function _ZNSt4pairIKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEiEC2EOS7_ called 18 returned 100% blocks executed 100%
+       18:  295:      constexpr pair(pair&&) = default;		///< Move constructor
+       18:  295-block 2
+call    0 returned 18
+------------------
+_ZNSt4pairINSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEES_ImmEEC2EOS7_:
+function _ZNSt4pairINSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEES_ImmEEC2EOS7_ called 18 returned 100% blocks executed 100%
+       18:  295:      constexpr pair(pair&&) = default;		///< Move constructor
+       18:  295-block 2
+call    0 returned 18
+------------------
+_ZNSt4pairINSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEmEC2EOS6_:
+function _ZNSt4pairINSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEmEC2EOS6_ called 4 returned 100% blocks executed 100%
+        4:  295:      constexpr pair(pair&&) = default;		///< Move constructor
+        4:  295-block 2
+call    0 returned 4
+------------------
+        -:  296:
+        -:  297:      template<typename... _Args1, typename... _Args2>
+        -:  298:	_GLIBCXX20_CONSTEXPR
+        -:  299:	pair(piecewise_construct_t, tuple<_Args1...>, tuple<_Args2...>);
+        -:  300:
+        -:  301:      /// Swap the first members and then the second members.
+        -:  302:      _GLIBCXX20_CONSTEXPR void
+        -:  303:      swap(pair& __p)
+        -:  304:      noexcept(__and_<__is_nothrow_swappable<_T1>,
+        -:  305:		      __is_nothrow_swappable<_T2>>::value)
+        -:  306:      {
+        -:  307:	using std::swap;
+        -:  308:	swap(first, __p.first);
+        -:  309:	swap(second, __p.second);
+        -:  310:      }
+        -:  311:
+        -:  312:#if __glibcxx_ranges_zip // >= C++23
+        -:  313:      // As an extension, we constrain the const swap member function in order
+        -:  314:      // to continue accepting explicit instantiation of pairs whose elements
+        -:  315:      // are not all const swappable.  Without this constraint, such an
+        -:  316:      // explicit instantiation would also instantiate the ill-formed body of
+        -:  317:      // this function and yield a hard error.  This constraint shouldn't
+        -:  318:      // affect the behavior of valid programs.
+        -:  319:      constexpr void
+        -:  320:      swap(const pair& __p) const
+        -:  321:      noexcept(__and_v<__is_nothrow_swappable<const _T1>,
+        -:  322:		       __is_nothrow_swappable<const _T2>>)
+        -:  323:      requires is_swappable_v<const _T1> && is_swappable_v<const _T2>
+        -:  324:      {
+        -:  325:	using std::swap;
+        -:  326:	swap(first, __p.first);
+        -:  327:	swap(second, __p.second);
+        -:  328:      }
+        -:  329:#endif // C++23
+        -:  330:
+        -:  331:    private:
+        -:  332:      template<typename... _Args1, size_t... _Indexes1,
+        -:  333:	       typename... _Args2, size_t... _Indexes2>
+        -:  334:	_GLIBCXX20_CONSTEXPR
+        -:  335:	pair(tuple<_Args1...>&, tuple<_Args2...>&,
+        -:  336:	     _Index_tuple<_Indexes1...>, _Index_tuple<_Indexes2...>);
+        -:  337:    public:
+        -:  338:
+        -:  339:#if __cpp_lib_concepts
+        -:  340:      // C++20 implementation using concepts, explicit(bool), fully constexpr.
+        -:  341:
+        -:  342:      /// Default constructor
+        -:  343:      constexpr
+        -:  344:      explicit(__not_<__and_<__is_implicitly_default_constructible<_T1>,
+        -:  345:			     __is_implicitly_default_constructible<_T2>>>())
+function _ZNSt4pairImmEC2EvQaa26is_default_constructible_vIT_E26is_default_constructible_vIT0_E called 0 returned 0% blocks executed 0%
+    #####:  346:      pair()
+        -:  347:      requires is_default_constructible_v<_T1>
+        -:  348:	       && is_default_constructible_v<_T2>
+    #####:  349:      : first(), second()
+    #####:  350:      { }
+        -:  351:
+        -:  352:    private:
+        -:  353:
+        -:  354:      /// @cond undocumented
+        -:  355:      template<typename _U1, typename _U2>
+        -:  356:	static constexpr bool
+        -:  357:	_S_constructible()
+        -:  358:	{
+        -:  359:	  if constexpr (is_constructible_v<_T1, _U1>)
+        -:  360:	    return is_constructible_v<_T2, _U2>;
+        -:  361:	  return false;
+        -:  362:	}
+        -:  363:
+        -:  364:      template<typename _U1, typename _U2>
+        -:  365:	static constexpr bool
+        -:  366:	_S_nothrow_constructible()
+        -:  367:	{
+        -:  368:	  if constexpr (is_nothrow_constructible_v<_T1, _U1>)
+        -:  369:	    return is_nothrow_constructible_v<_T2, _U2>;
+        -:  370:	  return false;
+        -:  371:	}
+        -:  372:
+        -:  373:      template<typename _U1, typename _U2>
+        -:  374:	static constexpr bool
+        -:  375:	_S_convertible()
+        -:  376:	{
+        -:  377:	  if constexpr (is_convertible_v<_U1, _T1>)
+        -:  378:	    return is_convertible_v<_U2, _T2>;
+        -:  379:	  return false;
+        -:  380:	}
+        -:  381:
+        -:  382:      // True if construction from _U1 and _U2 would create a dangling ref.
+        -:  383:      template<typename _U1, typename _U2>
+        -:  384:	static constexpr bool
+        -:  385:	_S_dangles()
+        -:  386:	{
+        -:  387:#if __has_builtin(__reference_constructs_from_temporary)
+        -:  388:	  if constexpr (__reference_constructs_from_temporary(_T1, _U1&&))
+        -:  389:	    return true;
+        -:  390:	  else
+        -:  391:	    return __reference_constructs_from_temporary(_T2, _U2&&);
+        -:  392:#else
+        -:  393:	  return false;
+        -:  394:#endif
+        -:  395:	}
+        -:  396:
+        -:  397:#if __glibcxx_tuple_like // >= C++23
+        -:  398:      template<typename _UPair>
+        -:  399:	static constexpr bool
+        -:  400:	_S_constructible_from_pair_like()
+        -:  401:	{
+        -:  402:	  return _S_constructible<decltype(std::get<0>(std::declval<_UPair>())),
+        -:  403:				  decltype(std::get<1>(std::declval<_UPair>()))>();
+        -:  404:	}
+        -:  405:
+        -:  406:      template<typename _UPair>
+        -:  407:	static constexpr bool
+        -:  408:	_S_convertible_from_pair_like()
+        -:  409:	{
+        -:  410:	  return _S_convertible<decltype(std::get<0>(std::declval<_UPair>())),
+        -:  411:				decltype(std::get<1>(std::declval<_UPair>()))>();
+        -:  412:	}
+        -:  413:
+        -:  414:      template<typename _UPair>
+        -:  415:	static constexpr bool
+        -:  416:	_S_dangles_from_pair_like()
+        -:  417:	{
+        -:  418:	  return _S_dangles<decltype(std::get<0>(std::declval<_UPair>())),
+        -:  419:			    decltype(std::get<1>(std::declval<_UPair>()))>();
+        -:  420:	}
+        -:  421:#endif // C++23
+        -:  422:      /// @endcond
+        -:  423:
+        -:  424:    public:
+        -:  425:
+        -:  426:      /// Constructor accepting lvalues of `first_type` and `second_type`
+        -:  427:      constexpr explicit(!_S_convertible<const _T1&, const _T2&>())
+function _ZNSt4pairIPSt18_Rb_tree_node_baseS1_EC2ERKS1_S4_Qcl16_S_constructibleIRKT_RKT0_EE called 0 returned 0% blocks executed 0%
+    #####:  428:      pair(const _T1& __x, const _T2& __y)
+        -:  429:      noexcept(_S_nothrow_constructible<const _T1&, const _T2&>())
+        -:  430:      requires (_S_constructible<const _T1&, const _T2&>())
+    #####:  431:      : first(__x), second(__y)
+    #####:  432:      { }
+        -:  433:
+        -:  434:      /// Constructor accepting two values of arbitrary types
+        -:  435:#if __cplusplus > 202002L
+        -:  436:      template<typename _U1 = _T1, typename _U2 = _T2>
+        -:  437:#else
+        -:  438:      template<typename _U1, typename _U2>
+        -:  439:#endif
+        -:  440:	requires (_S_constructible<_U1, _U2>()) && (!_S_dangles<_U1, _U2>())
+        -:  441:	constexpr explicit(!_S_convertible<_U1, _U2>())
+     250*:  442:	pair(_U1&& __x, _U2&& __y)
+        -:  443:	noexcept(_S_nothrow_constructible<_U1, _U2>())
+     250*:  444:	: first(std::forward<_U1>(__x)), second(std::forward<_U2>(__y))
+     250*:  445:	{ }
+------------------
+_ZNSt4pairIN3tsl19detail_ordered_hash12ordered_hashIS_INSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEES_ImmEENS0_11ordered_mapIS8_S9_St4hashIS8_ESt8equal_toIS8_ESaISA_ESt5dequeISA_SG_EjE9KeySelectENSJ_11ValueSelectESD_SF_SG_SI_jE16ordered_iteratorILb0EEEbEC2ISO_bEEOT_OT0_:
+function _ZNSt4pairIN3tsl19detail_ordered_hash12ordered_hashIS_INSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEES_ImmEENS0_11ordered_mapIS8_S9_St4hashIS8_ESt8equal_toIS8_ESaISA_ESt5dequeISA_SG_EjE9KeySelectENSJ_11ValueSelectESD_SF_SG_SI_jE16ordered_iteratorILb0EEEbEC2ISO_bEEOT_OT0_ called 0 returned 0% blocks executed 0%
+    #####:  442:	pair(_U1&& __x, _U2&& __y)
+        -:  443:	noexcept(_S_nothrow_constructible<_U1, _U2>())
+    #####:  444:	: first(std::forward<_U1>(__x)), second(std::forward<_U2>(__y))
+    %%%%%:  444-block 2
+call    0 never executed
+call    1 never executed
+call    2 never executed
+    #####:  445:	{ }
+------------------
+_ZNSt4pairIPSt18_Rb_tree_node_baseS1_EC2IRPSt13_Rb_tree_nodeIS_IKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEESA_EERS1_EEOT_OT0_:
+function _ZNSt4pairIPSt18_Rb_tree_node_baseS1_EC2IRPSt13_Rb_tree_nodeIS_IKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEESA_EERS1_EEOT_OT0_ called 0 returned 0% blocks executed 0%
+    #####:  442:	pair(_U1&& __x, _U2&& __y)
+        -:  443:	noexcept(_S_nothrow_constructible<_U1, _U2>())
+    #####:  444:	: first(std::forward<_U1>(__x)), second(std::forward<_U2>(__y))
+    %%%%%:  444-block 2
+call    0 never executed
+call    1 never executed
+    #####:  445:	{ }
+------------------
+_ZNSt4pairIPSt18_Rb_tree_node_baseS1_EC2IRPSt13_Rb_tree_nodeIS_IKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEiEERS1_EEOT_OT0_:
+function _ZNSt4pairIPSt18_Rb_tree_node_baseS1_EC2IRPSt13_Rb_tree_nodeIS_IKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEiEERS1_EEOT_OT0_ called 0 returned 0% blocks executed 0%
+    #####:  442:	pair(_U1&& __x, _U2&& __y)
+        -:  443:	noexcept(_S_nothrow_constructible<_U1, _U2>())
+    #####:  444:	: first(std::forward<_U1>(__x)), second(std::forward<_U2>(__y))
+    %%%%%:  444-block 2
+call    0 never executed
+call    1 never executed
+    #####:  445:	{ }
+------------------
+_ZNSt4pairISt17_Rb_tree_iteratorIS_IKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEES6_EEbEC2IS9_bEEOT_OT0_:
+function _ZNSt4pairISt17_Rb_tree_iteratorIS_IKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEES6_EEbEC2IS9_bEEOT_OT0_ called 87 returned 100% blocks executed 100%
+       87:  442:	pair(_U1&& __x, _U2&& __y)
+        -:  443:	noexcept(_S_nothrow_constructible<_U1, _U2>())
+       87:  444:	: first(std::forward<_U1>(__x)), second(std::forward<_U2>(__y))
+       87:  444-block 2
+call    0 returned 87
+call    1 returned 87
+       87:  445:	{ }
+------------------
+_ZNSt4pairISt17_Rb_tree_iteratorIS_IKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEiEEbEC2IS9_bEEOT_OT0_:
+function _ZNSt4pairISt17_Rb_tree_iteratorIS_IKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEiEEbEC2IS9_bEEOT_OT0_ called 18 returned 100% blocks executed 100%
+       18:  442:	pair(_U1&& __x, _U2&& __y)
+        -:  443:	noexcept(_S_nothrow_constructible<_U1, _U2>())
+       18:  444:	: first(std::forward<_U1>(__x)), second(std::forward<_U2>(__y))
+       18:  444-block 2
+call    0 returned 18
+call    1 returned 18
+       18:  445:	{ }
+------------------
+_ZNSt4pairIKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEES5_EC2IS5_S5_EEOT_OT0_:
+function _ZNSt4pairIKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEES5_EC2IS5_S5_EEOT_OT0_ called 87 returned 100% blocks executed 100%
+       87:  442:	pair(_U1&& __x, _U2&& __y)
+        -:  443:	noexcept(_S_nothrow_constructible<_U1, _U2>())
+       87:  444:	: first(std::forward<_U1>(__x)), second(std::forward<_U2>(__y))
+       87:  444-block 2
+call    0 returned 87
+call    1 returned 87
+call    2 returned 87
+call    3 returned 87
+       87:  445:	{ }
+------------------
+_ZNSt4pairINSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEES_ImmEEC2IS5_S6_EEOT_OT0_:
+function _ZNSt4pairINSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEES_ImmEEC2IS5_S6_EEOT_OT0_ called 18 returned 100% blocks executed 100%
+       18:  442:	pair(_U1&& __x, _U2&& __y)
+        -:  443:	noexcept(_S_nothrow_constructible<_U1, _U2>())
+       18:  444:	: first(std::forward<_U1>(__x)), second(std::forward<_U2>(__y))
+       18:  444-block 2
+call    0 returned 18
+call    1 returned 18
+call    2 returned 18
+       18:  445:	{ }
+------------------
+_ZNSt4pairImmEC2IRmiEEOT_OT0_:
+function _ZNSt4pairImmEC2IRmiEEOT_OT0_ called 18 returned 100% blocks executed 100%
+       18:  442:	pair(_U1&& __x, _U2&& __y)
+        -:  443:	noexcept(_S_nothrow_constructible<_U1, _U2>())
+       18:  444:	: first(std::forward<_U1>(__x)), second(std::forward<_U2>(__y))
+       18:  444-block 2
+call    0 returned 18
+call    1 returned 18
+       18:  445:	{ }
+------------------
+_ZNSt4pairIKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEiEC2IS5_RmEEOT_OT0_:
+function _ZNSt4pairIKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEiEC2IS5_RmEEOT_OT0_ called 18 returned 100% blocks executed 100%
+       18:  442:	pair(_U1&& __x, _U2&& __y)
+        -:  443:	noexcept(_S_nothrow_constructible<_U1, _U2>())
+       18:  444:	: first(std::forward<_U1>(__x)), second(std::forward<_U2>(__y))
+       18:  444-block 2
+call    0 returned 18
+call    1 returned 18
+call    2 returned 18
+       18:  445:	{ }
+------------------
+_ZNSt4pairINSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEmEC2IS5_RmEEOT_OT0_:
+function _ZNSt4pairINSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEmEC2IS5_RmEEOT_OT0_ called 4 returned 100% blocks executed 100%
+        4:  442:	pair(_U1&& __x, _U2&& __y)
+        -:  443:	noexcept(_S_nothrow_constructible<_U1, _U2>())
+        4:  444:	: first(std::forward<_U1>(__x)), second(std::forward<_U2>(__y))
+        4:  444-block 2
+call    0 returned 4
+call    1 returned 4
+call    2 returned 4
+        4:  445:	{ }
+------------------
+_ZNSt4pairINSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEmEC2IRA1_KciEEOT_OT0_:
+function _ZNSt4pairINSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEmEC2IRA1_KciEEOT_OT0_ called 0 returned 0% blocks executed 0%
+    #####:  442:	pair(_U1&& __x, _U2&& __y)
+        -:  443:	noexcept(_S_nothrow_constructible<_U1, _U2>())
+    #####:  444:	: first(std::forward<_U1>(__x)), second(std::forward<_U2>(__y))
+    %%%%%:  444-block 2
+    %%%%%:  444-block 4
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+    %%%%%:  444-block 7
+call    4 never executed
+    #####:  445:	{ }
+------------------
+        -:  446:
+        -:  447:#if __cplusplus > 202002L
+        -:  448:      template<typename _U1 = _T1, typename _U2 = _T2>
+        -:  449:#else
+        -:  450:      template<typename _U1, typename _U2>
+        -:  451:#endif
+        -:  452:	requires (_S_constructible<_U1, _U2>()) && (_S_dangles<_U1, _U2>())
+        -:  453:	constexpr explicit(!_S_convertible<_U1, _U2>())
+        -:  454:	pair(_U1&&, _U2&&) = delete;
+        -:  455:
+        -:  456:      /// Converting constructor from a const `pair<U1, U2>` lvalue
+        -:  457:      template<typename _U1, typename _U2>
+        -:  458:	requires (_S_constructible<const _U1&, const _U2&>())
+        -:  459:	  && (!_S_dangles<_U1, _U2>())
+        -:  460:	constexpr explicit(!_S_convertible<const _U1&, const _U2&>())
+        -:  461:	pair(const pair<_U1, _U2>& __p)
+        -:  462:	noexcept(_S_nothrow_constructible<const _U1&, const _U2&>())
+        -:  463:	: first(__p.first), second(__p.second)
+        -:  464:	{ }
+        -:  465:
+        -:  466:      template<typename _U1, typename _U2>
+        -:  467:	requires (_S_constructible<const _U1&, const _U2&>())
+        -:  468:	      && (_S_dangles<const _U1&, const _U2&>())
+        -:  469:	constexpr explicit(!_S_convertible<const _U1&, const _U2&>())
+        -:  470:	pair(const pair<_U1, _U2>&) = delete;
+        -:  471:
+        -:  472:      /// Converting constructor from a non-const `pair<U1, U2>` rvalue
+        -:  473:      template<typename _U1, typename _U2>
+        -:  474:	requires (_S_constructible<_U1, _U2>()) && (!_S_dangles<_U1, _U2>())
+        -:  475:	constexpr explicit(!_S_convertible<_U1, _U2>())
+        -:  476:	pair(pair<_U1, _U2>&& __p)
+        -:  477:	noexcept(_S_nothrow_constructible<_U1, _U2>())
+        -:  478:	: first(std::forward<_U1>(__p.first)),
+        -:  479:	  second(std::forward<_U2>(__p.second))
+        -:  480:	{ }
+        -:  481:
+        -:  482:      template<typename _U1, typename _U2>
+        -:  483:	requires (_S_constructible<_U1, _U2>()) && (_S_dangles<_U1, _U2>())
+        -:  484:	constexpr explicit(!_S_convertible<_U1, _U2>())
+        -:  485:	pair(pair<_U1, _U2>&&) = delete;
+        -:  486:
+        -:  487:#if __glibcxx_ranges_zip // >= C++23
+        -:  488:      /// Converting constructor from a non-const `pair<U1, U2>` lvalue
+        -:  489:      template<typename _U1, typename _U2>
+        -:  490:	requires (_S_constructible<_U1&, _U2&>()) && (!_S_dangles<_U1&, _U2&>())
+        -:  491:	constexpr explicit(!_S_convertible<_U1&, _U2&>())
+        -:  492:	pair(pair<_U1, _U2>& __p)
+        -:  493:	noexcept(_S_nothrow_constructible<_U1&, _U2&>())
+        -:  494:	: first(__p.first), second(__p.second)
+        -:  495:	{ }
+        -:  496:
+        -:  497:      template<typename _U1, typename _U2>
+        -:  498:	requires (_S_constructible<_U1&, _U2&>()) && (_S_dangles<_U1&, _U2&>())
+        -:  499:	constexpr explicit(!_S_convertible<_U1&, _U2&>())
+        -:  500:	pair(pair<_U1, _U2>&) = delete;
+        -:  501:
+        -:  502:      /// Converting constructor from a const `pair<U1, U2>` rvalue
+        -:  503:      template<typename _U1, typename _U2>
+        -:  504:	requires (_S_constructible<const _U1, const _U2>())
+        -:  505:	  && (!_S_dangles<const _U1, const _U2>())
+        -:  506:	constexpr explicit(!_S_convertible<const _U1, const _U2>())
+        -:  507:	pair(const pair<_U1, _U2>&& __p)
+        -:  508:	noexcept(_S_nothrow_constructible<const _U1, const _U2>())
+        -:  509:	: first(std::forward<const _U1>(__p.first)),
+        -:  510:	  second(std::forward<const _U2>(__p.second))
+        -:  511:	{ }
+        -:  512:
+        -:  513:      template<typename _U1, typename _U2>
+        -:  514:	requires (_S_constructible<const _U1, const _U2>())
+        -:  515:	  && (_S_dangles<const _U1, const _U2>())
+        -:  516:	constexpr explicit(!_S_convertible<const _U1, const _U2>())
+        -:  517:	pair(const pair<_U1, _U2>&&) = delete;
+        -:  518:#endif // C++23
+        -:  519:
+        -:  520:#if __glibcxx_tuple_like // >= C++23
+        -:  521:      template<__eligible_pair_like<pair> _UPair>
+        -:  522:	requires (_S_constructible_from_pair_like<_UPair>())
+        -:  523:	  && (!_S_dangles_from_pair_like<_UPair>())
+        -:  524:	constexpr explicit(!_S_convertible_from_pair_like<_UPair>())
+        -:  525:	pair(_UPair&& __p)
+        -:  526:	: first(std::get<0>(std::forward<_UPair>(__p))),
+        -:  527:	  second(std::get<1>(std::forward<_UPair>(__p)))
+        -:  528:	{ }
+        -:  529:
+        -:  530:      template<__eligible_pair_like<pair> _UPair>
+        -:  531:	requires (_S_constructible_from_pair_like<_UPair>())
+        -:  532:	  && (_S_dangles_from_pair_like<_UPair>())
+        -:  533:	constexpr explicit(!_S_convertible_from_pair_like<_UPair>())
+        -:  534:	pair(_UPair&&) = delete;
+        -:  535:#endif // C++23
+        -:  536:
+        -:  537:  private:
+        -:  538:      /// @cond undocumented
+        -:  539:      template<typename _U1, typename _U2>
+        -:  540:	static constexpr bool
+        -:  541:	_S_assignable()
+        -:  542:	{
+        -:  543:	  if constexpr (is_assignable_v<_T1&, _U1>)
+        -:  544:	    return is_assignable_v<_T2&, _U2>;
+        -:  545:	  return false;
+        -:  546:	}
+        -:  547:
+        -:  548:      template<typename _U1, typename _U2>
+        -:  549:	static constexpr bool
+        -:  550:	_S_const_assignable()
+        -:  551:	{
+        -:  552:	  if constexpr (is_assignable_v<const _T1&, _U1>)
+        -:  553:	    return is_assignable_v<const _T2&, _U2>;
+        -:  554:	  return false;
+        -:  555:	}
+        -:  556:
+        -:  557:      template<typename _U1, typename _U2>
+        -:  558:	static constexpr bool
+        -:  559:	_S_nothrow_assignable()
+        -:  560:	{
+        -:  561:	  if constexpr (is_nothrow_assignable_v<_T1&, _U1>)
+        -:  562:	    return is_nothrow_assignable_v<_T2&, _U2>;
+        -:  563:	  return false;
+        -:  564:	}
+        -:  565:
+        -:  566:#if __glibcxx_tuple_like // >= C++23
+        -:  567:      template<typename _UPair>
+        -:  568:	static constexpr bool
+        -:  569:	_S_assignable_from_tuple_like()
+        -:  570:	{
+        -:  571:	  return _S_assignable<decltype(std::get<0>(std::declval<_UPair>())),
+        -:  572:			       decltype(std::get<1>(std::declval<_UPair>()))>();
+        -:  573:	}
+        -:  574:
+        -:  575:      template<typename _UPair>
+        -:  576:	static constexpr bool
+        -:  577:	_S_const_assignable_from_tuple_like()
+        -:  578:	{
+        -:  579:	  return _S_const_assignable<decltype(std::get<0>(std::declval<_UPair>())),
+        -:  580:				     decltype(std::get<1>(std::declval<_UPair>()))>();
+        -:  581:	}
+        -:  582:#endif // C++23
+        -:  583:      /// @endcond
+        -:  584:
+        -:  585:  public:
+        -:  586:
+        -:  587:      pair& operator=(const pair&) = delete;
+        -:  588:
+        -:  589:      /// Copy assignment operator
+        -:  590:      constexpr pair&
+        -:  591:      operator=(const pair& __p)
+        -:  592:      noexcept(_S_nothrow_assignable<const _T1&, const _T2&>())
+        -:  593:      requires (_S_assignable<const _T1&, const _T2&>())
+        -:  594:      {
+        -:  595:	first = __p.first;
+        -:  596:	second = __p.second;
+        -:  597:	return *this;
+        -:  598:      }
+        -:  599:
+        -:  600:      /// Move assignment operator
+        -:  601:      constexpr pair&
+        -:  602:      operator=(pair&& __p)
+        -:  603:      noexcept(_S_nothrow_assignable<_T1, _T2>())
+        -:  604:      requires (_S_assignable<_T1, _T2>())
+        -:  605:      {
+        -:  606:	first = std::forward<first_type>(__p.first);
+        -:  607:	second = std::forward<second_type>(__p.second);
+        -:  608:	return *this;
+        -:  609:      }
+        -:  610:
+        -:  611:      /// Converting assignment from a const `pair<U1, U2>` lvalue
+        -:  612:      template<typename _U1, typename _U2>
+        -:  613:	constexpr pair&
+        -:  614:	operator=(const pair<_U1, _U2>& __p)
+        -:  615:	noexcept(_S_nothrow_assignable<const _U1&, const _U2&>())
+        -:  616:	requires (_S_assignable<const _U1&, const _U2&>())
+        -:  617:	{
+        -:  618:	  first = __p.first;
+        -:  619:	  second = __p.second;
+        -:  620:	  return *this;
+        -:  621:	}
+        -:  622:
+        -:  623:      /// Converting assignment from a non-const `pair<U1, U2>` rvalue
+        -:  624:      template<typename _U1, typename _U2>
+        -:  625:	constexpr pair&
+        -:  626:	operator=(pair<_U1, _U2>&& __p)
+        -:  627:	noexcept(_S_nothrow_assignable<_U1, _U2>())
+        -:  628:	requires (_S_assignable<_U1, _U2>())
+        -:  629:	{
+        -:  630:	  first = std::forward<_U1>(__p.first);
+        -:  631:	  second = std::forward<_U2>(__p.second);
+        -:  632:	  return *this;
+        -:  633:	}
+        -:  634:
+        -:  635:#if __glibcxx_ranges_zip // >= C++23
+        -:  636:      /// Copy assignment operator (const)
+        -:  637:      constexpr const pair&
+        -:  638:      operator=(const pair& __p) const
+        -:  639:      requires (_S_const_assignable<const first_type&, const second_type&>())
+        -:  640:      {
+        -:  641:	first = __p.first;
+        -:  642:	second = __p.second;
+        -:  643:	return *this;
+        -:  644:      }
+        -:  645:
+        -:  646:      /// Move assignment operator (const)
+        -:  647:      constexpr const pair&
+        -:  648:      operator=(pair&& __p) const
+        -:  649:      requires (_S_const_assignable<first_type, second_type>())
+        -:  650:      {
+        -:  651:	first = std::forward<first_type>(__p.first);
+        -:  652:	second = std::forward<second_type>(__p.second);
+        -:  653:	return *this;
+        -:  654:      }
+        -:  655:
+        -:  656:      /// Converting assignment from a const `pair<U1, U2>` lvalue
+        -:  657:      template<typename _U1, typename _U2>
+        -:  658:	constexpr const pair&
+        -:  659:	operator=(const pair<_U1, _U2>& __p) const
+        -:  660:	requires (_S_const_assignable<const _U1&, const _U2&>())
+        -:  661:	{
+        -:  662:	  first = __p.first;
+        -:  663:	  second = __p.second;
+        -:  664:	  return *this;
+        -:  665:	}
+        -:  666:
+        -:  667:      /// Converting assignment from a non-const `pair<U1, U2>` rvalue
+        -:  668:      template<typename _U1, typename _U2>
+        -:  669:	constexpr const pair&
+        -:  670:	operator=(pair<_U1, _U2>&& __p) const
+        -:  671:	requires (_S_const_assignable<_U1, _U2>())
+        -:  672:	{
+        -:  673:	  first = std::forward<_U1>(__p.first);
+        -:  674:	  second = std::forward<_U2>(__p.second);
+        -:  675:	  return *this;
+        -:  676:	}
+        -:  677:#endif // C++23
+        -:  678:
+        -:  679:#if __glibcxx_tuple_like // >= C++23
+        -:  680:      template<__eligible_pair_like<pair> _UPair>
+        -:  681:	requires (_S_assignable_from_tuple_like<_UPair>())
+        -:  682:	constexpr pair&
+        -:  683:	operator=(_UPair&& __p)
+        -:  684:	{
+        -:  685:	  first = std::get<0>(std::forward<_UPair>(__p));
+        -:  686:	  second = std::get<1>(std::forward<_UPair>(__p));
+        -:  687:	  return *this;
+        -:  688:	}
+        -:  689:
+        -:  690:      template<__eligible_pair_like<pair> _UPair>
+        -:  691:	requires (_S_const_assignable_from_tuple_like<_UPair>())
+        -:  692:	constexpr const pair&
+        -:  693:	operator=(_UPair&& __p) const
+        -:  694:	{
+        -:  695:	  first = std::get<0>(std::forward<_UPair>(__p));
+        -:  696:	  second = std::get<1>(std::forward<_UPair>(__p));
+        -:  697:	  return *this;
+        -:  698:	}
+        -:  699:#endif // C++23
+        -:  700:
+        -:  701:#else // !__cpp_lib_concepts
+        -:  702:      // C++11/14/17 implementation using enable_if, partially constexpr.
+        -:  703:
+        -:  704:      /// @cond undocumented
+        -:  705:      // Error if construction from _U1 and _U2 would create a dangling ref.
+        -:  706:#if __has_builtin(__reference_constructs_from_temporary) \
+        -:  707:      && defined _GLIBCXX_DEBUG
+        -:  708:# define __glibcxx_no_dangling_refs(_U1, _U2) \
+        -:  709:  static_assert(!__reference_constructs_from_temporary(_T1, _U1) \
+        -:  710:	       && !__reference_constructs_from_temporary(_T2, _U2), \
+        -:  711:		"std::pair constructor creates a dangling reference")
+        -:  712:#else
+        -:  713:# define __glibcxx_no_dangling_refs(_U1, _U2)
+        -:  714:#endif
+        -:  715:      /// @endcond
+        -:  716:
+        -:  717:      /** The default constructor creates @c first and @c second using their
+        -:  718:       *  respective default constructors.  */
+        -:  719:      template <typename _U1 = _T1,
+        -:  720:                typename _U2 = _T2,
+        -:  721:                typename enable_if<__and_<
+        -:  722:                                     __is_implicitly_default_constructible<_U1>,
+        -:  723:                                     __is_implicitly_default_constructible<_U2>>
+        -:  724:                                   ::value, bool>::type = true>
+        -:  725:      constexpr pair()
+        -:  726:      : first(), second() { }
+        -:  727:
+        -:  728:      template <typename _U1 = _T1,
+        -:  729:                typename _U2 = _T2,
+        -:  730:                typename enable_if<__and_<
+        -:  731:                       is_default_constructible<_U1>,
+        -:  732:                       is_default_constructible<_U2>,
+        -:  733:                       __not_<
+        -:  734:                         __and_<__is_implicitly_default_constructible<_U1>,
+        -:  735:                                __is_implicitly_default_constructible<_U2>>>>
+        -:  736:                                   ::value, bool>::type = false>
+        -:  737:      explicit constexpr pair()
+        -:  738:      : first(), second() { }
+        -:  739:
+        -:  740:      // Shortcut for constraining the templates that don't take pairs.
+        -:  741:      /// @cond undocumented
+        -:  742:      using _PCCP = _PCC<true, _T1, _T2>;
+        -:  743:      /// @endcond
+        -:  744:
+        -:  745:      /// Construct from two const lvalues, allowing implicit conversions.
+        -:  746:      template<typename _U1 = _T1, typename _U2=_T2, typename
+        -:  747:	       enable_if<_PCCP::template
+        -:  748:			   _ConstructiblePair<_U1, _U2>()
+        -:  749:	                 && _PCCP::template
+        -:  750:			   _ImplicitlyConvertiblePair<_U1, _U2>(),
+        -:  751:                         bool>::type=true>
+        -:  752:      constexpr pair(const _T1& __a, const _T2& __b)
+        -:  753:      : first(__a), second(__b) { }
+        -:  754:
+        -:  755:      /// Construct from two const lvalues, disallowing implicit conversions.
+        -:  756:       template<typename _U1 = _T1, typename _U2=_T2, typename
+        -:  757:		enable_if<_PCCP::template
+        -:  758:			    _ConstructiblePair<_U1, _U2>()
+        -:  759:	                  && !_PCCP::template
+        -:  760:			    _ImplicitlyConvertiblePair<_U1, _U2>(),
+        -:  761:                         bool>::type=false>
+        -:  762:      explicit constexpr pair(const _T1& __a, const _T2& __b)
+        -:  763:      : first(__a), second(__b) { }
+        -:  764:
+        -:  765:      // Shortcut for constraining the templates that take pairs.
+        -:  766:      /// @cond undocumented
+        -:  767:      template <typename _U1, typename _U2>
+        -:  768:        using _PCCFP = _PCC<!is_same<_T1, _U1>::value
+        -:  769:			    || !is_same<_T2, _U2>::value,
+        -:  770:			    _T1, _T2>;
+        -:  771:      /// @endcond
+        -:  772:
+        -:  773:      template<typename _U1, typename _U2, typename
+        -:  774:	       enable_if<_PCCFP<_U1, _U2>::template
+        -:  775:			   _ConstructiblePair<_U1, _U2>()
+        -:  776:	                 && _PCCFP<_U1, _U2>::template
+        -:  777:			   _ImplicitlyConvertiblePair<_U1, _U2>(),
+        -:  778:			  bool>::type=true>
+        -:  779:	constexpr pair(const pair<_U1, _U2>& __p)
+        -:  780:	: first(__p.first), second(__p.second)
+        -:  781:	{ __glibcxx_no_dangling_refs(const _U1&, const _U2&); }
+        -:  782:
+        -:  783:      template<typename _U1, typename _U2, typename
+        -:  784:	       enable_if<_PCCFP<_U1, _U2>::template
+        -:  785:			   _ConstructiblePair<_U1, _U2>()
+        -:  786:			 && !_PCCFP<_U1, _U2>::template
+        -:  787:			   _ImplicitlyConvertiblePair<_U1, _U2>(),
+        -:  788:                         bool>::type=false>
+        -:  789:	explicit constexpr pair(const pair<_U1, _U2>& __p)
+        -:  790:	: first(__p.first), second(__p.second)
+        -:  791:	{ __glibcxx_no_dangling_refs(const _U1&, const _U2&); }
+        -:  792:
+        -:  793:#if _GLIBCXX_USE_DEPRECATED
+        -:  794:#if defined(__DEPRECATED)
+        -:  795:# define _GLIBCXX_DEPRECATED_PAIR_CTOR \
+        -:  796:      __attribute__ ((__deprecated__ ("use 'nullptr' instead of '0' to " \
+        -:  797:				      "initialize std::pair of move-only " \
+        -:  798:				      "type and pointer")))
+        -:  799:#else
+        -:  800:# define _GLIBCXX_DEPRECATED_PAIR_CTOR
+        -:  801:#endif
+        -:  802:
+        -:  803:    private:
+        -:  804:      /// @cond undocumented
+        -:  805:
+        -:  806:      // A type which can be constructed from literal zero, but not nullptr
+        -:  807:      struct __zero_as_null_pointer_constant
+        -:  808:      {
+        -:  809:	__zero_as_null_pointer_constant(int __zero_as_null_pointer_constant::*)
+        -:  810:	{ }
+        -:  811:	template<typename _Tp,
+        -:  812:		 typename = __enable_if_t<is_null_pointer<_Tp>::value>>
+        -:  813:	__zero_as_null_pointer_constant(_Tp) = delete;
+        -:  814:      };
+        -:  815:      /// @endcond
+        -:  816:    public:
+        -:  817:
+        -:  818:      // Deprecated extensions to DR 811.
+        -:  819:      // These allow construction from an rvalue and a literal zero,
+        -:  820:      // in cases where the standard says the zero should be deduced as int
+        -:  821:      template<typename _U1,
+        -:  822:	       __enable_if_t<__and_<__not_<is_reference<_U1>>,
+        -:  823:				    is_pointer<_T2>,
+        -:  824:				    is_constructible<_T1, _U1>,
+        -:  825:				    __not_<is_constructible<_T1, const _U1&>>,
+        -:  826:				    is_convertible<_U1, _T1>>::value,
+        -:  827:			     bool> = true>
+        -:  828:	_GLIBCXX_DEPRECATED_PAIR_CTOR
+        -:  829:	constexpr
+        -:  830:	pair(_U1&& __x, __zero_as_null_pointer_constant, ...)
+        -:  831:	: first(std::forward<_U1>(__x)), second(nullptr)
+        -:  832:	{ __glibcxx_no_dangling_refs(_U1&&, std::nullptr_t); }
+        -:  833:
+        -:  834:      template<typename _U1,
+        -:  835:	       __enable_if_t<__and_<__not_<is_reference<_U1>>,
+        -:  836:				    is_pointer<_T2>,
+        -:  837:				    is_constructible<_T1, _U1>,
+        -:  838:				    __not_<is_constructible<_T1, const _U1&>>,
+        -:  839:				    __not_<is_convertible<_U1, _T1>>>::value,
+        -:  840:			     bool> = false>
+        -:  841:	_GLIBCXX_DEPRECATED_PAIR_CTOR
+        -:  842:	explicit constexpr
+        -:  843:	pair(_U1&& __x, __zero_as_null_pointer_constant, ...)
+        -:  844:	: first(std::forward<_U1>(__x)), second(nullptr)
+        -:  845:	{ __glibcxx_no_dangling_refs(_U1&&, std::nullptr_t); }
+        -:  846:
+        -:  847:      template<typename _U2,
+        -:  848:	       __enable_if_t<__and_<is_pointer<_T1>,
+        -:  849:				    __not_<is_reference<_U2>>,
+        -:  850:				    is_constructible<_T2, _U2>,
+        -:  851:				    __not_<is_constructible<_T2, const _U2&>>,
+        -:  852:				    is_convertible<_U2, _T2>>::value,
+        -:  853:			     bool> = true>
+        -:  854:	_GLIBCXX_DEPRECATED_PAIR_CTOR
+        -:  855:	constexpr
+        -:  856:	pair(__zero_as_null_pointer_constant, _U2&& __y, ...)
+        -:  857:	: first(nullptr), second(std::forward<_U2>(__y))
+        -:  858:	{ __glibcxx_no_dangling_refs(std::nullptr_t, _U2&&); }
+        -:  859:
+        -:  860:      template<typename _U2,
+        -:  861:	       __enable_if_t<__and_<is_pointer<_T1>,
+        -:  862:				    __not_<is_reference<_U2>>,
+        -:  863:				    is_constructible<_T2, _U2>,
+        -:  864:				    __not_<is_constructible<_T2, const _U2&>>,
+        -:  865:				    __not_<is_convertible<_U2, _T2>>>::value,
+        -:  866:			     bool> = false>
+        -:  867:	_GLIBCXX_DEPRECATED_PAIR_CTOR
+        -:  868:	explicit constexpr
+        -:  869:	pair(__zero_as_null_pointer_constant, _U2&& __y, ...)
+        -:  870:	: first(nullptr), second(std::forward<_U2>(__y))
+        -:  871:	{ __glibcxx_no_dangling_refs(std::nullptr_t, _U2&&); }
+        -:  872:#undef _GLIBCXX_DEPRECATED_PAIR_CTOR
+        -:  873:#endif
+        -:  874:
+        -:  875:      template<typename _U1, typename _U2, typename
+        -:  876:	       enable_if<_PCCP::template
+        -:  877:			   _MoveConstructiblePair<_U1, _U2>()
+        -:  878:			  && _PCCP::template
+        -:  879:			   _ImplicitlyMoveConvertiblePair<_U1, _U2>(),
+        -:  880:                         bool>::type=true>
+        -:  881:	constexpr pair(_U1&& __x, _U2&& __y)
+        -:  882:	: first(std::forward<_U1>(__x)), second(std::forward<_U2>(__y))
+        -:  883:	{ __glibcxx_no_dangling_refs(_U1&&, _U2&&); }
+        -:  884:
+        -:  885:      template<typename _U1, typename _U2, typename
+        -:  886:	       enable_if<_PCCP::template
+        -:  887:			   _MoveConstructiblePair<_U1, _U2>()
+        -:  888:			  && !_PCCP::template
+        -:  889:			   _ImplicitlyMoveConvertiblePair<_U1, _U2>(),
+        -:  890:                         bool>::type=false>
+        -:  891:	explicit constexpr pair(_U1&& __x, _U2&& __y)
+        -:  892:	: first(std::forward<_U1>(__x)), second(std::forward<_U2>(__y))
+        -:  893:	{ __glibcxx_no_dangling_refs(_U1&&, _U2&&); }
+        -:  894:
+        -:  895:
+        -:  896:      template<typename _U1, typename _U2, typename
+        -:  897:	       enable_if<_PCCFP<_U1, _U2>::template
+        -:  898:			   _MoveConstructiblePair<_U1, _U2>()
+        -:  899:			  && _PCCFP<_U1, _U2>::template
+        -:  900:			   _ImplicitlyMoveConvertiblePair<_U1, _U2>(),
+        -:  901:                         bool>::type=true>
+        -:  902:	constexpr pair(pair<_U1, _U2>&& __p)
+        -:  903:	: first(std::forward<_U1>(__p.first)),
+        -:  904:	  second(std::forward<_U2>(__p.second))
+        -:  905:	{ __glibcxx_no_dangling_refs(_U1&&, _U2&&); }
+        -:  906:
+        -:  907:      template<typename _U1, typename _U2, typename
+        -:  908:	       enable_if<_PCCFP<_U1, _U2>::template
+        -:  909:			   _MoveConstructiblePair<_U1, _U2>()
+        -:  910:			  && !_PCCFP<_U1, _U2>::template
+        -:  911:			   _ImplicitlyMoveConvertiblePair<_U1, _U2>(),
+        -:  912:                         bool>::type=false>
+        -:  913:	explicit constexpr pair(pair<_U1, _U2>&& __p)
+        -:  914:	: first(std::forward<_U1>(__p.first)),
+        -:  915:	  second(std::forward<_U2>(__p.second))
+        -:  916:	{ __glibcxx_no_dangling_refs(_U1&&, _U2&&); }
+        -:  917:
+        -:  918:#undef __glibcxx_no_dangling_refs
+        -:  919:
+        -:  920:      pair&
+        -:  921:      operator=(__conditional_t<__and_<is_copy_assignable<_T1>,
+        -:  922:				       is_copy_assignable<_T2>>::value,
+        -:  923:				const pair&, const __nonesuch&> __p)
+        -:  924:      {
+        -:  925:	first = __p.first;
+        -:  926:	second = __p.second;
+        -:  927:	return *this;
+        -:  928:      }
+        -:  929:
+        -:  930:      pair&
+        -:  931:      operator=(__conditional_t<__and_<is_move_assignable<_T1>,
+        -:  932:				       is_move_assignable<_T2>>::value,
+        -:  933:				pair&&, __nonesuch&&> __p)
+        -:  934:      noexcept(__and_<is_nothrow_move_assignable<_T1>,
+        -:  935:		      is_nothrow_move_assignable<_T2>>::value)
+        -:  936:      {
+        -:  937:	first = std::forward<first_type>(__p.first);
+        -:  938:	second = std::forward<second_type>(__p.second);
+        -:  939:	return *this;
+        -:  940:      }
+        -:  941:
+        -:  942:      template<typename _U1, typename _U2>
+        -:  943:	typename enable_if<__and_<is_assignable<_T1&, const _U1&>,
+        -:  944:				  is_assignable<_T2&, const _U2&>>::value,
+        -:  945:			   pair&>::type
+        -:  946:	operator=(const pair<_U1, _U2>& __p)
+        -:  947:	{
+        -:  948:	  first = __p.first;
+        -:  949:	  second = __p.second;
+        -:  950:	  return *this;
+        -:  951:	}
+        -:  952:
+        -:  953:      template<typename _U1, typename _U2>
+        -:  954:	typename enable_if<__and_<is_assignable<_T1&, _U1&&>,
+        -:  955:				  is_assignable<_T2&, _U2&&>>::value,
+        -:  956:			   pair&>::type
+        -:  957:	operator=(pair<_U1, _U2>&& __p)
+        -:  958:	{
+        -:  959:	  first = std::forward<_U1>(__p.first);
+        -:  960:	  second = std::forward<_U2>(__p.second);
+        -:  961:	  return *this;
+        -:  962:	}
+        -:  963:#endif // lib concepts
+        -:  964:#else
+        -:  965:      // C++03 implementation
+        -:  966:
+        -:  967:      // _GLIBCXX_RESOLVE_LIB_DEFECTS
+        -:  968:      // 265.  std::pair::pair() effects overly restrictive
+        -:  969:      /** The default constructor creates @c first and @c second using their
+        -:  970:       *  respective default constructors.  */
+        -:  971:      pair() : first(), second() { }
+        -:  972:
+        -:  973:      /// Two objects may be passed to a `pair` constructor to be copied.
+        -:  974:      pair(const _T1& __a, const _T2& __b)
+        -:  975:      : first(__a), second(__b) { }
+        -:  976:
+        -:  977:      /// Templated constructor to convert from other pairs.
+        -:  978:      template<typename _U1, typename _U2>
+        -:  979:	pair(const pair<_U1, _U2>& __p)
+        -:  980:	: first(__p.first), second(__p.second)
+        -:  981:	{
+        -:  982:#if __has_builtin(__reference_constructs_from_temporary)
+        -:  983:#pragma GCC diagnostic push
+        -:  984:#pragma GCC diagnostic ignored "-Wunused-local-typedefs"
+        -:  985:	  typedef int _DanglingCheck1[
+        -:  986:	    __reference_constructs_from_temporary(_T1, const _U1&) ? -1 : 1
+        -:  987:		      ];
+        -:  988:	  typedef int _DanglingCheck2[
+        -:  989:	    __reference_constructs_from_temporary(_T2, const _U2&) ? -1 : 1
+        -:  990:		      ];
+        -:  991:#pragma GCC diagnostic pop
+        -:  992:#endif
+        -:  993:	}
+        -:  994:#endif // C++11
+        -:  995:    };
+        -:  996:
+        -:  997:  /// @relates pair @{
+        -:  998:
+        -:  999:#if __cpp_deduction_guides >= 201606
+        -: 1000:  template<typename _T1, typename _T2> pair(_T1, _T2) -> pair<_T1, _T2>;
+        -: 1001:#endif
+        -: 1002:
+        -: 1003:#if __cpp_lib_three_way_comparison && __cpp_lib_concepts
+        -: 1004:  // _GLIBCXX_RESOLVE_LIB_DEFECTS
+        -: 1005:  // 3865. Sorting a range of pairs
+        -: 1006:
+        -: 1007:  /// Two pairs are equal iff their members are equal.
+        -: 1008:  template<typename _T1, typename _T2, typename _U1, typename _U2>
+        -: 1009:    inline _GLIBCXX_CONSTEXPR bool
+        -: 1010:    operator==(const pair<_T1, _T2>& __x, const pair<_U1, _U2>& __y)
+        -: 1011:    { return __x.first == __y.first && __x.second == __y.second; }
+        -: 1012:
+        -: 1013:  /** Defines a lexicographical order for pairs.
+        -: 1014:   *
+        -: 1015:   * For two pairs of comparable types, `P` is ordered before `Q` if
+        -: 1016:   * `P.first` is less than `Q.first`, or if `P.first` and `Q.first`
+        -: 1017:   * are equivalent (neither is less than the other) and `P.second` is
+        -: 1018:   * less than `Q.second`.
+        -: 1019:  */
+        -: 1020:  template<typename _T1, typename _T2, typename _U1, typename _U2>
+        -: 1021:    constexpr common_comparison_category_t<__detail::__synth3way_t<_T1, _U1>,
+        -: 1022:					   __detail::__synth3way_t<_T2, _U2>>
+        -: 1023:    operator<=>(const pair<_T1, _T2>& __x, const pair<_U1, _U2>& __y)
+        -: 1024:    {
+        -: 1025:      if (auto __c = __detail::__synth3way(__x.first, __y.first); __c != 0)
+        -: 1026:	return __c;
+        -: 1027:      return __detail::__synth3way(__x.second, __y.second);
+        -: 1028:    }
+        -: 1029:#else
+        -: 1030:  /// Two pairs of the same type are equal iff their members are equal.
+        -: 1031:  template<typename _T1, typename _T2>
+        -: 1032:    inline _GLIBCXX_CONSTEXPR bool
+        -: 1033:    operator==(const pair<_T1, _T2>& __x, const pair<_T1, _T2>& __y)
+        -: 1034:    { return __x.first == __y.first && __x.second == __y.second; }
+        -: 1035:
+        -: 1036:  /** Defines a lexicographical order for pairs.
+        -: 1037:   *
+        -: 1038:   * For two pairs of the same type, `P` is ordered before `Q` if
+        -: 1039:   * `P.first` is less than `Q.first`, or if `P.first` and `Q.first`
+        -: 1040:   * are equivalent (neither is less than the other) and `P.second` is less
+        -: 1041:   * than `Q.second`.
+        -: 1042:  */
+        -: 1043:  template<typename _T1, typename _T2>
+        -: 1044:    inline _GLIBCXX_CONSTEXPR bool
+        -: 1045:    operator<(const pair<_T1, _T2>& __x, const pair<_T1, _T2>& __y)
+        -: 1046:    { return __x.first < __y.first
+        -: 1047:	     || (!(__y.first < __x.first) && __x.second < __y.second); }
+        -: 1048:
+        -: 1049:  /// Uses @c operator== to find the result.
+        -: 1050:  template<typename _T1, typename _T2>
+        -: 1051:    inline _GLIBCXX_CONSTEXPR bool
+        -: 1052:    operator!=(const pair<_T1, _T2>& __x, const pair<_T1, _T2>& __y)
+        -: 1053:    { return !(__x == __y); }
+        -: 1054:
+        -: 1055:  /// Uses @c operator< to find the result.
+        -: 1056:  template<typename _T1, typename _T2>
+        -: 1057:    inline _GLIBCXX_CONSTEXPR bool
+        -: 1058:    operator>(const pair<_T1, _T2>& __x, const pair<_T1, _T2>& __y)
+        -: 1059:    { return __y < __x; }
+        -: 1060:
+        -: 1061:  /// Uses @c operator< to find the result.
+        -: 1062:  template<typename _T1, typename _T2>
+        -: 1063:    inline _GLIBCXX_CONSTEXPR bool
+        -: 1064:    operator<=(const pair<_T1, _T2>& __x, const pair<_T1, _T2>& __y)
+        -: 1065:    { return !(__y < __x); }
+        -: 1066:
+        -: 1067:  /// Uses @c operator< to find the result.
+        -: 1068:  template<typename _T1, typename _T2>
+        -: 1069:    inline _GLIBCXX_CONSTEXPR bool
+        -: 1070:    operator>=(const pair<_T1, _T2>& __x, const pair<_T1, _T2>& __y)
+        -: 1071:    { return !(__x < __y); }
+        -: 1072:#endif // !(three_way_comparison && concepts)
+        -: 1073:
+        -: 1074:#if __cplusplus >= 201103L
+        -: 1075:  /** Swap overload for pairs. Calls std::pair::swap().
+        -: 1076:   *
+        -: 1077:   * @note This std::swap overload is not declared in C++03 mode,
+        -: 1078:   * which has performance implications, e.g. see https://gcc.gnu.org/PR38466
+        -: 1079:  */
+        -: 1080:  template<typename _T1, typename _T2>
+        -: 1081:    _GLIBCXX20_CONSTEXPR inline
+        -: 1082:#if __cplusplus > 201402L || !defined(__STRICT_ANSI__) // c++1z or gnu++11
+        -: 1083:    // Constrained free swap overload, see p0185r1
+        -: 1084:    typename enable_if<__and_<__is_swappable<_T1>,
+        -: 1085:                              __is_swappable<_T2>>::value>::type
+        -: 1086:#else
+        -: 1087:    void
+        -: 1088:#endif
+        -: 1089:    swap(pair<_T1, _T2>& __x, pair<_T1, _T2>& __y)
+        -: 1090:    noexcept(noexcept(__x.swap(__y)))
+        -: 1091:    { __x.swap(__y); }
+        -: 1092:
+        -: 1093:#if __glibcxx_ranges_zip // >= C++23
+        -: 1094:  template<typename _T1, typename _T2>
+        -: 1095:    requires is_swappable_v<const _T1> && is_swappable_v<const _T2>
+        -: 1096:    constexpr void
+        -: 1097:    swap(const pair<_T1, _T2>& __x, const pair<_T1, _T2>& __y)
+        -: 1098:    noexcept(noexcept(__x.swap(__y)))
+        -: 1099:    { __x.swap(__y); }
+        -: 1100:#endif // C++23
+        -: 1101:
+        -: 1102:#if __cplusplus > 201402L || !defined(__STRICT_ANSI__) // c++1z or gnu++11
+        -: 1103:  template<typename _T1, typename _T2>
+        -: 1104:    typename enable_if<!__and_<__is_swappable<_T1>,
+        -: 1105:			       __is_swappable<_T2>>::value>::type
+        -: 1106:    swap(pair<_T1, _T2>&, pair<_T1, _T2>&) = delete;
+        -: 1107:#endif
+        -: 1108:#endif // __cplusplus >= 201103L
+        -: 1109:
+        -: 1110:  /// @} relates pair
+        -: 1111:
+        -: 1112:  /**
+        -: 1113:   *  @brief A convenience wrapper for creating a pair from two objects.
+        -: 1114:   *  @param  __x  The first object.
+        -: 1115:   *  @param  __y  The second object.
+        -: 1116:   *  @return   A newly-constructed pair<> object of the appropriate type.
+        -: 1117:   *
+        -: 1118:   *  The C++98 standard says the objects are passed by reference-to-const,
+        -: 1119:   *  but C++03 says they are passed by value (this was LWG issue #181).
+        -: 1120:   *
+        -: 1121:   *  Since C++11 they have been passed by forwarding reference and then
+        -: 1122:   *  forwarded to the new members of the pair. To create a pair with a
+        -: 1123:   *  member of reference type, pass a `reference_wrapper` to this function.
+        -: 1124:   */
+        -: 1125:  // _GLIBCXX_RESOLVE_LIB_DEFECTS
+        -: 1126:  // 181.  make_pair() unintended behavior
+        -: 1127:#if __cplusplus >= 201103L
+        -: 1128:  // NB: DR 706.
+        -: 1129:  template<typename _T1, typename _T2>
+        -: 1130:    constexpr pair<typename __decay_and_strip<_T1>::__type,
+        -: 1131:                   typename __decay_and_strip<_T2>::__type>
+function _ZSt9make_pairIN3tsl19detail_ordered_hash12ordered_hashISt4pairINSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEES3_ImmEENS0_11ordered_mapIS9_SA_St4hashIS9_ESt8equal_toIS9_ESaISB_ESt5dequeISB_SH_EjE9KeySelectENSK_11ValueSelectESE_SG_SH_SJ_jE16ordered_iteratorILb0EEEbES3_INSt25__strip_reference_wrapperINSt5decayIT_E4typeEE6__typeENSQ_INSR_IT0_E4typeEE6__typeEEOSS_OSX_ called 0 returned 0% blocks executed 0%
+    #####: 1132:    make_pair(_T1&& __x, _T2&& __y)
+        -: 1133:    {
+        -: 1134:      typedef typename __decay_and_strip<_T1>::__type __ds_type1;
+        -: 1135:      typedef typename __decay_and_strip<_T2>::__type __ds_type2;
+        -: 1136:      typedef pair<__ds_type1, __ds_type2> 	      __pair_type;
+    #####: 1137:      return __pair_type(std::forward<_T1>(__x), std::forward<_T2>(__y));
+    %%%%%: 1137-block 2
+call    0 never executed
+call    1 never executed
+call    2 never executed
+        -: 1138:    }
+        -: 1139:#else
+        -: 1140:  template<typename _T1, typename _T2>
+        -: 1141:    inline pair<_T1, _T2>
+        -: 1142:    make_pair(_T1 __x, _T2 __y)
+        -: 1143:    { return pair<_T1, _T2>(__x, __y); }
+        -: 1144:#endif
+        -: 1145:
+        -: 1146:  /// @}
+        -: 1147:
+        -: 1148:#if __cplusplus >= 201103L
+        -: 1149:  // Various functions which give std::pair a tuple-like interface.
+        -: 1150:
+        -: 1151:  /// @cond undocumented
+        -: 1152:  template<typename _T1, typename _T2>
+        -: 1153:    struct __is_tuple_like_impl<pair<_T1, _T2>> : true_type
+        -: 1154:    { };
+        -: 1155:  /// @endcond
+        -: 1156:
+        -: 1157:  /// Partial specialization for std::pair
+        -: 1158:  template<class _Tp1, class _Tp2>
+        -: 1159:    struct tuple_size<pair<_Tp1, _Tp2>>
+        -: 1160:    : public integral_constant<size_t, 2> { };
+        -: 1161:
+        -: 1162:  /// Partial specialization for std::pair
+        -: 1163:  template<class _Tp1, class _Tp2>
+        -: 1164:    struct tuple_element<0, pair<_Tp1, _Tp2>>
+        -: 1165:    { typedef _Tp1 type; };
+        -: 1166:
+        -: 1167:  /// Partial specialization for std::pair
+        -: 1168:  template<class _Tp1, class _Tp2>
+        -: 1169:    struct tuple_element<1, pair<_Tp1, _Tp2>>
+        -: 1170:    { typedef _Tp2 type; };
+        -: 1171:
+        -: 1172:  // Forward declare the partial specialization for std::tuple
+        -: 1173:  // to work around modules bug PR c++/113814.
+        -: 1174:  template<size_t __i, typename... _Types>
+        -: 1175:    struct tuple_element<__i, tuple<_Types...>>;
+        -: 1176:
+        -: 1177:#if __cplusplus >= 201703L
+        -: 1178:  template<typename _Tp1, typename _Tp2>
+        -: 1179:    inline constexpr size_t tuple_size_v<pair<_Tp1, _Tp2>> = 2;
+        -: 1180:
+        -: 1181:  template<typename _Tp1, typename _Tp2>
+        -: 1182:    inline constexpr size_t tuple_size_v<const pair<_Tp1, _Tp2>> = 2;
+        -: 1183:
+        -: 1184:  template<typename _Tp>
+        -: 1185:    inline constexpr bool __is_pair = false;
+        -: 1186:
+        -: 1187:  template<typename _Tp, typename _Up>
+        -: 1188:    inline constexpr bool __is_pair<pair<_Tp, _Up>> = true;
+        -: 1189:#endif
+        -: 1190:
+        -: 1191:  /// @cond undocumented
+        -: 1192:  template<size_t _Int>
+        -: 1193:    struct __pair_get;
+        -: 1194:
+        -: 1195:  template<>
+        -: 1196:    struct __pair_get<0>
+        -: 1197:    {
+        -: 1198:      template<typename _Tp1, typename _Tp2>
+        -: 1199:	static constexpr _Tp1&
+        -: 1200:	__get(pair<_Tp1, _Tp2>& __pair) noexcept
+        -: 1201:	{ return __pair.first; }
+        -: 1202:
+        -: 1203:      template<typename _Tp1, typename _Tp2>
+        -: 1204:	static constexpr _Tp1&&
+function _ZNSt10__pair_getILm0EE10__move_getINSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEmEEOT_OSt4pairIS8_T0_E called 4 returned 100% blocks executed 100%
+        4: 1205:	__move_get(pair<_Tp1, _Tp2>&& __pair) noexcept
+        4: 1206:	{ return std::forward<_Tp1>(__pair.first); }
+        4: 1206-block 2
+call    0 returned 4
+        -: 1207:
+        -: 1208:      template<typename _Tp1, typename _Tp2>
+        -: 1209:	static constexpr const _Tp1&
+        -: 1210:	__const_get(const pair<_Tp1, _Tp2>& __pair) noexcept
+        -: 1211:	{ return __pair.first; }
+        -: 1212:
+        -: 1213:      template<typename _Tp1, typename _Tp2>
+        -: 1214:	static constexpr const _Tp1&&
+        -: 1215:	__const_move_get(const pair<_Tp1, _Tp2>&& __pair) noexcept
+        -: 1216:	{ return std::forward<const _Tp1>(__pair.first); }
+        -: 1217:    };
+        -: 1218:
+        -: 1219:  template<>
+        -: 1220:    struct __pair_get<1>
+        -: 1221:    {
+        -: 1222:      template<typename _Tp1, typename _Tp2>
+        -: 1223:	static constexpr _Tp2&
+        -: 1224:	__get(pair<_Tp1, _Tp2>& __pair) noexcept
+        -: 1225:	{ return __pair.second; }
+        -: 1226:
+        -: 1227:      template<typename _Tp1, typename _Tp2>
+        -: 1228:	static constexpr _Tp2&&
+function _ZNSt10__pair_getILm1EE10__move_getINSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEmEEOT0_OSt4pairIT_S8_E called 4 returned 100% blocks executed 100%
+        4: 1229:	__move_get(pair<_Tp1, _Tp2>&& __pair) noexcept
+        4: 1230:	{ return std::forward<_Tp2>(__pair.second); }
+        4: 1230-block 2
+call    0 returned 4
+        -: 1231:
+        -: 1232:      template<typename _Tp1, typename _Tp2>
+        -: 1233:	static constexpr const _Tp2&
+        -: 1234:	__const_get(const pair<_Tp1, _Tp2>& __pair) noexcept
+        -: 1235:	{ return __pair.second; }
+        -: 1236:
+        -: 1237:      template<typename _Tp1, typename _Tp2>
+        -: 1238:	static constexpr const _Tp2&&
+        -: 1239:	__const_move_get(const pair<_Tp1, _Tp2>&& __pair) noexcept
+        -: 1240:	{ return std::forward<const _Tp2>(__pair.second); }
+        -: 1241:    };
+        -: 1242:  /// @endcond
+        -: 1243:
+        -: 1244:  /** @{
+        -: 1245:   * std::get overloads for accessing members of std::pair
+        -: 1246:   */
+        -: 1247:
+        -: 1248:  template<size_t _Int, class _Tp1, class _Tp2>
+        -: 1249:    constexpr typename tuple_element<_Int, pair<_Tp1, _Tp2>>::type&
+        -: 1250:    get(pair<_Tp1, _Tp2>& __in) noexcept
+        -: 1251:    { return __pair_get<_Int>::__get(__in); }
+        -: 1252:
+        -: 1253:  template<size_t _Int, class _Tp1, class _Tp2>
+        -: 1254:    constexpr typename tuple_element<_Int, pair<_Tp1, _Tp2>>::type&&
+        8: 1255:    get(pair<_Tp1, _Tp2>&& __in) noexcept
+        8: 1256:    { return __pair_get<_Int>::__move_get(std::move(__in)); }
+------------------
+_ZSt3getILm1ENSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEmEONSt13tuple_elementIXT_ESt4pairIT0_T1_EE4typeEOSA_:
+function _ZSt3getILm1ENSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEmEONSt13tuple_elementIXT_ESt4pairIT0_T1_EE4typeEOSA_ called 4 returned 100% blocks executed 100%
+        4: 1255:    get(pair<_Tp1, _Tp2>&& __in) noexcept
+        4: 1256:    { return __pair_get<_Int>::__move_get(std::move(__in)); }
+        4: 1256-block 2
+call    0 returned 4
+call    1 returned 4
+------------------
+_ZSt3getILm0ENSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEmEONSt13tuple_elementIXT_ESt4pairIT0_T1_EE4typeEOSA_:
+function _ZSt3getILm0ENSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEmEONSt13tuple_elementIXT_ESt4pairIT0_T1_EE4typeEOSA_ called 4 returned 100% blocks executed 100%
+        4: 1255:    get(pair<_Tp1, _Tp2>&& __in) noexcept
+        4: 1256:    { return __pair_get<_Int>::__move_get(std::move(__in)); }
+        4: 1256-block 2
+call    0 returned 4
+call    1 returned 4
+------------------
+        -: 1257:
+        -: 1258:  template<size_t _Int, class _Tp1, class _Tp2>
+        -: 1259:    constexpr const typename tuple_element<_Int, pair<_Tp1, _Tp2>>::type&
+        -: 1260:    get(const pair<_Tp1, _Tp2>& __in) noexcept
+        -: 1261:    { return __pair_get<_Int>::__const_get(__in); }
+        -: 1262:
+        -: 1263:  template<size_t _Int, class _Tp1, class _Tp2>
+        -: 1264:    constexpr const typename tuple_element<_Int, pair<_Tp1, _Tp2>>::type&&
+        -: 1265:    get(const pair<_Tp1, _Tp2>&& __in) noexcept
+        -: 1266:    { return __pair_get<_Int>::__const_move_get(std::move(__in)); }
+        -: 1267:
+        -: 1268:
+        -: 1269:#ifdef __glibcxx_tuples_by_type // C++ >= 14
+        -: 1270:  template <typename _Tp, typename _Up>
+        -: 1271:    constexpr _Tp&
+        -: 1272:    get(pair<_Tp, _Up>& __p) noexcept
+        -: 1273:    { return __p.first; }
+        -: 1274:
+        -: 1275:  template <typename _Tp, typename _Up>
+        -: 1276:    constexpr const _Tp&
+        -: 1277:    get(const pair<_Tp, _Up>& __p) noexcept
+        -: 1278:    { return __p.first; }
+        -: 1279:
+        -: 1280:  template <typename _Tp, typename _Up>
+        -: 1281:    constexpr _Tp&&
+        -: 1282:    get(pair<_Tp, _Up>&& __p) noexcept
+        -: 1283:    { return std::move(__p.first); }
+        -: 1284:
+        -: 1285:  template <typename _Tp, typename _Up>
+        -: 1286:    constexpr const _Tp&&
+        -: 1287:    get(const pair<_Tp, _Up>&& __p) noexcept
+        -: 1288:    { return std::move(__p.first); }
+        -: 1289:
+        -: 1290:  template <typename _Tp, typename _Up>
+        -: 1291:    constexpr _Tp&
+        -: 1292:    get(pair<_Up, _Tp>& __p) noexcept
+        -: 1293:    { return __p.second; }
+        -: 1294:
+        -: 1295:  template <typename _Tp, typename _Up>
+        -: 1296:    constexpr const _Tp&
+        -: 1297:    get(const pair<_Up, _Tp>& __p) noexcept
+        -: 1298:    { return __p.second; }
+        -: 1299:
+        -: 1300:  template <typename _Tp, typename _Up>
+        -: 1301:    constexpr _Tp&&
+        -: 1302:    get(pair<_Up, _Tp>&& __p) noexcept
+        -: 1303:    { return std::move(__p.second); }
+        -: 1304:
+        -: 1305:  template <typename _Tp, typename _Up>
+        -: 1306:    constexpr const _Tp&&
+        -: 1307:    get(const pair<_Up, _Tp>&& __p) noexcept
+        -: 1308:    { return std::move(__p.second); }
+        -: 1309:#endif // __glibcxx_tuples_by_type
+        -: 1310:
+        -: 1311:
+        -: 1312:#if __glibcxx_ranges_zip // >= C++23
+        -: 1313:  template<typename _T1, typename _T2, typename _U1, typename _U2,
+        -: 1314:	   template<typename> class _TQual, template<typename> class _UQual>
+        -: 1315:    requires requires { typename pair<common_reference_t<_TQual<_T1>, _UQual<_U1>>,
+        -: 1316:				      common_reference_t<_TQual<_T2>, _UQual<_U2>>>; }
+        -: 1317:  struct basic_common_reference<pair<_T1, _T2>, pair<_U1, _U2>, _TQual, _UQual>
+        -: 1318:  {
+        -: 1319:    using type = pair<common_reference_t<_TQual<_T1>, _UQual<_U1>>,
+        -: 1320:		      common_reference_t<_TQual<_T2>, _UQual<_U2>>>;
+        -: 1321:  };
+        -: 1322:
+        -: 1323:  template<typename _T1, typename _T2, typename _U1, typename _U2>
+        -: 1324:    requires requires { typename pair<common_type_t<_T1, _U1>, common_type_t<_T2, _U2>>; }
+        -: 1325:  struct common_type<pair<_T1, _T2>, pair<_U1, _U2>>
+        -: 1326:  { using type = pair<common_type_t<_T1, _U1>, common_type_t<_T2, _U2>>; };
+        -: 1327:#endif // C++23
+        -: 1328:
+        -: 1329:  /// @}
+        -: 1330:#endif // C++11
+        -: 1331:
+        -: 1332:_GLIBCXX_END_NAMESPACE_VERSION
+        -: 1333:} // namespace std
+        -: 1334:
+        -: 1335:#endif /* _STL_PAIR_H */

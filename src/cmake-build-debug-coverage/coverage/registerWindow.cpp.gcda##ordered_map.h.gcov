@@ -1,0 +1,1055 @@
+        -:    0:Source:/home/rc/ZathuraDbg/vendor/ordered-map/include/tsl/ordered_map.h
+        -:    0:Graph:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/app/windows/registerWindow.cpp.gcno
+        -:    0:Data:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/app/windows/registerWindow.cpp.gcda
+        -:    0:Runs:1
+        -:    1:/**
+        -:    2: * MIT License
+        -:    3: *
+        -:    4: * Copyright (c) 2017 Thibaut Goetghebuer-Planchon <tessil@gmx.com>
+        -:    5: *
+        -:    6: * Permission is hereby granted, free of charge, to any person obtaining a copy
+        -:    7: * of this software and associated documentation files (the "Software"), to deal
+        -:    8: * in the Software without restriction, including without limitation the rights
+        -:    9: * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+        -:   10: * copies of the Software, and to permit persons to whom the Software is
+        -:   11: * furnished to do so, subject to the following conditions:
+        -:   12: *
+        -:   13: * The above copyright notice and this permission notice shall be included in
+        -:   14: * all copies or substantial portions of the Software.
+        -:   15: *
+        -:   16: * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+        -:   17: * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+        -:   18: * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+        -:   19: * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+        -:   20: * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+        -:   21: * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+        -:   22: * SOFTWARE.
+        -:   23: */
+        -:   24:#ifndef TSL_ORDERED_MAP_H
+        -:   25:#define TSL_ORDERED_MAP_H
+        -:   26:
+        -:   27:#include <cstddef>
+        -:   28:#include <cstdint>
+        -:   29:#include <deque>
+        -:   30:#include <functional>
+        -:   31:#include <initializer_list>
+        -:   32:#include <memory>
+        -:   33:#include <type_traits>
+        -:   34:#include <utility>
+        -:   35:#include <vector>
+        -:   36:
+        -:   37:#include "ordered_hash.h"
+        -:   38:
+        -:   39:namespace tsl {
+        -:   40:
+        -:   41:/**
+        -:   42: * Implementation of an hash map using open addressing with robin hood with
+        -:   43: * backshift delete to resolve collisions.
+        -:   44: *
+        -:   45: * The particularity of this hash map is that it remembers the order in which
+        -:   46: * the elements were added and provide a way to access the structure which
+        -:   47: * stores these values through the 'values_container()' method. The used
+        -:   48: * container is defined by ValueTypeContainer, by default a std::deque is used
+        -:   49: * (grows faster) but a std::vector may be used. In this case the map provides a
+        -:   50: * 'data()' method which give a direct access to the memory used to store the
+        -:   51: * values (which can be useful to communicate with C API's).
+        -:   52: *
+        -:   53: * The Key and T must be copy constructible and/or move constructible. To use
+        -:   54: * `unordered_erase` they both must be swappable.
+        -:   55: *
+        -:   56: * The behaviour of the hash map is undefined if the destructor of Key or T
+        -:   57: * throws an exception.
+        -:   58: *
+        -:   59: * By default the maximum size of a map is limited to 2^32 - 1 values, if needed
+        -:   60: * this can be changed through the IndexType template parameter. Using an
+        -:   61: * `uint64_t` will raise this limit to 2^64 - 1 values but each bucket will use
+        -:   62: * 16 bytes instead of 8 bytes in addition to the space needed to store the
+        -:   63: * values.
+        -:   64: *
+        -:   65: * Iterators invalidation:
+        -:   66: *  - clear, operator=, reserve, rehash: always invalidate the iterators (also
+        -:   67: * invalidate end()).
+        -:   68: *  - insert, emplace, emplace_hint, operator[]: when a std::vector is used as
+        -:   69: * ValueTypeContainer and if size() < capacity(), only end(). Otherwise all the
+        -:   70: * iterators are invalidated if an insert occurs.
+        -:   71: *  - erase, unordered_erase: when a std::vector is used as ValueTypeContainer
+        -:   72: * invalidate the iterator of the erased element and all the ones after the
+        -:   73: * erased element (including end()). Otherwise all the iterators are invalidated
+        -:   74: * if an erase occurs.
+        -:   75: */
+        -:   76:template <class Key, class T, class Hash = std::hash<Key>,
+        -:   77:          class KeyEqual = std::equal_to<Key>,
+        -:   78:          class Allocator = std::allocator<std::pair<Key, T>>,
+        -:   79:          class ValueTypeContainer = std::deque<std::pair<Key, T>, Allocator>,
+        -:   80:          class IndexType = std::uint_least32_t>
+        -:   81:class ordered_map {
+        -:   82: private:
+        -:   83:  template <typename U>
+        -:   84:  using has_is_transparent = tsl::detail_ordered_hash::has_is_transparent<U>;
+        -:   85:
+        -:   86:  class KeySelect {
+        -:   87:   public:
+        -:   88:    using key_type = Key;
+        -:   89:
+function _ZNK3tsl11ordered_mapINSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEES6_St4hashIS6_ESt8equal_toIS6_ESaISt4pairIS6_S6_EESt5dequeISC_SD_EjE9KeySelectclERKSC_ called 23694 returned 100% blocks executed 100%
+    23694:   90:    const key_type& operator()(
+        -:   91:        const std::pair<Key, T>& key_value) const noexcept {
+    23694:   92:      return key_value.first;
+    23694:   92-block 2
+        -:   93:    }
+        -:   94:
+function _ZN3tsl11ordered_mapINSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEES6_St4hashIS6_ESt8equal_toIS6_ESaISt4pairIS6_S6_EESt5dequeISC_SD_EjE9KeySelectclERSC_ called 5888 returned 100% blocks executed 100%
+     5888:   95:    key_type& operator()(std::pair<Key, T>& key_value) noexcept {
+     5888:   96:      return key_value.first;
+     5888:   96-block 2
+        -:   97:    }
+        -:   98:  };
+        -:   99:
+        -:  100:  class ValueSelect {
+        -:  101:   public:
+        -:  102:    using value_type = T;
+        -:  103:
+        -:  104:    const value_type& operator()(
+        -:  105:        const std::pair<Key, T>& key_value) const noexcept {
+        -:  106:      return key_value.second;
+        -:  107:    }
+        -:  108:
+function _ZN3tsl11ordered_mapINSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEES6_St4hashIS6_ESt8equal_toIS6_ESaISt4pairIS6_S6_EESt5dequeISC_SD_EjE11ValueSelectclERSC_ called 5911 returned 100% blocks executed 100%
+     5911:  109:    value_type& operator()(std::pair<Key, T>& key_value) noexcept {
+     5911:  110:      return key_value.second;
+     5911:  110-block 2
+        -:  111:    }
+        -:  112:  };
+        -:  113:
+        -:  114:  using ht =
+        -:  115:      detail_ordered_hash::ordered_hash<std::pair<Key, T>, KeySelect,
+        -:  116:                                        ValueSelect, Hash, KeyEqual, Allocator,
+        -:  117:                                        ValueTypeContainer, IndexType>;
+        -:  118:
+        -:  119: public:
+        -:  120:  using key_type = typename ht::key_type;
+        -:  121:  using mapped_type = T;
+        -:  122:  using value_type = typename ht::value_type;
+        -:  123:  using size_type = typename ht::size_type;
+        -:  124:  using difference_type = typename ht::difference_type;
+        -:  125:  using hasher = typename ht::hasher;
+        -:  126:  using key_equal = typename ht::key_equal;
+        -:  127:  using allocator_type = typename ht::allocator_type;
+        -:  128:  using reference = typename ht::reference;
+        -:  129:  using const_reference = typename ht::const_reference;
+        -:  130:  using pointer = typename ht::pointer;
+        -:  131:  using const_pointer = typename ht::const_pointer;
+        -:  132:  using iterator = typename ht::iterator;
+        -:  133:  using const_iterator = typename ht::const_iterator;
+        -:  134:  using reverse_iterator = typename ht::reverse_iterator;
+        -:  135:  using const_reverse_iterator = typename ht::const_reverse_iterator;
+        -:  136:
+        -:  137:  using values_container_type = typename ht::values_container_type;
+        -:  138:
+        -:  139:  /*
+        -:  140:   * Constructors
+        -:  141:   */
+function _ZN3tsl11ordered_mapINSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEES6_St4hashIS6_ESt8equal_toIS6_ESaISt4pairIS6_S6_EESt5dequeISC_SD_EjEC2Ev called 1 returned 100% blocks executed 60%
+        2:  142:  ordered_map() : ordered_map(ht::DEFAULT_INIT_BUCKETS_SIZE) {}
+        1:  142-block 2
+        1:  142-block 4
+call    0 returned 1
+branch  1 taken 1 (fallthrough)
+branch  2 taken 0 (throw)
+        1:  142-block 5
+        1:  142-block 6
+    $$$$$:  142-block 7
+    $$$$$:  142-block 8
+        -:  143:
+function _ZN3tsl11ordered_mapINSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEES6_St4hashIS6_ESt8equal_toIS6_ESaISt4pairIS6_S6_EESt5dequeISC_SD_EjEC2EmRKS8_RKSA_RKSD_ called 1 returned 100% blocks executed 100%
+        1:  144:  explicit ordered_map(size_type bucket_count, const Hash& hash = Hash(),
+        -:  145:                       const KeyEqual& equal = KeyEqual(),
+        -:  146:                       const Allocator& alloc = Allocator())
+        1:  147:      : m_ht(bucket_count, hash, equal, alloc, ht::DEFAULT_MAX_LOAD_FACTOR) {}
+        1:  147-block 2
+call    0 returned 1
+        -:  148:
+        -:  149:  ordered_map(size_type bucket_count, const Allocator& alloc)
+        -:  150:      : ordered_map(bucket_count, Hash(), KeyEqual(), alloc) {}
+        -:  151:
+        -:  152:  ordered_map(size_type bucket_count, const Hash& hash, const Allocator& alloc)
+        -:  153:      : ordered_map(bucket_count, hash, KeyEqual(), alloc) {}
+        -:  154:
+        -:  155:  explicit ordered_map(const Allocator& alloc)
+        -:  156:      : ordered_map(ht::DEFAULT_INIT_BUCKETS_SIZE, alloc) {}
+        -:  157:
+        -:  158:  template <class InputIt>
+        -:  159:  ordered_map(InputIt first, InputIt last,
+        -:  160:              size_type bucket_count = ht::DEFAULT_INIT_BUCKETS_SIZE,
+        -:  161:              const Hash& hash = Hash(), const KeyEqual& equal = KeyEqual(),
+        -:  162:              const Allocator& alloc = Allocator())
+        -:  163:      : ordered_map(bucket_count, hash, equal, alloc) {
+        -:  164:    insert(first, last);
+        -:  165:  }
+        -:  166:
+        -:  167:  template <class InputIt>
+        -:  168:  ordered_map(InputIt first, InputIt last, size_type bucket_count,
+        -:  169:              const Allocator& alloc)
+        -:  170:      : ordered_map(first, last, bucket_count, Hash(), KeyEqual(), alloc) {}
+        -:  171:
+        -:  172:  template <class InputIt>
+        -:  173:  ordered_map(InputIt first, InputIt last, size_type bucket_count,
+        -:  174:              const Hash& hash, const Allocator& alloc)
+        -:  175:      : ordered_map(first, last, bucket_count, hash, KeyEqual(), alloc) {}
+        -:  176:
+        -:  177:  ordered_map(std::initializer_list<value_type> init,
+        -:  178:              size_type bucket_count = ht::DEFAULT_INIT_BUCKETS_SIZE,
+        -:  179:              const Hash& hash = Hash(), const KeyEqual& equal = KeyEqual(),
+        -:  180:              const Allocator& alloc = Allocator())
+        -:  181:      : ordered_map(init.begin(), init.end(), bucket_count, hash, equal,
+        -:  182:                    alloc) {}
+        -:  183:
+        -:  184:  ordered_map(std::initializer_list<value_type> init, size_type bucket_count,
+        -:  185:              const Allocator& alloc)
+        -:  186:      : ordered_map(init.begin(), init.end(), bucket_count, Hash(), KeyEqual(),
+        -:  187:                    alloc) {}
+        -:  188:
+        -:  189:  ordered_map(std::initializer_list<value_type> init, size_type bucket_count,
+        -:  190:              const Hash& hash, const Allocator& alloc)
+        -:  191:      : ordered_map(init.begin(), init.end(), bucket_count, hash, KeyEqual(),
+        -:  192:                    alloc) {}
+        -:  193:
+        -:  194:  ordered_map& operator=(std::initializer_list<value_type> ilist) {
+        -:  195:    m_ht.clear();
+        -:  196:
+        -:  197:    m_ht.reserve(ilist.size());
+        -:  198:    m_ht.insert(ilist.begin(), ilist.end());
+        -:  199:
+        -:  200:    return *this;
+        -:  201:  }
+        -:  202:
+        -:  203:  allocator_type get_allocator() const { return m_ht.get_allocator(); }
+        -:  204:
+        -:  205:  /*
+        -:  206:   * Iterators
+        -:  207:   */
+function _ZN3tsl11ordered_mapINSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEES6_St4hashIS6_ESt8equal_toIS6_ESaISt4pairIS6_S6_EESt5dequeISC_SD_EjE5beginEv called 1333 returned 100% blocks executed 100%
+     1333:  208:  iterator begin() noexcept { return m_ht.begin(); }
+     1333:  208-block 2
+call    0 returned 1333
+        -:  209:  const_iterator begin() const noexcept { return m_ht.begin(); }
+        -:  210:  const_iterator cbegin() const noexcept { return m_ht.cbegin(); }
+        -:  211:
+function _ZN3tsl11ordered_mapINSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEES6_St4hashIS6_ESt8equal_toIS6_ESaISt4pairIS6_S6_EESt5dequeISC_SD_EjE3endEv called 85339 returned 100% blocks executed 100%
+    85339:  212:  iterator end() noexcept { return m_ht.end(); }
+    85339:  212-block 2
+call    0 returned 85339
+        -:  213:  const_iterator end() const noexcept { return m_ht.end(); }
+        -:  214:  const_iterator cend() const noexcept { return m_ht.cend(); }
+        -:  215:
+        -:  216:  reverse_iterator rbegin() noexcept { return m_ht.rbegin(); }
+        -:  217:  const_reverse_iterator rbegin() const noexcept { return m_ht.rbegin(); }
+        -:  218:  const_reverse_iterator rcbegin() const noexcept { return m_ht.rcbegin(); }
+        -:  219:
+        -:  220:  reverse_iterator rend() noexcept { return m_ht.rend(); }
+        -:  221:  const_reverse_iterator rend() const noexcept { return m_ht.rend(); }
+        -:  222:  const_reverse_iterator rcend() const noexcept { return m_ht.rcend(); }
+        -:  223:
+        -:  224:  /*
+        -:  225:   * Capacity
+        -:  226:   */
+function _ZNK3tsl11ordered_mapINSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEES6_St4hashIS6_ESt8equal_toIS6_ESaISt4pairIS6_S6_EESt5dequeISC_SD_EjE5emptyEv called 1077 returned 100% blocks executed 100%
+     1077:  227:  bool empty() const noexcept { return m_ht.empty(); }
+     1077:  227-block 2
+call    0 returned 1077
+        -:  228:  size_type size() const noexcept { return m_ht.size(); }
+        -:  229:  size_type max_size() const noexcept { return m_ht.max_size(); }
+        -:  230:
+        -:  231:  /*
+        -:  232:   * Modifiers
+        -:  233:   */
+        -:  234:  void clear() noexcept { m_ht.clear(); }
+        -:  235:
+        -:  236:  std::pair<iterator, bool> insert(const value_type& value) {
+        -:  237:    return m_ht.insert(value);
+        -:  238:  }
+        -:  239:
+        -:  240:  template <class P, typename std::enable_if<std::is_constructible<
+        -:  241:                         value_type, P&&>::value>::type* = nullptr>
+        -:  242:  std::pair<iterator, bool> insert(P&& value) {
+        -:  243:    return m_ht.emplace(std::forward<P>(value));
+        -:  244:  }
+        -:  245:
+        -:  246:  std::pair<iterator, bool> insert(value_type&& value) {
+        -:  247:    return m_ht.insert(std::move(value));
+        -:  248:  }
+        -:  249:
+        -:  250:  iterator insert(const_iterator hint, const value_type& value) {
+        -:  251:    return m_ht.insert_hint(hint, value);
+        -:  252:  }
+        -:  253:
+        -:  254:  template <class P, typename std::enable_if<std::is_constructible<
+        -:  255:                         value_type, P&&>::value>::type* = nullptr>
+        -:  256:  iterator insert(const_iterator hint, P&& value) {
+        -:  257:    return m_ht.emplace_hint(hint, std::forward<P>(value));
+        -:  258:  }
+        -:  259:
+        -:  260:  iterator insert(const_iterator hint, value_type&& value) {
+        -:  261:    return m_ht.insert_hint(hint, std::move(value));
+        -:  262:  }
+        -:  263:
+        -:  264:  template <class InputIt>
+        -:  265:  void insert(InputIt first, InputIt last) {
+        -:  266:    m_ht.insert(first, last);
+        -:  267:  }
+        -:  268:  void insert(std::initializer_list<value_type> ilist) {
+        -:  269:    m_ht.insert(ilist.begin(), ilist.end());
+        -:  270:  }
+        -:  271:
+        -:  272:  template <class M>
+        -:  273:  std::pair<iterator, bool> insert_or_assign(const key_type& k, M&& obj) {
+        -:  274:    return m_ht.insert_or_assign(k, std::forward<M>(obj));
+        -:  275:  }
+        -:  276:
+        -:  277:  template <class M>
+        -:  278:  std::pair<iterator, bool> insert_or_assign(key_type&& k, M&& obj) {
+        -:  279:    return m_ht.insert_or_assign(std::move(k), std::forward<M>(obj));
+        -:  280:  }
+        -:  281:
+        -:  282:  template <class M>
+        -:  283:  iterator insert_or_assign(const_iterator hint, const key_type& k, M&& obj) {
+        -:  284:    return m_ht.insert_or_assign(hint, k, std::forward<M>(obj));
+        -:  285:  }
+        -:  286:
+        -:  287:  template <class M>
+        -:  288:  iterator insert_or_assign(const_iterator hint, key_type&& k, M&& obj) {
+        -:  289:    return m_ht.insert_or_assign(hint, std::move(k), std::forward<M>(obj));
+        -:  290:  }
+        -:  291:
+        -:  292:  /**
+        -:  293:   * Due to the way elements are stored, emplace will need to move or copy the
+        -:  294:   * key-value once. The method is equivalent to
+        -:  295:   * insert(value_type(std::forward<Args>(args)...));
+        -:  296:   *
+        -:  297:   * Mainly here for compatibility with the std::unordered_map interface.
+        -:  298:   */
+        -:  299:  template <class... Args>
+        -:  300:  std::pair<iterator, bool> emplace(Args&&... args) {
+        -:  301:    return m_ht.emplace(std::forward<Args>(args)...);
+        -:  302:  }
+        -:  303:
+        -:  304:  /**
+        -:  305:   * Due to the way elements are stored, emplace_hint will need to move or copy
+        -:  306:   * the key-value once. The method is equivalent to insert(hint,
+        -:  307:   * value_type(std::forward<Args>(args)...));
+        -:  308:   *
+        -:  309:   * Mainly here for compatibility with the std::unordered_map interface.
+        -:  310:   */
+        -:  311:  template <class... Args>
+        -:  312:  iterator emplace_hint(const_iterator hint, Args&&... args) {
+        -:  313:    return m_ht.emplace_hint(hint, std::forward<Args>(args)...);
+        -:  314:  }
+        -:  315:
+        -:  316:  template <class... Args>
+        -:  317:  std::pair<iterator, bool> try_emplace(const key_type& k, Args&&... args) {
+        -:  318:    return m_ht.try_emplace(k, std::forward<Args>(args)...);
+        -:  319:  }
+        -:  320:
+        -:  321:  template <class... Args>
+        -:  322:  std::pair<iterator, bool> try_emplace(key_type&& k, Args&&... args) {
+        -:  323:    return m_ht.try_emplace(std::move(k), std::forward<Args>(args)...);
+        -:  324:  }
+        -:  325:
+        -:  326:  template <class... Args>
+        -:  327:  iterator try_emplace(const_iterator hint, const key_type& k, Args&&... args) {
+        -:  328:    return m_ht.try_emplace_hint(hint, k, std::forward<Args>(args)...);
+        -:  329:  }
+        -:  330:
+        -:  331:  template <class... Args>
+        -:  332:  iterator try_emplace(const_iterator hint, key_type&& k, Args&&... args) {
+        -:  333:    return m_ht.try_emplace_hint(hint, std::move(k),
+        -:  334:                                 std::forward<Args>(args)...);
+        -:  335:  }
+        -:  336:
+        -:  337:  /**
+        -:  338:   * When erasing an element, the insert order will be preserved and no holes
+        -:  339:   * will be present in the container returned by 'values_container()'.
+        -:  340:   *
+        -:  341:   * The method is in O(bucket_count()), if the order is not important
+        -:  342:   * 'unordered_erase(...)' method is faster with an O(1) average complexity.
+        -:  343:   */
+function _ZN3tsl11ordered_mapINSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEES6_St4hashIS6_ESt8equal_toIS6_ESaISt4pairIS6_S6_EESt5dequeISC_SD_EjE5eraseENS_19detail_ordered_hash12ordered_hashISC_NSG_9KeySelectENSG_11ValueSelectES8_SA_SD_SF_jE16ordered_iteratorILb0EEE called 0 returned 0% blocks executed 0%
+    #####:  344:  iterator erase(iterator pos) { return m_ht.erase(pos); }
+    %%%%%:  344-block 2
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+    %%%%%:  344-block 5
+    %%%%%:  344-block 6
+        -:  345:
+        -:  346:  /**
+        -:  347:   * @copydoc erase(iterator pos)
+        -:  348:   */
+        -:  349:  iterator erase(const_iterator pos) { return m_ht.erase(pos); }
+        -:  350:
+        -:  351:  /**
+        -:  352:   * @copydoc erase(iterator pos)
+        -:  353:   */
+        -:  354:  iterator erase(const_iterator first, const_iterator last) {
+        -:  355:    return m_ht.erase(first, last);
+        -:  356:  }
+        -:  357:
+        -:  358:  /**
+        -:  359:   * @copydoc erase(iterator pos)
+        -:  360:   */
+function _ZN3tsl11ordered_mapINSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEES6_St4hashIS6_ESt8equal_toIS6_ESaISt4pairIS6_S6_EESt5dequeISC_SD_EjE5eraseERKS6_ called 0 returned 0% blocks executed 0%
+    #####:  361:  size_type erase(const key_type& key) { return m_ht.erase(key); }
+    %%%%%:  361-block 2
+call    0 never executed
+        -:  362:
+        -:  363:  /**
+        -:  364:   * @copydoc erase(iterator pos)
+        -:  365:   *
+        -:  366:   * Use the hash value 'precalculated_hash' instead of hashing the key. The
+        -:  367:   * hash value should be the same as hash_function()(key). Useful to speed-up
+        -:  368:   * the lookup to the value if you already have the hash.
+        -:  369:   */
+        -:  370:  size_type erase(const key_type& key, std::size_t precalculated_hash) {
+        -:  371:    return m_ht.erase(key, precalculated_hash);
+        -:  372:  }
+        -:  373:
+        -:  374:  /**
+        -:  375:   * @copydoc erase(iterator pos)
+        -:  376:   *
+        -:  377:   * This overload only participates in the overload resolution if the typedef
+        -:  378:   * KeyEqual::is_transparent exists. If so, K must be hashable and comparable
+        -:  379:   * to Key.
+        -:  380:   */
+        -:  381:  template <
+        -:  382:      class K, class KE = KeyEqual,
+        -:  383:      typename std::enable_if<has_is_transparent<KE>::value>::type* = nullptr>
+        -:  384:  size_type erase(const K& key) {
+        -:  385:    return m_ht.erase(key);
+        -:  386:  }
+        -:  387:
+        -:  388:  /**
+        -:  389:   * @copydoc erase(const key_type& key, std::size_t precalculated_hash)
+        -:  390:   *
+        -:  391:   * This overload only participates in the overload resolution if the typedef
+        -:  392:   * KeyEqual::is_transparent exists. If so, K must be hashable and comparable
+        -:  393:   * to Key.
+        -:  394:   */
+        -:  395:  template <
+        -:  396:      class K, class KE = KeyEqual,
+        -:  397:      typename std::enable_if<has_is_transparent<KE>::value>::type* = nullptr>
+        -:  398:  size_type erase(const K& key, std::size_t precalculated_hash) {
+        -:  399:    return m_ht.erase(key, precalculated_hash);
+        -:  400:  }
+        -:  401:
+        -:  402:  /**
+        -:  403:   * @copydoc erase(iterator pos)
+        -:  404:   *
+        -:  405:   * Erases all elements that satisfy the predicate pred. The method is in
+        -:  406:   * O(n). Note that the function only has the strong exception guarantee if
+        -:  407:   * the Predicate, Hash, and Key predicates and moves of keys and values do
+        -:  408:   * not throw. If an exception is raised, the object is in an invalid state.
+        -:  409:   * It can still be cleared and destroyed without leaking memory.
+        -:  410:   */
+        -:  411:  template <class Predicate>
+        -:  412:  friend size_type erase_if(ordered_map &map, Predicate pred) {
+        -:  413:    return map.m_ht.erase_if(pred);
+        -:  414:  }
+        -:  415:
+        -:  416:  void swap(ordered_map& other) { other.m_ht.swap(m_ht); }
+        -:  417:
+        -:  418:  /*
+        -:  419:   * Lookup
+        -:  420:   */
+        -:  421:  T& at(const Key& key) { return m_ht.at(key); }
+        -:  422:
+        -:  423:  /**
+        -:  424:   * Use the hash value 'precalculated_hash' instead of hashing the key. The
+        -:  425:   * hash value should be the same as hash_function()(key). Useful to speed-up
+        -:  426:   * the lookup if you already have the hash.
+        -:  427:   */
+        -:  428:  T& at(const Key& key, std::size_t precalculated_hash) {
+        -:  429:    return m_ht.at(key, precalculated_hash);
+        -:  430:  }
+        -:  431:
+        -:  432:  const T& at(const Key& key) const { return m_ht.at(key); }
+        -:  433:
+        -:  434:  /**
+        -:  435:   * @copydoc at(const Key& key, std::size_t precalculated_hash)
+        -:  436:   */
+        -:  437:  const T& at(const Key& key, std::size_t precalculated_hash) const {
+        -:  438:    return m_ht.at(key, precalculated_hash);
+        -:  439:  }
+        -:  440:
+        -:  441:  /**
+        -:  442:   * This overload only participates in the overload resolution if the typedef
+        -:  443:   * KeyEqual::is_transparent exists. If so, K must be hashable and comparable
+        -:  444:   * to Key.
+        -:  445:   */
+        -:  446:  template <
+        -:  447:      class K, class KE = KeyEqual,
+        -:  448:      typename std::enable_if<has_is_transparent<KE>::value>::type* = nullptr>
+        -:  449:  T& at(const K& key) {
+        -:  450:    return m_ht.at(key);
+        -:  451:  }
+        -:  452:
+        -:  453:  /**
+        -:  454:   * @copydoc at(const K& key)
+        -:  455:   *
+        -:  456:   * Use the hash value 'precalculated_hash' instead of hashing the key. The
+        -:  457:   * hash value should be the same as hash_function()(key). Useful to speed-up
+        -:  458:   * the lookup if you already have the hash.
+        -:  459:   */
+        -:  460:  template <
+        -:  461:      class K, class KE = KeyEqual,
+        -:  462:      typename std::enable_if<has_is_transparent<KE>::value>::type* = nullptr>
+        -:  463:  T& at(const K& key, std::size_t precalculated_hash) {
+        -:  464:    return m_ht.at(key, precalculated_hash);
+        -:  465:  }
+        -:  466:
+        -:  467:  /**
+        -:  468:   * @copydoc at(const K& key)
+        -:  469:   */
+        -:  470:  template <
+        -:  471:      class K, class KE = KeyEqual,
+        -:  472:      typename std::enable_if<has_is_transparent<KE>::value>::type* = nullptr>
+        -:  473:  const T& at(const K& key) const {
+        -:  474:    return m_ht.at(key);
+        -:  475:  }
+        -:  476:
+        -:  477:  /**
+        -:  478:   * @copydoc at(const K& key, std::size_t precalculated_hash)
+        -:  479:   */
+        -:  480:  template <
+        -:  481:      class K, class KE = KeyEqual,
+        -:  482:      typename std::enable_if<has_is_transparent<KE>::value>::type* = nullptr>
+        -:  483:  const T& at(const K& key, std::size_t precalculated_hash) const {
+        -:  484:    return m_ht.at(key, precalculated_hash);
+        -:  485:  }
+        -:  486:
+function _ZN3tsl11ordered_mapINSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEES6_St4hashIS6_ESt8equal_toIS6_ESaISt4pairIS6_S6_EESt5dequeISC_SD_EjEixERKS6_ called 5911 returned 100% blocks executed 100%
+     5911:  487:  T& operator[](const Key& key) { return m_ht[key]; }
+     5911:  487-block 2
+call    0 returned 5911
+function _ZN3tsl11ordered_mapINSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEES6_St4hashIS6_ESt8equal_toIS6_ESaISt4pairIS6_S6_EESt5dequeISC_SD_EjEixEOS6_ called 0 returned 0% blocks executed 0%
+    #####:  488:  T& operator[](Key&& key) { return m_ht[std::move(key)]; }
+    %%%%%:  488-block 2
+call    0 never executed
+call    1 never executed
+        -:  489:
+function _ZNK3tsl11ordered_mapINSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEES6_St4hashIS6_ESt8equal_toIS6_ESaISt4pairIS6_S6_EESt5dequeISC_SD_EjE5countERKS6_ called 0 returned 0% blocks executed 0%
+    #####:  490:  size_type count(const Key& key) const { return m_ht.count(key); }
+    %%%%%:  490-block 2
+call    0 never executed
+        -:  491:
+        -:  492:  /**
+        -:  493:   * Use the hash value 'precalculated_hash' instead of hashing the key. The
+        -:  494:   * hash value should be the same as hash_function()(key). Useful to speed-up
+        -:  495:   * the lookup if you already have the hash.
+        -:  496:   */
+        -:  497:  size_type count(const Key& key, std::size_t precalculated_hash) const {
+        -:  498:    return m_ht.count(key, precalculated_hash);
+        -:  499:  }
+        -:  500:
+        -:  501:  /**
+        -:  502:   * This overload only participates in the overload resolution if the typedef
+        -:  503:   * KeyEqual::is_transparent exists. If so, K must be hashable and comparable
+        -:  504:   * to Key.
+        -:  505:   */
+        -:  506:  template <
+        -:  507:      class K, class KE = KeyEqual,
+        -:  508:      typename std::enable_if<has_is_transparent<KE>::value>::type* = nullptr>
+        -:  509:  size_type count(const K& key) const {
+        -:  510:    return m_ht.count(key);
+        -:  511:  }
+        -:  512:
+        -:  513:  /**
+        -:  514:   * @copydoc count(const K& key) const
+        -:  515:   *
+        -:  516:   * Use the hash value 'precalculated_hash' instead of hashing the key. The
+        -:  517:   * hash value should be the same as hash_function()(key). Useful to speed-up
+        -:  518:   * the lookup if you already have the hash.
+        -:  519:   */
+        -:  520:  template <
+        -:  521:      class K, class KE = KeyEqual,
+        -:  522:      typename std::enable_if<has_is_transparent<KE>::value>::type* = nullptr>
+        -:  523:  size_type count(const K& key, std::size_t precalculated_hash) const {
+        -:  524:    return m_ht.count(key, precalculated_hash);
+        -:  525:  }
+        -:  526:
+function _ZN3tsl11ordered_mapINSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEES6_St4hashIS6_ESt8equal_toIS6_ESaISt4pairIS6_S6_EESt5dequeISC_SD_EjE4findERKS6_ called 23694 returned 100% blocks executed 100%
+    23694:  527:  iterator find(const Key& key) { return m_ht.find(key); }
+    23694:  527-block 2
+call    0 returned 23694
+        -:  528:
+        -:  529:  /**
+        -:  530:   * Use the hash value 'precalculated_hash' instead of hashing the key. The
+        -:  531:   * hash value should be the same as hash_function()(key). Useful to speed-up
+        -:  532:   * the lookup if you already have the hash.
+        -:  533:   */
+        -:  534:  iterator find(const Key& key, std::size_t precalculated_hash) {
+        -:  535:    return m_ht.find(key, precalculated_hash);
+        -:  536:  }
+        -:  537:
+        -:  538:  const_iterator find(const Key& key) const { return m_ht.find(key); }
+        -:  539:
+        -:  540:  /**
+        -:  541:   * @copydoc find(const Key& key, std::size_t precalculated_hash)
+        -:  542:   */
+        -:  543:  const_iterator find(const Key& key, std::size_t precalculated_hash) const {
+        -:  544:    return m_ht.find(key, precalculated_hash);
+        -:  545:  }
+        -:  546:
+        -:  547:  /**
+        -:  548:   * This overload only participates in the overload resolution if the typedef
+        -:  549:   * KeyEqual::is_transparent exists. If so, K must be hashable and comparable
+        -:  550:   * to Key.
+        -:  551:   */
+        -:  552:  template <
+        -:  553:      class K, class KE = KeyEqual,
+        -:  554:      typename std::enable_if<has_is_transparent<KE>::value>::type* = nullptr>
+        -:  555:  iterator find(const K& key) {
+        -:  556:    return m_ht.find(key);
+        -:  557:  }
+        -:  558:
+        -:  559:  /**
+        -:  560:   * @copydoc find(const K& key)
+        -:  561:   *
+        -:  562:   * Use the hash value 'precalculated_hash' instead of hashing the key. The
+        -:  563:   * hash value should be the same as hash_function()(key). Useful to speed-up
+        -:  564:   * the lookup if you already have the hash.
+        -:  565:   */
+        -:  566:  template <
+        -:  567:      class K, class KE = KeyEqual,
+        -:  568:      typename std::enable_if<has_is_transparent<KE>::value>::type* = nullptr>
+        -:  569:  iterator find(const K& key, std::size_t precalculated_hash) {
+        -:  570:    return m_ht.find(key, precalculated_hash);
+        -:  571:  }
+        -:  572:
+        -:  573:  /**
+        -:  574:   * @copydoc find(const K& key)
+        -:  575:   */
+        -:  576:  template <
+        -:  577:      class K, class KE = KeyEqual,
+        -:  578:      typename std::enable_if<has_is_transparent<KE>::value>::type* = nullptr>
+        -:  579:  const_iterator find(const K& key) const {
+        -:  580:    return m_ht.find(key);
+        -:  581:  }
+        -:  582:
+        -:  583:  /**
+        -:  584:   * @copydoc find(const K& key)
+        -:  585:   *
+        -:  586:   * Use the hash value 'precalculated_hash' instead of hashing the key. The
+        -:  587:   * hash value should be the same as hash_function()(key). Useful to speed-up
+        -:  588:   * the lookup if you already have the hash.
+        -:  589:   */
+        -:  590:  template <
+        -:  591:      class K, class KE = KeyEqual,
+        -:  592:      typename std::enable_if<has_is_transparent<KE>::value>::type* = nullptr>
+        -:  593:  const_iterator find(const K& key, std::size_t precalculated_hash) const {
+        -:  594:    return m_ht.find(key, precalculated_hash);
+        -:  595:  }
+        -:  596:
+function _ZNK3tsl11ordered_mapINSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEES6_St4hashIS6_ESt8equal_toIS6_ESaISt4pairIS6_S6_EESt5dequeISC_SD_EjE8containsERKS6_ called 0 returned 0% blocks executed 0%
+    #####:  597:  bool contains(const Key& key) const { return m_ht.contains(key); }
+    %%%%%:  597-block 2
+call    0 never executed
+        -:  598:
+        -:  599:  /**
+        -:  600:   * Use the hash value 'precalculated_hash' instead of hashing the key. The
+        -:  601:   * hash value should be the same as hash_function()(key). Useful to speed-up
+        -:  602:   * the lookup if you already have the hash.
+        -:  603:   */
+        -:  604:  bool contains(const Key& key, std::size_t precalculated_hash) const {
+        -:  605:    return m_ht.contains(key, precalculated_hash);
+        -:  606:  }
+        -:  607:
+        -:  608:  /**
+        -:  609:   * This overload only participates in the overload resolution if the typedef
+        -:  610:   * KeyEqual::is_transparent exists. If so, K must be hashable and comparable
+        -:  611:   * to Key.
+        -:  612:   */
+        -:  613:  template <
+        -:  614:      class K, class KE = KeyEqual,
+        -:  615:      typename std::enable_if<has_is_transparent<KE>::value>::type* = nullptr>
+        -:  616:  bool contains(const K& key) const {
+        -:  617:    return m_ht.contains(key);
+        -:  618:  }
+        -:  619:
+        -:  620:  /**
+        -:  621:   * @copydoc contains(const K& key) const
+        -:  622:   *
+        -:  623:   * Use the hash value 'precalculated_hash' instead of hashing the key. The
+        -:  624:   * hash value should be the same as hash_function()(key). Useful to speed-up
+        -:  625:   * the lookup if you already have the hash.
+        -:  626:   */
+        -:  627:  template <
+        -:  628:      class K, class KE = KeyEqual,
+        -:  629:      typename std::enable_if<has_is_transparent<KE>::value>::type* = nullptr>
+        -:  630:  bool contains(const K& key, std::size_t precalculated_hash) const {
+        -:  631:    return m_ht.contains(key, precalculated_hash);
+        -:  632:  }
+        -:  633:
+        -:  634:  std::pair<iterator, iterator> equal_range(const Key& key) {
+        -:  635:    return m_ht.equal_range(key);
+        -:  636:  }
+        -:  637:
+        -:  638:  /**
+        -:  639:   * Use the hash value 'precalculated_hash' instead of hashing the key. The
+        -:  640:   * hash value should be the same as hash_function()(key). Useful to speed-up
+        -:  641:   * the lookup if you already have the hash.
+        -:  642:   */
+        -:  643:  std::pair<iterator, iterator> equal_range(const Key& key,
+        -:  644:                                            std::size_t precalculated_hash) {
+        -:  645:    return m_ht.equal_range(key, precalculated_hash);
+        -:  646:  }
+        -:  647:
+        -:  648:  std::pair<const_iterator, const_iterator> equal_range(const Key& key) const {
+        -:  649:    return m_ht.equal_range(key);
+        -:  650:  }
+        -:  651:
+        -:  652:  /**
+        -:  653:   * @copydoc equal_range(const Key& key, std::size_t precalculated_hash)
+        -:  654:   */
+        -:  655:  std::pair<const_iterator, const_iterator> equal_range(
+        -:  656:      const Key& key, std::size_t precalculated_hash) const {
+        -:  657:    return m_ht.equal_range(key, precalculated_hash);
+        -:  658:  }
+        -:  659:
+        -:  660:  /**
+        -:  661:   * This overload only participates in the overload resolution if the typedef
+        -:  662:   * KeyEqual::is_transparent exists. If so, K must be hashable and comparable
+        -:  663:   * to Key.
+        -:  664:   */
+        -:  665:  template <
+        -:  666:      class K, class KE = KeyEqual,
+        -:  667:      typename std::enable_if<has_is_transparent<KE>::value>::type* = nullptr>
+        -:  668:  std::pair<iterator, iterator> equal_range(const K& key) {
+        -:  669:    return m_ht.equal_range(key);
+        -:  670:  }
+        -:  671:
+        -:  672:  /**
+        -:  673:   * @copydoc equal_range(const K& key)
+        -:  674:   *
+        -:  675:   * Use the hash value 'precalculated_hash' instead of hashing the key. The
+        -:  676:   * hash value should be the same as hash_function()(key). Useful to speed-up
+        -:  677:   * the lookup if you already have the hash.
+        -:  678:   */
+        -:  679:  template <
+        -:  680:      class K, class KE = KeyEqual,
+        -:  681:      typename std::enable_if<has_is_transparent<KE>::value>::type* = nullptr>
+        -:  682:  std::pair<iterator, iterator> equal_range(const K& key,
+        -:  683:                                            std::size_t precalculated_hash) {
+        -:  684:    return m_ht.equal_range(key, precalculated_hash);
+        -:  685:  }
+        -:  686:
+        -:  687:  /**
+        -:  688:   * @copydoc equal_range(const K& key)
+        -:  689:   */
+        -:  690:  template <
+        -:  691:      class K, class KE = KeyEqual,
+        -:  692:      typename std::enable_if<has_is_transparent<KE>::value>::type* = nullptr>
+        -:  693:  std::pair<const_iterator, const_iterator> equal_range(const K& key) const {
+        -:  694:    return m_ht.equal_range(key);
+        -:  695:  }
+        -:  696:
+        -:  697:  /**
+        -:  698:   * @copydoc equal_range(const K& key, std::size_t precalculated_hash)
+        -:  699:   */
+        -:  700:  template <
+        -:  701:      class K, class KE = KeyEqual,
+        -:  702:      typename std::enable_if<has_is_transparent<KE>::value>::type* = nullptr>
+        -:  703:  std::pair<const_iterator, const_iterator> equal_range(
+        -:  704:      const K& key, std::size_t precalculated_hash) const {
+        -:  705:    return m_ht.equal_range(key, precalculated_hash);
+        -:  706:  }
+        -:  707:
+        -:  708:  /*
+        -:  709:   * Bucket interface
+        -:  710:   */
+        -:  711:  size_type bucket_count() const { return m_ht.bucket_count(); }
+        -:  712:  size_type max_bucket_count() const { return m_ht.max_bucket_count(); }
+        -:  713:
+        -:  714:  /*
+        -:  715:   * Hash policy
+        -:  716:   */
+        -:  717:  float load_factor() const { return m_ht.load_factor(); }
+        -:  718:  float max_load_factor() const { return m_ht.max_load_factor(); }
+        -:  719:  void max_load_factor(float ml) { m_ht.max_load_factor(ml); }
+        -:  720:
+        -:  721:  void rehash(size_type count) { m_ht.rehash(count); }
+        -:  722:  void reserve(size_type count) { m_ht.reserve(count); }
+        -:  723:
+        -:  724:  /*
+        -:  725:   * Observers
+        -:  726:   */
+        -:  727:  hasher hash_function() const { return m_ht.hash_function(); }
+        -:  728:  key_equal key_eq() const { return m_ht.key_eq(); }
+        -:  729:
+        -:  730:  /*
+        -:  731:   * Other
+        -:  732:   */
+        -:  733:
+        -:  734:  /**
+        -:  735:   * Convert a const_iterator to an iterator.
+        -:  736:   */
+        -:  737:  iterator mutable_iterator(const_iterator pos) {
+        -:  738:    return m_ht.mutable_iterator(pos);
+        -:  739:  }
+        -:  740:
+        -:  741:  /**
+        -:  742:   * Requires index <= size().
+        -:  743:   *
+        -:  744:   * Return an iterator to the element at index. Return end() if index ==
+        -:  745:   * size().
+        -:  746:   */
+        -:  747:  iterator nth(size_type index) { return m_ht.nth(index); }
+        -:  748:
+        -:  749:  /**
+        -:  750:   * @copydoc nth(size_type index)
+        -:  751:   */
+        -:  752:  const_iterator nth(size_type index) const { return m_ht.nth(index); }
+        -:  753:
+        -:  754:  /**
+        -:  755:   * Return const_reference to the first element. Requires the container to not
+        -:  756:   * be empty.
+        -:  757:   */
+        -:  758:  const_reference front() const { return m_ht.front(); }
+        -:  759:
+        -:  760:  /**
+        -:  761:   * Return const_reference to the last element. Requires the container to not
+        -:  762:   * be empty.
+        -:  763:   */
+        -:  764:  const_reference back() const { return m_ht.back(); }
+        -:  765:
+        -:  766:  /**
+        -:  767:   * Only available if ValueTypeContainer is a std::vector. Same as calling
+        -:  768:   * 'values_container().data()'.
+        -:  769:   */
+        -:  770:  template <class U = values_container_type,
+        -:  771:            typename std::enable_if<
+        -:  772:                tsl::detail_ordered_hash::is_vector<U>::value>::type* = nullptr>
+        -:  773:  const typename values_container_type::value_type* data() const noexcept {
+        -:  774:    return m_ht.data();
+        -:  775:  }
+        -:  776:
+        -:  777:  /**
+        -:  778:   * Return the container in which the values are stored. The values are in the
+        -:  779:   * same order as the insertion order and are contiguous in the structure, no
+        -:  780:   * holes (size() == values_container().size()).
+        -:  781:   */
+        -:  782:  const values_container_type& values_container() const noexcept {
+        -:  783:    return m_ht.values_container();
+        -:  784:  }
+        -:  785:
+        -:  786:  /**
+        -:  787:   * Release the container in which the values are stored.
+        -:  788:   *
+        -:  789:   * The map is empty after this operation.
+        -:  790:   */
+        -:  791:  values_container_type release() { return m_ht.release(); }
+        -:  792:
+        -:  793:  template <class U = values_container_type,
+        -:  794:            typename std::enable_if<
+        -:  795:                tsl::detail_ordered_hash::is_vector<U>::value>::type* = nullptr>
+        -:  796:  size_type capacity() const noexcept {
+        -:  797:    return m_ht.capacity();
+        -:  798:  }
+        -:  799:
+        -:  800:  void shrink_to_fit() { m_ht.shrink_to_fit(); }
+        -:  801:
+        -:  802:  /**
+        -:  803:   * Insert the value before pos shifting all the elements on the right of pos
+        -:  804:   * (including pos) one position to the right.
+        -:  805:   *
+        -:  806:   * O(bucket_count()) runtime complexity.
+        -:  807:   */
+        -:  808:  std::pair<iterator, bool> insert_at_position(const_iterator pos,
+        -:  809:                                               const value_type& value) {
+        -:  810:    return m_ht.insert_at_position(pos, value);
+        -:  811:  }
+        -:  812:
+        -:  813:  /**
+        -:  814:   * @copydoc insert_at_position(const_iterator pos, const value_type& value)
+        -:  815:   */
+        -:  816:  std::pair<iterator, bool> insert_at_position(const_iterator pos,
+        -:  817:                                               value_type&& value) {
+        -:  818:    return m_ht.insert_at_position(pos, std::move(value));
+        -:  819:  }
+        -:  820:
+        -:  821:  /**
+        -:  822:   * @copydoc insert_at_position(const_iterator pos, const value_type& value)
+        -:  823:   *
+        -:  824:   * Same as insert_at_position(pos, value_type(std::forward<Args>(args)...),
+        -:  825:   * mainly here for coherence.
+        -:  826:   */
+        -:  827:  template <class... Args>
+        -:  828:  std::pair<iterator, bool> emplace_at_position(const_iterator pos,
+        -:  829:                                                Args&&... args) {
+        -:  830:    return m_ht.emplace_at_position(pos, std::forward<Args>(args)...);
+        -:  831:  }
+        -:  832:
+        -:  833:  /**
+        -:  834:   * @copydoc insert_at_position(const_iterator pos, const value_type& value)
+        -:  835:   */
+        -:  836:  template <class... Args>
+        -:  837:  std::pair<iterator, bool> try_emplace_at_position(const_iterator pos,
+        -:  838:                                                    const key_type& k,
+        -:  839:                                                    Args&&... args) {
+        -:  840:    return m_ht.try_emplace_at_position(pos, k, std::forward<Args>(args)...);
+        -:  841:  }
+        -:  842:
+        -:  843:  /**
+        -:  844:   * @copydoc insert_at_position(const_iterator pos, const value_type& value)
+        -:  845:   */
+        -:  846:  template <class... Args>
+        -:  847:  std::pair<iterator, bool> try_emplace_at_position(const_iterator pos,
+        -:  848:                                                    key_type&& k,
+        -:  849:                                                    Args&&... args) {
+        -:  850:    return m_ht.try_emplace_at_position(pos, std::move(k),
+        -:  851:                                        std::forward<Args>(args)...);
+        -:  852:  }
+        -:  853:
+        -:  854:  void pop_back() { m_ht.pop_back(); }
+        -:  855:
+        -:  856:  /**
+        -:  857:   * Faster erase operation with an O(1) average complexity but it doesn't
+        -:  858:   * preserve the insertion order.
+        -:  859:   *
+        -:  860:   * If an erasure occurs, the last element of the map will take the place of
+        -:  861:   * the erased element.
+        -:  862:   */
+        -:  863:  iterator unordered_erase(iterator pos) { return m_ht.unordered_erase(pos); }
+        -:  864:
+        -:  865:  /**
+        -:  866:   * @copydoc unordered_erase(iterator pos)
+        -:  867:   */
+        -:  868:  iterator unordered_erase(const_iterator pos) {
+        -:  869:    return m_ht.unordered_erase(pos);
+        -:  870:  }
+        -:  871:
+        -:  872:  /**
+        -:  873:   * @copydoc unordered_erase(iterator pos)
+        -:  874:   */
+        -:  875:  size_type unordered_erase(const key_type& key) {
+        -:  876:    return m_ht.unordered_erase(key);
+        -:  877:  }
+        -:  878:
+        -:  879:  /**
+        -:  880:   * @copydoc unordered_erase(iterator pos)
+        -:  881:   *
+        -:  882:   * Use the hash value 'precalculated_hash' instead of hashing the key. The
+        -:  883:   * hash value should be the same as hash_function()(key). Useful to speed-up
+        -:  884:   * the lookup if you already have the hash.
+        -:  885:   */
+        -:  886:  size_type unordered_erase(const key_type& key,
+        -:  887:                            std::size_t precalculated_hash) {
+        -:  888:    return m_ht.unordered_erase(key, precalculated_hash);
+        -:  889:  }
+        -:  890:
+        -:  891:  /**
+        -:  892:   * @copydoc unordered_erase(iterator pos)
+        -:  893:   *
+        -:  894:   * This overload only participates in the overload resolution if the typedef
+        -:  895:   * KeyEqual::is_transparent exists. If so, K must be hashable and comparable
+        -:  896:   * to Key.
+        -:  897:   */
+        -:  898:  template <
+        -:  899:      class K, class KE = KeyEqual,
+        -:  900:      typename std::enable_if<has_is_transparent<KE>::value>::type* = nullptr>
+        -:  901:  size_type unordered_erase(const K& key) {
+        -:  902:    return m_ht.unordered_erase(key);
+        -:  903:  }
+        -:  904:
+        -:  905:  /**
+        -:  906:   * @copydoc unordered_erase(const K& key)
+        -:  907:   *
+        -:  908:   * Use the hash value 'precalculated_hash' instead of hashing the key. The
+        -:  909:   * hash value should be the same as hash_function()(key). Useful to speed-up
+        -:  910:   * the lookup if you already have the hash.
+        -:  911:   */
+        -:  912:  template <
+        -:  913:      class K, class KE = KeyEqual,
+        -:  914:      typename std::enable_if<has_is_transparent<KE>::value>::type* = nullptr>
+        -:  915:  size_type unordered_erase(const K& key, std::size_t precalculated_hash) {
+        -:  916:    return m_ht.unordered_erase(key, precalculated_hash);
+        -:  917:  }
+        -:  918:
+        -:  919:  /**
+        -:  920:   * Serialize the map through the `serializer` parameter.
+        -:  921:   *
+        -:  922:   * The `serializer` parameter must be a function object that supports the
+        -:  923:   * following call:
+        -:  924:   *  - `template<typename U> void operator()(const U& value);` where the types
+        -:  925:   * `std::uint64_t`, `float` and `std::pair<Key, T>` must be supported for U.
+        -:  926:   *
+        -:  927:   * The implementation leaves binary compatibility (endianness, IEEE 754 for
+        -:  928:   * floats, ...) of the types it serializes in the hands of the `Serializer`
+        -:  929:   * function object if compatibility is required.
+        -:  930:   */
+        -:  931:  template <class Serializer>
+        -:  932:  void serialize(Serializer& serializer) const {
+        -:  933:    m_ht.serialize(serializer);
+        -:  934:  }
+        -:  935:
+        -:  936:  /**
+        -:  937:   * Deserialize a previously serialized map through the `deserializer`
+        -:  938:   * parameter.
+        -:  939:   *
+        -:  940:   * The `deserializer` parameter must be a function object that supports the
+        -:  941:   * following calls:
+        -:  942:   *  - `template<typename U> U operator()();` where the types `std::uint64_t`,
+        -:  943:   * `float` and `std::pair<Key, T>` must be supported for U.
+        -:  944:   *
+        -:  945:   * If the deserialized hash map type is hash compatible with the serialized
+        -:  946:   * map, the deserialization process can be sped up by setting
+        -:  947:   * `hash_compatible` to true. To be hash compatible, the Hash and KeyEqual
+        -:  948:   * must behave the same way than the ones used on the serialized map. The
+        -:  949:   * `std::size_t` must also be of the same size as the one on the platform used
+        -:  950:   * to serialize the map, the same apply for `IndexType`. If these criteria are
+        -:  951:   * not met, the behaviour is undefined with `hash_compatible` sets to true.
+        -:  952:   *
+        -:  953:   * The behaviour is undefined if the type `Key` and `T` of the `ordered_map`
+        -:  954:   * are not the same as the types used during serialization.
+        -:  955:   *
+        -:  956:   * The implementation leaves binary compatibility (endianness, IEEE 754 for
+        -:  957:   * floats, size of int, ...) of the types it deserializes in the hands of the
+        -:  958:   * `Deserializer` function object if compatibility is required.
+        -:  959:   */
+        -:  960:  template <class Deserializer>
+        -:  961:  static ordered_map deserialize(Deserializer& deserializer,
+        -:  962:                                 bool hash_compatible = false) {
+        -:  963:    ordered_map map(0);
+        -:  964:    map.m_ht.deserialize(deserializer, hash_compatible);
+        -:  965:
+        -:  966:    return map;
+        -:  967:  }
+        -:  968:
+        -:  969:  friend bool operator==(const ordered_map& lhs, const ordered_map& rhs) {
+        -:  970:    return lhs.m_ht == rhs.m_ht;
+        -:  971:  }
+        -:  972:  friend bool operator!=(const ordered_map& lhs, const ordered_map& rhs) {
+        -:  973:    return lhs.m_ht != rhs.m_ht;
+        -:  974:  }
+        -:  975:  friend bool operator<(const ordered_map& lhs, const ordered_map& rhs) {
+        -:  976:    return lhs.m_ht < rhs.m_ht;
+        -:  977:  }
+        -:  978:  friend bool operator<=(const ordered_map& lhs, const ordered_map& rhs) {
+        -:  979:    return lhs.m_ht <= rhs.m_ht;
+        -:  980:  }
+        -:  981:  friend bool operator>(const ordered_map& lhs, const ordered_map& rhs) {
+        -:  982:    return lhs.m_ht > rhs.m_ht;
+        -:  983:  }
+        -:  984:  friend bool operator>=(const ordered_map& lhs, const ordered_map& rhs) {
+        -:  985:    return lhs.m_ht >= rhs.m_ht;
+        -:  986:  }
+        -:  987:
+        -:  988:  friend void swap(ordered_map& lhs, ordered_map& rhs) { lhs.swap(rhs); }
+        -:  989:
+        -:  990: private:
+        -:  991:  ht m_ht;
+        -:  992:};
+        -:  993:
+        -:  994:}  // end namespace tsl
+        -:  995:
+        -:  996:#endif

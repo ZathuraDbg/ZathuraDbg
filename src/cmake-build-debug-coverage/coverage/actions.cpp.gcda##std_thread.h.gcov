@@ -1,0 +1,679 @@
+        -:    0:Source:/usr/include/c++/14.2.1/bits/std_thread.h
+        -:    0:Graph:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/app/actions/actions.cpp.gcno
+        -:    0:Data:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/app/actions/actions.cpp.gcda
+        -:    0:Runs:1
+        -:    1:// std::thread declarations -*- C++ -*-
+        -:    2:
+        -:    3:// Copyright (C) 2008-2024 Free Software Foundation, Inc.
+        -:    4://
+        -:    5:// This file is part of the GNU ISO C++ Library.  This library is free
+        -:    6:// software; you can redistribute it and/or modify it under the
+        -:    7:// terms of the GNU General Public License as published by the
+        -:    8:// Free Software Foundation; either version 3, or (at your option)
+        -:    9:// any later version.
+        -:   10:
+        -:   11:// This library is distributed in the hope that it will be useful,
+        -:   12:// but WITHOUT ANY WARRANTY; without even the implied warranty of
+        -:   13:// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+        -:   14:// GNU General Public License for more details.
+        -:   15:
+        -:   16:// Under Section 7 of GPL version 3, you are granted additional
+        -:   17:// permissions described in the GCC Runtime Library Exception, version
+        -:   18:// 3.1, as published by the Free Software Foundation.
+        -:   19:
+        -:   20:// You should have received a copy of the GNU General Public License and
+        -:   21:// a copy of the GCC Runtime Library Exception along with this program;
+        -:   22:// see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+        -:   23:// <http://www.gnu.org/licenses/>.
+        -:   24:
+        -:   25:/** @file bits/std_thread.h
+        -:   26: *  This is an internal header file, included by other library headers.
+        -:   27: *  Do not attempt to use it directly. @headername{thread}
+        -:   28: */
+        -:   29:
+        -:   30:#ifndef _GLIBCXX_THREAD_H
+        -:   31:#define _GLIBCXX_THREAD_H 1
+        -:   32:
+        -:   33:#pragma GCC system_header
+        -:   34:
+        -:   35:#if __cplusplus >= 201103L
+        -:   36:#include <bits/c++config.h>
+        -:   37:
+        -:   38:#include <iosfwd>		// std::basic_ostream
+        -:   39:#include <tuple>		// std::tuple
+        -:   40:#include <bits/functional_hash.h> // std::hash
+        -:   41:#include <bits/invoke.h>	// std::__invoke
+        -:   42:#include <bits/refwrap.h>       // not required, but helpful to users
+        -:   43:#include <bits/unique_ptr.h>	// std::unique_ptr
+        -:   44:
+        -:   45:#ifdef _GLIBCXX_HAS_GTHREADS
+        -:   46:# include <bits/gthr.h>
+        -:   47:#else
+        -:   48:# include <errno.h>
+        -:   49:# include <bits/functexcept.h>
+        -:   50:#endif
+        -:   51:
+        -:   52:namespace std _GLIBCXX_VISIBILITY(default)
+        -:   53:{
+        -:   54:_GLIBCXX_BEGIN_NAMESPACE_VERSION
+        -:   55:
+        -:   56:#if __glibcxx_formatters
+        -:   57:  template<typename, typename> class formatter;
+        -:   58:#endif
+        -:   59:
+        -:   60:  /** @addtogroup threads
+        -:   61:   *  @{
+        -:   62:   */
+        -:   63:
+        -:   64:  /** A std::thread represents a new thread of execution.
+        -:   65:   *
+        -:   66:   * The default constructor creates an object that does not own a thread.
+        -:   67:   * The `thread(F&&, Args&&...)` constructor invokes a callable in a new
+        -:   68:   * thread, and owns that new thread. A `std::thread` that owns a thread
+        -:   69:   * is *joinable*. Joining a thread waits for it to finish executing,
+        -:   70:   * which happens when the callable running in that thread returns.
+        -:   71:   *
+        -:   72:   * A `std::thread` cannot be copied, but can be moved. Moving a joinable
+        -:   73:   * object transfers ownership of its thread to another object.
+        -:   74:   *
+        -:   75:   * A joinable `std::thread` must be explicitly joined (or detached) before
+        -:   76:   * it is destroyed or assigned to. Attempting to destroy a joinable thread
+        -:   77:   * will terminate the whole process.
+        -:   78:   *
+        -:   79:   * @headerfile thread
+        -:   80:   * @since C++11
+        -:   81:   */
+        -:   82:  class thread
+        -:   83:  {
+        -:   84:  public:
+        -:   85:#ifdef _GLIBCXX_HAS_GTHREADS
+        -:   86:    using native_handle_type = __gthread_t;
+        -:   87:#else
+        -:   88:    using native_handle_type = int;
+        -:   89:#endif
+        -:   90:
+        -:   91:    /** A std::thread::id is a unique identifier for a thread.
+        -:   92:     *
+        -:   93:     * @headerfile thread
+        -:   94:     * @since C++11
+        -:   95:     */
+        -:   96:    class id
+        -:   97:    {
+        -:   98:      native_handle_type	_M_thread;
+        -:   99:
+        -:  100:    public:
+function _ZNSt6thread2idC2Ev called 2 returned 100% blocks executed 100%
+        2:  101:      id() noexcept : _M_thread() { }
+        -:  102:
+        -:  103:      explicit
+        -:  104:      id(native_handle_type __id) : _M_thread(__id) { }
+        -:  105:
+        -:  106:    private:
+        -:  107:      friend class thread;
+        -:  108:      friend struct hash<id>;
+        -:  109:
+        -:  110:      friend bool
+        -:  111:      operator==(id __x, id __y) noexcept;
+        -:  112:
+        -:  113:#if __cpp_lib_three_way_comparison
+        -:  114:      friend strong_ordering
+        -:  115:      operator<=>(id __x, id __y) noexcept;
+        -:  116:#else
+        -:  117:      friend bool
+        -:  118:      operator<(id __x, id __y) noexcept;
+        -:  119:#endif
+        -:  120:
+        -:  121:      template<class _CharT, class _Traits>
+        -:  122:	friend basic_ostream<_CharT, _Traits>&
+        -:  123:	operator<<(basic_ostream<_CharT, _Traits>& __out, id __id);
+        -:  124:
+        -:  125:#if __glibcxx_formatters
+        -:  126:      friend formatter<id, char>;
+        -:  127:      friend formatter<id, wchar_t>;
+        -:  128:#endif
+        -:  129:    };
+        -:  130:
+        -:  131:  private:
+        -:  132:    id				_M_id;
+        -:  133:
+        -:  134:    // _GLIBCXX_RESOLVE_LIB_DEFECTS
+        -:  135:    // 2097. packaged_task constructors should be constrained
+        -:  136:    // 3039. Unnecessary decay in thread and packaged_task
+        -:  137:    template<typename _Tp>
+        -:  138:      using __not_same = __not_<is_same<__remove_cvref_t<_Tp>, thread>>;
+        -:  139:
+        -:  140:  public:
+        -:  141:    thread() noexcept = default;
+        -:  142:
+        -:  143:#ifdef _GLIBCXX_HAS_GTHREADS
+        -:  144:  private:
+        -:  145:    // This adds to user code that creates std:thread objects (because
+        -:  146:    // it is called by the template ctor below) strong references to
+        -:  147:    // pthread_create and pthread_join, which ensures they are both
+        -:  148:    // linked in even during static linking.  We can't depend on
+        -:  149:    // gthread calls to bring them in, because those may use weak
+        -:  150:    // references.
+        -:  151:    static void
+function _ZNSt6thread24_M_thread_deps_never_runEv called 0 returned 0% blocks executed 0%
+    #####:  152:    _M_thread_deps_never_run() {
+        -:  153:#ifdef GTHR_ACTIVE_PROXY
+        -:  154:      reinterpret_cast<void (*)(void)>(&pthread_create)();
+        -:  155:      reinterpret_cast<void (*)(void)>(&pthread_join)();
+        -:  156:#endif
+    #####:  157:    }
+        -:  158:
+        -:  159:  public:
+        -:  160:    template<typename _Callable, typename... _Args,
+        -:  161:	     typename = _Require<__not_same<_Callable>>>
+        -:  162:      explicit
+       1*:  163:      thread(_Callable&& __f, _Args&&... __args)
+       1*:  164:      {
+        -:  165:	static_assert( __is_invocable<typename decay<_Callable>::type,
+        -:  166:				      typename decay<_Args>::type...>::value,
+        -:  167:	  "std::thread arguments must be invocable after conversion to rvalues"
+        -:  168:	  );
+        -:  169:
+        -:  170:	using _Wrapper = _Call_wrapper<_Callable, _Args...>;
+        -:  171:	// Create a call wrapper with DECAY_COPY(__f) as its target object
+        -:  172:	// and DECAY_COPY(__args)... as its bound argument entities.
+       1*:  173:	_M_start_thread(_State_ptr(new _State_impl<_Wrapper>(
+        -:  174:	      std::forward<_Callable>(__f), std::forward<_Args>(__args)...)),
+        -:  175:	    _M_thread_deps_never_run);
+       1*:  176:      }
+------------------
+_ZNSt6threadC2IRFvbEJbEvEEOT_DpOT0_:
+function _ZNSt6threadC2IRFvbEJbEvEEOT_DpOT0_ called 0 returned 0% blocks executed 0%
+    #####:  163:      thread(_Callable&& __f, _Args&&... __args)
+    #####:  164:      {
+    %%%%%:  164-block 2
+call    0 never executed
+        -:  165:	static_assert( __is_invocable<typename decay<_Callable>::type,
+        -:  166:				      typename decay<_Args>::type...>::value,
+        -:  167:	  "std::thread arguments must be invocable after conversion to rvalues"
+        -:  168:	  );
+        -:  169:
+        -:  170:	using _Wrapper = _Call_wrapper<_Callable, _Args...>;
+        -:  171:	// Create a call wrapper with DECAY_COPY(__f) as its target object
+        -:  172:	// and DECAY_COPY(__args)... as its bound argument entities.
+    #####:  173:	_M_start_thread(_State_ptr(new _State_impl<_Wrapper>(
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  173-block 4
+call    3 never executed
+call    4 never executed
+call    5 never executed
+branch  6 never executed (fallthrough)
+branch  7 never executed (throw)
+    %%%%%:  173-block 7
+call    8 never executed
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+    %%%%%:  173-block 9
+call   12 never executed
+    $$$$$:  173-block 11
+call   13 never executed
+    $$$$$:  173-block 13
+branch 14 never executed (fallthrough)
+branch 15 never executed
+    $$$$$:  173-block 14
+call   16 never executed
+        -:  174:	      std::forward<_Callable>(__f), std::forward<_Args>(__args)...)),
+        -:  175:	    _M_thread_deps_never_run);
+    #####:  176:      }
+------------------
+_ZNSt6threadC2IRFvvEJEvEEOT_DpOT0_:
+function _ZNSt6threadC2IRFvvEJEvEEOT_DpOT0_ called 0 returned 0% blocks executed 0%
+    #####:  163:      thread(_Callable&& __f, _Args&&... __args)
+    #####:  164:      {
+    %%%%%:  164-block 2
+call    0 never executed
+        -:  165:	static_assert( __is_invocable<typename decay<_Callable>::type,
+        -:  166:				      typename decay<_Args>::type...>::value,
+        -:  167:	  "std::thread arguments must be invocable after conversion to rvalues"
+        -:  168:	  );
+        -:  169:
+        -:  170:	using _Wrapper = _Call_wrapper<_Callable, _Args...>;
+        -:  171:	// Create a call wrapper with DECAY_COPY(__f) as its target object
+        -:  172:	// and DECAY_COPY(__args)... as its bound argument entities.
+    #####:  173:	_M_start_thread(_State_ptr(new _State_impl<_Wrapper>(
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  173-block 4
+call    3 never executed
+call    4 never executed
+branch  5 never executed (fallthrough)
+branch  6 never executed (throw)
+    %%%%%:  173-block 6
+call    7 never executed
+call    8 never executed
+branch  9 never executed (fallthrough)
+branch 10 never executed (throw)
+    %%%%%:  173-block 8
+call   11 never executed
+    $$$$$:  173-block 10
+call   12 never executed
+    $$$$$:  173-block 12
+branch 13 never executed (fallthrough)
+branch 14 never executed
+    $$$$$:  173-block 13
+call   15 never executed
+        -:  174:	      std::forward<_Callable>(__f), std::forward<_Args>(__args)...)),
+        -:  175:	    _M_thread_deps_never_run);
+    #####:  176:      }
+------------------
+_ZNSt6threadC2IRFbmEJiEvEEOT_DpOT0_:
+function _ZNSt6threadC2IRFbmEJiEvEEOT_DpOT0_ called 1 returned 100% blocks executed 67%
+        1:  163:      thread(_Callable&& __f, _Args&&... __args)
+        1:  164:      {
+        1:  164-block 2
+call    0 returned 1
+        -:  165:	static_assert( __is_invocable<typename decay<_Callable>::type,
+        -:  166:				      typename decay<_Args>::type...>::value,
+        -:  167:	  "std::thread arguments must be invocable after conversion to rvalues"
+        -:  168:	  );
+        -:  169:
+        -:  170:	using _Wrapper = _Call_wrapper<_Callable, _Args...>;
+        -:  171:	// Create a call wrapper with DECAY_COPY(__f) as its target object
+        -:  172:	// and DECAY_COPY(__args)... as its bound argument entities.
+        1:  173:	_M_start_thread(_State_ptr(new _State_impl<_Wrapper>(
+call    0 returned 1
+branch  1 taken 1 (fallthrough)
+branch  2 taken 0 (throw)
+        1:  173-block 4
+call    3 returned 1
+call    4 returned 1
+call    5 returned 1
+branch  6 taken 1 (fallthrough)
+branch  7 taken 0 (throw)
+        1:  173-block 7
+call    8 returned 1
+call    9 returned 1
+branch 10 taken 1 (fallthrough)
+branch 11 taken 0 (throw)
+        1:  173-block 9
+call   12 returned 1
+    $$$$$:  173-block 11
+call   13 never executed
+    $$$$$:  173-block 13
+branch 14 never executed (fallthrough)
+branch 15 never executed
+    $$$$$:  173-block 14
+call   16 never executed
+        -:  174:	      std::forward<_Callable>(__f), std::forward<_Args>(__args)...)),
+        -:  175:	    _M_thread_deps_never_run);
+        1:  176:      }
+------------------
+        -:  177:#endif // _GLIBCXX_HAS_GTHREADS
+        -:  178:
+function _ZNSt6threadD2Ev called 1 returned 100% blocks executed 75%
+        1:  179:    ~thread()
+        -:  180:    {
+        1:  181:      if (joinable())
+        1:  181-block 2
+call    0 returned 1
+branch  1 taken 0 (fallthrough)
+branch  2 taken 1
+        -:  182:	std::__terminate();
+        1:  183:    }
+        -:  184:
+        -:  185:    thread(const thread&) = delete;
+        -:  186:
+        -:  187:    thread(thread&& __t) noexcept
+        -:  188:    { swap(__t); }
+        -:  189:
+        -:  190:    thread& operator=(const thread&) = delete;
+        -:  191:
+        -:  192:    thread& operator=(thread&& __t) noexcept
+        -:  193:    {
+        -:  194:      if (joinable())
+        -:  195:	std::__terminate();
+        -:  196:      swap(__t);
+        -:  197:      return *this;
+        -:  198:    }
+        -:  199:
+        -:  200:    void
+        -:  201:    swap(thread& __t) noexcept
+        -:  202:    { std::swap(_M_id, __t._M_id); }
+        -:  203:
+        -:  204:    bool
+function _ZNKSt6thread8joinableEv called 1 returned 100% blocks executed 100%
+        1:  205:    joinable() const noexcept
+        1:  206:    { return !(_M_id == id()); }
+        1:  206-block 2
+call    0 returned 1
+call    1 returned 1
+        1:  206-block 5
+        -:  207:
+        -:  208:    void
+        -:  209:    join();
+        -:  210:
+        -:  211:    void
+        -:  212:    detach();
+        -:  213:
+        -:  214:    id
+        -:  215:    get_id() const noexcept
+        -:  216:    { return _M_id; }
+        -:  217:
+        -:  218:    /** @pre thread is joinable
+        -:  219:     */
+        -:  220:    native_handle_type
+        -:  221:    native_handle()
+        -:  222:    { return _M_id._M_thread; }
+        -:  223:
+        -:  224:    // Returns a value that hints at the number of hardware thread contexts.
+        -:  225:    static unsigned int
+        -:  226:    hardware_concurrency() noexcept;
+        -:  227:
+        -:  228:#ifdef _GLIBCXX_HAS_GTHREADS
+        -:  229:#ifndef _GLIBCXX_THREAD_IMPL
+        -:  230:  private:
+        -:  231:#endif
+        -:  232:    // Abstract base class for types that wrap arbitrary functors to be
+        -:  233:    // invoked in the new thread of execution.
+        -:  234:    struct _State
+        -:  235:    {
+        -:  236:      virtual ~_State();
+        -:  237:      virtual void _M_run() = 0;
+        -:  238:    };
+        -:  239:    using _State_ptr = unique_ptr<_State>;
+        -:  240:
+        -:  241:  private:
+        -:  242:    template<typename _Callable>
+        -:  243:      struct _State_impl : public _State
+        -:  244:      {
+        -:  245:	_Callable		_M_func;
+        -:  246:
+        -:  247:	template<typename... _Args>
+       1*:  248:	  _State_impl(_Args&&... __args)
+       1*:  249:	  : _M_func(std::forward<_Args>(__args)...)
+       1*:  250:	  { }
+------------------
+_ZNSt6thread11_State_implINS_8_InvokerISt5tupleIJPFvbEbEEEEEC2IJRS3_bEEEDpOT_:
+function _ZNSt6thread11_State_implINS_8_InvokerISt5tupleIJPFvbEbEEEEEC2IJRS3_bEEEDpOT_ called 0 returned 0% blocks executed 0%
+    #####:  248:	  _State_impl(_Args&&... __args)
+    #####:  249:	  : _M_func(std::forward<_Args>(__args)...)
+    %%%%%:  249-block 2
+call    0 never executed
+call    1 never executed
+call    2 never executed
+call    3 never executed
+    #####:  250:	  { }
+------------------
+_ZNSt6thread11_State_implINS_8_InvokerISt5tupleIJPFvvEEEEEEC2IJRS3_EEEDpOT_:
+function _ZNSt6thread11_State_implINS_8_InvokerISt5tupleIJPFvvEEEEEEC2IJRS3_EEEDpOT_ called 0 returned 0% blocks executed 0%
+    #####:  248:	  _State_impl(_Args&&... __args)
+    #####:  249:	  : _M_func(std::forward<_Args>(__args)...)
+    %%%%%:  249-block 2
+call    0 never executed
+call    1 never executed
+call    2 never executed
+    #####:  250:	  { }
+------------------
+_ZNSt6thread11_State_implINS_8_InvokerISt5tupleIJPFbmEiEEEEEC2IJRS3_iEEEDpOT_:
+function _ZNSt6thread11_State_implINS_8_InvokerISt5tupleIJPFbmEiEEEEEC2IJRS3_iEEEDpOT_ called 1 returned 100% blocks executed 100%
+        1:  248:	  _State_impl(_Args&&... __args)
+        1:  249:	  : _M_func(std::forward<_Args>(__args)...)
+        1:  249-block 2
+call    0 returned 1
+call    1 returned 1
+call    2 returned 1
+call    3 returned 1
+        1:  250:	  { }
+------------------
+        -:  251:
+        -:  252:	void
+       1*:  253:	_M_run() { _M_func(); }
+------------------
+_ZNSt6thread11_State_implINS_8_InvokerISt5tupleIJPFbmEiEEEEE6_M_runEv:
+function _ZNSt6thread11_State_implINS_8_InvokerISt5tupleIJPFbmEiEEEEE6_M_runEv called 1 returned 100% blocks executed 100%
+        1:  253:	_M_run() { _M_func(); }
+        1:  253-block 2
+call    0 returned 1
+------------------
+_ZNSt6thread11_State_implINS_8_InvokerISt5tupleIJPFvvEEEEEE6_M_runEv:
+function _ZNSt6thread11_State_implINS_8_InvokerISt5tupleIJPFvvEEEEEE6_M_runEv called 0 returned 0% blocks executed 0%
+    #####:  253:	_M_run() { _M_func(); }
+    %%%%%:  253-block 2
+call    0 never executed
+------------------
+_ZNSt6thread11_State_implINS_8_InvokerISt5tupleIJPFvbEbEEEEE6_M_runEv:
+function _ZNSt6thread11_State_implINS_8_InvokerISt5tupleIJPFvbEbEEEEE6_M_runEv called 0 returned 0% blocks executed 0%
+    #####:  253:	_M_run() { _M_func(); }
+    %%%%%:  253-block 2
+call    0 never executed
+------------------
+        -:  254:      };
+        -:  255:
+        -:  256:    void
+        -:  257:    _M_start_thread(_State_ptr, void (*)());
+        -:  258:
+        -:  259:#if _GLIBCXX_THREAD_ABI_COMPAT
+        -:  260:  public:
+        -:  261:    struct _Impl_base;
+        -:  262:    typedef shared_ptr<_Impl_base>	__shared_base_type;
+        -:  263:    struct _Impl_base
+        -:  264:    {
+        -:  265:      __shared_base_type	_M_this_ptr;
+        -:  266:      virtual ~_Impl_base() = default;
+        -:  267:      virtual void _M_run() = 0;
+        -:  268:    };
+        -:  269:
+        -:  270:  private:
+        -:  271:    void
+        -:  272:    _M_start_thread(__shared_base_type, void (*)());
+        -:  273:
+        -:  274:    void
+        -:  275:    _M_start_thread(__shared_base_type);
+        -:  276:#endif
+        -:  277:
+        -:  278:  private:
+        -:  279:    // A call wrapper that does INVOKE(forwarded tuple elements...)
+        -:  280:    template<typename _Tuple>
+        -:  281:      struct _Invoker
+        -:  282:      {
+        -:  283:	template<typename... _Args>
+        -:  284:	  explicit
+       1*:  285:	  _Invoker(_Args&&... __args)
+       1*:  286:	  : _M_t(std::forward<_Args>(__args)...)
+       1*:  287:	  { }
+------------------
+_ZNSt6thread8_InvokerISt5tupleIJPFvbEbEEEC2IJRS2_bEEEDpOT_:
+function _ZNSt6thread8_InvokerISt5tupleIJPFvbEbEEEC2IJRS2_bEEEDpOT_ called 0 returned 0% blocks executed 0%
+    #####:  285:	  _Invoker(_Args&&... __args)
+    #####:  286:	  : _M_t(std::forward<_Args>(__args)...)
+    %%%%%:  286-block 2
+call    0 never executed
+call    1 never executed
+call    2 never executed
+    #####:  287:	  { }
+------------------
+_ZNSt6thread8_InvokerISt5tupleIJPFvvEEEEC2IJRS2_EEEDpOT_:
+function _ZNSt6thread8_InvokerISt5tupleIJPFvvEEEEC2IJRS2_EEEDpOT_ called 0 returned 0% blocks executed 0%
+    #####:  285:	  _Invoker(_Args&&... __args)
+    #####:  286:	  : _M_t(std::forward<_Args>(__args)...)
+    %%%%%:  286-block 2
+call    0 never executed
+call    1 never executed
+    #####:  287:	  { }
+------------------
+_ZNSt6thread8_InvokerISt5tupleIJPFbmEiEEEC2IJRS2_iEEEDpOT_:
+function _ZNSt6thread8_InvokerISt5tupleIJPFbmEiEEEC2IJRS2_iEEEDpOT_ called 1 returned 100% blocks executed 100%
+        1:  285:	  _Invoker(_Args&&... __args)
+        1:  286:	  : _M_t(std::forward<_Args>(__args)...)
+        1:  286-block 2
+call    0 returned 1
+call    1 returned 1
+call    2 returned 1
+        1:  287:	  { }
+------------------
+        -:  288:
+        -:  289:	_Tuple _M_t;
+        -:  290:
+        -:  291:	template<typename>
+        -:  292:	  struct __result;
+        -:  293:	template<typename _Fn, typename... _Args>
+        -:  294:	  struct __result<tuple<_Fn, _Args...>>
+        -:  295:	  : __invoke_result<_Fn, _Args...>
+        -:  296:	  { };
+        -:  297:
+        -:  298:	template<size_t... _Ind>
+        -:  299:	  typename __result<_Tuple>::type
+       1*:  300:	  _M_invoke(_Index_tuple<_Ind...>)
+       1*:  301:	  { return std::__invoke(std::get<_Ind>(std::move(_M_t))...); }
+------------------
+_ZNSt6thread8_InvokerISt5tupleIJPFbmEiEEE9_M_invokeIJLm0ELm1EEEEbSt12_Index_tupleIJXspT_EEE:
+function _ZNSt6thread8_InvokerISt5tupleIJPFbmEiEEE9_M_invokeIJLm0ELm1EEEEbSt12_Index_tupleIJXspT_EEE called 1 returned 100% blocks executed 100%
+        1:  300:	  _M_invoke(_Index_tuple<_Ind...>)
+        1:  301:	  { return std::__invoke(std::get<_Ind>(std::move(_M_t))...); }
+        1:  301-block 2
+call    0 returned 1
+call    1 returned 1
+call    2 returned 1
+call    3 returned 1
+call    4 returned 1
+------------------
+_ZNSt6thread8_InvokerISt5tupleIJPFvvEEEE9_M_invokeIJLm0EEEEvSt12_Index_tupleIJXspT_EEE:
+function _ZNSt6thread8_InvokerISt5tupleIJPFvvEEEE9_M_invokeIJLm0EEEEvSt12_Index_tupleIJXspT_EEE called 0 returned 0% blocks executed 0%
+    #####:  300:	  _M_invoke(_Index_tuple<_Ind...>)
+    #####:  301:	  { return std::__invoke(std::get<_Ind>(std::move(_M_t))...); }
+    %%%%%:  301-block 2
+call    0 never executed
+call    1 never executed
+call    2 never executed
+------------------
+_ZNSt6thread8_InvokerISt5tupleIJPFvbEbEEE9_M_invokeIJLm0ELm1EEEEvSt12_Index_tupleIJXspT_EEE:
+function _ZNSt6thread8_InvokerISt5tupleIJPFvbEbEEE9_M_invokeIJLm0ELm1EEEEvSt12_Index_tupleIJXspT_EEE called 0 returned 0% blocks executed 0%
+    #####:  300:	  _M_invoke(_Index_tuple<_Ind...>)
+    #####:  301:	  { return std::__invoke(std::get<_Ind>(std::move(_M_t))...); }
+    %%%%%:  301-block 2
+call    0 never executed
+call    1 never executed
+call    2 never executed
+call    3 never executed
+call    4 never executed
+------------------
+        -:  302:
+        -:  303:	typename __result<_Tuple>::type
+       1*:  304:	operator()()
+        -:  305:	{
+        -:  306:	  using _Indices
+        -:  307:	    = typename _Build_index_tuple<tuple_size<_Tuple>::value>::__type;
+       1*:  308:	  return _M_invoke(_Indices());
+        -:  309:	}
+------------------
+_ZNSt6thread8_InvokerISt5tupleIJPFbmEiEEEclEv:
+function _ZNSt6thread8_InvokerISt5tupleIJPFbmEiEEEclEv called 1 returned 100% blocks executed 100%
+        1:  304:	operator()()
+        -:  305:	{
+        -:  306:	  using _Indices
+        -:  307:	    = typename _Build_index_tuple<tuple_size<_Tuple>::value>::__type;
+        1:  308:	  return _M_invoke(_Indices());
+        1:  308-block 2
+call    0 returned 1
+        -:  309:	}
+------------------
+_ZNSt6thread8_InvokerISt5tupleIJPFvvEEEEclEv:
+function _ZNSt6thread8_InvokerISt5tupleIJPFvvEEEEclEv called 0 returned 0% blocks executed 0%
+    #####:  304:	operator()()
+        -:  305:	{
+        -:  306:	  using _Indices
+        -:  307:	    = typename _Build_index_tuple<tuple_size<_Tuple>::value>::__type;
+    #####:  308:	  return _M_invoke(_Indices());
+    %%%%%:  308-block 2
+call    0 never executed
+        -:  309:	}
+------------------
+_ZNSt6thread8_InvokerISt5tupleIJPFvbEbEEEclEv:
+function _ZNSt6thread8_InvokerISt5tupleIJPFvbEbEEEclEv called 0 returned 0% blocks executed 0%
+    #####:  304:	operator()()
+        -:  305:	{
+        -:  306:	  using _Indices
+        -:  307:	    = typename _Build_index_tuple<tuple_size<_Tuple>::value>::__type;
+    #####:  308:	  return _M_invoke(_Indices());
+    %%%%%:  308-block 2
+call    0 never executed
+        -:  309:	}
+------------------
+        -:  310:      };
+        -:  311:
+        -:  312:  public:
+        -:  313:    /// @cond undocumented
+        -:  314:    template<typename... _Tp>
+        -:  315:      using _Call_wrapper = _Invoker<tuple<typename decay<_Tp>::type...>>;
+        -:  316:    /// @endcond
+        -:  317:#endif // _GLIBCXX_HAS_GTHREADS
+        -:  318:  };
+        -:  319:
+        -:  320:#ifndef _GLIBCXX_HAS_GTHREADS
+        -:  321:  inline void thread::join() { std::__throw_system_error(EINVAL); }
+        -:  322:  inline void thread::detach() { std::__throw_system_error(EINVAL); }
+        -:  323:  inline unsigned int thread::hardware_concurrency() noexcept { return 0; }
+        -:  324:#endif
+        -:  325:
+        -:  326:  /// @relates std::thread
+        -:  327:  inline void
+        -:  328:  swap(thread& __x, thread& __y) noexcept
+        -:  329:  { __x.swap(__y); }
+        -:  330:
+        -:  331:  /// @relates std::thread::id
+        -:  332:  inline bool
+function _ZSteqNSt6thread2idES0_ called 1 returned 100% blocks executed 100%
+        1:  333:  operator==(thread::id __x, thread::id __y) noexcept
+        -:  334:  {
+        -:  335:    // pthread_equal is undefined if either thread ID is not valid, so we
+        -:  336:    // can't safely use __gthread_equal on default-constructed values (nor
+        -:  337:    // the non-zero value returned by this_thread::get_id() for
+        -:  338:    // single-threaded programs using GNU libc). Assume EqualityComparable.
+        1:  339:    return __x._M_thread == __y._M_thread;
+        1:  339-block 2
+        -:  340:  }
+        -:  341:
+        -:  342:  // N.B. other comparison operators are defined in <thread>
+        -:  343:
+        -:  344:  // DR 889.
+        -:  345:  /// std::hash specialization for thread::id.
+        -:  346:  template<>
+        -:  347:    struct hash<thread::id>
+        -:  348:    : public __hash_base<size_t, thread::id>
+        -:  349:    {
+        -:  350:      size_t
+        -:  351:      operator()(const thread::id& __id) const noexcept
+        -:  352:      { return std::_Hash_impl::hash(__id._M_thread); }
+        -:  353:    };
+        -:  354:
+        -:  355:  namespace this_thread
+        -:  356:  {
+        -:  357:    /// The unique identifier of the current thread.
+        -:  358:    inline thread::id
+        -:  359:    get_id() noexcept
+        -:  360:    {
+        -:  361:#ifndef _GLIBCXX_HAS_GTHREADS
+        -:  362:      return thread::id(1);
+        -:  363:#elif defined _GLIBCXX_NATIVE_THREAD_ID
+        -:  364:      return thread::id(_GLIBCXX_NATIVE_THREAD_ID);
+        -:  365:#else
+        -:  366:      return thread::id(__gthread_self());
+        -:  367:#endif
+        -:  368:    }
+        -:  369:
+        -:  370:    /// Allow the implementation to schedule a different thread.
+        -:  371:    inline void
+        -:  372:    yield() noexcept
+        -:  373:    {
+        -:  374:#if defined _GLIBCXX_HAS_GTHREADS && defined _GLIBCXX_USE_SCHED_YIELD
+        -:  375:      __gthread_yield();
+        -:  376:#endif
+        -:  377:    }
+        -:  378:
+        -:  379:  } // namespace this_thread
+        -:  380:
+        -:  381:  /// @}
+        -:  382:
+        -:  383:_GLIBCXX_END_NAMESPACE_VERSION
+        -:  384:} // namespace
+        -:  385:#endif // C++11
+        -:  386:
+        -:  387:#endif // _GLIBCXX_THREAD_H

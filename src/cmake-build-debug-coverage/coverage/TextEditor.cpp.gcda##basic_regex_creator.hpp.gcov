@@ -1,0 +1,3181 @@
+        -:    0:Source:/home/rc/ZathuraDbg/vendor/ImGuiColorTextEdit/vendor/regex/include/boost/regex/v5/basic_regex_creator.hpp
+        -:    0:Graph:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/home/rc/ZathuraDbg/vendor/ImGuiColorTextEdit/TextEditor.cpp.gcno
+        -:    0:Data:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/home/rc/ZathuraDbg/vendor/ImGuiColorTextEdit/TextEditor.cpp.gcda
+        -:    0:Runs:1
+        -:    1:/*
+        -:    2: *
+        -:    3: * Copyright (c) 2004
+        -:    4: * John Maddock
+        -:    5: *
+        -:    6: * Use, modification and distribution are subject to the 
+        -:    7: * Boost Software License, Version 1.0. (See accompanying file 
+        -:    8: * LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+        -:    9: *
+        -:   10: */
+        -:   11:
+        -:   12: /*
+        -:   13:  *   LOCATION:    see http://www.boost.org for most recent version.
+        -:   14:  *   FILE         basic_regex_creator.cpp
+        -:   15:  *   VERSION      see <boost/version.hpp>
+        -:   16:  *   DESCRIPTION: Declares template class basic_regex_creator which fills in
+        -:   17:  *                the data members of a regex_data object.
+        -:   18:  */
+        -:   19:
+        -:   20:#ifndef BOOST_REGEX_V5_BASIC_REGEX_CREATOR_HPP
+        -:   21:#define BOOST_REGEX_V5_BASIC_REGEX_CREATOR_HPP
+        -:   22:
+        -:   23:#ifdef BOOST_REGEX_MSVC
+        -:   24:#  pragma warning(push)
+        -:   25:#pragma warning(disable:4459)
+        -:   26:#if BOOST_REGEX_MSVC < 1910
+        -:   27:#pragma warning(disable:4800)
+        -:   28:#endif
+        -:   29:#endif
+        -:   30:
+        -:   31:#include <set>
+        -:   32:
+        -:   33:namespace boost{
+        -:   34:
+        -:   35:namespace BOOST_REGEX_DETAIL_NS{
+        -:   36:
+        -:   37:template <class charT>
+        -:   38:struct digraph : public std::pair<charT, charT>
+        -:   39:{
+function _ZN5boost13re_detail_5007digraphIcEC2Ev called 12 returned 100% blocks executed 100%
+       12:   40:   digraph() : std::pair<charT, charT>(charT(0), charT(0)){}
+       12:   40-block 2
+call    0 returned 12
+function _ZN5boost13re_detail_5007digraphIcEC2Ec called 12 returned 100% blocks executed 100%
+       12:   41:   digraph(charT c1) : std::pair<charT, charT>(c1, charT(0)){}
+       12:   41-block 2
+call    0 returned 12
+        -:   42:   digraph(charT c1, charT c2) : std::pair<charT, charT>(c1, c2)
+        -:   43:   {}
+function _ZN5boost13re_detail_5007digraphIcEC2ERKS2_ called 22 returned 100% blocks executed 100%
+       22:   44:   digraph(const digraph<charT>& d) : std::pair<charT, charT>(d.first, d.second){}
+       22:   44-block 2
+call    0 returned 22
+function _ZN5boost13re_detail_5007digraphIcEaSERKS2_ called 12 returned 100% blocks executed 100%
+       12:   45:   digraph<charT>& operator=(const digraph<charT>&) = default;
+       12:   45-block 2
+call    0 returned 12
+        -:   46:   template <class Seq>
+        -:   47:   digraph(const Seq& s) : std::pair<charT, charT>()
+        -:   48:   {
+        -:   49:      BOOST_REGEX_ASSERT(s.size() <= 2);
+        -:   50:      BOOST_REGEX_ASSERT(s.size());
+        -:   51:      this->first = s[0];
+        -:   52:      this->second = (s.size() > 1) ? s[1] : 0;
+        -:   53:   }
+        -:   54:};
+        -:   55:
+        -:   56:template <class charT, class traits>
+        -:   57:class basic_char_set
+        -:   58:{
+        -:   59:public:
+        -:   60:   typedef digraph<charT>                   digraph_type;
+        -:   61:   typedef typename traits::string_type     string_type;
+        -:   62:   typedef typename traits::char_class_type m_type;
+        -:   63:
+function _ZN5boost13re_detail_50014basic_char_setIcNS_12regex_traitsIcNS_16cpp_regex_traitsIcEEEEEC2Ev called 2 returned 100% blocks executed 100%
+        2:   64:   basic_char_set()
+        2:   65:   {
+        2:   65-block 2
+call    0 returned 2
+call    1 returned 2
+call    2 returned 2
+        2:   66:      m_negate = false;
+        2:   67:      m_has_digraphs = false;
+        2:   68:      m_classes = 0;
+        2:   69:      m_negated_classes = 0;
+        2:   70:      m_empty = true;
+        2:   71:   }
+        -:   72:
+function _ZN5boost13re_detail_50014basic_char_setIcNS_12regex_traitsIcNS_16cpp_regex_traitsIcEEEEE10add_singleERKNS0_7digraphIcEE called 2 returned 100% blocks executed 75%
+        2:   73:   void add_single(const digraph_type& s)
+        -:   74:   {
+        2:   75:      m_singles.insert(s);
+        2:   75-block 2
+call    0 returned 2
+        2:   76:      if(s.second)
+branch  0 taken 0 (fallthrough)
+branch  1 taken 2
+    #####:   77:         m_has_digraphs = true;
+    %%%%%:   77-block 4
+        2:   78:      m_empty = false;
+        2:   79:   }
+function _ZN5boost13re_detail_50014basic_char_setIcNS_12regex_traitsIcNS_16cpp_regex_traitsIcEEEEE9add_rangeERKNS0_7digraphIcEESA_ called 5 returned 100% blocks executed 71%
+        5:   80:   void add_range(const digraph_type& first, const digraph_type& end)
+        -:   81:   {
+        5:   82:      m_ranges.push_back(first);
+        5:   82-block 2
+call    0 returned 5
+        5:   83:      m_ranges.push_back(end);
+call    0 returned 5
+        5:   84:      if(first.second)
+branch  0 taken 0 (fallthrough)
+branch  1 taken 5
+        -:   85:      {
+    #####:   86:         m_has_digraphs = true;
+    #####:   87:         add_single(first);
+    %%%%%:   87-block 5
+call    0 never executed
+        -:   88:      }
+        5:   89:      if(end.second)
+        5:   89-block 6
+branch  0 taken 0 (fallthrough)
+branch  1 taken 5
+        -:   90:      {
+    #####:   91:         m_has_digraphs = true;
+    #####:   92:         add_single(end);
+    %%%%%:   92-block 7
+call    0 never executed
+        -:   93:      }
+        5:   94:      m_empty = false;
+        5:   95:   }
+function _ZN5boost13re_detail_50014basic_char_setIcNS_12regex_traitsIcNS_16cpp_regex_traitsIcEEEEE9add_classEj called 0 returned 0% blocks executed 0%
+    #####:   96:   void add_class(m_type m)
+        -:   97:   {
+    #####:   98:      m_classes |= m;
+    #####:   99:      m_empty = false;
+    #####:  100:   }
+function _ZN5boost13re_detail_50014basic_char_setIcNS_12regex_traitsIcNS_16cpp_regex_traitsIcEEEEE17add_negated_classEj called 0 returned 0% blocks executed 0%
+    #####:  101:   void add_negated_class(m_type m)
+        -:  102:   {
+    #####:  103:      m_negated_classes |= m;
+    #####:  104:      m_empty = false;
+    #####:  105:   }
+function _ZN5boost13re_detail_50014basic_char_setIcNS_12regex_traitsIcNS_16cpp_regex_traitsIcEEEEE14add_equivalentERKNS0_7digraphIcEE called 0 returned 0% blocks executed 0%
+    #####:  106:   void add_equivalent(const digraph_type& s)
+        -:  107:   {
+    #####:  108:      m_equivalents.insert(s);
+    %%%%%:  108-block 2
+call    0 never executed
+    #####:  109:      if(s.second)
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  110:      {
+    #####:  111:         m_has_digraphs = true;
+    #####:  112:         add_single(s);
+    %%%%%:  112-block 4
+call    0 never executed
+        -:  113:      }
+    #####:  114:      m_empty = false;
+    #####:  115:   }
+function _ZN5boost13re_detail_50014basic_char_setIcNS_12regex_traitsIcNS_16cpp_regex_traitsIcEEEEE6negateEv called 0 returned 0% blocks executed 0%
+    #####:  116:   void negate()
+        -:  117:   { 
+    #####:  118:      m_negate = true;
+        -:  119:      //m_empty = false;
+    #####:  120:   }
+        -:  121:
+        -:  122:   //
+        -:  123:   // accessor functions:
+        -:  124:   //
+function _ZNK5boost13re_detail_50014basic_char_setIcNS_12regex_traitsIcNS_16cpp_regex_traitsIcEEEEE12has_digraphsEv called 2 returned 100% blocks executed 100%
+        2:  125:   bool has_digraphs()const
+        -:  126:   {
+        2:  127:      return m_has_digraphs;
+        2:  127-block 2
+        -:  128:   }
+function _ZNK5boost13re_detail_50014basic_char_setIcNS_12regex_traitsIcNS_16cpp_regex_traitsIcEEEEE10is_negatedEv called 2 returned 100% blocks executed 100%
+        2:  129:   bool is_negated()const
+        -:  130:   {
+        2:  131:      return m_negate;
+        2:  131-block 2
+        -:  132:   }
+        -:  133:   typedef typename std::vector<digraph_type>::const_iterator  list_iterator;
+        -:  134:   typedef typename std::set<digraph_type>::const_iterator     set_iterator;
+function _ZNK5boost13re_detail_50014basic_char_setIcNS_12regex_traitsIcNS_16cpp_regex_traitsIcEEEEE13singles_beginEv called 2 returned 100% blocks executed 100%
+        2:  135:   set_iterator singles_begin()const
+        -:  136:   {
+        2:  137:      return m_singles.begin();
+        2:  137-block 2
+call    0 returned 2
+        -:  138:   }
+function _ZNK5boost13re_detail_50014basic_char_setIcNS_12regex_traitsIcNS_16cpp_regex_traitsIcEEEEE11singles_endEv called 2 returned 100% blocks executed 100%
+        2:  139:   set_iterator singles_end()const
+        -:  140:   {
+        2:  141:      return m_singles.end();
+        2:  141-block 2
+call    0 returned 2
+        -:  142:   }
+function _ZNK5boost13re_detail_50014basic_char_setIcNS_12regex_traitsIcNS_16cpp_regex_traitsIcEEEEE12ranges_beginEv called 2 returned 100% blocks executed 100%
+        2:  143:   list_iterator ranges_begin()const
+        -:  144:   {
+        2:  145:      return m_ranges.begin();
+        2:  145-block 2
+call    0 returned 2
+        -:  146:   }
+function _ZNK5boost13re_detail_50014basic_char_setIcNS_12regex_traitsIcNS_16cpp_regex_traitsIcEEEEE10ranges_endEv called 2 returned 100% blocks executed 100%
+        2:  147:   list_iterator ranges_end()const
+        -:  148:   {
+        2:  149:      return m_ranges.end();
+        2:  149-block 2
+call    0 returned 2
+        -:  150:   }
+function _ZNK5boost13re_detail_50014basic_char_setIcNS_12regex_traitsIcNS_16cpp_regex_traitsIcEEEEE17equivalents_beginEv called 2 returned 100% blocks executed 100%
+        2:  151:   set_iterator equivalents_begin()const
+        -:  152:   {
+        2:  153:      return m_equivalents.begin();
+        2:  153-block 2
+call    0 returned 2
+        -:  154:   }
+function _ZNK5boost13re_detail_50014basic_char_setIcNS_12regex_traitsIcNS_16cpp_regex_traitsIcEEEEE15equivalents_endEv called 2 returned 100% blocks executed 100%
+        2:  155:   set_iterator equivalents_end()const
+        -:  156:   {
+        2:  157:      return m_equivalents.end();
+        2:  157-block 2
+call    0 returned 2
+        -:  158:   }
+function _ZNK5boost13re_detail_50014basic_char_setIcNS_12regex_traitsIcNS_16cpp_regex_traitsIcEEEEE7classesEv called 2 returned 100% blocks executed 100%
+        2:  159:   m_type classes()const
+        -:  160:   {
+        2:  161:      return m_classes;
+        2:  161-block 2
+        -:  162:   }
+function _ZNK5boost13re_detail_50014basic_char_setIcNS_12regex_traitsIcNS_16cpp_regex_traitsIcEEEEE15negated_classesEv called 2 returned 100% blocks executed 100%
+        2:  163:   m_type negated_classes()const
+        -:  164:   {
+        2:  165:      return m_negated_classes;
+        2:  165-block 2
+        -:  166:   }
+function _ZNK5boost13re_detail_50014basic_char_setIcNS_12regex_traitsIcNS_16cpp_regex_traitsIcEEEEE5emptyEv called 0 returned 0% blocks executed 0%
+    #####:  167:   bool empty()const
+        -:  168:   {
+    #####:  169:      return m_empty;
+    %%%%%:  169-block 2
+        -:  170:   }
+        -:  171:private:
+        -:  172:   std::set<digraph_type>    m_singles;         // a list of single characters to match
+        -:  173:   std::vector<digraph_type> m_ranges;          // a list of end points of our ranges
+        -:  174:   bool                      m_negate;          // true if the set is to be negated
+        -:  175:   bool                      m_has_digraphs;    // true if we have digraphs present
+        -:  176:   m_type                    m_classes;         // character classes to match
+        -:  177:   m_type                    m_negated_classes; // negated character classes to match
+        -:  178:   bool                      m_empty;           // whether we've added anything yet
+        -:  179:   std::set<digraph_type>    m_equivalents;     // a list of equivalence classes
+        -:  180:};
+        -:  181:   
+        -:  182:template <class charT, class traits>
+        -:  183:class basic_regex_creator
+        -:  184:{
+        -:  185:public:
+        -:  186:   basic_regex_creator(regex_data<charT, traits>* data);
+function _ZN5boost13re_detail_50019basic_regex_creatorIcNS_12regex_traitsIcNS_16cpp_regex_traitsIcEEEEE9getoffsetEPv called 16 returned 100% blocks executed 100%
+       16:  187:   std::ptrdiff_t getoffset(void* addr)
+        -:  188:   {
+       16:  189:      return getoffset(addr, m_pdata->m_data.data());
+       16:  189-block 2
+call    0 returned 16
+call    1 returned 16
+        -:  190:   }
+function _ZN5boost13re_detail_50019basic_regex_creatorIcNS_12regex_traitsIcNS_16cpp_regex_traitsIcEEEEE9getoffsetEPKvS8_ called 16 returned 100% blocks executed 100%
+       16:  191:   std::ptrdiff_t getoffset(const void* addr, const void* base)
+        -:  192:   {
+       16:  193:      return static_cast<const char*>(addr) - static_cast<const char*>(base);
+       16:  193-block 2
+        -:  194:   }
+function _ZN5boost13re_detail_50019basic_regex_creatorIcNS_12regex_traitsIcNS_16cpp_regex_traitsIcEEEEE10getaddressEl called 4 returned 100% blocks executed 100%
+        4:  195:   re_syntax_base* getaddress(std::ptrdiff_t off)
+        -:  196:   {
+        4:  197:      return getaddress(off, m_pdata->m_data.data());
+        4:  197-block 2
+call    0 returned 4
+call    1 returned 4
+        -:  198:   }
+function _ZN5boost13re_detail_50019basic_regex_creatorIcNS_12regex_traitsIcNS_16cpp_regex_traitsIcEEEEE10getaddressElPv called 16 returned 100% blocks executed 100%
+       16:  199:   re_syntax_base* getaddress(std::ptrdiff_t off, void* base)
+        -:  200:   {
+       16:  201:      return static_cast<re_syntax_base*>(static_cast<void*>(static_cast<char*>(base) + off));
+       16:  201-block 2
+        -:  202:   }
+function _ZN5boost13re_detail_50019basic_regex_creatorIcNS_12regex_traitsIcNS_16cpp_regex_traitsIcEEEEE4initEj called 1 returned 100% blocks executed 100%
+        1:  203:   void init(unsigned l_flags)
+        -:  204:   {
+        1:  205:      m_pdata->m_flags = l_flags;
+        1:  206:      m_icase = l_flags & regex_constants::icase;
+        1:  207:   }
+function _ZN5boost13re_detail_50019basic_regex_creatorIcNS_12regex_traitsIcNS_16cpp_regex_traitsIcEEEEE5flagsEv called 17 returned 100% blocks executed 100%
+       17:  208:   regbase::flag_type flags()
+        -:  209:   {
+       17:  210:      return m_pdata->m_flags;
+       17:  210-block 2
+        -:  211:   }
+function _ZN5boost13re_detail_50019basic_regex_creatorIcNS_12regex_traitsIcNS_16cpp_regex_traitsIcEEEEE5flagsEj called 1 returned 100% blocks executed 67%
+        1:  212:   void flags(regbase::flag_type f)
+        -:  213:   {
+        1:  214:      m_pdata->m_flags = f;
+        1:  215:      if(m_icase != static_cast<bool>(f & regbase::icase))
+        1:  215-block 2
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+        -:  216:      {
+    #####:  217:         m_icase = static_cast<bool>(f & regbase::icase);
+    %%%%%:  217-block 3
+        -:  218:      }
+        1:  219:   }
+        -:  220:   re_syntax_base* append_state(syntax_element_type t, std::size_t s = sizeof(re_syntax_base));
+        -:  221:   re_syntax_base* insert_state(std::ptrdiff_t pos, syntax_element_type t, std::size_t s = sizeof(re_syntax_base));
+        -:  222:   re_literal* append_literal(charT c);
+        -:  223:   re_syntax_base* append_set(const basic_char_set<charT, traits>& char_set);
+        -:  224:   re_syntax_base* append_set(const basic_char_set<charT, traits>& char_set, std::integral_constant<bool, false>*);
+        -:  225:   re_syntax_base* append_set(const basic_char_set<charT, traits>& char_set, std::integral_constant<bool, true>*);
+        -:  226:   void finalize(const charT* p1, const charT* p2);
+        -:  227:protected:
+        -:  228:   regex_data<charT, traits>*    m_pdata;              // pointer to the basic_regex_data struct we are filling in
+        -:  229:   const ::boost::regex_traits_wrapper<traits>&  
+        -:  230:                                 m_traits;             // convenience reference to traits class
+        -:  231:   re_syntax_base*               m_last_state;         // the last state we added
+        -:  232:   bool                          m_icase;              // true for case insensitive matches
+        -:  233:   unsigned                      m_repeater_id;        // the state_id of the next repeater
+        -:  234:   bool                          m_has_backrefs;       // true if there are actually any backrefs
+        -:  235:   std::uintmax_t                m_bad_repeats;        // bitmask of repeats we can't deduce a startmap for;
+        -:  236:   bool                          m_has_recursions;     // set when we have recursive expressions to fixup
+        -:  237:   std::vector<unsigned char>    m_recursion_checks;   // notes which recursions we've followed while analysing this expression
+        -:  238:   typename traits::char_class_type m_word_mask;       // mask used to determine if a character is a word character
+        -:  239:   typename traits::char_class_type m_mask_space;      // mask used to determine if a character is a word character
+        -:  240:   typename traits::char_class_type m_lower_mask;       // mask used to determine if a character is a lowercase character
+        -:  241:   typename traits::char_class_type m_upper_mask;      // mask used to determine if a character is an uppercase character
+        -:  242:   typename traits::char_class_type m_alpha_mask;      // mask used to determine if a character is an alphabetic character
+        -:  243:private:
+        -:  244:   basic_regex_creator& operator=(const basic_regex_creator&);
+        -:  245:   basic_regex_creator(const basic_regex_creator&);
+        -:  246:
+        -:  247:   void fixup_pointers(re_syntax_base* state);
+        -:  248:   void fixup_recursions(re_syntax_base* state);
+        -:  249:   void create_startmaps(re_syntax_base* state);
+        -:  250:   int calculate_backstep(re_syntax_base* state);
+        -:  251:   void create_startmap(re_syntax_base* state, unsigned char* l_map, unsigned int* pnull, unsigned char mask);
+        -:  252:   unsigned get_restart_type(re_syntax_base* state);
+        -:  253:   void set_all_masks(unsigned char* bits, unsigned char);
+        -:  254:   bool is_bad_repeat(re_syntax_base* pt);
+        -:  255:   void set_bad_repeat(re_syntax_base* pt);
+        -:  256:   syntax_element_type get_repeat_type(re_syntax_base* state);
+        -:  257:   void probe_leading_repeat(re_syntax_base* state);
+        -:  258:};
+        -:  259:
+        -:  260:template <class charT, class traits>
+function _ZN5boost13re_detail_50019basic_regex_creatorIcNS_12regex_traitsIcNS_16cpp_regex_traitsIcEEEEEC2EPNS0_10regex_dataIcS5_EE called 1 returned 100% blocks executed 71%
+        1:  261:basic_regex_creator<charT, traits>::basic_regex_creator(regex_data<charT, traits>* data)
+        1:  262:   : m_pdata(data), m_traits(*(data->m_ptraits)), m_last_state(0), m_icase(false), m_repeater_id(0), 
+        1:  262-block 2
+call    0 returned 1
+        1:  263:   m_has_backrefs(false), m_bad_repeats(0), m_has_recursions(false), m_word_mask(0), m_mask_space(0), m_lower_mask(0), m_upper_mask(0), m_alpha_mask(0)
+call    0 returned 1
+        -:  264:{
+        1:  265:   m_pdata->m_data.clear();
+call    0 returned 1
+        1:  266:   m_pdata->m_status = ::boost::regex_constants::error_ok;
+        -:  267:   static const charT w = 'w';
+        -:  268:   static const charT s = 's';
+        -:  269:   static const charT l[5] = { 'l', 'o', 'w', 'e', 'r', };
+        -:  270:   static const charT u[5] = { 'u', 'p', 'p', 'e', 'r', };
+        -:  271:   static const charT a[5] = { 'a', 'l', 'p', 'h', 'a', };
+        1:  272:   m_word_mask = m_traits.lookup_classname(&w, &w +1);
+call    0 returned 1
+branch  1 taken 1 (fallthrough)
+branch  2 taken 0 (throw)
+        1:  273:   m_mask_space = m_traits.lookup_classname(&s, &s +1);
+        1:  273-block 6
+call    0 returned 1
+branch  1 taken 1 (fallthrough)
+branch  2 taken 0 (throw)
+        1:  274:   m_lower_mask = m_traits.lookup_classname(l, l + 5);
+        1:  274-block 7
+call    0 returned 1
+branch  1 taken 1 (fallthrough)
+branch  2 taken 0 (throw)
+        1:  275:   m_upper_mask = m_traits.lookup_classname(u, u + 5);
+        1:  275-block 8
+call    0 returned 1
+branch  1 taken 1 (fallthrough)
+branch  2 taken 0 (throw)
+        1:  276:   m_alpha_mask = m_traits.lookup_classname(a, a + 5);
+        1:  276-block 9
+call    0 returned 1
+branch  1 taken 1 (fallthrough)
+branch  2 taken 0 (throw)
+        1:  277:   m_pdata->m_word_mask = m_word_mask;
+       1*:  278:   BOOST_REGEX_ASSERT(m_word_mask != 0); 
+        1:  278-block 10
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+    %%%%%:  278-block 11
+call    2 never executed
+       1*:  279:   BOOST_REGEX_ASSERT(m_mask_space != 0); 
+        1:  279-block 12
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+    %%%%%:  279-block 13
+call    2 never executed
+       1*:  280:   BOOST_REGEX_ASSERT(m_lower_mask != 0); 
+        1:  280-block 14
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+    %%%%%:  280-block 15
+call    2 never executed
+       1*:  281:   BOOST_REGEX_ASSERT(m_upper_mask != 0); 
+        1:  281-block 16
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+    %%%%%:  281-block 17
+call    2 never executed
+       1*:  282:   BOOST_REGEX_ASSERT(m_alpha_mask != 0); 
+        1:  282-block 18
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+    %%%%%:  282-block 19
+call    2 never executed
+        1:  283:}
+        1:  283-block 20
+    $$$$$:  283-block 21
+call    0 never executed
+        -:  284:
+        -:  285:template <class charT, class traits>
+function _ZN5boost13re_detail_50019basic_regex_creatorIcNS_12regex_traitsIcNS_16cpp_regex_traitsIcEEEEE12append_stateENS0_19syntax_element_typeEm called 7 returned 100% blocks executed 90%
+        7:  286:re_syntax_base* basic_regex_creator<charT, traits>::append_state(syntax_element_type t, std::size_t s)
+        -:  287:{
+        -:  288:   // if the state is a backref then make a note of it:
+        7:  289:   if(t == syntax_element_backref)
+        7:  289-block 2
+branch  0 taken 0 (fallthrough)
+branch  1 taken 7
+    #####:  290:      this->m_has_backrefs = true;
+    %%%%%:  290-block 3
+        -:  291:   // append a new state, start by aligning our last one:
+        7:  292:   m_pdata->m_data.align();
+        7:  292-block 4
+call    0 returned 7
+        -:  293:   // set the offset to the next state in our last one:
+        7:  294:   if(m_last_state)
+branch  0 taken 6 (fallthrough)
+branch  1 taken 1
+        6:  295:      m_last_state->next.i = m_pdata->m_data.size() - getoffset(m_last_state);
+        6:  295-block 6
+call    0 returned 6
+call    1 returned 6
+        -:  296:   // now actually extend our data:
+        7:  297:   m_last_state = static_cast<re_syntax_base*>(m_pdata->m_data.extend(s));
+        7:  297-block 9
+call    0 returned 7
+        -:  298:   // fill in boilerplate options in the new state:
+        7:  299:   m_last_state->next.i = 0;
+        7:  300:   m_last_state->type = t;
+        7:  301:   return m_last_state;
+        -:  302:}
+        -:  303:
+        -:  304:template <class charT, class traits>
+function _ZN5boost13re_detail_50019basic_regex_creatorIcNS_12regex_traitsIcNS_16cpp_regex_traitsIcEEEEE12insert_stateElNS0_19syntax_element_typeEm called 2 returned 100% blocks executed 100%
+        2:  305:re_syntax_base* basic_regex_creator<charT, traits>::insert_state(std::ptrdiff_t pos, syntax_element_type t, std::size_t s)
+        -:  306:{
+        -:  307:   // append a new state, start by aligning our last one:
+        2:  308:   m_pdata->m_data.align();
+        2:  308-block 2
+call    0 returned 2
+        -:  309:   // set the offset to the next state in our last one:
+        2:  310:   if(m_last_state)
+branch  0 taken 2 (fallthrough)
+branch  1 taken 0
+        2:  311:      m_last_state->next.i = m_pdata->m_data.size() - getoffset(m_last_state);
+        2:  311-block 4
+call    0 returned 2
+call    1 returned 2
+        -:  312:   // remember the last state position:
+        2:  313:   std::ptrdiff_t off = getoffset(m_last_state) + s;
+        2:  313-block 7
+call    0 returned 2
+        -:  314:   // now actually insert our data:
+        2:  315:   re_syntax_base* new_state = static_cast<re_syntax_base*>(m_pdata->m_data.insert(pos, s));
+call    0 returned 2
+        -:  316:   // fill in boilerplate options in the new state:
+        2:  317:   new_state->next.i = s;
+        2:  318:   new_state->type = t;
+        2:  319:   m_last_state = getaddress(off);
+call    0 returned 2
+        2:  320:   return new_state;
+        -:  321:}
+        -:  322:
+        -:  323:template <class charT, class traits>
+function _ZN5boost13re_detail_50019basic_regex_creatorIcNS_12regex_traitsIcNS_16cpp_regex_traitsIcEEEEE14append_literalEc called 1 returned 100% blocks executed 58%
+        1:  324:re_literal* basic_regex_creator<charT, traits>::append_literal(charT c)
+        -:  325:{
+        -:  326:   re_literal* result;
+        -:  327:   // start by seeing if we have an existing re_literal we can extend:
+        1:  328:   if((0 == m_last_state) || (m_last_state->type != syntax_element_literal))
+        1:  328-block 2
+branch  0 taken 1 (fallthrough)
+branch  1 taken 0
+        1:  328-block 3
+branch  2 taken 1 (fallthrough)
+branch  3 taken 0
+        -:  329:   {
+        -:  330:      // no existing re_literal, create a new one:
+        1:  331:      result = static_cast<re_literal*>(append_state(syntax_element_literal, sizeof(re_literal) + sizeof(charT)));
+        1:  331-block 4
+call    0 returned 1
+        1:  332:      result->length = 1;
+        1:  333:      *static_cast<charT*>(static_cast<void*>(result+1)) = m_traits.translate(c, m_icase);
+call    0 returned 1
+        -:  334:   }
+        -:  335:   else
+        -:  336:   {
+        -:  337:      // we have an existing re_literal, extend it:
+    #####:  338:      std::ptrdiff_t off = getoffset(m_last_state);
+    %%%%%:  338-block 7
+call    0 never executed
+    #####:  339:      m_pdata->m_data.extend(sizeof(charT));
+call    0 never executed
+    #####:  340:      m_last_state = result = static_cast<re_literal*>(getaddress(off));
+call    0 never executed
+    #####:  341:      charT* characters = static_cast<charT*>(static_cast<void*>(result+1));
+    #####:  342:      characters[result->length] = m_traits.translate(c, m_icase);
+call    0 never executed
+    #####:  343:      result->length += 1;
+        -:  344:   }
+        1:  345:   return result;
+        1:  345-block 12
+        -:  346:}
+        -:  347:
+        -:  348:template <class charT, class traits>
+function _ZN5boost13re_detail_50019basic_regex_creatorIcNS_12regex_traitsIcNS_16cpp_regex_traitsIcEEEEE10append_setERKNS0_14basic_char_setIcS5_EE called 2 returned 100% blocks executed 75%
+        2:  349:inline re_syntax_base* basic_regex_creator<charT, traits>::append_set(
+        -:  350:   const basic_char_set<charT, traits>& char_set)
+        -:  351:{
+        -:  352:   typedef std::integral_constant<bool, (sizeof(charT) == 1) > truth_type;
+        2:  353:   return char_set.has_digraphs() 
+        2:  353-block 2
+call    0 returned 2
+       2*:  354:      ? append_set(char_set, static_cast<std::integral_constant<bool, false>*>(0))
+branch  0 taken 0 (fallthrough)
+branch  1 taken 2
+    %%%%%:  354-block 4
+call    2 never executed
+        2:  355:      : append_set(char_set, static_cast<truth_type*>(0));
+        2:  355-block 6
+call    0 returned 2
+        2:  355-block 8
+        -:  356:}
+        -:  357:
+        -:  358:template <class charT, class traits>
+function _ZN5boost13re_detail_50019basic_regex_creatorIcNS_12regex_traitsIcNS_16cpp_regex_traitsIcEEEEE10append_setERKNS0_14basic_char_setIcS5_EEPSt17integral_constantIbLb0EE called 0 returned 0% blocks executed 0%
+    #####:  359:re_syntax_base* basic_regex_creator<charT, traits>::append_set(
+        -:  360:   const basic_char_set<charT, traits>& char_set, std::integral_constant<bool, false>*)
+        -:  361:{
+        -:  362:   typedef typename traits::string_type string_type;
+        -:  363:   typedef typename basic_char_set<charT, traits>::list_iterator item_iterator;
+        -:  364:   typedef typename basic_char_set<charT, traits>::set_iterator  set_iterator;
+        -:  365:   typedef typename traits::char_class_type m_type;
+        -:  366:   
+    #####:  367:   re_set_long<m_type>* result = static_cast<re_set_long<m_type>*>(append_state(syntax_element_long_set, sizeof(re_set_long<m_type>)));
+    %%%%%:  367-block 2
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:  368:   //
+        -:  369:   // fill in the basics:
+        -:  370:   //
+    #####:  371:   result->csingles = static_cast<unsigned int>(std::distance(char_set.singles_begin(), char_set.singles_end()));
+    %%%%%:  371-block 3
+call    0 never executed
+call    1 never executed
+    #####:  372:   result->cranges = static_cast<unsigned int>(std::distance(char_set.ranges_begin(), char_set.ranges_end())) / 2;
+    %%%%%:  372-block 11
+call    0 never executed
+call    1 never executed
+    #####:  373:   result->cequivalents = static_cast<unsigned int>(std::distance(char_set.equivalents_begin(), char_set.equivalents_end()));
+    %%%%%:  373-block 19
+call    0 never executed
+call    1 never executed
+    #####:  374:   result->cclasses = char_set.classes();
+    %%%%%:  374-block 27
+call    0 never executed
+    #####:  375:   result->cnclasses = char_set.negated_classes();
+call    0 never executed
+    #####:  376:   if(flags() & regbase::icase)
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+        -:  377:   {
+        -:  378:      // adjust classes as needed:
+    #####:  379:      if(((result->cclasses & m_lower_mask) == m_lower_mask) || ((result->cclasses & m_upper_mask) == m_upper_mask))
+    %%%%%:  379-block 31
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  379-block 32
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    #####:  380:         result->cclasses |= m_alpha_mask;
+    %%%%%:  380-block 33
+    #####:  381:      if(((result->cnclasses & m_lower_mask) == m_lower_mask) || ((result->cnclasses & m_upper_mask) == m_upper_mask))
+    %%%%%:  381-block 34
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  381-block 35
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    #####:  382:         result->cnclasses |= m_alpha_mask;
+    %%%%%:  382-block 36
+        -:  383:   }
+        -:  384:
+    #####:  385:   result->isnot = char_set.is_negated();
+    %%%%%:  385-block 37
+call    0 never executed
+    #####:  386:   result->singleton = !char_set.has_digraphs();
+call    0 never executed
+        -:  387:   //
+        -:  388:   // remember where the state is for later:
+        -:  389:   //
+    #####:  390:   std::ptrdiff_t offset = getoffset(result);
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:  391:   //
+        -:  392:   // now extend with all the singles:
+        -:  393:   //
+    #####:  394:   item_iterator first, last;
+    #####:  395:   set_iterator sfirst, slast;
+    %%%%%:  395-block 40
+call    0 never executed
+call    1 never executed
+    #####:  396:   sfirst = char_set.singles_begin();
+call    0 never executed
+    #####:  397:   slast = char_set.singles_end();
+call    0 never executed
+    #####:  398:   while(sfirst != slast)
+    %%%%%:  398-block 66
+call    0 never executed
+branch  1 never executed
+branch  2 never executed (fallthrough)
+        -:  399:   {
+    #####:  400:      charT* p = static_cast<charT*>(this->m_pdata->m_data.extend(sizeof(charT) * (sfirst->first == static_cast<charT>(0) ? 1 : sfirst->second ? 3 : 2)));
+    %%%%%:  400-block 45
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:  400-block 47
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:  400-block 49
+    %%%%%:  400-block 50
+    %%%%%:  400-block 51
+    %%%%%:  400-block 52
+    %%%%%:  400-block 53
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    #####:  401:      p[0] = m_traits.translate(sfirst->first, m_icase);
+    %%%%%:  401-block 54
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+    #####:  402:      if(sfirst->first == static_cast<charT>(0))
+    %%%%%:  402-block 56
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+        -:  403:      {
+    #####:  404:         p[0] = 0;
+    %%%%%:  404-block 58
+        -:  405:      }
+    #####:  406:      else if(sfirst->second)
+    %%%%%:  406-block 59
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+        -:  407:      {
+    #####:  408:         p[1] = m_traits.translate(sfirst->second, m_icase);
+    %%%%%:  408-block 61
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+    #####:  409:         p[2] = 0;
+    %%%%%:  409-block 63
+        -:  410:      }
+        -:  411:      else
+    #####:  412:         p[1] = 0;
+    %%%%%:  412-block 64
+    #####:  413:      ++sfirst;
+    %%%%%:  413-block 65
+call    0 never executed
+        -:  414:   }
+        -:  415:   //
+        -:  416:   // now extend with all the ranges:
+        -:  417:   //
+    #####:  418:   first = char_set.ranges_begin();
+    %%%%%:  418-block 68
+call    0 never executed
+    #####:  419:   last = char_set.ranges_end();
+call    0 never executed
+    #####:  420:   while(first != last)
+    %%%%%:  420-block 159
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:  420-block 161
+    %%%%%:  420-block 163
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:  420-block 169
+call    6 never executed
+branch  7 never executed
+branch  8 never executed (fallthrough)
+    $$$$$:  420-block 236
+call    9 never executed
+    $$$$$:  420-block 238
+call   10 never executed
+        -:  421:   {
+        -:  422:      // first grab the endpoints of the range:
+    #####:  423:      digraph<charT> c1 = *first;
+    %%%%%:  423-block 70
+call    0 never executed
+call    1 never executed
+    #####:  424:      c1.first = this->m_traits.translate(c1.first, this->m_icase);
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  425:      c1.second = this->m_traits.translate(c1.second, this->m_icase);
+    %%%%%:  425-block 73
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  426:      ++first;
+    %%%%%:  426-block 74
+call    0 never executed
+    #####:  427:      digraph<charT> c2 = *first;
+call    0 never executed
+call    1 never executed
+    #####:  428:      c2.first = this->m_traits.translate(c2.first, this->m_icase);
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  429:      c2.second = this->m_traits.translate(c2.second, this->m_icase);
+    %%%%%:  429-block 78
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  430:      ++first;
+    %%%%%:  430-block 79
+call    0 never executed
+    #####:  431:      string_type s1, s2;
+call    0 never executed
+call    1 never executed
+        -:  432:      // different actions now depending upon whether collation is turned on:
+    #####:  433:      if(flags() & regex_constants::collate)
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+        -:  434:      {
+        -:  435:         // we need to transform our range into sort keys:
+    #####:  436:         charT a1[3] = { c1.first, c1.second, charT(0), };
+    #####:  437:         charT a2[3] = { c2.first, c2.second, charT(0), };
+    #####:  438:         s1 = this->m_traits.transform(a1, (a1[1] ? a1+2 : a1+1));
+    %%%%%:  438-block 84
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  438-block 85
+    %%%%%:  438-block 86
+    %%%%%:  438-block 87
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed (throw)
+    %%%%%:  438-block 88
+call    5 never executed
+call    6 never executed
+    $$$$$:  438-block 211
+    #####:  439:         s2 = this->m_traits.transform(a2, (a2[1] ? a2+2 : a2+1));
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  439-block 91
+    %%%%%:  439-block 92
+    %%%%%:  439-block 93
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed (throw)
+    %%%%%:  439-block 94
+call    5 never executed
+call    6 never executed
+    $$$$$:  439-block 212
+    #####:  440:         if(s1.empty())
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  441:            s1 = string_type(1, charT(0));
+    %%%%%:  441-block 100
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  441-block 101
+call    3 never executed
+call    4 never executed
+    %%%%%:  441-block 104
+    $$$$$:  441-block 215
+    $$$$$:  441-block 216
+    #####:  442:         if(s2.empty())
+    %%%%%:  442-block 105
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  443:            s2 = string_type(1, charT(0));
+    %%%%%:  443-block 109
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  443-block 110
+call    3 never executed
+call    4 never executed
+    %%%%%:  443-block 113
+    $$$$$:  443-block 219
+    $$$$$:  443-block 220
+        -:  444:      }
+        -:  445:      else
+        -:  446:      {
+    #####:  447:         if(c1.second)
+    %%%%%:  447-block 115
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  448:         {
+    #####:  449:            s1.insert(s1.end(), c1.first);
+    %%%%%:  449-block 116
+call    0 never executed
+call    1 never executed
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed (throw)
+    $$$$$:  449-block 222
+    $$$$$:  449-block 223
+    #####:  450:            s1.insert(s1.end(), c1.second);
+    %%%%%:  450-block 119
+call    0 never executed
+call    1 never executed
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed (throw)
+    %%%%%:  450-block 122
+    $$$$$:  450-block 224
+    $$$$$:  450-block 225
+        -:  451:         }
+        -:  452:         else
+    #####:  453:            s1 = string_type(1, c1.first);
+    %%%%%:  453-block 125
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  453-block 126
+call    3 never executed
+call    4 never executed
+    %%%%%:  453-block 129
+    $$$$$:  453-block 228
+    $$$$$:  453-block 229
+    #####:  454:         if(c2.second)
+    %%%%%:  454-block 130
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  455:         {
+    #####:  456:            s2.insert(s2.end(), c2.first);
+    %%%%%:  456-block 131
+call    0 never executed
+call    1 never executed
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed (throw)
+    $$$$$:  456-block 230
+    $$$$$:  456-block 231
+    #####:  457:            s2.insert(s2.end(), c2.second);
+    %%%%%:  457-block 134
+call    0 never executed
+call    1 never executed
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed (throw)
+    %%%%%:  457-block 137
+    $$$$$:  457-block 232
+    $$$$$:  457-block 233
+        -:  458:         }
+        -:  459:         else
+    #####:  460:            s2.insert(s2.end(), c2.first);
+    %%%%%:  460-block 138
+call    0 never executed
+call    1 never executed
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed (throw)
+    %%%%%:  460-block 141
+    $$$$$:  460-block 234
+    $$$$$:  460-block 235
+        -:  461:      }
+    #####:  462:      if(s1 > s2)
+    %%%%%:  462-block 142
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed
+        -:  463:      {
+        -:  464:         // Oops error:
+    #####:  465:         return 0;
+    %%%%%:  465-block 145
+        -:  466:      }
+    #####:  467:      charT* p = static_cast<charT*>(this->m_pdata->m_data.extend(sizeof(charT) * (s1.size() + s2.size() + 2) ) );
+    %%%%%:  467-block 146
+call    0 never executed
+call    1 never executed
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed (throw)
+    #####:  468:      BOOST_REGEX_DETAIL_NS::copy(s1.begin(), s1.end(), p);
+    %%%%%:  468-block 149
+call    0 never executed
+call    1 never executed
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed (throw)
+    #####:  469:      p[s1.size()] = charT(0);
+    %%%%%:  469-block 152
+call    0 never executed
+    #####:  470:      p += s1.size() + 1;
+call    0 never executed
+    #####:  471:      BOOST_REGEX_DETAIL_NS::copy(s2.begin(), s2.end(), p);
+call    0 never executed
+call    1 never executed
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed (throw)
+    #####:  472:      p[s2.size()] = charT(0);
+    %%%%%:  472-block 157
+call    0 never executed
+        -:  473:   }
+        -:  474:   //
+        -:  475:   // now process the equivalence classes:
+        -:  476:   //
+    #####:  477:   sfirst = char_set.equivalents_begin();
+    %%%%%:  477-block 171
+call    0 never executed
+    #####:  478:   slast = char_set.equivalents_end();
+call    0 never executed
+    #####:  479:   while(sfirst != slast)
+    %%%%%:  479-block 199
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:  479-block 205
+call    3 never executed
+branch  4 never executed
+branch  5 never executed (fallthrough)
+    $$$$$:  479-block 244
+call    6 never executed
+        -:  480:   {
+    #####:  481:      string_type s;
+    %%%%%:  481-block 173
+call    0 never executed
+    #####:  482:      if(sfirst->second)
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+        -:  483:      {
+    #####:  484:         charT cs[3] = { sfirst->first, sfirst->second, charT(0), };
+    %%%%%:  484-block 176
+call    0 never executed
+call    1 never executed
+    #####:  485:         s = m_traits.transform_primary(cs, cs+2);
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  485-block 179
+call    3 never executed
+call    4 never executed
+    $$$$$:  485-block 241
+        -:  486:      }
+        -:  487:      else
+    #####:  488:         s = m_traits.transform_primary(&sfirst->first, &sfirst->first+1);
+    %%%%%:  488-block 182
+call    0 never executed
+call    1 never executed
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed (throw)
+    %%%%%:  488-block 185
+call    5 never executed
+call    6 never executed
+    $$$$$:  488-block 243
+    #####:  489:      if(s.empty())
+    %%%%%:  489-block 188
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  490:         return 0;  // invalid or unsupported equivalence class
+    %%%%%:  490-block 190
+    #####:  491:      charT* p = static_cast<charT*>(this->m_pdata->m_data.extend(sizeof(charT) * (s.size()+1) ) );
+    %%%%%:  491-block 191
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+    #####:  492:      BOOST_REGEX_DETAIL_NS::copy(s.begin(), s.end(), p);
+    %%%%%:  492-block 193
+call    0 never executed
+call    1 never executed
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed (throw)
+    #####:  493:      p[s.size()] = charT(0);
+    %%%%%:  493-block 196
+call    0 never executed
+    #####:  494:      ++sfirst;
+call    0 never executed
+        -:  495:   }
+        -:  496:   //
+        -:  497:   // finally reset the address of our last state:
+        -:  498:   //
+    #####:  499:   m_last_state = result = static_cast<re_set_long<m_type>*>(getaddress(offset));
+    %%%%%:  499-block 207
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  500:   return result;
+    %%%%%:  500-block 208
+        -:  501:}
+        -:  502:
+        -:  503:template<class T>
+        -:  504:inline bool char_less(T t1, T t2)
+        -:  505:{
+        -:  506:   return t1 < t2;
+        -:  507:}
+function _ZN5boost13re_detail_5009char_lessEcc called 5 returned 100% blocks executed 100%
+        5:  508:inline bool char_less(char t1, char t2)
+        -:  509:{
+        5:  510:   return static_cast<unsigned char>(t1) < static_cast<unsigned char>(t2);
+        5:  510-block 2
+        -:  511:}
+        -:  512:inline bool char_less(signed char t1, signed char t2)
+        -:  513:{
+        -:  514:   return static_cast<unsigned char>(t1) < static_cast<unsigned char>(t2);
+        -:  515:}
+        -:  516:
+        -:  517:template <class charT, class traits>
+function _ZN5boost13re_detail_50019basic_regex_creatorIcNS_12regex_traitsIcNS_16cpp_regex_traitsIcEEEEE10append_setERKNS0_14basic_char_setIcS5_EEPSt17integral_constantIbLb1EE called 2 returned 100% blocks executed 36%
+        2:  518:re_syntax_base* basic_regex_creator<charT, traits>::append_set(
+        -:  519:   const basic_char_set<charT, traits>& char_set, std::integral_constant<bool, true>*)
+        -:  520:{
+        -:  521:   typedef typename traits::string_type string_type;
+        -:  522:   typedef typename basic_char_set<charT, traits>::list_iterator item_iterator;
+        -:  523:   typedef typename basic_char_set<charT, traits>::set_iterator set_iterator;
+        -:  524:
+        2:  525:   re_set* result = static_cast<re_set*>(append_state(syntax_element_set, sizeof(re_set)));
+        2:  525-block 2
+call    0 returned 2
+branch  1 taken 2 (fallthrough)
+branch  2 taken 0 (throw)
+        2:  526:   bool negate = char_set.is_negated();
+        2:  526-block 3
+call    0 returned 2
+        2:  527:   std::memset(result->_map, 0, sizeof(result->_map));
+        -:  528:   //
+        -:  529:   // handle singles first:
+        -:  530:   //
+        2:  531:   item_iterator first, last;
+        2:  532:   set_iterator sfirst, slast;
+call    0 returned 2
+call    1 returned 2
+        2:  533:   sfirst = char_set.singles_begin();
+call    0 returned 2
+        2:  534:   slast = char_set.singles_end();
+call    0 returned 2
+        4:  535:   while(sfirst != slast)
+        4:  535-block 18
+call    0 returned 4
+branch  1 taken 2
+branch  2 taken 2 (fallthrough)
+        -:  536:   {
+      514:  537:      for(unsigned int i = 0; i < (1 << CHAR_BIT); ++i)
+        2:  537-block 9
+      512:  537-block 15
+      514:  537-block 16
+branch  0 taken 512
+branch  1 taken 2 (fallthrough)
+        -:  538:      {
+      512:  539:         if(this->m_traits.translate(static_cast<charT>(i), this->m_icase)
+      512:  539-block 10
+call    0 returned 512
+branch  1 taken 512 (fallthrough)
+branch  2 taken 0 (throw)
+      512:  540:            == this->m_traits.translate(sfirst->first, this->m_icase))
+      512:  540-block 11
+call    0 returned 512
+call    1 returned 512
+branch  2 taken 512 (fallthrough)
+branch  3 taken 0 (throw)
+      512:  540-block 13
+branch  4 taken 2 (fallthrough)
+branch  5 taken 510
+        2:  541:            result->_map[i] = true;
+        2:  541-block 14
+        -:  542:      }
+        2:  543:      ++sfirst;
+        2:  543-block 17
+call    0 returned 2
+        -:  544:   }
+        -:  545:   //
+        -:  546:   // OK now handle ranges:
+        -:  547:   //
+        2:  548:   first = char_set.ranges_begin();
+        2:  548-block 20
+call    0 returned 2
+        2:  549:   last = char_set.ranges_end();
+call    0 returned 2
+        7:  550:   while(first != last)
+        7:  550-block 68
+call    0 returned 7
+branch  1 taken 5
+branch  2 taken 2 (fallthrough)
+        -:  551:   {
+        -:  552:      // first grab the endpoints of the range:
+        5:  553:      charT c1 = this->m_traits.translate(first->first, this->m_icase);
+        5:  553-block 23
+call    0 returned 5
+call    1 returned 5
+branch  2 taken 5 (fallthrough)
+branch  3 taken 0 (throw)
+        5:  554:      ++first;
+        5:  554-block 25
+call    0 returned 5
+        5:  555:      charT c2 = this->m_traits.translate(first->first, this->m_icase);
+call    0 returned 5
+call    1 returned 5
+branch  2 taken 5 (fallthrough)
+branch  3 taken 0 (throw)
+        5:  556:      ++first;
+        5:  556-block 28
+call    0 returned 5
+        -:  557:      // different actions now depending upon whether collation is turned on:
+        5:  558:      if(flags() & regex_constants::collate)
+call    0 returned 5
+branch  1 taken 0 (fallthrough)
+branch  2 taken 5
+        -:  559:      {
+        -:  560:         // we need to transform our range into sort keys:
+    #####:  561:         charT c3[2] = { c1, charT(0), };
+    #####:  562:         string_type s1 = this->m_traits.transform(c3, c3+1);
+    %%%%%:  562-block 31
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  563:         c3[0] = c2;
+    #####:  564:         string_type s2 = this->m_traits.transform(c3, c3+1);
+    %%%%%:  564-block 32
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  565:         if(s1 > s2)
+    %%%%%:  565-block 33
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed
+        -:  566:         {
+        -:  567:            // Oops error:
+    #####:  568:            return 0;
+    %%%%%:  568-block 36
+        -:  569:         }
+    #####:  570:         BOOST_REGEX_ASSERT(c3[1] == charT(0));
+    %%%%%:  570-block 37
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  570-block 38
+call    2 never executed
+    #####:  571:         for(unsigned i = 0; i < (1u << CHAR_BIT); ++i)
+    %%%%%:  571-block 39
+    %%%%%:  571-block 51
+call    0 never executed
+    %%%%%:  571-block 53
+branch  1 never executed
+branch  2 never executed (fallthrough)
+        -:  572:         {
+    #####:  573:            c3[0] = static_cast<charT>(i);
+    #####:  574:            string_type s3 = this->m_traits.transform(c3, c3 +1);
+    %%%%%:  574-block 40
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  575:            if((s1 <= s3) && (s3 <= s2))
+    %%%%%:  575-block 41
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    %%%%%:  575-block 44
+call    4 never executed
+call    5 never executed
+branch  6 never executed (fallthrough)
+branch  7 never executed
+    %%%%%:  575-block 47
+    %%%%%:  575-block 48
+    %%%%%:  575-block 49
+branch  8 never executed (fallthrough)
+branch  9 never executed
+    #####:  576:               result->_map[i] = true;
+    %%%%%:  576-block 50
+        -:  577:         }
+    #####:  578:      }
+    %%%%%:  578-block 54
+    %%%%%:  578-block 55
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:  578-block 57
+    %%%%%:  578-block 59
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    $$$$$:  578-block 136
+call    6 never executed
+    $$$$$:  578-block 138
+call    7 never executed
+        -:  579:      else
+        -:  580:      {
+        5:  581:         if(char_less(c2, c1))
+        5:  581-block 64
+call    0 returned 5
+branch  1 taken 0 (fallthrough)
+branch  2 taken 5
+        -:  582:         {
+        -:  583:            // Oops error:
+    #####:  584:            return 0;
+    %%%%%:  584-block 66
+        -:  585:         }
+        -:  586:         // everything in range matches:
+        5:  587:         std::memset(result->_map + static_cast<unsigned char>(c1), true, static_cast<unsigned char>(1u) + static_cast<unsigned char>(static_cast<unsigned char>(c2) - static_cast<unsigned char>(c1)));
+        5:  587-block 67
+        -:  588:      }
+        -:  589:   }
+        -:  590:   //
+        -:  591:   // and now the classes:
+        -:  592:   //
+        -:  593:   typedef typename traits::char_class_type m_type;
+        2:  594:   m_type m = char_set.classes();
+        2:  594-block 70
+call    0 returned 2
+        2:  595:   if(flags() & regbase::icase)
+call    0 returned 2
+branch  1 taken 0 (fallthrough)
+branch  2 taken 2
+        -:  596:   {
+        -:  597:      // adjust m as needed:
+    #####:  598:      if(((m & m_lower_mask) == m_lower_mask) || ((m & m_upper_mask) == m_upper_mask))
+    %%%%%:  598-block 73
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  598-block 74
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    #####:  599:         m |= m_alpha_mask;
+    %%%%%:  599-block 75
+        -:  600:   }
+        2:  601:   if(m != 0)
+        2:  601-block 76
+branch  0 taken 0 (fallthrough)
+branch  1 taken 2
+        -:  602:   {
+    #####:  603:      for(unsigned i = 0; i < (1u << CHAR_BIT); ++i)
+    %%%%%:  603-block 77
+    %%%%%:  603-block 81
+    %%%%%:  603-block 82
+branch  0 never executed
+branch  1 never executed (fallthrough)
+        -:  604:      {
+    #####:  605:         if(this->m_traits.isctype(static_cast<charT>(i), m))
+    %%%%%:  605-block 78
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  605-block 79
+branch  3 never executed (fallthrough)
+branch  4 never executed
+    #####:  606:            result->_map[i] = true;
+    %%%%%:  606-block 80
+        -:  607:      }
+        -:  608:   }
+        -:  609:   //
+        -:  610:   // and now the negated classes:
+        -:  611:   //
+        2:  612:   m = char_set.negated_classes();
+        2:  612-block 83
+call    0 returned 2
+        2:  613:   if(flags() & regbase::icase)
+call    0 returned 2
+branch  1 taken 0 (fallthrough)
+branch  2 taken 2
+        -:  614:   {
+        -:  615:      // adjust m as needed:
+    #####:  616:      if(((m & m_lower_mask) == m_lower_mask) || ((m & m_upper_mask) == m_upper_mask))
+    %%%%%:  616-block 86
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  616-block 87
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    #####:  617:         m |= m_alpha_mask;
+    %%%%%:  617-block 88
+        -:  618:   }
+        2:  619:   if(m != 0)
+        2:  619-block 89
+branch  0 taken 0 (fallthrough)
+branch  1 taken 2
+        -:  620:   {
+    #####:  621:      for(unsigned i = 0; i < (1u << CHAR_BIT); ++i)
+    %%%%%:  621-block 90
+    %%%%%:  621-block 94
+    %%%%%:  621-block 95
+branch  0 never executed
+branch  1 never executed (fallthrough)
+        -:  622:      {
+    #####:  623:         if(0 == this->m_traits.isctype(static_cast<charT>(i), m))
+    %%%%%:  623-block 91
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  623-block 92
+branch  3 never executed (fallthrough)
+branch  4 never executed
+    #####:  624:            result->_map[i] = true;
+    %%%%%:  624-block 93
+        -:  625:      }
+        -:  626:   }
+        -:  627:   //
+        -:  628:   // now process the equivalence classes:
+        -:  629:   //
+        2:  630:   sfirst = char_set.equivalents_begin();
+        2:  630-block 96
+call    0 returned 2
+        2:  631:   slast = char_set.equivalents_end();
+call    0 returned 2
+       2*:  632:   while(sfirst != slast)
+    %%%%%:  632-block 120
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+        2:  632-block 126
+call    3 returned 2
+branch  4 taken 0
+branch  5 taken 2 (fallthrough)
+    $$$$$:  632-block 143
+call    6 never executed
+        -:  633:   {
+    #####:  634:      string_type s;
+    %%%%%:  634-block 98
+call    0 never executed
+    #####:  635:      BOOST_REGEX_ASSERT(static_cast<charT>(0) == sfirst->second);
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:  635-block 101
+call    3 never executed
+    #####:  636:      s = m_traits.transform_primary(&sfirst->first, &sfirst->first+1);
+    %%%%%:  636-block 102
+call    0 never executed
+call    1 never executed
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed (throw)
+    %%%%%:  636-block 105
+call    5 never executed
+call    6 never executed
+    $$$$$:  636-block 141
+    #####:  637:      if(s.empty())
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  638:         return 0;  // invalid or unsupported equivalence class
+    %%%%%:  638-block 109
+    #####:  639:      for(unsigned i = 0; i < (1u << CHAR_BIT); ++i)
+    %%%%%:  639-block 110
+    %%%%%:  639-block 115
+call    0 never executed
+    %%%%%:  639-block 117
+branch  1 never executed
+branch  2 never executed (fallthrough)
+        -:  640:      {
+    #####:  641:         charT c[2] = { (static_cast<charT>(i)), charT(0), };
+    #####:  642:         string_type s2 = this->m_traits.transform_primary(c, c+1);
+    %%%%%:  642-block 111
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  643:         if(s == s2)
+    %%%%%:  643-block 112
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  644:            result->_map[i] = true;
+    %%%%%:  644-block 114
+        -:  645:      }
+    #####:  646:      ++sfirst;
+    %%%%%:  646-block 118
+call    0 never executed
+        -:  647:   }
+        2:  648:   if(negate)
+        2:  648-block 128
+branch  0 taken 0 (fallthrough)
+branch  1 taken 2
+        -:  649:   {
+    #####:  650:      for(unsigned i = 0; i < (1u << CHAR_BIT); ++i)
+    %%%%%:  650-block 129
+    %%%%%:  650-block 131
+branch  0 never executed
+branch  1 never executed (fallthrough)
+        -:  651:      {
+    #####:  652:         result->_map[i] = !(result->_map[i]);
+    %%%%%:  652-block 130
+        -:  653:      }
+        -:  654:   }
+        2:  655:   return result;
+        2:  655-block 132
+        -:  656:}
+        -:  657:
+        -:  658:template <class charT, class traits>
+function _ZN5boost13re_detail_50019basic_regex_creatorIcNS_12regex_traitsIcNS_16cpp_regex_traitsIcEEEEE8finalizeEPKcS8_ called 1 returned 100% blocks executed 71%
+        1:  659:void basic_regex_creator<charT, traits>::finalize(const charT* p1, const charT* p2)
+        -:  660:{
+        1:  661:   if(this->m_pdata->m_status)
+        1:  661-block 2
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+    #####:  662:      return;
+    %%%%%:  662-block 3
+        -:  663:   // we've added all the states we need, now finish things off.
+        -:  664:   // start by adding a terminating state:
+        1:  665:   append_state(syntax_element_match);
+        1:  665-block 4
+call    0 returned 1
+        -:  666:   // extend storage to store original expression:
+        1:  667:   std::ptrdiff_t len = p2 - p1;
+        1:  668:   m_pdata->m_expression_len = len;
+        1:  669:   charT* ps = static_cast<charT*>(m_pdata->m_data.extend(sizeof(charT) * (1 + (p2 - p1))));
+call    0 returned 1
+        1:  670:   m_pdata->m_expression = ps;
+        1:  671:   BOOST_REGEX_DETAIL_NS::copy(p1, p2, ps);
+call    0 returned 1
+        1:  672:   ps[p2 - p1] = 0;
+        -:  673:   // fill in our other data...
+        -:  674:   // successful parsing implies a zero status:
+        1:  675:   m_pdata->m_status = 0;
+        -:  676:   // get the first state of the machine:
+        1:  677:   m_pdata->m_first_state = static_cast<re_syntax_base*>(m_pdata->m_data.data());
+call    0 returned 1
+        -:  678:   // fixup pointers in the machine:
+        1:  679:   fixup_pointers(m_pdata->m_first_state);
+call    0 returned 1
+        1:  680:   if(m_has_recursions)
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+        -:  681:   {
+    #####:  682:      m_pdata->m_has_recursions = true;
+    #####:  683:      fixup_recursions(m_pdata->m_first_state);
+    %%%%%:  683-block 10
+call    0 never executed
+    #####:  684:      if(this->m_pdata->m_status)
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  685:         return;
+    %%%%%:  685-block 12
+        -:  686:   }
+        -:  687:   else
+        1:  688:      m_pdata->m_has_recursions = false;
+        1:  688-block 13
+        -:  689:   // create nested startmaps:
+        1:  690:   create_startmaps(m_pdata->m_first_state);
+        1:  690-block 14
+call    0 returned 1
+        -:  691:   // create main startmap:
+        1:  692:   std::memset(m_pdata->m_startmap, 0, sizeof(m_pdata->m_startmap));
+        1:  693:   m_pdata->m_can_be_null = 0;
+        -:  694:
+        1:  695:   m_bad_repeats = 0;
+        1:  696:   if(m_has_recursions)
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+    #####:  697:      m_recursion_checks.assign(1 + m_pdata->m_mark_count, 0u);
+    %%%%%:  697-block 16
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  697-block 17
+        1:  698:   create_startmap(m_pdata->m_first_state, m_pdata->m_startmap, &(m_pdata->m_can_be_null), mask_all);
+        1:  698-block 18
+call    0 returned 1
+        -:  699:   // get the restart type:
+        1:  700:   m_pdata->m_restart_type = get_restart_type(m_pdata->m_first_state);
+call    0 returned 1
+        -:  701:   // optimise a leading repeat if there is one:
+        1:  702:   probe_leading_repeat(m_pdata->m_first_state);
+call    0 returned 1
+        -:  703:}
+        -:  704:
+        -:  705:template <class charT, class traits>
+function _ZN5boost13re_detail_50019basic_regex_creatorIcNS_12regex_traitsIcNS_16cpp_regex_traitsIcEEEEE14fixup_pointersEPNS0_14re_syntax_baseE called 1 returned 100% blocks executed 72%
+        1:  706:void basic_regex_creator<charT, traits>::fixup_pointers(re_syntax_base* state)
+        -:  707:{
+       10:  708:   while(state)
+        1:  708-block 2
+       10:  708-block 18
+branch  0 taken 9
+branch  1 taken 1 (fallthrough)
+        -:  709:   {
+        9:  710:      switch(state->type)
+        9:  710-block 3
+branch  0 taken 0
+branch  1 taken 2
+branch  2 taken 0
+branch  3 taken 2
+branch  4 taken 5
+        -:  711:      {
+    #####:  712:      case syntax_element_recurse:
+    #####:  713:         m_has_recursions = true;
+    #####:  714:         if(state->next.i)
+    %%%%%:  714-block 4
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  715:            state->next.p = getaddress(state->next.i, state);
+    %%%%%:  715-block 5
+call    0 never executed
+        -:  716:         else
+    #####:  717:            state->next.p = 0;
+    %%%%%:  717-block 7
+    #####:  718:         break;
+    %%%%%:  718-block 8
+        2:  719:      case syntax_element_rep:
+        -:  720:      case syntax_element_dot_rep:
+        -:  721:      case syntax_element_char_rep:
+        -:  722:      case syntax_element_short_set_rep:
+        -:  723:      case syntax_element_long_set_rep:
+        -:  724:         // set the state_id of this repeat:
+        2:  725:         static_cast<re_repeat*>(state)->state_id = m_repeater_id++;
+        2:  725-block 9
+        -:  726:         BOOST_REGEX_FALLTHROUGH;
+        2:  727:      case syntax_element_alt:
+        2:  728:         std::memset(static_cast<re_alt*>(state)->_map, 0, sizeof(static_cast<re_alt*>(state)->_map));
+        2:  729:         static_cast<re_alt*>(state)->can_be_null = 0;
+        2:  729-block 10
+        -:  730:         BOOST_REGEX_FALLTHROUGH;
+        4:  731:      case syntax_element_jump:
+        4:  732:         static_cast<re_jump*>(state)->alt.p = getaddress(static_cast<re_jump*>(state)->alt.i, state);
+        4:  732-block 11
+call    0 returned 4
+        -:  733:         BOOST_REGEX_FALLTHROUGH;
+        9:  734:      default:
+        9:  735:         if(state->next.i)
+        9:  735-block 13
+branch  0 taken 8 (fallthrough)
+branch  1 taken 1
+        8:  736:            state->next.p = getaddress(state->next.i, state);
+        8:  736-block 14
+call    0 returned 8
+        -:  737:         else
+        1:  738:            state->next.p = 0;
+        1:  738-block 16
+        -:  739:      }
+        9:  740:      state = state->next.p;
+        9:  740-block 17
+        -:  741:   }
+        1:  742:}
+        -:  743:
+        -:  744:template <class charT, class traits>
+function _ZN5boost13re_detail_50019basic_regex_creatorIcNS_12regex_traitsIcNS_16cpp_regex_traitsIcEEEEE16fixup_recursionsEPNS0_14re_syntax_baseE called 0 returned 0% blocks executed 0%
+    #####:  745:void basic_regex_creator<charT, traits>::fixup_recursions(re_syntax_base* state)
+        -:  746:{
+    #####:  747:   re_syntax_base* base = state;
+    #####:  748:   while(state)
+    %%%%%:  748-block 2
+    %%%%%:  748-block 63
+branch  0 never executed
+branch  1 never executed (fallthrough)
+        -:  749:   {
+    #####:  750:      switch(state->type)
+    %%%%%:  750-block 3
+branch  0 never executed
+branch  1 never executed
+branch  2 never executed
+        -:  751:      {
+    #####:  752:      case syntax_element_assert_backref:
+        -:  753:         {
+        -:  754:            // just check that the index is valid:
+    #####:  755:            int idx = static_cast<const re_brace*>(state)->index;
+    #####:  756:            if(idx < 0)
+    %%%%%:  756-block 4
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  757:            {
+    #####:  758:               idx = -idx-1;
+    #####:  759:               if(idx >= hash_value_mask)
+    %%%%%:  759-block 5
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  760:               {
+    #####:  761:                  idx = m_pdata->get_id(idx);
+    %%%%%:  761-block 6
+call    0 never executed
+    #####:  762:                  if(idx <= 0)
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  763:                  {
+        -:  764:                     // check of sub-expression that doesn't exist:
+    #####:  765:                     if(0 == this->m_pdata->m_status) // update the error code if not already set
+    %%%%%:  765-block 8
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  766:                        this->m_pdata->m_status = boost::regex_constants::error_bad_pattern;
+    %%%%%:  766-block 9
+        -:  767:                     //
+        -:  768:                     // clear the expression, we should be empty:
+        -:  769:                     //
+    #####:  770:                     this->m_pdata->m_expression = 0;
+    #####:  771:                     this->m_pdata->m_expression_len = 0;
+        -:  772:                     //
+        -:  773:                     // and throw if required:
+        -:  774:                     //
+    #####:  775:                     if(0 == (this->flags() & regex_constants::no_except))
+    %%%%%:  775-block 10
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+        -:  776:                     {
+    #####:  777:                        std::string message = "Encountered a forward reference to a marked sub-expression that does not exist.";
+    %%%%%:  777-block 14
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    $$$$$:  777-block 67
+    #####:  778:                        boost::regex_error e(message, boost::regex_constants::error_bad_pattern, 0);
+    %%%%%:  778-block 16
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  779:                        e.raise();
+    %%%%%:  779-block 17
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  780:                     }
+    %%%%%:  780-block 18
+call    0 never executed
+call    1 never executed
+    $$$$$:  780-block 68
+call    2 never executed
+    $$$$$:  780-block 70
+call    3 never executed
+        -:  781:                  }
+        -:  782:               }
+        -:  783:            }
+        -:  784:         }
+    #####:  785:         break;
+    %%%%%:  785-block 21
+    #####:  786:      case syntax_element_recurse:
+        -:  787:         {
+    #####:  788:            bool ok = false;
+    #####:  789:            re_syntax_base* p = base;
+    #####:  790:            std::ptrdiff_t idx = static_cast<re_jump*>(state)->alt.i;
+    #####:  791:            if(idx >= hash_value_mask)
+    %%%%%:  791-block 22
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  792:            {
+        -:  793:               //
+        -:  794:               // There may be more than one capture group with this hash, just do what Perl
+        -:  795:               // does and recurse to the leftmost:
+        -:  796:               //
+    #####:  797:               idx = m_pdata->get_id(static_cast<int>(idx));
+    %%%%%:  797-block 23
+call    0 never executed
+        -:  798:            }
+    #####:  799:            if(idx < 0)
+    %%%%%:  799-block 25
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  800:            {
+    #####:  801:               ok = false;
+    %%%%%:  801-block 26
+        -:  802:            }
+        -:  803:            else
+        -:  804:            {
+    #####:  805:               while(p)
+    %%%%%:  805-block 27
+    %%%%%:  805-block 45
+branch  0 never executed
+branch  1 never executed (fallthrough)
+        -:  806:               {
+    #####:  807:                  if((p->type == syntax_element_startmark) && (static_cast<re_brace*>(p)->index == idx))
+    %%%%%:  807-block 28
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  807-block 29
+branch  2 never executed (fallthrough)
+branch  3 never executed
+        -:  808:                  {
+        -:  809:                     //
+        -:  810:                     // We've found the target of the recursion, set the jump target:
+        -:  811:                     //
+    #####:  812:                     static_cast<re_jump*>(state)->alt.p = p;
+    #####:  813:                     ok = true;
+        -:  814:                     // 
+        -:  815:                     // Now scan the target for nested repeats:
+        -:  816:                     //
+    #####:  817:                     p = p->next.p;
+    #####:  818:                     int next_rep_id = 0;
+    #####:  819:                     while(p)
+    %%%%%:  819-block 30
+    %%%%%:  819-block 40
+branch  0 never executed
+branch  1 never executed (fallthrough)
+        -:  820:                     {
+    #####:  821:                        switch(p->type)
+    %%%%%:  821-block 31
+branch  0 never executed
+branch  1 never executed
+branch  2 never executed
+        -:  822:                        {
+    #####:  823:                        case syntax_element_rep:
+        -:  824:                        case syntax_element_dot_rep:
+        -:  825:                        case syntax_element_char_rep:
+        -:  826:                        case syntax_element_short_set_rep:
+        -:  827:                        case syntax_element_long_set_rep:
+    #####:  828:                           next_rep_id = static_cast<re_repeat*>(p)->state_id;
+    #####:  829:                           break;
+    %%%%%:  829-block 32
+    #####:  830:                        case syntax_element_endmark:
+    #####:  831:                           if(static_cast<const re_brace*>(p)->index == idx)
+    %%%%%:  831-block 33
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  832:                              next_rep_id = -1;
+    %%%%%:  832-block 34
+    #####:  833:                           break;
+    %%%%%:  833-block 35
+    #####:  834:                        default:
+    #####:  835:                           break;
+    %%%%%:  835-block 36
+        -:  836:                        }
+    #####:  837:                        if(next_rep_id)
+    %%%%%:  837-block 37
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  838:                           break;
+    %%%%%:  838-block 38
+    #####:  839:                        p = p->next.p;
+    %%%%%:  839-block 39
+        -:  840:                     }
+    #####:  841:                     if(next_rep_id > 0)
+    %%%%%:  841-block 41
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  842:                     {
+    #####:  843:                        static_cast<re_recurse*>(state)->state_id = next_rep_id - 1;
+    %%%%%:  843-block 42
+        -:  844:                     }
+        -:  845:
+    #####:  846:                     break;
+    %%%%%:  846-block 43
+        -:  847:                  }
+    #####:  848:                  p = p->next.p;
+    %%%%%:  848-block 44
+        -:  849:               }
+        -:  850:            }
+    #####:  851:            if(!ok)
+    %%%%%:  851-block 46
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  852:            {
+        -:  853:               // recursion to sub-expression that doesn't exist:
+    #####:  854:               if(0 == this->m_pdata->m_status) // update the error code if not already set
+    %%%%%:  854-block 47
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  855:                  this->m_pdata->m_status = boost::regex_constants::error_bad_pattern;
+    %%%%%:  855-block 48
+        -:  856:               //
+        -:  857:               // clear the expression, we should be empty:
+        -:  858:               //
+    #####:  859:               this->m_pdata->m_expression = 0;
+    #####:  860:               this->m_pdata->m_expression_len = 0;
+        -:  861:               //
+        -:  862:               // and throw if required:
+        -:  863:               //
+    #####:  864:               if(0 == (this->flags() & regex_constants::no_except))
+    %%%%%:  864-block 49
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+        -:  865:               {
+    #####:  866:                  std::string message = "Encountered a forward reference to a recursive sub-expression that does not exist.";
+    %%%%%:  866-block 53
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    $$$$$:  866-block 75
+    #####:  867:                  boost::regex_error e(message, boost::regex_constants::error_bad_pattern, 0);
+    %%%%%:  867-block 55
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  868:                  e.raise();
+    %%%%%:  868-block 56
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  869:               }
+    %%%%%:  869-block 57
+call    0 never executed
+call    1 never executed
+    $$$$$:  869-block 76
+call    2 never executed
+    $$$$$:  869-block 78
+call    3 never executed
+        -:  870:            }
+        -:  871:         }
+    #####:  872:         break;
+    %%%%%:  872-block 60
+    #####:  873:      default:
+    #####:  874:         break;
+    %%%%%:  874-block 61
+        -:  875:      }
+    #####:  876:      state = state->next.p;
+    %%%%%:  876-block 62
+        -:  877:   }
+    #####:  878:}
+    %%%%%:  878-block 64
+        -:  879:
+        -:  880:template <class charT, class traits>
+function _ZN5boost13re_detail_50019basic_regex_creatorIcNS_12regex_traitsIcNS_16cpp_regex_traitsIcEEEEE16create_startmapsEPNS0_14re_syntax_baseE called 1 returned 100% blocks executed 39%
+        1:  881:void basic_regex_creator<charT, traits>::create_startmaps(re_syntax_base* state)
+        -:  882:{
+        -:  883:   // non-recursive implementation:
+        -:  884:   // create the last map in the machine first, so that earlier maps
+        -:  885:   // can make use of the result...
+        -:  886:   //
+        -:  887:   // This was originally a recursive implementation, but that caused stack
+        -:  888:   // overflows with complex expressions on small stacks (think COM+).
+        -:  889:
+        -:  890:   // start by saving the case setting:
+        1:  891:   bool l_icase = m_icase;
+        1:  892:   std::vector<std::pair<bool, re_syntax_base*> > v;
+        -:  893:
+       10:  894:   while(state)
+        1:  894-block 2
+       10:  894-block 24
+branch  0 taken 9
+branch  1 taken 1 (fallthrough)
+        -:  895:   {
+        9:  896:      switch(state->type)
+        9:  896-block 3
+branch  0 taken 0
+branch  1 taken 2
+branch  2 taken 0
+branch  3 taken 7
+        -:  897:      {
+    #####:  898:      case syntax_element_toggle_case:
+        -:  899:         // we need to track case changes here:
+    #####:  900:         m_icase = static_cast<re_case*>(state)->icase;
+    #####:  901:         state = state->next.p;
+    #####:  902:         continue;
+        2:  903:      case syntax_element_alt:
+        -:  904:      case syntax_element_rep:
+        -:  905:      case syntax_element_dot_rep:
+        -:  906:      case syntax_element_char_rep:
+        -:  907:      case syntax_element_short_set_rep:
+        -:  908:      case syntax_element_long_set_rep:
+        -:  909:         // just push the state onto our stack for now:
+        2:  910:         v.push_back(std::pair<bool, re_syntax_base*>(m_icase, state));
+        2:  910-block 5
+call    0 returned 2
+call    1 returned 2
+branch  2 taken 2 (fallthrough)
+branch  3 taken 0 (throw)
+    $$$$$:  910-block 42
+        2:  911:         state = state->next.p;
+        2:  912:         break;
+        2:  912-block 7
+    #####:  913:      case syntax_element_backstep:
+        -:  914:         // we need to calculate how big the backstep is:
+    #####:  915:         static_cast<re_brace*>(state)->index
+    #####:  916:            = this->calculate_backstep(state->next.p);
+    %%%%%:  916-block 8
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  917:         if(static_cast<re_brace*>(state)->index < 0)
+    %%%%%:  917-block 9
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  918:         {
+        -:  919:            // Oops error:
+    #####:  920:            if(0 == this->m_pdata->m_status) // update the error code if not already set
+    %%%%%:  920-block 10
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  921:               this->m_pdata->m_status = boost::regex_constants::error_bad_pattern;
+    %%%%%:  921-block 11
+        -:  922:            //
+        -:  923:            // clear the expression, we should be empty:
+        -:  924:            //
+    #####:  925:            this->m_pdata->m_expression = 0;
+    #####:  926:            this->m_pdata->m_expression_len = 0;
+        -:  927:            //
+        -:  928:            // and throw if required:
+        -:  929:            //
+    #####:  930:            if(0 == (this->flags() & regex_constants::no_except))
+    %%%%%:  930-block 12
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+        -:  931:            {
+    #####:  932:               std::string message = "Invalid lookbehind assertion encountered in the regular expression.";
+    %%%%%:  932-block 16
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    $$$$$:  932-block 45
+    #####:  933:               boost::regex_error e(message, boost::regex_constants::error_bad_pattern, 0);
+    %%%%%:  933-block 18
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  934:               e.raise();
+    %%%%%:  934-block 19
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  935:            }
+    %%%%%:  935-block 20
+call    0 never executed
+call    1 never executed
+    $$$$$:  935-block 46
+call    2 never executed
+    $$$$$:  935-block 48
+call    3 never executed
+        -:  936:         }
+        -:  937:         BOOST_REGEX_FALLTHROUGH;
+        -:  938:      default:
+        7:  939:         state = state->next.p;
+        7:  939-block 23
+    #####:  940:      }
+    %%%%%:  940-block 4
+        -:  941:   }
+        -:  942:
+        -:  943:   // now work through our list, building all the maps as we go:
+        3:  944:   while(!v.empty())
+        1:  944-block 25
+        3:  944-block 38
+call    0 returned 3
+branch  1 taken 2
+branch  2 taken 1 (fallthrough)
+        -:  945:   {
+        -:  946:      // Initialize m_recursion_checks if we need it:
+        2:  947:      if(m_has_recursions)
+        2:  947-block 26
+branch  0 taken 0 (fallthrough)
+branch  1 taken 2
+    #####:  948:         m_recursion_checks.assign(1 + m_pdata->m_mark_count, 0u);
+    %%%%%:  948-block 27
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  948-block 28
+    $$$$$:  948-block 51
+        -:  949:
+        2:  950:      const std::pair<bool, re_syntax_base*>& p = v.back();
+        2:  950-block 29
+call    0 returned 2
+        2:  951:      m_icase = p.first;
+        2:  952:      state = p.second;
+        2:  953:      v.pop_back();
+call    0 returned 2
+        -:  954:
+        -:  955:      // Build maps:
+        2:  956:      m_bad_repeats = 0;
+        2:  957:      create_startmap(state->next.p, static_cast<re_alt*>(state)->_map, &static_cast<re_alt*>(state)->can_be_null, mask_take);
+call    0 returned 2
+branch  1 taken 2 (fallthrough)
+branch  2 taken 0 (throw)
+        2:  958:      m_bad_repeats = 0;
+        -:  959:
+        2:  960:      if(m_has_recursions)
+        2:  960-block 32
+branch  0 taken 0 (fallthrough)
+branch  1 taken 2
+    #####:  961:         m_recursion_checks.assign(1 + m_pdata->m_mark_count, 0u);
+    %%%%%:  961-block 33
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  961-block 34
+    $$$$$:  961-block 52
+        2:  962:      create_startmap(static_cast<re_alt*>(state)->alt.p, static_cast<re_alt*>(state)->_map, &static_cast<re_alt*>(state)->can_be_null, mask_skip);
+        2:  962-block 35
+call    0 returned 2
+branch  1 taken 2 (fallthrough)
+branch  2 taken 0 (throw)
+        -:  963:      // adjust the type of the state to allow for faster matching:
+        2:  964:      state->type = this->get_repeat_type(state);
+        2:  964-block 36
+call    0 returned 2
+        -:  965:   }
+        -:  966:   // restore case sensitivity:
+        1:  967:   m_icase = l_icase;
+        1:  968:}
+        1:  968-block 40
+call    0 returned 1
+    $$$$$:  968-block 53
+call    1 never executed
+        -:  969:
+        -:  970:template <class charT, class traits>
+function _ZN5boost13re_detail_50019basic_regex_creatorIcNS_12regex_traitsIcNS_16cpp_regex_traitsIcEEEEE18calculate_backstepEPNS0_14re_syntax_baseE called 0 returned 0% blocks executed 0%
+    #####:  971:int basic_regex_creator<charT, traits>::calculate_backstep(re_syntax_base* state)
+        -:  972:{
+        -:  973:   typedef typename traits::char_class_type m_type;
+    #####:  974:   int result = 0;
+    #####:  975:   while(state)
+    %%%%%:  975-block 2
+    %%%%%:  975-block 47
+branch  0 never executed
+branch  1 never executed (fallthrough)
+        -:  976:   {
+    #####:  977:      switch(state->type)
+    %%%%%:  977-block 3
+branch  0 never executed
+branch  1 never executed
+branch  2 never executed
+branch  3 never executed
+branch  4 never executed
+branch  5 never executed
+branch  6 never executed
+branch  7 never executed
+branch  8 never executed
+        -:  978:      {
+    #####:  979:      case syntax_element_startmark:
+    #####:  980:         if((static_cast<re_brace*>(state)->index == -1)
+    %%%%%:  980-block 4
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  981:            || (static_cast<re_brace*>(state)->index == -2))
+    %%%%%:  981-block 5
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  982:         {
+    #####:  983:            state = static_cast<re_jump*>(state->next.p)->alt.p->next.p;
+    #####:  984:            continue;
+    %%%%%:  984-block 6
+        -:  985:         }
+    #####:  986:         else if(static_cast<re_brace*>(state)->index == -3)
+    %%%%%:  986-block 7
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  987:         {
+    #####:  988:            state = state->next.p->next.p;
+    #####:  989:            continue;
+    %%%%%:  989-block 8
+        -:  990:         }
+    #####:  991:         break;
+    %%%%%:  991-block 9
+    #####:  992:      case syntax_element_endmark:
+    #####:  993:         if((static_cast<re_brace*>(state)->index == -1)
+    %%%%%:  993-block 10
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  994:            || (static_cast<re_brace*>(state)->index == -2))
+    %%%%%:  994-block 11
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  995:            return result;
+    %%%%%:  995-block 12
+    #####:  996:         break;
+    %%%%%:  996-block 13
+    #####:  997:      case syntax_element_literal:
+    #####:  998:         result += static_cast<re_literal*>(state)->length;
+    #####:  999:         break;
+    %%%%%:  999-block 14
+    #####: 1000:      case syntax_element_wild:
+        -: 1001:      case syntax_element_set:
+    #####: 1002:         result += 1;
+    #####: 1003:         break;
+    %%%%%: 1003-block 15
+    #####: 1004:      case syntax_element_dot_rep:
+        -: 1005:      case syntax_element_char_rep:
+        -: 1006:      case syntax_element_short_set_rep:
+        -: 1007:      case syntax_element_backref:
+        -: 1008:      case syntax_element_rep:
+        -: 1009:      case syntax_element_combining:
+        -: 1010:      case syntax_element_long_set_rep:
+        -: 1011:      case syntax_element_backstep:
+        -: 1012:         {
+    #####: 1013:            re_repeat* rep = static_cast<re_repeat *>(state);
+        -: 1014:            // adjust the type of the state to allow for faster matching:
+    #####: 1015:            state->type = this->get_repeat_type(state);
+    %%%%%: 1015-block 16
+call    0 never executed
+    #####: 1016:            if((state->type == syntax_element_dot_rep) 
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####: 1017:               || (state->type == syntax_element_char_rep)
+    %%%%%: 1017-block 18
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####: 1018:               || (state->type == syntax_element_short_set_rep))
+    %%%%%: 1018-block 19
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -: 1019:            {
+    #####: 1020:               if(rep->max != rep->min)
+    %%%%%: 1020-block 20
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####: 1021:                  return -1;
+    %%%%%: 1021-block 21
+    #####: 1022:               if (static_cast<std::size_t>((std::numeric_limits<int>::max)() - result) < rep->min)
+    %%%%%: 1022-block 22
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####: 1023:                  return -1; // protection against overflow, we can't calculate a backstep in this case and the expression is probably ill-formed.
+    %%%%%: 1023-block 24
+    #####: 1024:               result += static_cast<int>(rep->min);
+    #####: 1025:               state = rep->alt.p;
+    #####: 1026:               continue;
+    %%%%%: 1026-block 25
+        -: 1027:            }
+    #####: 1028:            else if(state->type == syntax_element_long_set_rep)
+    %%%%%: 1028-block 26
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -: 1029:            {
+    #####: 1030:               BOOST_REGEX_ASSERT(rep->next.p->type == syntax_element_long_set);
+    %%%%%: 1030-block 27
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%: 1030-block 28
+call    2 never executed
+    #####: 1031:               if(static_cast<re_set_long<m_type>*>(rep->next.p)->singleton == 0)
+    %%%%%: 1031-block 29
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####: 1032:                  return -1;
+    %%%%%: 1032-block 30
+    #####: 1033:               if(rep->max != rep->min)
+    %%%%%: 1033-block 31
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####: 1034:                  return -1;
+    %%%%%: 1034-block 32
+    #####: 1035:               result += static_cast<int>(rep->min);
+    #####: 1036:               state = rep->alt.p;
+    #####: 1037:               continue;
+    %%%%%: 1037-block 33
+        -: 1038:            }
+        -: 1039:         }
+    #####: 1040:         return -1;
+    %%%%%: 1040-block 34
+    #####: 1041:      case syntax_element_long_set:
+    #####: 1042:         if(static_cast<re_set_long<m_type>*>(state)->singleton == 0)
+    %%%%%: 1042-block 35
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####: 1043:            return -1;
+    %%%%%: 1043-block 36
+    #####: 1044:         result += 1;
+    #####: 1045:         break;
+    %%%%%: 1045-block 37
+    #####: 1046:      case syntax_element_jump:
+    #####: 1047:         state = static_cast<re_jump*>(state)->alt.p;
+    #####: 1048:         continue;
+    #####: 1049:      case syntax_element_alt:
+        -: 1050:         {
+    #####: 1051:            int r1 = calculate_backstep(state->next.p);
+    %%%%%: 1051-block 39
+call    0 never executed
+    #####: 1052:            int r2 = calculate_backstep(static_cast<re_alt*>(state)->alt.p);
+call    0 never executed
+    #####: 1053:            if((r1 < 0) || (r1 != r2))
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%: 1053-block 42
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    #####: 1054:               return -1;
+    %%%%%: 1054-block 43
+    #####: 1055:            return result + r1;
+    %%%%%: 1055-block 44
+        -: 1056:         }
+    #####: 1057:      default:
+    #####: 1058:         break;
+    %%%%%: 1058-block 45
+    #####: 1059:      }
+    %%%%%: 1059-block 38
+    #####: 1060:      state = state->next.p;
+    %%%%%: 1060-block 46
+        -: 1061:   }
+    #####: 1062:   return -1;
+    %%%%%: 1062-block 48
+        -: 1063:}
+        -: 1064:
+        -: 1065:struct recursion_saver
+        -: 1066:{
+        -: 1067:   std::vector<unsigned char> saved_state;
+        -: 1068:   std::vector<unsigned char>* state;
+function _ZN5boost13re_detail_50015recursion_saverC2EPSt6vectorIhSaIhEE called 5 returned 100% blocks executed 100%
+        5: 1069:   recursion_saver(std::vector<unsigned char>* p) : saved_state(*p), state(p) {}
+        5: 1069-block 2
+call    0 returned 5
+function _ZN5boost13re_detail_50015recursion_saverD2Ev called 5 returned 100% blocks executed 100%
+        5: 1070:   ~recursion_saver()
+        -: 1071:   {
+        5: 1072:      state->swap(saved_state);
+        5: 1072-block 2
+call    0 returned 5
+        5: 1073:   }
+call    0 returned 5
+        -: 1074:};
+        -: 1075:
+        -: 1076:template <class charT, class traits>
+function _ZN5boost13re_detail_50019basic_regex_creatorIcNS_12regex_traitsIcNS_16cpp_regex_traitsIcEEEEE15create_startmapEPNS0_14re_syntax_baseEPhPjh called 5 returned 100% blocks executed 23%
+        5: 1077:void basic_regex_creator<charT, traits>::create_startmap(re_syntax_base* state, unsigned char* l_map, unsigned int* pnull, unsigned char mask)
+        -: 1078:{
+        5: 1079:   recursion_saver saved_recursions(&m_recursion_checks);
+        5: 1079-block 2
+call    0 returned 5
+branch  1 taken 5 (fallthrough)
+branch  2 taken 0 (throw)
+        5: 1080:   int not_last_jump = 1;
+        5: 1081:   re_syntax_base* recursion_start = 0;
+        5: 1082:   int recursion_sub = 0;
+        5: 1083:   re_syntax_base* recursion_restart = 0;
+        -: 1084:
+        -: 1085:   // track case sensitivity:
+        5: 1086:   bool l_icase = m_icase;
+        -: 1087:
+        6: 1088:   while(state)
+        5: 1088-block 3
+        6: 1088-block 150
+branch  0 taken 6
+branch  1 taken 0 (fallthrough)
+        -: 1089:   {
+        6: 1090:      switch(state->type)
+        6: 1090-block 4
+branch  0 taken 0
+branch  1 taken 1
+branch  2 taken 0
+branch  3 taken 0
+branch  4 taken 0
+branch  5 taken 0
+branch  6 taken 0
+branch  7 taken 0
+branch  8 taken 0
+branch  9 taken 0
+branch 10 taken 0
+branch 11 taken 2
+branch 12 taken 0
+branch 13 taken 2
+branch 14 taken 0
+branch 15 taken 0
+branch 16 taken 0
+branch 17 taken 1
+branch 18 taken 0
+        -: 1091:      {
+    #####: 1092:      case syntax_element_toggle_case:
+    #####: 1093:         l_icase = static_cast<re_case*>(state)->icase;
+    #####: 1094:         state = state->next.p;
+    #####: 1095:         break;
+    %%%%%: 1095-block 5
+        1: 1096:      case syntax_element_literal:
+        -: 1097:      {
+        -: 1098:         // don't set anything in *pnull, set each element in l_map
+        -: 1099:         // that could match the first character in the literal:
+        1: 1100:         if(l_map)
+        1: 1100-block 6
+branch  0 taken 1 (fallthrough)
+branch  1 taken 0
+        -: 1101:         {
+        1: 1102:            l_map[0] |= mask_init;
+        1: 1103:            charT first_char = *static_cast<charT*>(static_cast<void*>(static_cast<re_literal*>(state) + 1));
+      257: 1104:            for(unsigned int i = 0; i < (1u << CHAR_BIT); ++i)
+        1: 1104-block 7
+      256: 1104-block 11
+      257: 1104-block 12
+branch  0 taken 256
+branch  1 taken 1 (fallthrough)
+        -: 1105:            {
+      256: 1106:               if(m_traits.translate(static_cast<charT>(i), l_icase) == first_char)
+      256: 1106-block 8
+call    0 returned 256
+branch  1 taken 256 (fallthrough)
+branch  2 taken 0 (throw)
+      256: 1106-block 9
+branch  3 taken 1 (fallthrough)
+branch  4 taken 255
+        1: 1107:                  l_map[i] |= mask;
+        1: 1107-block 10
+        -: 1108:            }
+        -: 1109:         }
+        1: 1110:         return;
+        1: 1110-block 13
+        -: 1111:      }
+    #####: 1112:      case syntax_element_end_line:
+        -: 1113:      {
+        -: 1114:         // next character must be a line separator (if there is one):
+    #####: 1115:         if(l_map)
+    %%%%%: 1115-block 14
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -: 1116:         {
+    #####: 1117:            l_map[0] |= mask_init;
+    #####: 1118:            l_map[static_cast<unsigned>('\n')] |= mask;
+    #####: 1119:            l_map[static_cast<unsigned>('\r')] |= mask;
+    #####: 1120:            l_map[static_cast<unsigned>('\f')] |= mask;
+    #####: 1121:            l_map[0x85] |= mask;
+    %%%%%: 1121-block 15
+        -: 1122:         }
+        -: 1123:         // now figure out if we can match a NULL string at this point:
+    #####: 1124:         if(pnull)
+    %%%%%: 1124-block 16
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####: 1125:            create_startmap(state->next.p, 0, pnull, mask);
+    %%%%%: 1125-block 17
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####: 1126:         return;
+    %%%%%: 1126-block 18
+        -: 1127:      }
+    #####: 1128:      case syntax_element_recurse:
+        -: 1129:         {
+    #####: 1130:            BOOST_REGEX_ASSERT(static_cast<const re_jump*>(state)->alt.p->type == syntax_element_startmark);
+    %%%%%: 1130-block 19
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%: 1130-block 20
+call    2 never executed
+    #####: 1131:            recursion_sub = static_cast<re_brace*>(static_cast<const re_jump*>(state)->alt.p)->index;
+    #####: 1132:            if(m_recursion_checks[recursion_sub] & 1u)
+    %%%%%: 1132-block 21
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+        -: 1133:            {
+        -: 1134:               // Infinite recursion!!
+    #####: 1135:               if(0 == this->m_pdata->m_status) // update the error code if not already set
+    %%%%%: 1135-block 23
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####: 1136:                  this->m_pdata->m_status = boost::regex_constants::error_bad_pattern;
+    %%%%%: 1136-block 24
+        -: 1137:               //
+        -: 1138:               // clear the expression, we should be empty:
+        -: 1139:               //
+    #####: 1140:               this->m_pdata->m_expression = 0;
+    #####: 1141:               this->m_pdata->m_expression_len = 0;
+        -: 1142:               //
+        -: 1143:               // and throw if required:
+        -: 1144:               //
+    #####: 1145:               if(0 == (this->flags() & regex_constants::no_except))
+    %%%%%: 1145-block 25
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+        -: 1146:               {
+    #####: 1147:                  std::string message = "Encountered an infinite recursion.";
+    %%%%%: 1147-block 29
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    $$$$$: 1147-block 160
+    #####: 1148:                  boost::regex_error e(message, boost::regex_constants::error_bad_pattern, 0);
+    %%%%%: 1148-block 31
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####: 1149:                  e.raise();
+    %%%%%: 1149-block 32
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####: 1150:               }
+    %%%%%: 1150-block 33
+call    0 never executed
+call    1 never executed
+    $$$$$: 1150-block 161
+call    2 never executed
+    $$$$$: 1150-block 163
+call    3 never executed
+        -: 1151:            }
+    #####: 1152:            else if(recursion_start == 0)
+    %%%%%: 1152-block 36
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -: 1153:            {
+    #####: 1154:               recursion_start = state;
+    #####: 1155:               recursion_restart = state->next.p;
+    #####: 1156:               state = static_cast<re_jump*>(state)->alt.p;
+    #####: 1157:               m_recursion_checks[recursion_sub] |= 1u;
+    %%%%%: 1157-block 37
+call    0 never executed
+    #####: 1158:               break;
+        -: 1159:            }
+    #####: 1160:            m_recursion_checks[recursion_sub] |= 1u;
+    %%%%%: 1160-block 39
+call    0 never executed
+        -: 1161:            // can't handle nested recursion here...
+        -: 1162:            BOOST_REGEX_FALLTHROUGH;
+        -: 1163:         }
+    #####: 1164:      case syntax_element_backref:
+        -: 1165:         // can be null, and any character can match:
+    #####: 1166:         if(pnull)
+    %%%%%: 1166-block 41
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####: 1167:            *pnull |= mask;
+    %%%%%: 1167-block 42
+        -: 1168:         BOOST_REGEX_FALLTHROUGH;
+        -: 1169:      case syntax_element_wild:
+        -: 1170:      {
+        -: 1171:         // can't be null, any character can match:
+    #####: 1172:         set_all_masks(l_map, mask);
+    %%%%%: 1172-block 43
+call    0 never executed
+    #####: 1173:         return;
+        -: 1174:      }
+    #####: 1175:      case syntax_element_accept:
+        -: 1176:      case syntax_element_match:
+        -: 1177:      {
+        -: 1178:         // must be null, any character can match:
+    #####: 1179:         set_all_masks(l_map, mask);
+    %%%%%: 1179-block 45
+call    0 never executed
+    #####: 1180:         if(pnull)
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####: 1181:            *pnull |= mask;
+    %%%%%: 1181-block 47
+    #####: 1182:         return;
+    %%%%%: 1182-block 48
+        -: 1183:      }
+    #####: 1184:      case syntax_element_word_start:
+        -: 1185:      {
+        -: 1186:         // recurse, then AND with all the word characters:
+    #####: 1187:         create_startmap(state->next.p, l_map, pnull, mask);
+    %%%%%: 1187-block 49
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####: 1188:         if(l_map)
+    %%%%%: 1188-block 50
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -: 1189:         {
+    #####: 1190:            l_map[0] |= mask_init;
+    #####: 1191:            for(unsigned int i = 0; i < (1u << CHAR_BIT); ++i)
+    %%%%%: 1191-block 51
+    %%%%%: 1191-block 55
+    %%%%%: 1191-block 56
+branch  0 never executed
+branch  1 never executed (fallthrough)
+        -: 1192:            {
+    #####: 1193:               if(!m_traits.isctype(static_cast<charT>(i), m_word_mask))
+    %%%%%: 1193-block 52
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%: 1193-block 53
+branch  3 never executed (fallthrough)
+branch  4 never executed
+    #####: 1194:                  l_map[i] &= static_cast<unsigned char>(~mask);
+    %%%%%: 1194-block 54
+        -: 1195:            }
+        -: 1196:         }
+    #####: 1197:         return;
+    %%%%%: 1197-block 57
+        -: 1198:      }
+    #####: 1199:      case syntax_element_word_end:
+        -: 1200:      {
+        -: 1201:         // recurse, then AND with all the word characters:
+    #####: 1202:         create_startmap(state->next.p, l_map, pnull, mask);
+    %%%%%: 1202-block 58
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####: 1203:         if(l_map)
+    %%%%%: 1203-block 59
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -: 1204:         {
+    #####: 1205:            l_map[0] |= mask_init;
+    #####: 1206:            for(unsigned int i = 0; i < (1u << CHAR_BIT); ++i)
+    %%%%%: 1206-block 60
+    %%%%%: 1206-block 64
+    %%%%%: 1206-block 65
+branch  0 never executed
+branch  1 never executed (fallthrough)
+        -: 1207:            {
+    #####: 1208:               if(m_traits.isctype(static_cast<charT>(i), m_word_mask))
+    %%%%%: 1208-block 61
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%: 1208-block 62
+branch  3 never executed (fallthrough)
+branch  4 never executed
+    #####: 1209:                  l_map[i] &= static_cast<unsigned char>(~mask);
+    %%%%%: 1209-block 63
+        -: 1210:            }
+        -: 1211:         }
+    #####: 1212:         return;
+    %%%%%: 1212-block 66
+        -: 1213:      }
+    #####: 1214:      case syntax_element_buffer_end:
+        -: 1215:      {
+        -: 1216:         // we *must be null* :
+    #####: 1217:         if(pnull)
+    %%%%%: 1217-block 67
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####: 1218:            *pnull |= mask;
+    %%%%%: 1218-block 68
+    #####: 1219:         return;
+    %%%%%: 1219-block 69
+        -: 1220:      }
+    #####: 1221:      case syntax_element_long_set:
+    #####: 1222:         if(l_map)
+    %%%%%: 1222-block 70
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -: 1223:         {
+        -: 1224:            typedef typename traits::char_class_type m_type;
+    #####: 1225:            if(static_cast<re_set_long<m_type>*>(state)->singleton)
+    %%%%%: 1225-block 71
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -: 1226:            {
+    #####: 1227:               l_map[0] |= mask_init;
+    #####: 1228:               for(unsigned int i = 0; i < (1u << CHAR_BIT); ++i)
+    %%%%%: 1228-block 72
+    %%%%%: 1228-block 76
+    %%%%%: 1228-block 77
+branch  0 never executed
+branch  1 never executed
+        -: 1229:               {
+    #####: 1230:                  charT c = static_cast<charT>(i);
+    #####: 1231:                  if(&c != re_is_set_member(&c, &c + 1, static_cast<re_set_long<m_type>*>(state), *m_pdata, l_icase))
+    %%%%%: 1231-block 73
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%: 1231-block 74
+branch  3 never executed (fallthrough)
+branch  4 never executed
+    #####: 1232:                     l_map[i] |= mask;
+    %%%%%: 1232-block 75
+        -: 1233:               }
+        -: 1234:            }
+        -: 1235:            else
+    #####: 1236:               set_all_masks(l_map, mask);
+    %%%%%: 1236-block 78
+call    0 never executed
+        -: 1237:         }
+    #####: 1238:         return;
+    %%%%%: 1238-block 79
+        2: 1239:      case syntax_element_set:
+        2: 1240:         if(l_map)
+        2: 1240-block 80
+branch  0 taken 2 (fallthrough)
+branch  1 taken 0
+        -: 1241:         {
+        2: 1242:            l_map[0] |= mask_init;
+      514: 1243:            for(unsigned int i = 0; i < (1u << CHAR_BIT); ++i)
+        2: 1243-block 81
+      512: 1243-block 85
+      514: 1243-block 86
+branch  0 taken 512
+branch  1 taken 2 (fallthrough)
+        -: 1244:            {
+      512: 1245:               if(static_cast<re_set*>(state)->_map[
+      512: 1246:                  static_cast<unsigned char>(m_traits.translate(static_cast<charT>(i), l_icase))])
+      512: 1246-block 82
+call    0 returned 512
+branch  1 taken 512 (fallthrough)
+branch  2 taken 0 (throw)
+      512: 1246-block 83
+branch  3 taken 116 (fallthrough)
+branch  4 taken 396
+      116: 1247:                  l_map[i] |= mask;
+      116: 1247-block 84
+        -: 1248:            }
+        -: 1249:         }
+        2: 1250:         return;
+        2: 1250-block 87
+    #####: 1251:      case syntax_element_jump:
+        -: 1252:         // take the jump:
+    #####: 1253:         state = static_cast<re_alt*>(state)->alt.p;
+    #####: 1254:         not_last_jump = -1;
+    #####: 1255:         break;
+    %%%%%: 1255-block 88
+        2: 1256:      case syntax_element_alt:
+        -: 1257:      case syntax_element_rep:
+        -: 1258:      case syntax_element_dot_rep:
+        -: 1259:      case syntax_element_char_rep:
+        -: 1260:      case syntax_element_short_set_rep:
+        -: 1261:      case syntax_element_long_set_rep:
+        -: 1262:         {
+        2: 1263:            re_alt* rep = static_cast<re_alt*>(state);
+        2: 1264:            if(rep->_map[0] & mask_init)
+        2: 1264-block 89
+branch  0 taken 2 (fallthrough)
+branch  1 taken 0
+        -: 1265:            {
+        2: 1266:               if(l_map)
+        2: 1266-block 90
+branch  0 taken 2 (fallthrough)
+branch  1 taken 0
+        -: 1267:               {
+        -: 1268:                  // copy previous results:
+        2: 1269:                  l_map[0] |= mask_init;
+      514: 1270:                  for(unsigned int i = 0; i <= UCHAR_MAX; ++i)
+        2: 1270-block 91
+      512: 1270-block 94
+      514: 1270-block 95
+branch  0 taken 512
+branch  1 taken 2 (fallthrough)
+        -: 1271:                  {
+      512: 1272:                     if(rep->_map[i] & mask_any)
+      512: 1272-block 92
+branch  0 taken 128 (fallthrough)
+branch  1 taken 384
+      128: 1273:                        l_map[i] |= mask;
+      128: 1273-block 93
+        -: 1274:                  }
+        -: 1275:               }
+        2: 1276:               if(pnull)
+        2: 1276-block 96
+branch  0 taken 2 (fallthrough)
+branch  1 taken 0
+        -: 1277:               {
+        2: 1278:                  if(rep->can_be_null & mask_any)
+        2: 1278-block 97
+branch  0 taken 0 (fallthrough)
+branch  1 taken 2
+    #####: 1279:                     *pnull |= mask;
+    %%%%%: 1279-block 98
+        -: 1280:               }
+        -: 1281:            }
+        -: 1282:            else
+        -: 1283:            {
+        -: 1284:               // we haven't created a startmap for this alternative yet
+        -: 1285:               // so take the union of the two options:
+    #####: 1286:               if(is_bad_repeat(state))
+    %%%%%: 1286-block 99
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+        -: 1287:               {
+    #####: 1288:                  set_all_masks(l_map, mask);
+    %%%%%: 1288-block 101
+call    0 never executed
+    #####: 1289:                  if(pnull)
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####: 1290:                     *pnull |= mask;
+    %%%%%: 1290-block 103
+    #####: 1291:                  return;
+    %%%%%: 1291-block 104
+        -: 1292:               }
+    #####: 1293:               set_bad_repeat(state);
+    %%%%%: 1293-block 105
+call    0 never executed
+    #####: 1294:               create_startmap(state->next.p, l_map, pnull, mask);
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####: 1295:               if((state->type == syntax_element_alt)
+    %%%%%: 1295-block 107
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####: 1296:                  || (static_cast<re_repeat*>(state)->min == 0)
+    %%%%%: 1296-block 108
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####: 1297:                  || (not_last_jump == 0))
+    %%%%%: 1297-block 109
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####: 1298:                  create_startmap(rep->alt.p, l_map, pnull, mask);
+    %%%%%: 1298-block 110
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -: 1299:            }
+        -: 1300:         }
+        2: 1301:         return;
+        2: 1301-block 111
+    #####: 1302:      case syntax_element_soft_buffer_end:
+        -: 1303:         // match newline or null:
+    #####: 1304:         if(l_map)
+    %%%%%: 1304-block 112
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -: 1305:         {
+    #####: 1306:            l_map[0] |= mask_init;
+    #####: 1307:            l_map[static_cast<unsigned>('\n')] |= mask;
+    #####: 1308:            l_map[static_cast<unsigned>('\r')] |= mask;
+    %%%%%: 1308-block 113
+        -: 1309:         }
+    #####: 1310:         if(pnull)
+    %%%%%: 1310-block 114
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####: 1311:            *pnull |= mask;
+    %%%%%: 1311-block 115
+    #####: 1312:         return;
+    %%%%%: 1312-block 116
+    #####: 1313:      case syntax_element_endmark:
+        -: 1314:         // need to handle independent subs as a special case:
+    #####: 1315:         if(static_cast<re_brace*>(state)->index < 0)
+    %%%%%: 1315-block 117
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -: 1316:         {
+        -: 1317:            // can be null, any character can match:
+    #####: 1318:            set_all_masks(l_map, mask);
+    %%%%%: 1318-block 118
+call    0 never executed
+    #####: 1319:            if(pnull)
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####: 1320:               *pnull |= mask;
+    %%%%%: 1320-block 120
+    #####: 1321:            return;
+    %%%%%: 1321-block 121
+        -: 1322:         }
+    #####: 1323:         else if(recursion_start && (recursion_sub != 0) && (recursion_sub == static_cast<re_brace*>(state)->index))
+    %%%%%: 1323-block 122
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%: 1323-block 123
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    %%%%%: 1323-block 124
+branch  4 never executed (fallthrough)
+branch  5 never executed
+        -: 1324:         {
+        -: 1325:            // recursion termination:
+    #####: 1326:            recursion_start = 0;
+    #####: 1327:            state = recursion_restart;
+    #####: 1328:            break;
+    %%%%%: 1328-block 125
+        -: 1329:         }
+        -: 1330:
+        -: 1331:         //
+        -: 1332:         // Normally we just go to the next state... but if this sub-expression is
+        -: 1333:         // the target of a recursion, then we might be ending a recursion, in which
+        -: 1334:         // case we should check whatever follows that recursion, as well as whatever
+        -: 1335:         // follows this state:
+        -: 1336:         //
+    #####: 1337:         if(m_pdata->m_has_recursions && static_cast<re_brace*>(state)->index)
+    %%%%%: 1337-block 126
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%: 1337-block 127
+branch  2 never executed (fallthrough)
+branch  3 never executed
+        -: 1338:         {
+    #####: 1339:            bool ok = false;
+    #####: 1340:            re_syntax_base* p = m_pdata->m_first_state;
+    #####: 1341:            while(p)
+    %%%%%: 1341-block 128
+    %%%%%: 1341-block 134
+branch  0 never executed
+branch  1 never executed (fallthrough)
+        -: 1342:            {
+    #####: 1343:               if(p->type == syntax_element_recurse)
+    %%%%%: 1343-block 129
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -: 1344:               {
+    #####: 1345:                  re_brace* p2 = static_cast<re_brace*>(static_cast<re_jump*>(p)->alt.p);
+    #####: 1346:                  if((p2->type == syntax_element_startmark) && (p2->index == static_cast<re_brace*>(state)->index))
+    %%%%%: 1346-block 130
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%: 1346-block 131
+branch  2 never executed (fallthrough)
+branch  3 never executed
+        -: 1347:                  {
+    #####: 1348:                     ok = true;
+    #####: 1349:                     break;
+    %%%%%: 1349-block 132
+        -: 1350:                  }
+        -: 1351:               }
+    #####: 1352:               p = p->next.p;
+    %%%%%: 1352-block 133
+        -: 1353:            }
+    #####: 1354:            if(ok && ((m_recursion_checks[static_cast<re_brace*>(state)->index] & 2u) == 0))
+    %%%%%: 1354-block 135
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%: 1354-block 136
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed
+    %%%%%: 1354-block 138
+    %%%%%: 1354-block 139
+    %%%%%: 1354-block 140
+branch  5 never executed (fallthrough)
+branch  6 never executed
+        -: 1355:            {
+    #####: 1356:               m_recursion_checks[static_cast<re_brace*>(state)->index] |= 2u;
+    %%%%%: 1356-block 141
+call    0 never executed
+    #####: 1357:               create_startmap(p->next.p, l_map, pnull, mask);
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -: 1358:            }
+        -: 1359:         }
+    #####: 1360:         state = state->next.p;
+    #####: 1361:         break;
+    %%%%%: 1361-block 143
+        -: 1362:
+    #####: 1363:      case syntax_element_commit:
+    #####: 1364:         set_all_masks(l_map, mask);
+    %%%%%: 1364-block 144
+call    0 never executed
+        -: 1365:         // Continue scanning so we can figure out whether we can be null:
+    #####: 1366:         state = state->next.p;
+    #####: 1367:         break;
+        1: 1368:      case syntax_element_startmark:
+        -: 1369:         // need to handle independent subs as a special case:
+        1: 1370:         if(static_cast<re_brace*>(state)->index == -3)
+        1: 1370-block 146
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+        -: 1371:         {
+    #####: 1372:            state = state->next.p->next.p;
+    #####: 1373:            break;
+    %%%%%: 1373-block 147
+        -: 1374:         }
+        -: 1375:         BOOST_REGEX_FALLTHROUGH;
+        -: 1376:      default:
+        1: 1377:         state = state->next.p;
+        1: 1377-block 148
+        -: 1378:      }
+        1: 1379:      ++not_last_jump;
+        1: 1379-block 149
+        -: 1380:   }
+       5*: 1381:}
+    %%%%%: 1381-block 151
+        5: 1381-block 152
+call    0 returned 5
+branch  1 taken 0 (fallthrough)
+branch  2 taken 5
+    $$$$$: 1381-block 167
+call    3 never executed
+        -: 1382:
+        -: 1383:template <class charT, class traits>
+function _ZN5boost13re_detail_50019basic_regex_creatorIcNS_12regex_traitsIcNS_16cpp_regex_traitsIcEEEEE16get_restart_typeEPNS0_14re_syntax_baseE called 1 returned 100% blocks executed 64%
+        1: 1384:unsigned basic_regex_creator<charT, traits>::get_restart_type(re_syntax_base* state)
+        -: 1385:{
+        -: 1386:   //
+        -: 1387:   // find out how the machine starts, so we can optimise the search:
+        -: 1388:   //
+        3: 1389:   while(state)
+        1: 1389-block 2
+        3: 1389-block 10
+branch  0 taken 2
+branch  1 taken 1 (fallthrough)
+        -: 1390:   {
+        2: 1391:      switch(state->type)
+        2: 1391-block 3
+branch  0 taken 1
+branch  1 taken 0
+branch  2 taken 0
+branch  3 taken 0
+branch  4 taken 0
+branch  5 taken 1
+        -: 1392:      {
+        1: 1393:      case syntax_element_startmark:
+        -: 1394:      case syntax_element_endmark:
+        1: 1395:         state = state->next.p;
+        1: 1396:         continue;
+        1: 1396-block 4
+    #####: 1397:      case syntax_element_start_line:
+    #####: 1398:         return regbase::restart_line;
+    %%%%%: 1398-block 5
+    #####: 1399:      case syntax_element_word_start:
+    #####: 1400:         return regbase::restart_word;
+    %%%%%: 1400-block 6
+    #####: 1401:      case syntax_element_buffer_start:
+    #####: 1402:         return regbase::restart_buf;
+    %%%%%: 1402-block 7
+    #####: 1403:      case syntax_element_restart_continue:
+    #####: 1404:         return regbase::restart_continue;
+    %%%%%: 1404-block 8
+        1: 1405:      default:
+        1: 1406:         state = 0;
+        1: 1407:         continue;
+        1: 1407-block 9
+        -: 1408:      }
+        -: 1409:   }
+        1: 1410:   return regbase::restart_any;
+        1: 1410-block 11
+        -: 1411:}
+        -: 1412:
+        -: 1413:template <class charT, class traits>
+function _ZN5boost13re_detail_50019basic_regex_creatorIcNS_12regex_traitsIcNS_16cpp_regex_traitsIcEEEEE13set_all_masksEPhh called 0 returned 0% blocks executed 0%
+    #####: 1414:void basic_regex_creator<charT, traits>::set_all_masks(unsigned char* bits, unsigned char mask)
+        -: 1415:{
+        -: 1416:   //
+        -: 1417:   // set mask in all of bits elements, 
+        -: 1418:   // if bits[0] has mask_init not set then we can 
+        -: 1419:   // optimise this to a call to memset:
+        -: 1420:   //
+    #####: 1421:   if(bits)
+    %%%%%: 1421-block 2
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -: 1422:   {
+    #####: 1423:      if(bits[0] == 0)
+    %%%%%: 1423-block 3
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####: 1424:         (std::memset)(bits, mask, 1u << CHAR_BIT);
+    %%%%%: 1424-block 4
+        -: 1425:      else
+        -: 1426:      {
+    #####: 1427:         for(unsigned i = 0; i < (1u << CHAR_BIT); ++i)
+    %%%%%: 1427-block 5
+    %%%%%: 1427-block 7
+branch  0 never executed
+branch  1 never executed (fallthrough)
+    #####: 1428:            bits[i] |= mask;
+    %%%%%: 1428-block 6
+        -: 1429:      }
+    #####: 1430:      bits[0] |= mask_init;
+    %%%%%: 1430-block 8
+        -: 1431:   }
+    #####: 1432:}
+        -: 1433:
+        -: 1434:template <class charT, class traits>
+function _ZN5boost13re_detail_50019basic_regex_creatorIcNS_12regex_traitsIcNS_16cpp_regex_traitsIcEEEEE13is_bad_repeatEPNS0_14re_syntax_baseE called 0 returned 0% blocks executed 0%
+    #####: 1435:bool basic_regex_creator<charT, traits>::is_bad_repeat(re_syntax_base* pt)
+        -: 1436:{
+    #####: 1437:   switch(pt->type)
+    %%%%%: 1437-block 2
+branch  0 never executed
+branch  1 never executed
+        -: 1438:   {
+    #####: 1439:   case syntax_element_rep:
+        -: 1440:   case syntax_element_dot_rep:
+        -: 1441:   case syntax_element_char_rep:
+        -: 1442:   case syntax_element_short_set_rep:
+        -: 1443:   case syntax_element_long_set_rep:
+        -: 1444:      {
+    #####: 1445:         unsigned state_id = static_cast<re_repeat*>(pt)->state_id;
+    #####: 1446:         if(state_id >= sizeof(m_bad_repeats) * CHAR_BIT)
+    %%%%%: 1446-block 3
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####: 1447:            return true;  // run out of bits, assume we can't traverse this one.
+    %%%%%: 1447-block 4
+        -: 1448:         static const std::uintmax_t one = 1uL;
+    #####: 1449:         return m_bad_repeats & (one << state_id);
+    %%%%%: 1449-block 5
+        -: 1450:      }
+    #####: 1451:   default:
+    #####: 1452:      return false;
+    %%%%%: 1452-block 6
+        -: 1453:   }
+        -: 1454:}
+        -: 1455:
+        -: 1456:template <class charT, class traits>
+function _ZN5boost13re_detail_50019basic_regex_creatorIcNS_12regex_traitsIcNS_16cpp_regex_traitsIcEEEEE14set_bad_repeatEPNS0_14re_syntax_baseE called 0 returned 0% blocks executed 0%
+    #####: 1457:void basic_regex_creator<charT, traits>::set_bad_repeat(re_syntax_base* pt)
+        -: 1458:{
+    #####: 1459:   switch(pt->type)
+    %%%%%: 1459-block 2
+branch  0 never executed
+branch  1 never executed
+        -: 1460:   {
+    #####: 1461:   case syntax_element_rep:
+        -: 1462:   case syntax_element_dot_rep:
+        -: 1463:   case syntax_element_char_rep:
+        -: 1464:   case syntax_element_short_set_rep:
+        -: 1465:   case syntax_element_long_set_rep:
+        -: 1466:      {
+    #####: 1467:         unsigned state_id = static_cast<re_repeat*>(pt)->state_id;
+        -: 1468:         static const std::uintmax_t one = 1uL;
+    #####: 1469:         if(state_id <= sizeof(m_bad_repeats) * CHAR_BIT)
+    %%%%%: 1469-block 3
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####: 1470:            m_bad_repeats |= (one << state_id);
+    %%%%%: 1470-block 4
+        -: 1471:      }
+    #####: 1472:      break;
+    %%%%%: 1472-block 5
+    #####: 1473:   default:
+    #####: 1474:      break;
+    %%%%%: 1474-block 6
+        -: 1475:   }
+    #####: 1476:}
+        -: 1477:
+        -: 1478:template <class charT, class traits>
+function _ZN5boost13re_detail_50019basic_regex_creatorIcNS_12regex_traitsIcNS_16cpp_regex_traitsIcEEEEE15get_repeat_typeEPNS0_14re_syntax_baseE called 2 returned 100% blocks executed 38%
+        2: 1479:syntax_element_type basic_regex_creator<charT, traits>::get_repeat_type(re_syntax_base* state)
+        -: 1480:{
+        -: 1481:   typedef typename traits::char_class_type m_type;
+        2: 1482:   if(state->type == syntax_element_rep)
+        2: 1482-block 2
+branch  0 taken 2 (fallthrough)
+branch  1 taken 0
+        -: 1483:   {
+        -: 1484:      // check to see if we are repeating a single state:
+        2: 1485:      if(state->next.p->next.p->next.p == static_cast<re_alt*>(state)->alt.p)
+        2: 1485-block 3
+branch  0 taken 2 (fallthrough)
+branch  1 taken 0
+        -: 1486:      {
+        2: 1487:         switch(state->next.p->type)
+        2: 1487-block 4
+branch  0 taken 0
+branch  1 taken 0
+branch  2 taken 2
+branch  3 taken 0
+branch  4 taken 0
+        -: 1488:         {
+    #####: 1489:         case BOOST_REGEX_DETAIL_NS::syntax_element_wild:
+    #####: 1490:            return BOOST_REGEX_DETAIL_NS::syntax_element_dot_rep;
+    %%%%%: 1490-block 5
+    #####: 1491:         case BOOST_REGEX_DETAIL_NS::syntax_element_literal:
+    #####: 1492:            return BOOST_REGEX_DETAIL_NS::syntax_element_char_rep;
+    %%%%%: 1492-block 6
+        2: 1493:         case BOOST_REGEX_DETAIL_NS::syntax_element_set:
+        2: 1494:            return BOOST_REGEX_DETAIL_NS::syntax_element_short_set_rep;
+        2: 1494-block 7
+    #####: 1495:         case BOOST_REGEX_DETAIL_NS::syntax_element_long_set:
+    #####: 1496:            if(static_cast<BOOST_REGEX_DETAIL_NS::re_set_long<m_type>*>(state->next.p)->singleton)
+    %%%%%: 1496-block 8
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####: 1497:               return BOOST_REGEX_DETAIL_NS::syntax_element_long_set_rep;
+    %%%%%: 1497-block 9
+    #####: 1498:            break;
+    %%%%%: 1498-block 10
+    #####: 1499:         default:
+    #####: 1500:            break;
+    %%%%%: 1500-block 11
+        -: 1501:         }
+        -: 1502:      }
+        -: 1503:   }
+    #####: 1504:   return state->type;
+    %%%%%: 1504-block 13
+        -: 1505:}
+        -: 1506:
+        -: 1507:template <class charT, class traits>
+function _ZN5boost13re_detail_50019basic_regex_creatorIcNS_12regex_traitsIcNS_16cpp_regex_traitsIcEEEEE20probe_leading_repeatEPNS0_14re_syntax_baseE called 1 returned 100% blocks executed 53%
+        2: 1508:void basic_regex_creator<charT, traits>::probe_leading_repeat(re_syntax_base* state)
+        -: 1509:{
+        -: 1510:   // enumerate our states, and see if we have a leading repeat 
+        -: 1511:   // for which failed search restarts can be optimized;
+        -: 1512:   do
+        -: 1513:   {
+        2: 1514:      switch(state->type)
+        2: 1514-block 2
+branch  0 taken 1
+branch  1 taken 0
+branch  2 taken 1
+branch  3 taken 0
+        -: 1515:      {
+        1: 1516:      case syntax_element_startmark:
+        1: 1517:         if(static_cast<re_brace*>(state)->index >= 0)
+        1: 1517-block 3
+branch  0 taken 1 (fallthrough)
+branch  1 taken 0
+        -: 1518:         {
+        1: 1519:            state = state->next.p;
+        1: 1520:            continue;
+        1: 1520-block 4
+        -: 1521:         }
+        -: 1522:#ifdef BOOST_REGEX_MSVC
+        -: 1523:#  pragma warning(push)
+        -: 1524:#pragma warning(disable:6011)
+        -: 1525:#endif
+    #####: 1526:         if((static_cast<re_brace*>(state)->index == -1)
+    %%%%%: 1526-block 5
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####: 1527:            || (static_cast<re_brace*>(state)->index == -2))
+    %%%%%: 1527-block 6
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -: 1528:         {
+        -: 1529:            // skip past the zero width assertion:
+    #####: 1530:            state = static_cast<const re_jump*>(state->next.p)->alt.p->next.p;
+    #####: 1531:            continue;
+    %%%%%: 1531-block 7
+        -: 1532:         }
+        -: 1533:#ifdef BOOST_REGEX_MSVC
+        -: 1534:#  pragma warning(pop)
+        -: 1535:#endif
+    #####: 1536:         if(static_cast<re_brace*>(state)->index == -3)
+    %%%%%: 1536-block 8
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -: 1537:         {
+        -: 1538:            // Have to skip the leading jump state:
+    #####: 1539:            state = state->next.p->next.p;
+    #####: 1540:            continue;
+    %%%%%: 1540-block 9
+        -: 1541:         }
+    #####: 1542:         return;
+    %%%%%: 1542-block 10
+    #####: 1543:      case syntax_element_endmark:
+        -: 1544:      case syntax_element_start_line:
+        -: 1545:      case syntax_element_end_line:
+        -: 1546:      case syntax_element_word_boundary:
+        -: 1547:      case syntax_element_within_word:
+        -: 1548:      case syntax_element_word_start:
+        -: 1549:      case syntax_element_word_end:
+        -: 1550:      case syntax_element_buffer_start:
+        -: 1551:      case syntax_element_buffer_end:
+        -: 1552:      case syntax_element_restart_continue:
+    #####: 1553:         state = state->next.p;
+    #####: 1554:         break;
+    %%%%%: 1554-block 11
+        1: 1555:      case syntax_element_dot_rep:
+        -: 1556:      case syntax_element_char_rep:
+        -: 1557:      case syntax_element_short_set_rep:
+        -: 1558:      case syntax_element_long_set_rep:
+        1: 1559:         if(this->m_has_backrefs == 0)
+        1: 1559-block 12
+branch  0 taken 1 (fallthrough)
+branch  1 taken 0
+        1: 1560:            static_cast<re_repeat*>(state)->leading = true;
+        1: 1560-block 13
+        -: 1561:         BOOST_REGEX_FALLTHROUGH;
+        -: 1562:      default:
+        1: 1563:         return;
+        1: 1563-block 14
+        -: 1564:      }
+        1: 1565:   }while(state);
+        1: 1565-block 15
+branch  0 taken 1
+branch  1 taken 0 (fallthrough)
+        -: 1566:}
+        -: 1567:
+        -: 1568:} // namespace BOOST_REGEX_DETAIL_NS
+        -: 1569:
+        -: 1570:} // namespace boost
+        -: 1571:
+        -: 1572:#ifdef BOOST_REGEX_MSVC
+        -: 1573:#  pragma warning(pop)
+        -: 1574:#endif
+        -: 1575:
+        -: 1576:#endif

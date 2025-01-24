@@ -1,0 +1,1173 @@
+        -:    0:Source:/usr/include/c++/14.2.1/bits/ios_base.h
+        -:    0:Graph:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/app/windows/stackWindow.cpp.gcno
+        -:    0:Data:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/app/windows/stackWindow.cpp.gcda
+        -:    0:Runs:1
+        -:    1:// Iostreams base classes -*- C++ -*-
+        -:    2:
+        -:    3:// Copyright (C) 1997-2024 Free Software Foundation, Inc.
+        -:    4://
+        -:    5:// This file is part of the GNU ISO C++ Library.  This library is free
+        -:    6:// software; you can redistribute it and/or modify it under the
+        -:    7:// terms of the GNU General Public License as published by the
+        -:    8:// Free Software Foundation; either version 3, or (at your option)
+        -:    9:// any later version.
+        -:   10:
+        -:   11:// This library is distributed in the hope that it will be useful,
+        -:   12:// but WITHOUT ANY WARRANTY; without even the implied warranty of
+        -:   13:// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+        -:   14:// GNU General Public License for more details.
+        -:   15:
+        -:   16:// Under Section 7 of GPL version 3, you are granted additional
+        -:   17:// permissions described in the GCC Runtime Library Exception, version
+        -:   18:// 3.1, as published by the Free Software Foundation.
+        -:   19:
+        -:   20:// You should have received a copy of the GNU General Public License and
+        -:   21:// a copy of the GCC Runtime Library Exception along with this program;
+        -:   22:// see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+        -:   23:// <http://www.gnu.org/licenses/>.
+        -:   24:
+        -:   25:/** @file bits/ios_base.h
+        -:   26: *  This is an internal header file, included by other library headers.
+        -:   27: *  Do not attempt to use it directly. @headername{ios}
+        -:   28: */
+        -:   29:
+        -:   30://
+        -:   31:// ISO C++ 14882: 27.4  Iostreams base classes
+        -:   32://
+        -:   33:
+        -:   34:#ifndef _IOS_BASE_H
+        -:   35:#define _IOS_BASE_H 1
+        -:   36:
+        -:   37:#pragma GCC system_header
+        -:   38:
+        -:   39:#include <ext/atomicity.h>
+        -:   40:#include <bits/localefwd.h>
+        -:   41:#include <bits/locale_classes.h>
+        -:   42:
+        -:   43:#if __cplusplus < 201103L
+        -:   44:# include <stdexcept>
+        -:   45:#else
+        -:   46:# include <system_error>
+        -:   47:#endif
+        -:   48:
+        -:   49:namespace std _GLIBCXX_VISIBILITY(default)
+        -:   50:{
+        -:   51:_GLIBCXX_BEGIN_NAMESPACE_VERSION
+        -:   52:
+        -:   53:  // The following definitions of bitmask types are enums, not ints,
+        -:   54:  // as permitted (but not required) in the standard, in order to provide
+        -:   55:  // better type safety in iostream calls.  A side effect is that in C++98
+        -:   56:  // expressions involving them are not compile-time constants.
+        -:   57:  enum _Ios_Fmtflags 
+        -:   58:    { 
+        -:   59:      _S_boolalpha 	= 1L << 0,
+        -:   60:      _S_dec 		= 1L << 1,
+        -:   61:      _S_fixed 		= 1L << 2,
+        -:   62:      _S_hex 		= 1L << 3,
+        -:   63:      _S_internal 	= 1L << 4,
+        -:   64:      _S_left 		= 1L << 5,
+        -:   65:      _S_oct 		= 1L << 6,
+        -:   66:      _S_right 		= 1L << 7,
+        -:   67:      _S_scientific 	= 1L << 8,
+        -:   68:      _S_showbase 	= 1L << 9,
+        -:   69:      _S_showpoint 	= 1L << 10,
+        -:   70:      _S_showpos 	= 1L << 11,
+        -:   71:      _S_skipws 	= 1L << 12,
+        -:   72:      _S_unitbuf 	= 1L << 13,
+        -:   73:      _S_uppercase 	= 1L << 14,
+        -:   74:      _S_adjustfield 	= _S_left | _S_right | _S_internal,
+        -:   75:      _S_basefield 	= _S_dec | _S_oct | _S_hex,
+        -:   76:      _S_floatfield 	= _S_scientific | _S_fixed,
+        -:   77:      _S_ios_fmtflags_end = 1L << 16,
+        -:   78:      _S_ios_fmtflags_max = __INT_MAX__,
+        -:   79:      _S_ios_fmtflags_min = ~__INT_MAX__
+        -:   80:    };
+        -:   81:
+        -:   82:  _GLIBCXX_NODISCARD _GLIBCXX_CONSTEXPR
+        -:   83:  inline _Ios_Fmtflags
+function _ZStanSt13_Ios_FmtflagsS_ called 0 returned 0% blocks executed 0%
+    #####:   84:  operator&(_Ios_Fmtflags __a, _Ios_Fmtflags __b) _GLIBCXX_NOTHROW
+    #####:   85:  { return _Ios_Fmtflags(static_cast<int>(__a) & static_cast<int>(__b)); }
+    %%%%%:   85-block 2
+        -:   86:
+        -:   87:  _GLIBCXX_NODISCARD _GLIBCXX_CONSTEXPR
+        -:   88:  inline _Ios_Fmtflags
+function _ZStorSt13_Ios_FmtflagsS_ called 0 returned 0% blocks executed 0%
+    #####:   89:  operator|(_Ios_Fmtflags __a, _Ios_Fmtflags __b) _GLIBCXX_NOTHROW
+    #####:   90:  { return _Ios_Fmtflags(static_cast<int>(__a) | static_cast<int>(__b)); }
+    %%%%%:   90-block 2
+        -:   91:
+        -:   92:  _GLIBCXX_NODISCARD _GLIBCXX_CONSTEXPR
+        -:   93:  inline _Ios_Fmtflags
+        -:   94:  operator^(_Ios_Fmtflags __a, _Ios_Fmtflags __b) _GLIBCXX_NOTHROW
+        -:   95:  { return _Ios_Fmtflags(static_cast<int>(__a) ^ static_cast<int>(__b)); }
+        -:   96:
+        -:   97:  _GLIBCXX_NODISCARD _GLIBCXX_CONSTEXPR
+        -:   98:  inline _Ios_Fmtflags
+function _ZStcoSt13_Ios_Fmtflags called 0 returned 0% blocks executed 0%
+    #####:   99:  operator~(_Ios_Fmtflags __a) _GLIBCXX_NOTHROW
+    #####:  100:  { return _Ios_Fmtflags(~static_cast<int>(__a)); }
+    %%%%%:  100-block 2
+        -:  101:
+        -:  102:  _GLIBCXX14_CONSTEXPR
+        -:  103:  inline const _Ios_Fmtflags&
+function _ZStoRRSt13_Ios_FmtflagsS_ called 0 returned 0% blocks executed 0%
+    #####:  104:  operator|=(_Ios_Fmtflags& __a, _Ios_Fmtflags __b) _GLIBCXX_NOTHROW
+    #####:  105:  { return __a = __a | __b; }
+    %%%%%:  105-block 2
+call    0 never executed
+        -:  106:
+        -:  107:  _GLIBCXX14_CONSTEXPR
+        -:  108:  inline const _Ios_Fmtflags&
+function _ZStaNRSt13_Ios_FmtflagsS_ called 0 returned 0% blocks executed 0%
+    #####:  109:  operator&=(_Ios_Fmtflags& __a, _Ios_Fmtflags __b) _GLIBCXX_NOTHROW
+    #####:  110:  { return __a = __a & __b; }
+    %%%%%:  110-block 2
+call    0 never executed
+        -:  111:
+        -:  112:  _GLIBCXX14_CONSTEXPR
+        -:  113:  inline const _Ios_Fmtflags&
+        -:  114:  operator^=(_Ios_Fmtflags& __a, _Ios_Fmtflags __b) _GLIBCXX_NOTHROW
+        -:  115:  { return __a = __a ^ __b; }
+        -:  116:
+        -:  117:
+        -:  118:  enum _Ios_Openmode 
+        -:  119:    { 
+        -:  120:      _S_app 		= 1L << 0,
+        -:  121:      _S_ate 		= 1L << 1,
+        -:  122:      _S_bin 		= 1L << 2,
+        -:  123:      _S_in 		= 1L << 3,
+        -:  124:      _S_out 		= 1L << 4,
+        -:  125:      _S_trunc 		= 1L << 5,
+        -:  126:      _S_noreplace 	= 1L << 6,
+        -:  127:      _S_ios_openmode_end = 1L << 16,
+        -:  128:      _S_ios_openmode_max = __INT_MAX__,
+        -:  129:      _S_ios_openmode_min = ~__INT_MAX__
+        -:  130:    };
+        -:  131:
+        -:  132:  _GLIBCXX_NODISCARD _GLIBCXX_CONSTEXPR
+        -:  133:  inline _Ios_Openmode
+        -:  134:  operator&(_Ios_Openmode __a, _Ios_Openmode __b) _GLIBCXX_NOTHROW
+        -:  135:  { return _Ios_Openmode(static_cast<int>(__a) & static_cast<int>(__b)); }
+        -:  136:
+        -:  137:  _GLIBCXX_NODISCARD _GLIBCXX_CONSTEXPR
+        -:  138:  inline _Ios_Openmode
+        -:  139:  operator|(_Ios_Openmode __a, _Ios_Openmode __b) _GLIBCXX_NOTHROW
+        -:  140:  { return _Ios_Openmode(static_cast<int>(__a) | static_cast<int>(__b)); }
+        -:  141:
+        -:  142:  _GLIBCXX_NODISCARD _GLIBCXX_CONSTEXPR
+        -:  143:  inline _Ios_Openmode
+        -:  144:  operator^(_Ios_Openmode __a, _Ios_Openmode __b) _GLIBCXX_NOTHROW
+        -:  145:  { return _Ios_Openmode(static_cast<int>(__a) ^ static_cast<int>(__b)); }
+        -:  146:
+        -:  147:  _GLIBCXX_NODISCARD _GLIBCXX_CONSTEXPR
+        -:  148:  inline _Ios_Openmode
+        -:  149:  operator~(_Ios_Openmode __a) _GLIBCXX_NOTHROW
+        -:  150:  { return _Ios_Openmode(~static_cast<int>(__a)); }
+        -:  151:
+        -:  152:  _GLIBCXX14_CONSTEXPR
+        -:  153:  inline const _Ios_Openmode&
+        -:  154:  operator|=(_Ios_Openmode& __a, _Ios_Openmode __b) _GLIBCXX_NOTHROW
+        -:  155:  { return __a = __a | __b; }
+        -:  156:
+        -:  157:  _GLIBCXX14_CONSTEXPR
+        -:  158:  inline const _Ios_Openmode&
+        -:  159:  operator&=(_Ios_Openmode& __a, _Ios_Openmode __b) _GLIBCXX_NOTHROW
+        -:  160:  { return __a = __a & __b; }
+        -:  161:
+        -:  162:  _GLIBCXX14_CONSTEXPR
+        -:  163:  inline const _Ios_Openmode&
+        -:  164:  operator^=(_Ios_Openmode& __a, _Ios_Openmode __b) _GLIBCXX_NOTHROW
+        -:  165:  { return __a = __a ^ __b; }
+        -:  166:
+        -:  167:
+        -:  168:  enum _Ios_Iostate
+        -:  169:    { 
+        -:  170:      _S_goodbit 		= 0,
+        -:  171:      _S_badbit 		= 1L << 0,
+        -:  172:      _S_eofbit 		= 1L << 1,
+        -:  173:      _S_failbit		= 1L << 2,
+        -:  174:      _S_ios_iostate_end = 1L << 16,
+        -:  175:      _S_ios_iostate_max = __INT_MAX__,
+        -:  176:      _S_ios_iostate_min = ~__INT_MAX__
+        -:  177:    };
+        -:  178:
+        -:  179:  _GLIBCXX_NODISCARD _GLIBCXX_CONSTEXPR
+        -:  180:  inline _Ios_Iostate
+        -:  181:  operator&(_Ios_Iostate __a, _Ios_Iostate __b) _GLIBCXX_NOTHROW
+        -:  182:  { return _Ios_Iostate(static_cast<int>(__a) & static_cast<int>(__b)); }
+        -:  183:
+        -:  184:  _GLIBCXX_NODISCARD _GLIBCXX_CONSTEXPR
+        -:  185:  inline _Ios_Iostate
+        -:  186:  operator|(_Ios_Iostate __a, _Ios_Iostate __b) _GLIBCXX_NOTHROW
+        -:  187:  { return _Ios_Iostate(static_cast<int>(__a) | static_cast<int>(__b)); }
+        -:  188:
+        -:  189:  _GLIBCXX_NODISCARD _GLIBCXX_CONSTEXPR
+        -:  190:  inline _Ios_Iostate
+        -:  191:  operator^(_Ios_Iostate __a, _Ios_Iostate __b) _GLIBCXX_NOTHROW
+        -:  192:  { return _Ios_Iostate(static_cast<int>(__a) ^ static_cast<int>(__b)); }
+        -:  193:
+        -:  194:  _GLIBCXX_NODISCARD _GLIBCXX_CONSTEXPR
+        -:  195:  inline _Ios_Iostate
+        -:  196:  operator~(_Ios_Iostate __a) _GLIBCXX_NOTHROW
+        -:  197:  { return _Ios_Iostate(~static_cast<int>(__a)); }
+        -:  198:
+        -:  199:  _GLIBCXX14_CONSTEXPR
+        -:  200:  inline const _Ios_Iostate&
+        -:  201:  operator|=(_Ios_Iostate& __a, _Ios_Iostate __b) _GLIBCXX_NOTHROW
+        -:  202:  { return __a = __a | __b; }
+        -:  203:
+        -:  204:  _GLIBCXX14_CONSTEXPR
+        -:  205:  inline const _Ios_Iostate&
+        -:  206:  operator&=(_Ios_Iostate& __a, _Ios_Iostate __b) _GLIBCXX_NOTHROW
+        -:  207:  { return __a = __a & __b; }
+        -:  208:
+        -:  209:  _GLIBCXX14_CONSTEXPR
+        -:  210:  inline const _Ios_Iostate&
+        -:  211:  operator^=(_Ios_Iostate& __a, _Ios_Iostate __b) _GLIBCXX_NOTHROW
+        -:  212:  { return __a = __a ^ __b; }
+        -:  213:
+        -:  214:
+        -:  215:  enum _Ios_Seekdir 
+        -:  216:    { 
+        -:  217:      _S_beg = 0,
+        -:  218:      _S_cur = _GLIBCXX_STDIO_SEEK_CUR,
+        -:  219:      _S_end = _GLIBCXX_STDIO_SEEK_END,
+        -:  220:      _S_ios_seekdir_end = 1L << 16 
+        -:  221:    };
+        -:  222:
+        -:  223:#if __cplusplus >= 201103L
+        -:  224:  /// I/O error code
+        -:  225:  enum class io_errc { stream = 1 };
+        -:  226:
+        -:  227:  template <> struct is_error_code_enum<io_errc> : public true_type { };
+        -:  228:
+        -:  229:  [[__nodiscard__, __gnu__::__const__]]
+        -:  230:  const error_category&
+        -:  231:  iostream_category() noexcept;
+        -:  232:
+        -:  233:  [[__nodiscard__]]
+        -:  234:  inline error_code
+        -:  235:  make_error_code(io_errc __e) noexcept
+        -:  236:  { return error_code(static_cast<int>(__e), iostream_category()); }
+        -:  237:
+        -:  238:  [[__nodiscard__]]
+        -:  239:  inline error_condition
+        -:  240:  make_error_condition(io_errc __e) noexcept
+        -:  241:  { return error_condition(static_cast<int>(__e), iostream_category()); }
+        -:  242:#endif
+        -:  243:
+        -:  244:  // 27.4.2  Class ios_base
+        -:  245:  /**
+        -:  246:   *  @brief  The base of the I/O class hierarchy.
+        -:  247:   *  @ingroup io
+        -:  248:   *
+        -:  249:   *  This class defines everything that can be defined about I/O that does
+        -:  250:   *  not depend on the type of characters being input or output.  Most
+        -:  251:   *  people will only see @c ios_base when they need to specify the full
+        -:  252:   *  name of the various I/O flags (e.g., the openmodes).
+        -:  253:  */
+        -:  254:  class ios_base
+        -:  255:  {
+        -:  256:#if _GLIBCXX_USE_CXX11_ABI
+        -:  257:#if __cplusplus < 201103L
+        -:  258:    // Type that is layout-compatible with std::system_error
+        -:  259:    struct system_error : std::runtime_error
+        -:  260:    {
+        -:  261:      // Type that is layout-compatible with std::error_code
+        -:  262:      struct error_code
+        -:  263:      {
+        -:  264:	error_code() { }
+        -:  265:      private:
+        -:  266:	int		_M_value;
+        -:  267:	const void*	_M_cat;
+        -:  268:      } _M_code;
+        -:  269:    };
+        -:  270:#endif
+        -:  271:#endif
+        -:  272:  public:
+        -:  273:
+        -:  274:    /** 
+        -:  275:     *  @brief These are thrown to indicate problems with io.
+        -:  276:     *  @ingroup exceptions
+        -:  277:     *
+        -:  278:     *  27.4.2.1.1  Class ios_base::failure
+        -:  279:     */
+        -:  280:#if _GLIBCXX_USE_CXX11_ABI
+        -:  281:    class _GLIBCXX_ABI_TAG_CXX11 failure : public system_error
+        -:  282:    {
+        -:  283:    public:
+        -:  284:      explicit
+        -:  285:      failure(const string& __str);
+        -:  286:
+        -:  287:#if __cplusplus >= 201103L
+        -:  288:      explicit
+        -:  289:      failure(const string&, const error_code&);
+        -:  290:
+        -:  291:      explicit
+        -:  292:      failure(const char*, const error_code& = io_errc::stream);
+        -:  293:#endif
+        -:  294:
+        -:  295:      virtual
+        -:  296:      ~failure() throw();
+        -:  297:
+        -:  298:      virtual const char*
+        -:  299:      what() const throw();
+        -:  300:    };
+        -:  301:#else
+        -:  302:    class failure : public exception
+        -:  303:    {
+        -:  304:    public:
+        -:  305:      // _GLIBCXX_RESOLVE_LIB_DEFECTS
+        -:  306:      // 48.  Use of non-existent exception constructor
+        -:  307:      explicit
+        -:  308:      failure(const string& __str) throw();
+        -:  309:
+        -:  310:      // This declaration is not useless:
+        -:  311:      // http://gcc.gnu.org/onlinedocs/gcc-4.3.2/gcc/Vague-Linkage.html
+        -:  312:      virtual
+        -:  313:      ~failure() throw();
+        -:  314:
+        -:  315:      virtual const char*
+        -:  316:      what() const throw();
+        -:  317:
+        -:  318:#if __cplusplus >= 201103L
+        -:  319:      // Define the new members required by C++11,
+        -:  320:      // even though the error_code cannot be stored.
+        -:  321:
+        -:  322:      explicit
+        -:  323:      failure(const string& __s, const error_code&) noexcept
+        -:  324:      : failure(__s)
+        -:  325:      { }
+        -:  326:
+        -:  327:      explicit
+        -:  328:      failure(const char* __s, const error_code& = error_code{})
+        -:  329:      : failure(string(__s))
+        -:  330:      { }
+        -:  331:
+        -:  332:      // Stand-in for system_error::code() but returning by value.
+        -:  333:      error_code code() const noexcept { return error_code{}; }
+        -:  334:#endif
+        -:  335:
+        -:  336:    private:
+        -:  337:      string _M_msg;
+        -:  338:    };
+        -:  339:#endif
+        -:  340:
+        -:  341:    // 27.4.2.1.2  Type ios_base::fmtflags
+        -:  342:    /**
+        -:  343:     *  @brief This is a bitmask type.
+        -:  344:     *
+        -:  345:     *  @c @a _Ios_Fmtflags is implementation-defined, but it is valid to
+        -:  346:     *  perform bitwise operations on these values and expect the Right
+        -:  347:     *  Thing to happen.  Defined objects of type fmtflags are:
+        -:  348:     *  - boolalpha
+        -:  349:     *  - dec
+        -:  350:     *  - fixed
+        -:  351:     *  - hex
+        -:  352:     *  - internal
+        -:  353:     *  - left
+        -:  354:     *  - oct
+        -:  355:     *  - right
+        -:  356:     *  - scientific
+        -:  357:     *  - showbase
+        -:  358:     *  - showpoint
+        -:  359:     *  - showpos
+        -:  360:     *  - skipws
+        -:  361:     *  - unitbuf
+        -:  362:     *  - uppercase
+        -:  363:     *  - adjustfield
+        -:  364:     *  - basefield
+        -:  365:     *  - floatfield
+        -:  366:    */
+        -:  367:    typedef _Ios_Fmtflags fmtflags;
+        -:  368:
+        -:  369:    /// Insert/extract @c bool in alphabetic rather than numeric format.
+        -:  370:    static const fmtflags boolalpha =   _S_boolalpha;
+        -:  371:
+        -:  372:    /// Converts integer input or generates integer output in decimal base.
+        -:  373:    static const fmtflags dec =         _S_dec;
+        -:  374:
+        -:  375:    /// Generate floating-point output in fixed-point notation.
+        -:  376:    static const fmtflags fixed =       _S_fixed;
+        -:  377:
+        -:  378:    /// Converts integer input or generates integer output in hexadecimal base.
+        -:  379:    static const fmtflags hex =         _S_hex;
+        -:  380:
+        -:  381:    /// Adds fill characters at a designated internal point in certain
+        -:  382:    /// generated output, or identical to @c right if no such point is
+        -:  383:    /// designated.
+        -:  384:    static const fmtflags internal =    _S_internal;
+        -:  385:
+        -:  386:    /// Adds fill characters on the right (final positions) of certain
+        -:  387:    /// generated output.  (I.e., the thing you print is flush left.)
+        -:  388:    static const fmtflags left =        _S_left;
+        -:  389:
+        -:  390:    /// Converts integer input or generates integer output in octal base.
+        -:  391:    static const fmtflags oct =         _S_oct;
+        -:  392:
+        -:  393:    /// Adds fill characters on the left (initial positions) of certain
+        -:  394:    /// generated output.  (I.e., the thing you print is flush right.)
+        -:  395:    static const fmtflags right =       _S_right;
+        -:  396:
+        -:  397:    /// Generates floating-point output in scientific notation.
+        -:  398:    static const fmtflags scientific =  _S_scientific;
+        -:  399:
+        -:  400:    /// Generates a prefix indicating the numeric base of generated integer
+        -:  401:    /// output.
+        -:  402:    static const fmtflags showbase =    _S_showbase;
+        -:  403:
+        -:  404:    /// Generates a decimal-point character unconditionally in generated
+        -:  405:    /// floating-point output.
+        -:  406:    static const fmtflags showpoint =   _S_showpoint;
+        -:  407:
+        -:  408:    /// Generates a + sign in non-negative generated numeric output.
+        -:  409:    static const fmtflags showpos =     _S_showpos;
+        -:  410:
+        -:  411:    /// Skips leading white space before certain input operations.
+        -:  412:    static const fmtflags skipws =      _S_skipws;
+        -:  413:
+        -:  414:    /// Flushes output after each output operation.
+        -:  415:    static const fmtflags unitbuf =     _S_unitbuf;
+        -:  416:
+        -:  417:    /// Replaces certain lowercase letters with their uppercase equivalents
+        -:  418:    /// in generated output.
+        -:  419:    static const fmtflags uppercase =   _S_uppercase;
+        -:  420:
+        -:  421:    /// A mask of left|right|internal.  Useful for the 2-arg form of @c setf.
+        -:  422:    static const fmtflags adjustfield = _S_adjustfield;
+        -:  423:
+        -:  424:    /// A mask of dec|oct|hex.  Useful for the 2-arg form of @c setf.
+        -:  425:    static const fmtflags basefield =   _S_basefield;
+        -:  426:
+        -:  427:    /// A mask of scientific|fixed.  Useful for the 2-arg form of @c setf.
+        -:  428:    static const fmtflags floatfield =  _S_floatfield;
+        -:  429:
+        -:  430:    // 27.4.2.1.3  Type ios_base::iostate
+        -:  431:    /**
+        -:  432:     *  @brief This is a bitmask type.
+        -:  433:     *
+        -:  434:     *  @c @a _Ios_Iostate is implementation-defined, but it is valid to
+        -:  435:     *  perform bitwise operations on these values and expect the Right
+        -:  436:     *  Thing to happen.  Defined objects of type iostate are:
+        -:  437:     *  - badbit
+        -:  438:     *  - eofbit
+        -:  439:     *  - failbit
+        -:  440:     *  - goodbit
+        -:  441:    */
+        -:  442:    typedef _Ios_Iostate iostate;
+        -:  443:
+        -:  444:    /// Indicates a loss of integrity in an input or output sequence (such
+        -:  445:    /// as an irrecoverable read error from a file).
+        -:  446:    static const iostate badbit =	_S_badbit;
+        -:  447:
+        -:  448:    /// Indicates that an input operation reached the end of an input sequence.
+        -:  449:    static const iostate eofbit =	_S_eofbit;
+        -:  450:
+        -:  451:    /// Indicates that an input operation failed to read the expected
+        -:  452:    /// characters, or that an output operation failed to generate the
+        -:  453:    /// desired characters.
+        -:  454:    static const iostate failbit =	_S_failbit;
+        -:  455:
+        -:  456:    /// Indicates all is well.
+        -:  457:    static const iostate goodbit =	_S_goodbit;
+        -:  458:
+        -:  459:    // 27.4.2.1.4  Type ios_base::openmode
+        -:  460:    /**
+        -:  461:     *  @brief This is a bitmask type.
+        -:  462:     *
+        -:  463:     *  @c @a _Ios_Openmode is implementation-defined, but it is valid to
+        -:  464:     *  perform bitwise operations on these values and expect the Right
+        -:  465:     *  Thing to happen.  Defined objects of type openmode are:
+        -:  466:     *  - app
+        -:  467:     *  - ate
+        -:  468:     *  - binary
+        -:  469:     *  - in
+        -:  470:     *  - out
+        -:  471:     *  - trunc
+        -:  472:    */
+        -:  473:    typedef _Ios_Openmode openmode;
+        -:  474:
+        -:  475:    /// Seek to end before each write.
+        -:  476:    static const openmode app =		_S_app;
+        -:  477:
+        -:  478:    /// Open and seek to end immediately after opening.
+        -:  479:    static const openmode ate =		_S_ate;
+        -:  480:
+        -:  481:    /// Perform input and output in binary mode (as opposed to text mode).
+        -:  482:    /// This is probably not what you think it is; see
+        -:  483:    /// https://gcc.gnu.org/onlinedocs/libstdc++/manual/fstreams.html#std.io.filestreams.binary
+        -:  484:    static const openmode binary =	_S_bin;
+        -:  485:
+        -:  486:    /// Open for input.  Default for @c ifstream and fstream.
+        -:  487:    static const openmode in =		_S_in;
+        -:  488:
+        -:  489:    /// Open for output.  Default for @c ofstream and fstream.
+        -:  490:    static const openmode out =		_S_out;
+        -:  491:
+        -:  492:    /// Truncate an existing stream when opening.  Default for @c ofstream.
+        -:  493:    static const openmode trunc =	_S_trunc;
+        -:  494:
+        -:  495:    static const openmode __noreplace =	_S_noreplace;
+        -:  496:
+        -:  497:#ifdef __glibcxx_ios_noreplace // C++ >= 23 && HOSTED
+        -:  498:    /// Open a file in exclusive mode.
+        -:  499:    static const openmode noreplace =	_S_noreplace;
+        -:  500:#endif
+        -:  501:
+        -:  502:    // 27.4.2.1.5  Type ios_base::seekdir
+        -:  503:    /**
+        -:  504:     *  @brief This is an enumerated type.
+        -:  505:     *
+        -:  506:     *  @c @a _Ios_Seekdir is implementation-defined.  Defined values
+        -:  507:     *  of type seekdir are:
+        -:  508:     *  - beg
+        -:  509:     *  - cur, equivalent to @c SEEK_CUR in the C standard library.
+        -:  510:     *  - end, equivalent to @c SEEK_END in the C standard library.
+        -:  511:    */
+        -:  512:    typedef _Ios_Seekdir seekdir;
+        -:  513:
+        -:  514:    /// Request a seek relative to the beginning of the stream.
+        -:  515:    static const seekdir beg =		_S_beg;
+        -:  516:
+        -:  517:    /// Request a seek relative to the current position within the sequence.
+        -:  518:    static const seekdir cur =		_S_cur;
+        -:  519:
+        -:  520:    /// Request a seek relative to the current end of the sequence.
+        -:  521:    static const seekdir end =		_S_end;
+        -:  522:
+        -:  523:#if __cplusplus <= 201402L
+        -:  524:    // Annex D.6 (removed in C++17)
+        -:  525:    typedef int io_state
+        -:  526:      _GLIBCXX_DEPRECATED_SUGGEST("std::iostate");
+        -:  527:    typedef int open_mode
+        -:  528:      _GLIBCXX_DEPRECATED_SUGGEST("std::openmode");
+        -:  529:    typedef int seek_dir
+        -:  530:      _GLIBCXX_DEPRECATED_SUGGEST("std::seekdir");
+        -:  531:
+        -:  532:    typedef std::streampos streampos
+        -:  533:      _GLIBCXX_DEPRECATED_SUGGEST("std::streampos");
+        -:  534:    typedef std::streamoff streamoff
+        -:  535:      _GLIBCXX_DEPRECATED_SUGGEST("std::streamoff");
+        -:  536:#endif
+        -:  537:
+        -:  538:    // Callbacks;
+        -:  539:    /**
+        -:  540:     *  @brief  The set of events that may be passed to an event callback.
+        -:  541:     *
+        -:  542:     *  erase_event is used during ~ios() and copyfmt().  imbue_event is used
+        -:  543:     *  during imbue().  copyfmt_event is used during copyfmt().
+        -:  544:    */
+        -:  545:    enum event
+        -:  546:    {
+        -:  547:      erase_event,
+        -:  548:      imbue_event,
+        -:  549:      copyfmt_event
+        -:  550:    };
+        -:  551:
+        -:  552:    /**
+        -:  553:     *  @brief  The type of an event callback function.
+        -:  554:     *  @param  __e  One of the members of the event enum.
+        -:  555:     *  @param  __b  Reference to the ios_base object.
+        -:  556:     *  @param  __i  The integer provided when the callback was registered.
+        -:  557:     *
+        -:  558:     *  Event callbacks are user defined functions that get called during
+        -:  559:     *  several ios_base and basic_ios functions, specifically imbue(),
+        -:  560:     *  copyfmt(), and ~ios().
+        -:  561:    */
+        -:  562:    typedef void (*event_callback) (event __e, ios_base& __b, int __i);
+        -:  563:
+        -:  564:    /**
+        -:  565:     *  @brief  Add the callback __fn with parameter __index.
+        -:  566:     *  @param  __fn  The function to add.
+        -:  567:     *  @param  __index  The integer to pass to the function when invoked.
+        -:  568:     *
+        -:  569:     *  Registers a function as an event callback with an integer parameter to
+        -:  570:     *  be passed to the function when invoked.  Multiple copies of the
+        -:  571:     *  function are allowed.  If there are multiple callbacks, they are
+        -:  572:     *  invoked in the order they were registered.
+        -:  573:    */
+        -:  574:    void
+        -:  575:    register_callback(event_callback __fn, int __index);
+        -:  576:
+        -:  577:  protected:
+        -:  578:    streamsize		_M_precision;
+        -:  579:    streamsize		_M_width;
+        -:  580:    fmtflags		_M_flags;
+        -:  581:    iostate		_M_exception;
+        -:  582:    iostate		_M_streambuf_state;
+        -:  583:
+        -:  584:    // 27.4.2.6  Members for callbacks
+        -:  585:    // 27.4.2.6  ios_base callbacks
+        -:  586:    struct _Callback_list
+        -:  587:    {
+        -:  588:      // Data Members
+        -:  589:      _Callback_list*		_M_next;
+        -:  590:      ios_base::event_callback	_M_fn;
+        -:  591:      int			_M_index;
+        -:  592:      _Atomic_word		_M_refcount;  // 0 means one reference.
+        -:  593:
+        -:  594:      _Callback_list(ios_base::event_callback __fn, int __index,
+        -:  595:		     _Callback_list* __cb)
+        -:  596:      : _M_next(__cb), _M_fn(__fn), _M_index(__index), _M_refcount(0) { }
+        -:  597:
+        -:  598:      void
+        -:  599:      _M_add_reference() { __gnu_cxx::__atomic_add_dispatch(&_M_refcount, 1); }
+        -:  600:
+        -:  601:      // 0 => OK to delete.
+        -:  602:      int
+        -:  603:      _M_remove_reference() 
+        -:  604:      {
+        -:  605:        // Be race-detector-friendly.  For more info see bits/c++config.
+        -:  606:        _GLIBCXX_SYNCHRONIZATION_HAPPENS_BEFORE(&_M_refcount);
+        -:  607:        int __res = __gnu_cxx::__exchange_and_add_dispatch(&_M_refcount, -1);
+        -:  608:        if (__res == 0)
+        -:  609:          {
+        -:  610:            _GLIBCXX_SYNCHRONIZATION_HAPPENS_AFTER(&_M_refcount);
+        -:  611:          }
+        -:  612:        return __res;
+        -:  613:      }
+        -:  614:    };
+        -:  615:
+        -:  616:     _Callback_list*	_M_callbacks;
+        -:  617:
+        -:  618:    void
+        -:  619:    _M_call_callbacks(event __ev) throw();
+        -:  620:
+        -:  621:    void
+        -:  622:    _M_dispose_callbacks(void) throw();
+        -:  623:
+        -:  624:    // 27.4.2.5  Members for iword/pword storage
+        -:  625:    struct _Words
+        -:  626:    {
+        -:  627:      void*	_M_pword;
+        -:  628:      long	_M_iword;
+        -:  629:      _Words() : _M_pword(0), _M_iword(0) { }
+        -:  630:    };
+        -:  631:
+        -:  632:    // Only for failed iword/pword calls.
+        -:  633:    _Words		_M_word_zero;
+        -:  634:
+        -:  635:    // Guaranteed storage.
+        -:  636:    // The first 5 iword and pword slots are reserved for internal use.
+        -:  637:    enum { _S_local_word_size = 8 };
+        -:  638:    _Words		_M_local_word[_S_local_word_size];
+        -:  639:
+        -:  640:    // Allocated storage.
+        -:  641:    int			_M_word_size;
+        -:  642:    _Words*		_M_word;
+        -:  643:
+        -:  644:    _Words&
+        -:  645:    _M_grow_words(int __index, bool __iword);
+        -:  646:
+        -:  647:    // Members for locale and locale caching.
+        -:  648:    locale		_M_ios_locale;
+        -:  649:
+        -:  650:    void
+        -:  651:    _M_init() throw();
+        -:  652:
+        -:  653:  public:
+        -:  654:
+        -:  655:    // 27.4.2.1.6  Class ios_base::Init
+        -:  656:    // Used to initialize standard streams. In theory, g++ could use
+        -:  657:    // -finit-priority to order this stuff correctly without going
+        -:  658:    // through these machinations.
+        -:  659:    class Init
+        -:  660:    {
+        -:  661:      friend class ios_base;
+        -:  662:    public:
+        -:  663:      Init();
+        -:  664:      ~Init();
+        -:  665:
+        -:  666:#if __cplusplus >= 201103L
+        -:  667:      Init(const Init&) = default;
+        -:  668:      Init& operator=(const Init&) = default;
+        -:  669:#endif
+        -:  670:
+        -:  671:    private:
+        -:  672:      static _Atomic_word	_S_refcount;
+        -:  673:      static bool		_S_synced_with_stdio;
+        -:  674:    };
+        -:  675:
+        -:  676:    // [27.4.2.2] fmtflags state functions
+        -:  677:    /**
+        -:  678:     *  @brief  Access to format flags.
+        -:  679:     *  @return  The format control flags for both input and output.
+        -:  680:    */
+        -:  681:    fmtflags
+        -:  682:    flags() const
+        -:  683:    { return _M_flags; }
+        -:  684:
+        -:  685:    /**
+        -:  686:     *  @brief  Setting new format flags all at once.
+        -:  687:     *  @param  __fmtfl  The new flags to set.
+        -:  688:     *  @return  The previous format control flags.
+        -:  689:     *
+        -:  690:     *  This function overwrites all the format flags with @a __fmtfl.
+        -:  691:    */
+        -:  692:    fmtflags
+        -:  693:    flags(fmtflags __fmtfl)
+        -:  694:    {
+        -:  695:      fmtflags __old = _M_flags;
+        -:  696:      _M_flags = __fmtfl;
+        -:  697:      return __old;
+        -:  698:    }
+        -:  699:
+        -:  700:    /**
+        -:  701:     *  @brief  Setting new format flags.
+        -:  702:     *  @param  __fmtfl  Additional flags to set.
+        -:  703:     *  @return  The previous format control flags.
+        -:  704:     *
+        -:  705:     *  This function sets additional flags in format control.  Flags that
+        -:  706:     *  were previously set remain set.
+        -:  707:    */
+        -:  708:    fmtflags
+function _ZNSt8ios_base4setfESt13_Ios_Fmtflags called 0 returned 0% blocks executed 0%
+    #####:  709:    setf(fmtflags __fmtfl)
+        -:  710:    {
+    #####:  711:      fmtflags __old = _M_flags;
+    #####:  712:      _M_flags |= __fmtfl;
+    %%%%%:  712-block 2
+call    0 never executed
+    #####:  713:      return __old;
+        -:  714:    }
+        -:  715:
+        -:  716:    /**
+        -:  717:     *  @brief  Setting new format flags.
+        -:  718:     *  @param  __fmtfl  Additional flags to set.
+        -:  719:     *  @param  __mask  The flags mask for @a fmtfl.
+        -:  720:     *  @return  The previous format control flags.
+        -:  721:     *
+        -:  722:     *  This function clears @a mask in the format flags, then sets
+        -:  723:     *  @a fmtfl @c & @a mask.  An example mask is @c ios_base::adjustfield.
+        -:  724:    */
+        -:  725:    fmtflags
+function _ZNSt8ios_base4setfESt13_Ios_FmtflagsS0_ called 0 returned 0% blocks executed 0%
+    #####:  726:    setf(fmtflags __fmtfl, fmtflags __mask)
+        -:  727:    {
+    #####:  728:      fmtflags __old = _M_flags;
+    #####:  729:      _M_flags &= ~__mask;
+    %%%%%:  729-block 2
+call    0 never executed
+call    1 never executed
+    #####:  730:      _M_flags |= (__fmtfl & __mask);
+call    0 never executed
+call    1 never executed
+    #####:  731:      return __old;
+        -:  732:    }
+        -:  733:
+        -:  734:    /**
+        -:  735:     *  @brief  Clearing format flags.
+        -:  736:     *  @param  __mask  The flags to unset.
+        -:  737:     *
+        -:  738:     *  This function clears @a __mask in the format flags.
+        -:  739:    */
+        -:  740:    void
+        -:  741:    unsetf(fmtflags __mask)
+        -:  742:    { _M_flags &= ~__mask; }
+        -:  743:
+        -:  744:    /**
+        -:  745:     *  @brief  Flags access.
+        -:  746:     *  @return  The precision to generate on certain output operations.
+        -:  747:     *
+        -:  748:     *  Be careful if you try to give a definition of @a precision here; see
+        -:  749:     *  DR 189.
+        -:  750:    */
+        -:  751:    streamsize
+        -:  752:    precision() const
+        -:  753:    { return _M_precision; }
+        -:  754:
+        -:  755:    /**
+        -:  756:     *  @brief  Changing flags.
+        -:  757:     *  @param  __prec  The new precision value.
+        -:  758:     *  @return  The previous value of precision().
+        -:  759:    */
+        -:  760:    streamsize
+        -:  761:    precision(streamsize __prec)
+        -:  762:    {
+        -:  763:      streamsize __old = _M_precision;
+        -:  764:      _M_precision = __prec;
+        -:  765:      return __old;
+        -:  766:    }
+        -:  767:
+        -:  768:    /**
+        -:  769:     *  @brief  Flags access.
+        -:  770:     *  @return  The minimum field width to generate on output operations.
+        -:  771:     *
+        -:  772:     *  <em>Minimum field width</em> refers to the number of characters.
+        -:  773:    */
+        -:  774:    streamsize
+        -:  775:    width() const
+        -:  776:    { return _M_width; }
+        -:  777:
+        -:  778:    /**
+        -:  779:     *  @brief  Changing flags.
+        -:  780:     *  @param  __wide  The new width value.
+        -:  781:     *  @return  The previous value of width().
+        -:  782:    */
+        -:  783:    streamsize
+        -:  784:    width(streamsize __wide)
+        -:  785:    {
+        -:  786:      streamsize __old = _M_width;
+        -:  787:      _M_width = __wide;
+        -:  788:      return __old;
+        -:  789:    }
+        -:  790:
+        -:  791:    // [27.4.2.4] ios_base static members
+        -:  792:    /**
+        -:  793:     *  @brief  Interaction with the standard C I/O objects.
+        -:  794:     *  @param  __sync  Whether to synchronize or not.
+        -:  795:     *  @return  True if the standard streams were previously synchronized.
+        -:  796:     *
+        -:  797:     *  The synchronization referred to is @e only that between the standard
+        -:  798:     *  C facilities (e.g., stdout) and the standard C++ objects (e.g.,
+        -:  799:     *  cout).  User-declared streams are unaffected.  See
+        -:  800:     *  https://gcc.gnu.org/onlinedocs/libstdc++/manual/fstreams.html#std.io.filestreams.binary
+        -:  801:    */
+        -:  802:    static bool
+        -:  803:    sync_with_stdio(bool __sync = true);
+        -:  804:
+        -:  805:    // [27.4.2.3] ios_base locale functions
+        -:  806:    /**
+        -:  807:     *  @brief  Setting a new locale.
+        -:  808:     *  @param  __loc  The new locale.
+        -:  809:     *  @return  The previous locale.
+        -:  810:     *
+        -:  811:     *  Sets the new locale for this stream, and then invokes each callback
+        -:  812:     *  with imbue_event.
+        -:  813:    */
+        -:  814:    locale
+        -:  815:    imbue(const locale& __loc) throw();
+        -:  816:
+        -:  817:    /**
+        -:  818:     *  @brief  Locale access
+        -:  819:     *  @return  A copy of the current locale.
+        -:  820:     *
+        -:  821:     *  If @c imbue(loc) has previously been called, then this function
+        -:  822:     *  returns @c loc.  Otherwise, it returns a copy of @c std::locale(),
+        -:  823:     *  the global C++ locale.
+        -:  824:    */
+        -:  825:    locale
+        -:  826:    getloc() const
+        -:  827:    { return _M_ios_locale; }
+        -:  828:
+        -:  829:    /**
+        -:  830:     *  @brief  Locale access
+        -:  831:     *  @return  A reference to the current locale.
+        -:  832:     *
+        -:  833:     *  Like getloc above, but returns a reference instead of
+        -:  834:     *  generating a copy.
+        -:  835:    */
+        -:  836:    const locale&
+        -:  837:    _M_getloc() const
+        -:  838:    { return _M_ios_locale; }
+        -:  839:
+        -:  840:    // [27.4.2.5] ios_base storage functions
+        -:  841:    /**
+        -:  842:     *  @brief  Access to unique indices.
+        -:  843:     *  @return  An integer different from all previous calls.
+        -:  844:     *
+        -:  845:     *  This function returns a unique integer every time it is called.  It
+        -:  846:     *  can be used for any purpose, but is primarily intended to be a unique
+        -:  847:     *  index for the iword and pword functions.  The expectation is that an
+        -:  848:     *  application calls xalloc in order to obtain an index in the iword and
+        -:  849:     *  pword arrays that can be used without fear of conflict.
+        -:  850:     *
+        -:  851:     *  The implementation maintains a static variable that is incremented and
+        -:  852:     *  returned on each invocation.  xalloc is guaranteed to return an index
+        -:  853:     *  that is safe to use in the iword and pword arrays.
+        -:  854:    */
+        -:  855:    static int
+        -:  856:    xalloc() throw();
+        -:  857:
+        -:  858:    /**
+        -:  859:     *  @brief  Access to integer array.
+        -:  860:     *  @param  __ix  Index into the array.
+        -:  861:     *  @return  A reference to an integer associated with the index.
+        -:  862:     *
+        -:  863:     *  The iword function provides access to an array of integers that can be
+        -:  864:     *  used for any purpose.  The array grows as required to hold the
+        -:  865:     *  supplied index.  All integers in the array are initialized to 0.
+        -:  866:     *
+        -:  867:     *  The implementation reserves several indices.  You should use xalloc to
+        -:  868:     *  obtain an index that is safe to use.  Also note that since the array
+        -:  869:     *  can grow dynamically, it is not safe to hold onto the reference.
+        -:  870:    */
+        -:  871:    long&
+        -:  872:    iword(int __ix)
+        -:  873:    {
+        -:  874:      _Words& __word = ((unsigned)__ix < (unsigned)_M_word_size)
+        -:  875:			? _M_word[__ix] : _M_grow_words(__ix, true);
+        -:  876:      return __word._M_iword;
+        -:  877:    }
+        -:  878:
+        -:  879:    /**
+        -:  880:     *  @brief  Access to void pointer array.
+        -:  881:     *  @param  __ix  Index into the array.
+        -:  882:     *  @return  A reference to a void* associated with the index.
+        -:  883:     *
+        -:  884:     *  The pword function provides access to an array of pointers that can be
+        -:  885:     *  used for any purpose.  The array grows as required to hold the
+        -:  886:     *  supplied index.  All pointers in the array are initialized to 0.
+        -:  887:     *
+        -:  888:     *  The implementation reserves several indices.  You should use xalloc to
+        -:  889:     *  obtain an index that is safe to use.  Also note that since the array
+        -:  890:     *  can grow dynamically, it is not safe to hold onto the reference.
+        -:  891:    */
+        -:  892:    void*&
+        -:  893:    pword(int __ix)
+        -:  894:    {
+        -:  895:      _Words& __word = ((unsigned)__ix < (unsigned)_M_word_size)
+        -:  896:			? _M_word[__ix] : _M_grow_words(__ix, false);
+        -:  897:      return __word._M_pword;
+        -:  898:    }
+        -:  899:
+        -:  900:    // Destructor
+        -:  901:    /**
+        -:  902:     *  Invokes each callback with erase_event.  Destroys local storage.
+        -:  903:     *
+        -:  904:     *  Note that the ios_base object for the standard streams never gets
+        -:  905:     *  destroyed.  As a result, any callbacks registered with the standard
+        -:  906:     *  streams will not get invoked with erase_event (unless copyfmt is
+        -:  907:     *  used).
+        -:  908:    */
+        -:  909:    virtual ~ios_base();
+        -:  910:
+        -:  911:  protected:
+        -:  912:    ios_base() throw ();
+        -:  913:
+        -:  914:#if __cplusplus < 201103L
+        -:  915:  // _GLIBCXX_RESOLVE_LIB_DEFECTS
+        -:  916:  // 50.  Copy constructor and assignment operator of ios_base
+        -:  917:  private:
+        -:  918:    ios_base(const ios_base&);
+        -:  919:
+        -:  920:    ios_base&
+        -:  921:    operator=(const ios_base&);
+        -:  922:#else
+        -:  923:  public:
+        -:  924:    ios_base(const ios_base&) = delete;
+        -:  925:
+        -:  926:    ios_base&
+        -:  927:    operator=(const ios_base&) = delete;
+        -:  928:
+        -:  929:  protected:
+        -:  930:    void
+        -:  931:    _M_move(ios_base&) noexcept;
+        -:  932:
+        -:  933:    void
+        -:  934:    _M_swap(ios_base& __rhs) noexcept;
+        -:  935:#endif
+        -:  936:  };
+        -:  937:
+        -:  938:  // [27.4.5.1] fmtflags manipulators
+        -:  939:  /// Calls base.setf(ios_base::boolalpha).
+        -:  940:  inline ios_base&
+        -:  941:  boolalpha(ios_base& __base)
+        -:  942:  {
+        -:  943:    __base.setf(ios_base::boolalpha);
+        -:  944:    return __base;
+        -:  945:  }
+        -:  946:
+        -:  947:  /// Calls base.unsetf(ios_base::boolalpha).
+        -:  948:  inline ios_base&
+        -:  949:  noboolalpha(ios_base& __base)
+        -:  950:  {
+        -:  951:    __base.unsetf(ios_base::boolalpha);
+        -:  952:    return __base;
+        -:  953:  }
+        -:  954:
+        -:  955:  /// Calls base.setf(ios_base::showbase).
+        -:  956:  inline ios_base&
+        -:  957:  showbase(ios_base& __base)
+        -:  958:  {
+        -:  959:    __base.setf(ios_base::showbase);
+        -:  960:    return __base;
+        -:  961:  }
+        -:  962:
+        -:  963:  /// Calls base.unsetf(ios_base::showbase).
+        -:  964:  inline ios_base&
+        -:  965:  noshowbase(ios_base& __base)
+        -:  966:  {
+        -:  967:    __base.unsetf(ios_base::showbase);
+        -:  968:    return __base;
+        -:  969:  }
+        -:  970:
+        -:  971:  /// Calls base.setf(ios_base::showpoint).
+        -:  972:  inline ios_base&
+        -:  973:  showpoint(ios_base& __base)
+        -:  974:  {
+        -:  975:    __base.setf(ios_base::showpoint);
+        -:  976:    return __base;
+        -:  977:  }
+        -:  978:
+        -:  979:  /// Calls base.unsetf(ios_base::showpoint).
+        -:  980:  inline ios_base&
+        -:  981:  noshowpoint(ios_base& __base)
+        -:  982:  {
+        -:  983:    __base.unsetf(ios_base::showpoint);
+        -:  984:    return __base;
+        -:  985:  }
+        -:  986:
+        -:  987:  /// Calls base.setf(ios_base::showpos).
+        -:  988:  inline ios_base&
+        -:  989:  showpos(ios_base& __base)
+        -:  990:  {
+        -:  991:    __base.setf(ios_base::showpos);
+        -:  992:    return __base;
+        -:  993:  }
+        -:  994:
+        -:  995:  /// Calls base.unsetf(ios_base::showpos).
+        -:  996:  inline ios_base&
+        -:  997:  noshowpos(ios_base& __base)
+        -:  998:  {
+        -:  999:    __base.unsetf(ios_base::showpos);
+        -: 1000:    return __base;
+        -: 1001:  }
+        -: 1002:
+        -: 1003:  /// Calls base.setf(ios_base::skipws).
+        -: 1004:  inline ios_base&
+        -: 1005:  skipws(ios_base& __base)
+        -: 1006:  {
+        -: 1007:    __base.setf(ios_base::skipws);
+        -: 1008:    return __base;
+        -: 1009:  }
+        -: 1010:
+        -: 1011:  /// Calls base.unsetf(ios_base::skipws).
+        -: 1012:  inline ios_base&
+        -: 1013:  noskipws(ios_base& __base)
+        -: 1014:  {
+        -: 1015:    __base.unsetf(ios_base::skipws);
+        -: 1016:    return __base;
+        -: 1017:  }
+        -: 1018:
+        -: 1019:  /// Calls base.setf(ios_base::uppercase).
+        -: 1020:  inline ios_base&
+function _ZSt9uppercaseRSt8ios_base called 0 returned 0% blocks executed 0%
+    #####: 1021:  uppercase(ios_base& __base)
+        -: 1022:  {
+    #####: 1023:    __base.setf(ios_base::uppercase);
+    %%%%%: 1023-block 2
+call    0 never executed
+    #####: 1024:    return __base;
+        -: 1025:  }
+        -: 1026:
+        -: 1027:  /// Calls base.unsetf(ios_base::uppercase).
+        -: 1028:  inline ios_base&
+        -: 1029:  nouppercase(ios_base& __base)
+        -: 1030:  {
+        -: 1031:    __base.unsetf(ios_base::uppercase);
+        -: 1032:    return __base;
+        -: 1033:  }
+        -: 1034:
+        -: 1035:  /// Calls base.setf(ios_base::unitbuf).
+        -: 1036:  inline ios_base&
+        -: 1037:  unitbuf(ios_base& __base)
+        -: 1038:  {
+        -: 1039:     __base.setf(ios_base::unitbuf);
+        -: 1040:     return __base;
+        -: 1041:  }
+        -: 1042:
+        -: 1043:  /// Calls base.unsetf(ios_base::unitbuf).
+        -: 1044:  inline ios_base&
+        -: 1045:  nounitbuf(ios_base& __base)
+        -: 1046:  {
+        -: 1047:     __base.unsetf(ios_base::unitbuf);
+        -: 1048:     return __base;
+        -: 1049:  }
+        -: 1050:
+        -: 1051:  // [27.4.5.2] adjustfield manipulators
+        -: 1052:  /// Calls base.setf(ios_base::internal, ios_base::adjustfield).
+        -: 1053:  inline ios_base&
+        -: 1054:  internal(ios_base& __base)
+        -: 1055:  {
+        -: 1056:     __base.setf(ios_base::internal, ios_base::adjustfield);
+        -: 1057:     return __base;
+        -: 1058:  }
+        -: 1059:
+        -: 1060:  /// Calls base.setf(ios_base::left, ios_base::adjustfield).
+        -: 1061:  inline ios_base&
+        -: 1062:  left(ios_base& __base)
+        -: 1063:  {
+        -: 1064:    __base.setf(ios_base::left, ios_base::adjustfield);
+        -: 1065:    return __base;
+        -: 1066:  }
+        -: 1067:
+        -: 1068:  /// Calls base.setf(ios_base::right, ios_base::adjustfield).
+        -: 1069:  inline ios_base&
+        -: 1070:  right(ios_base& __base)
+        -: 1071:  {
+        -: 1072:    __base.setf(ios_base::right, ios_base::adjustfield);
+        -: 1073:    return __base;
+        -: 1074:  }
+        -: 1075:
+        -: 1076:  // [27.4.5.3] basefield manipulators
+        -: 1077:  /// Calls base.setf(ios_base::dec, ios_base::basefield).
+        -: 1078:  inline ios_base&
+        -: 1079:  dec(ios_base& __base)
+        -: 1080:  {
+        -: 1081:    __base.setf(ios_base::dec, ios_base::basefield);
+        -: 1082:    return __base;
+        -: 1083:  }
+        -: 1084:
+        -: 1085:  /// Calls base.setf(ios_base::hex, ios_base::basefield).
+        -: 1086:  inline ios_base&
+function _ZSt3hexRSt8ios_base called 0 returned 0% blocks executed 0%
+    #####: 1087:  hex(ios_base& __base)
+        -: 1088:  {
+    #####: 1089:    __base.setf(ios_base::hex, ios_base::basefield);
+    %%%%%: 1089-block 2
+call    0 never executed
+    #####: 1090:    return __base;
+        -: 1091:  }
+        -: 1092:
+        -: 1093:  /// Calls base.setf(ios_base::oct, ios_base::basefield).
+        -: 1094:  inline ios_base&
+        -: 1095:  oct(ios_base& __base)
+        -: 1096:  {
+        -: 1097:    __base.setf(ios_base::oct, ios_base::basefield);
+        -: 1098:    return __base;
+        -: 1099:  }
+        -: 1100:
+        -: 1101:  // [27.4.5.4] floatfield manipulators
+        -: 1102:  /// Calls base.setf(ios_base::fixed, ios_base::floatfield).
+        -: 1103:  inline ios_base&
+        -: 1104:  fixed(ios_base& __base)
+        -: 1105:  {
+        -: 1106:    __base.setf(ios_base::fixed, ios_base::floatfield);
+        -: 1107:    return __base;
+        -: 1108:  }
+        -: 1109:
+        -: 1110:  /// Calls base.setf(ios_base::scientific, ios_base::floatfield).
+        -: 1111:  inline ios_base&
+        -: 1112:  scientific(ios_base& __base)
+        -: 1113:  {
+        -: 1114:    __base.setf(ios_base::scientific, ios_base::floatfield);
+        -: 1115:    return __base;
+        -: 1116:  }
+        -: 1117:
+        -: 1118:#if __cplusplus >= 201103L
+        -: 1119:  // New C++11 floatfield manipulators
+        -: 1120:
+        -: 1121:  /// Calls
+        -: 1122:  /// base.setf(ios_base::fixed|ios_base::scientific, ios_base::floatfield)
+        -: 1123:  inline ios_base&
+        -: 1124:  hexfloat(ios_base& __base)
+        -: 1125:  {
+        -: 1126:    __base.setf(ios_base::fixed | ios_base::scientific, ios_base::floatfield);
+        -: 1127:    return __base;
+        -: 1128:  }
+        -: 1129:
+        -: 1130:  /// Calls @c base.unsetf(ios_base::floatfield)
+        -: 1131:  inline ios_base&
+        -: 1132:  defaultfloat(ios_base& __base)
+        -: 1133:  {
+        -: 1134:    __base.unsetf(ios_base::floatfield);
+        -: 1135:    return __base;
+        -: 1136:  }
+        -: 1137:#endif
+        -: 1138:
+        -: 1139:_GLIBCXX_END_NAMESPACE_VERSION
+        -: 1140:} // namespace
+        -: 1141:
+        -: 1142:#endif /* _IOS_BASE_H */

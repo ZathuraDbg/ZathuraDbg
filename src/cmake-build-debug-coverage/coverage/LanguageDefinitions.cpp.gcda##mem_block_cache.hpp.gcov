@@ -1,0 +1,188 @@
+        -:    0:Source:/home/rc/ZathuraDbg/vendor/ImGuiColorTextEdit/vendor/regex/include/boost/regex/v5/mem_block_cache.hpp
+        -:    0:Graph:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/home/rc/ZathuraDbg/vendor/ImGuiColorTextEdit/LanguageDefinitions.cpp.gcno
+        -:    0:Data:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/home/rc/ZathuraDbg/vendor/ImGuiColorTextEdit/LanguageDefinitions.cpp.gcda
+        -:    0:Runs:1
+        -:    1: /*
+        -:    2: * Copyright (c) 2002
+        -:    3: * John Maddock
+        -:    4: *
+        -:    5: * Use, modification and distribution are subject to the 
+        -:    6: * Boost Software License, Version 1.0. (See accompanying file 
+        -:    7: * LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+        -:    8: *
+        -:    9: */
+        -:   10:
+        -:   11: /*
+        -:   12:  *   LOCATION:    see http://www.boost.org for most recent version.
+        -:   13:  *   FILE         mem_block_cache.hpp
+        -:   14:  *   VERSION      see <boost/version.hpp>
+        -:   15:  *   DESCRIPTION: memory block cache used by the non-recursive matcher.
+        -:   16:  */
+        -:   17:
+        -:   18:#ifndef BOOST_REGEX_V5_MEM_BLOCK_CACHE_HPP
+        -:   19:#define BOOST_REGEX_V5_MEM_BLOCK_CACHE_HPP
+        -:   20:
+        -:   21:#include <new>
+        -:   22:#ifdef BOOST_HAS_THREADS
+        -:   23:#include <mutex>
+        -:   24:#endif
+        -:   25:
+        -:   26:#ifndef BOOST_NO_CXX11_HDR_ATOMIC
+        -:   27:  #include <atomic>
+        -:   28:  #if ATOMIC_POINTER_LOCK_FREE == 2
+        -:   29:    #define BOOST_REGEX_MEM_BLOCK_CACHE_LOCK_FREE
+        -:   30:    #define BOOST_REGEX_ATOMIC_POINTER std::atomic
+        -:   31:  #endif
+        -:   32:#endif
+        -:   33:
+        -:   34:namespace boost{
+        -:   35:namespace BOOST_REGEX_DETAIL_NS{
+        -:   36:
+        -:   37:#if BOOST_REGEX_MAX_CACHE_BLOCKS != 0
+        -:   38:#ifdef BOOST_REGEX_MEM_BLOCK_CACHE_LOCK_FREE /* lock free implementation */
+        -:   39:struct mem_block_cache
+        -:   40:{
+        -:   41:  std::atomic<void*> cache[BOOST_REGEX_MAX_CACHE_BLOCKS];
+        -:   42:
+        -:   43:   ~mem_block_cache()
+        -:   44:   {
+        -:   45:     for (size_t i = 0;i < BOOST_REGEX_MAX_CACHE_BLOCKS; ++i) {
+        -:   46:       if (cache[i].load()) ::operator delete(cache[i].load());
+        -:   47:     }
+        -:   48:   }
+        -:   49:   void* get()
+        -:   50:   {
+        -:   51:     for (size_t i = 0;i < BOOST_REGEX_MAX_CACHE_BLOCKS; ++i) {
+        -:   52:       void* p = cache[i].load();
+        -:   53:       if (p != NULL) {
+        -:   54:         if (cache[i].compare_exchange_strong(p, NULL)) return p;
+        -:   55:       }
+        -:   56:     }
+        -:   57:     return ::operator new(BOOST_REGEX_BLOCKSIZE);
+        -:   58:   }
+        -:   59:   void put(void* ptr)
+        -:   60:   {
+        -:   61:     for (size_t i = 0;i < BOOST_REGEX_MAX_CACHE_BLOCKS; ++i) {
+        -:   62:       void* p = cache[i].load();
+        -:   63:       if (p == NULL) {
+        -:   64:         if (cache[i].compare_exchange_strong(p, ptr)) return;
+        -:   65:       }
+        -:   66:     }
+        -:   67:     ::operator delete(ptr);
+        -:   68:   }
+        -:   69:
+        -:   70:   static mem_block_cache& instance()
+        -:   71:   {
+       1*:   72:      static mem_block_cache block_cache = { { {nullptr} } };
+call    0 never executed
+call    1 never executed
+call    2 never executed
+call    3 never executed
+call    4 never executed
+call    5 never executed
+call    6 never executed
+call    7 never executed
+call    8 never executed
+call    9 never executed
+call   10 returned 1
+        -:   73:      return block_cache;
+        -:   74:   }
+        -:   75:};
+        -:   76:
+        -:   77:
+        -:   78:#else /* lock-based implementation */
+        -:   79:
+        -:   80:
+        -:   81:struct mem_block_node
+        -:   82:{
+        -:   83:   mem_block_node* next;
+        -:   84:};
+        -:   85:
+        -:   86:struct mem_block_cache
+        -:   87:{
+        -:   88:   // this member has to be statically initialsed:
+        -:   89:   mem_block_node* next { nullptr };
+        -:   90:   unsigned cached_blocks { 0 };
+        -:   91:#ifdef BOOST_HAS_THREADS
+        -:   92:   std::mutex mut;
+        -:   93:#endif
+        -:   94:
+        -:   95:   ~mem_block_cache()
+        -:   96:   {
+        -:   97:      while(next)
+        -:   98:      {
+        -:   99:         mem_block_node* old = next;
+        -:  100:         next = next->next;
+        -:  101:         ::operator delete(old);
+        -:  102:      }
+        -:  103:   }
+        -:  104:   void* get()
+        -:  105:   {
+        -:  106:#ifdef BOOST_HAS_THREADS
+        -:  107:      std::lock_guard<std::mutex> g(mut);
+        -:  108:#endif
+        -:  109:     if(next)
+        -:  110:      {
+        -:  111:         mem_block_node* result = next;
+        -:  112:         next = next->next;
+        -:  113:         --cached_blocks;
+        -:  114:         return result;
+        -:  115:      }
+        -:  116:      return ::operator new(BOOST_REGEX_BLOCKSIZE);
+        -:  117:   }
+        -:  118:   void put(void* p)
+        -:  119:   {
+        -:  120:#ifdef BOOST_HAS_THREADS
+        -:  121:      std::lock_guard<std::mutex> g(mut);
+        -:  122:#endif
+        -:  123:      if(cached_blocks >= BOOST_REGEX_MAX_CACHE_BLOCKS)
+        -:  124:      {
+        -:  125:         ::operator delete(p);
+        -:  126:      }
+        -:  127:      else
+        -:  128:      {
+        -:  129:         mem_block_node* old = static_cast<mem_block_node*>(p);
+        -:  130:         old->next = next;
+        -:  131:         next = old;
+        -:  132:         ++cached_blocks;
+        -:  133:      }
+        -:  134:   }
+        -:  135:   static mem_block_cache& instance()
+        -:  136:   {
+        -:  137:      static mem_block_cache block_cache;
+        -:  138:      return block_cache;
+        -:  139:   }
+        -:  140:};
+        -:  141:#endif
+        -:  142:#endif
+        -:  143:
+        -:  144:#if BOOST_REGEX_MAX_CACHE_BLOCKS == 0
+        -:  145:
+        -:  146:inline void*  get_mem_block()
+        -:  147:{
+        -:  148:   return ::operator new(BOOST_REGEX_BLOCKSIZE);
+        -:  149:}
+        -:  150:
+        -:  151:inline void  put_mem_block(void* p)
+        -:  152:{
+        -:  153:   ::operator delete(p);
+        -:  154:}
+        -:  155:
+        -:  156:#else
+        -:  157:
+        -:  158:inline void*  get_mem_block()
+        -:  159:{
+        -:  160:   return mem_block_cache::instance().get();
+        -:  161:}
+        -:  162:
+        -:  163:inline void  put_mem_block(void* p)
+        -:  164:{
+        -:  165:   mem_block_cache::instance().put(p);
+        -:  166:}
+        -:  167:
+        -:  168:#endif
+        -:  169:}
+        -:  170:} // namespace boost
+        -:  171:
+        -:  172:#endif
+        -:  173:

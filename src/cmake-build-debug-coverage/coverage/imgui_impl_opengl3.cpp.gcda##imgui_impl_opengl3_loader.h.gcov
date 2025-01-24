@@ -1,0 +1,1105 @@
+        -:    0:Source:/home/rc/ZathuraDbg/vendor/imgui/backends/imgui_impl_opengl3_loader.h
+        -:    0:Graph:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/home/rc/ZathuraDbg/vendor/imgui/backends/imgui_impl_opengl3.cpp.gcno
+        -:    0:Data:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/home/rc/ZathuraDbg/vendor/imgui/backends/imgui_impl_opengl3.cpp.gcda
+        -:    0:Runs:1
+        -:    1://-----------------------------------------------------------------------------
+        -:    2:// About imgui_impl_opengl3_loader.h:
+        -:    3://
+        -:    4:// We embed our own OpenGL loader to not require user to provide their own or to have to use ours,
+        -:    5:// which proved to be endless problems for users.
+        -:    6:// Our loader is custom-generated, based on gl3w but automatically filtered to only include
+        -:    7:// enums/functions that we use in our imgui_impl_opengl3.cpp source file in order to be small.
+        -:    8://
+        -:    9:// YOU SHOULD NOT NEED TO INCLUDE/USE THIS DIRECTLY. THIS IS USED BY imgui_impl_opengl3.cpp ONLY.
+        -:   10:// THE REST OF YOUR APP SHOULD USE A DIFFERENT GL LOADER: ANY GL LOADER OF YOUR CHOICE.
+        -:   11://
+        -:   12:// IF YOU GET BUILD ERRORS IN THIS FILE (commonly macro redefinitions or function redefinitions):
+        -:   13:// IT LIKELY MEANS THAT YOU ARE BUILDING 'imgui_impl_opengl3.cpp' OR INCLUDING 'imgui_impl_opengl3_loader.h'
+        -:   14:// IN THE SAME COMPILATION UNIT AS ONE OF YOUR FILE WHICH IS USING A THIRD-PARTY OPENGL LOADER.
+        -:   15:// (e.g. COULD HAPPEN IF YOU ARE DOING A UNITY/JUMBO BUILD, OR INCLUDING .CPP FILES FROM OTHERS)
+        -:   16:// YOU SHOULD NOT BUILD BOTH IN THE SAME COMPILATION UNIT.
+        -:   17:// BUT IF YOU REALLY WANT TO, you can '#define IMGUI_IMPL_OPENGL_LOADER_CUSTOM' and imgui_impl_opengl3.cpp
+        -:   18:// WILL NOT BE USING OUR LOADER, AND INSTEAD EXPECT ANOTHER/YOUR LOADER TO BE AVAILABLE IN THE COMPILATION UNIT.
+        -:   19://
+        -:   20:// Regenerate with:
+        -:   21://   python3 gl3w_gen.py --output ../imgui/backends/imgui_impl_opengl3_loader.h --ref ../imgui/backends/imgui_impl_opengl3.cpp ./extra_symbols.txt
+        -:   22://
+        -:   23:// More info:
+        -:   24://   https://github.com/dearimgui/gl3w_stripped
+        -:   25://   https://github.com/ocornut/imgui/issues/4445
+        -:   26://-----------------------------------------------------------------------------
+        -:   27:
+        -:   28:/*
+        -:   29: * This file was generated with gl3w_gen.py, part of imgl3w
+        -:   30: * (hosted at https://github.com/dearimgui/gl3w_stripped)
+        -:   31: *
+        -:   32: * This is free and unencumbered software released into the public domain.
+        -:   33: *
+        -:   34: * Anyone is free to copy, modify, publish, use, compile, sell, or
+        -:   35: * distribute this software, either in source code form or as a compiled
+        -:   36: * binary, for any purpose, commercial or non-commercial, and by any
+        -:   37: * means.
+        -:   38: *
+        -:   39: * In jurisdictions that recognize copyright laws, the author or authors
+        -:   40: * of this software dedicate any and all copyright interest in the
+        -:   41: * software to the public domain. We make this dedication for the benefit
+        -:   42: * of the public at large and to the detriment of our heirs and
+        -:   43: * successors. We intend this dedication to be an overt act of
+        -:   44: * relinquishment in perpetuity of all present and future rights to this
+        -:   45: * software under copyright law.
+        -:   46: *
+        -:   47: * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+        -:   48: * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+        -:   49: * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+        -:   50: * IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+        -:   51: * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+        -:   52: * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+        -:   53: * OTHER DEALINGS IN THE SOFTWARE.
+        -:   54: */
+        -:   55:
+        -:   56:#ifndef __gl3w_h_
+        -:   57:#define __gl3w_h_
+        -:   58:
+        -:   59:// Adapted from KHR/khrplatform.h to avoid including entire file.
+        -:   60:#ifndef __khrplatform_h_
+        -:   61:typedef          float         khronos_float_t;
+        -:   62:typedef signed   char          khronos_int8_t;
+        -:   63:typedef unsigned char          khronos_uint8_t;
+        -:   64:typedef signed   short int     khronos_int16_t;
+        -:   65:typedef unsigned short int     khronos_uint16_t;
+        -:   66:#ifdef _WIN64
+        -:   67:typedef signed   long long int khronos_intptr_t;
+        -:   68:typedef signed   long long int khronos_ssize_t;
+        -:   69:#else
+        -:   70:typedef signed   long  int     khronos_intptr_t;
+        -:   71:typedef signed   long  int     khronos_ssize_t;
+        -:   72:#endif
+        -:   73:
+        -:   74:#if defined(_MSC_VER) && !defined(__clang__)
+        -:   75:typedef signed   __int64       khronos_int64_t;
+        -:   76:typedef unsigned __int64       khronos_uint64_t;
+        -:   77:#elif (defined(__clang__) || defined(__GNUC__)) && (__cplusplus < 201100)
+        -:   78:#include <stdint.h>
+        -:   79:typedef          int64_t       khronos_int64_t;
+        -:   80:typedef          uint64_t      khronos_uint64_t;
+        -:   81:#else
+        -:   82:typedef signed   long long     khronos_int64_t;
+        -:   83:typedef unsigned long long     khronos_uint64_t;
+        -:   84:#endif
+        -:   85:#endif  // __khrplatform_h_
+        -:   86:
+        -:   87:#ifndef __gl_glcorearb_h_
+        -:   88:#define __gl_glcorearb_h_ 1
+        -:   89:#ifdef __cplusplus
+        -:   90:extern "C" {
+        -:   91:#endif
+        -:   92:/*
+        -:   93:** Copyright 2013-2020 The Khronos Group Inc.
+        -:   94:** SPDX-License-Identifier: MIT
+        -:   95:**
+        -:   96:** This header is generated from the Khronos OpenGL / OpenGL ES XML
+        -:   97:** API Registry. The current version of the Registry, generator scripts
+        -:   98:** used to make the header, and the header can be found at
+        -:   99:**   https://github.com/KhronosGroup/OpenGL-Registry
+        -:  100:*/
+        -:  101:#if defined(_WIN32) && !defined(APIENTRY) && !defined(__CYGWIN__) && !defined(__SCITECH_SNAP__)
+        -:  102:#ifndef WIN32_LEAN_AND_MEAN
+        -:  103:#define WIN32_LEAN_AND_MEAN 1
+        -:  104:#endif
+        -:  105:#include <windows.h>
+        -:  106:#endif
+        -:  107:#ifndef APIENTRY
+        -:  108:#define APIENTRY
+        -:  109:#endif
+        -:  110:#ifndef APIENTRYP
+        -:  111:#define APIENTRYP APIENTRY *
+        -:  112:#endif
+        -:  113:#ifndef GLAPI
+        -:  114:#define GLAPI extern
+        -:  115:#endif
+        -:  116:/* glcorearb.h is for use with OpenGL core profile implementations.
+        -:  117:** It should should be placed in the same directory as gl.h and
+        -:  118:** included as <GL/glcorearb.h>.
+        -:  119:**
+        -:  120:** glcorearb.h includes only APIs in the latest OpenGL core profile
+        -:  121:** implementation together with APIs in newer ARB extensions which 
+        -:  122:** can be supported by the core profile. It does not, and never will
+        -:  123:** include functionality removed from the core profile, such as
+        -:  124:** fixed-function vertex and fragment processing.
+        -:  125:**
+        -:  126:** Do not #include both <GL/glcorearb.h> and either of <GL/gl.h> or
+        -:  127:** <GL/glext.h> in the same source file.
+        -:  128:*/
+        -:  129:/* Generated C header for:
+        -:  130: * API: gl
+        -:  131: * Profile: core
+        -:  132: * Versions considered: .*
+        -:  133: * Versions emitted: .*
+        -:  134: * Default extensions included: glcore
+        -:  135: * Additional extensions included: _nomatch_^
+        -:  136: * Extensions removed: _nomatch_^
+        -:  137: */
+        -:  138:#ifndef GL_VERSION_1_0
+        -:  139:typedef void GLvoid;
+        -:  140:typedef unsigned int GLenum;
+        -:  141:
+        -:  142:typedef khronos_float_t GLfloat;
+        -:  143:typedef int GLint;
+        -:  144:typedef int GLsizei;
+        -:  145:typedef unsigned int GLbitfield;
+        -:  146:typedef double GLdouble;
+        -:  147:typedef unsigned int GLuint;
+        -:  148:typedef unsigned char GLboolean;
+        -:  149:typedef khronos_uint8_t GLubyte;
+        -:  150:#define GL_COLOR_BUFFER_BIT               0x00004000
+        -:  151:#define GL_FALSE                          0
+        -:  152:#define GL_TRUE                           1
+        -:  153:#define GL_TRIANGLES                      0x0004
+        -:  154:#define GL_ONE                            1
+        -:  155:#define GL_SRC_ALPHA                      0x0302
+        -:  156:#define GL_ONE_MINUS_SRC_ALPHA            0x0303
+        -:  157:#define GL_FRONT                          0x0404
+        -:  158:#define GL_BACK                           0x0405
+        -:  159:#define GL_FRONT_AND_BACK                 0x0408
+        -:  160:#define GL_POLYGON_MODE                   0x0B40
+        -:  161:#define GL_CULL_FACE                      0x0B44
+        -:  162:#define GL_DEPTH_TEST                     0x0B71
+        -:  163:#define GL_STENCIL_TEST                   0x0B90
+        -:  164:#define GL_VIEWPORT                       0x0BA2
+        -:  165:#define GL_BLEND                          0x0BE2
+        -:  166:#define GL_SCISSOR_BOX                    0x0C10
+        -:  167:#define GL_SCISSOR_TEST                   0x0C11
+        -:  168:#define GL_UNPACK_ROW_LENGTH              0x0CF2
+        -:  169:#define GL_PACK_ALIGNMENT                 0x0D05
+        -:  170:#define GL_TEXTURE_2D                     0x0DE1
+        -:  171:#define GL_UNSIGNED_BYTE                  0x1401
+        -:  172:#define GL_UNSIGNED_SHORT                 0x1403
+        -:  173:#define GL_UNSIGNED_INT                   0x1405
+        -:  174:#define GL_FLOAT                          0x1406
+        -:  175:#define GL_RGBA                           0x1908
+        -:  176:#define GL_FILL                           0x1B02
+        -:  177:#define GL_VENDOR                         0x1F00
+        -:  178:#define GL_RENDERER                       0x1F01
+        -:  179:#define GL_VERSION                        0x1F02
+        -:  180:#define GL_EXTENSIONS                     0x1F03
+        -:  181:#define GL_LINEAR                         0x2601
+        -:  182:#define GL_TEXTURE_MAG_FILTER             0x2800
+        -:  183:#define GL_TEXTURE_MIN_FILTER             0x2801
+        -:  184:#define GL_TEXTURE_WRAP_S                 0x2802
+        -:  185:#define GL_TEXTURE_WRAP_T                 0x2803
+        -:  186:#define GL_REPEAT                         0x2901
+        -:  187:typedef void (APIENTRYP PFNGLPOLYGONMODEPROC) (GLenum face, GLenum mode);
+        -:  188:typedef void (APIENTRYP PFNGLSCISSORPROC) (GLint x, GLint y, GLsizei width, GLsizei height);
+        -:  189:typedef void (APIENTRYP PFNGLTEXPARAMETERIPROC) (GLenum target, GLenum pname, GLint param);
+        -:  190:typedef void (APIENTRYP PFNGLTEXIMAGE2DPROC) (GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const void *pixels);
+        -:  191:typedef void (APIENTRYP PFNGLCLEARPROC) (GLbitfield mask);
+        -:  192:typedef void (APIENTRYP PFNGLCLEARCOLORPROC) (GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha);
+        -:  193:typedef void (APIENTRYP PFNGLDISABLEPROC) (GLenum cap);
+        -:  194:typedef void (APIENTRYP PFNGLENABLEPROC) (GLenum cap);
+        -:  195:typedef void (APIENTRYP PFNGLFLUSHPROC) (void);
+        -:  196:typedef void (APIENTRYP PFNGLPIXELSTOREIPROC) (GLenum pname, GLint param);
+        -:  197:typedef void (APIENTRYP PFNGLREADPIXELSPROC) (GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, void *pixels);
+        -:  198:typedef GLenum (APIENTRYP PFNGLGETERRORPROC) (void);
+        -:  199:typedef void (APIENTRYP PFNGLGETINTEGERVPROC) (GLenum pname, GLint *data);
+        -:  200:typedef const GLubyte *(APIENTRYP PFNGLGETSTRINGPROC) (GLenum name);
+        -:  201:typedef GLboolean (APIENTRYP PFNGLISENABLEDPROC) (GLenum cap);
+        -:  202:typedef void (APIENTRYP PFNGLVIEWPORTPROC) (GLint x, GLint y, GLsizei width, GLsizei height);
+        -:  203:#ifdef GL_GLEXT_PROTOTYPES
+        -:  204:GLAPI void APIENTRY glPolygonMode (GLenum face, GLenum mode);
+        -:  205:GLAPI void APIENTRY glScissor (GLint x, GLint y, GLsizei width, GLsizei height);
+        -:  206:GLAPI void APIENTRY glTexParameteri (GLenum target, GLenum pname, GLint param);
+        -:  207:GLAPI void APIENTRY glTexImage2D (GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const void *pixels);
+        -:  208:GLAPI void APIENTRY glClear (GLbitfield mask);
+        -:  209:GLAPI void APIENTRY glClearColor (GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha);
+        -:  210:GLAPI void APIENTRY glDisable (GLenum cap);
+        -:  211:GLAPI void APIENTRY glEnable (GLenum cap);
+        -:  212:GLAPI void APIENTRY glFlush (void);
+        -:  213:GLAPI void APIENTRY glPixelStorei (GLenum pname, GLint param);
+        -:  214:GLAPI void APIENTRY glReadPixels (GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, void *pixels);
+        -:  215:GLAPI GLenum APIENTRY glGetError (void);
+        -:  216:GLAPI void APIENTRY glGetIntegerv (GLenum pname, GLint *data);
+        -:  217:GLAPI const GLubyte *APIENTRY glGetString (GLenum name);
+        -:  218:GLAPI GLboolean APIENTRY glIsEnabled (GLenum cap);
+        -:  219:GLAPI void APIENTRY glViewport (GLint x, GLint y, GLsizei width, GLsizei height);
+        -:  220:#endif
+        -:  221:#endif /* GL_VERSION_1_0 */
+        -:  222:#ifndef GL_VERSION_1_1
+        -:  223:typedef khronos_float_t GLclampf;
+        -:  224:typedef double GLclampd;
+        -:  225:#define GL_TEXTURE_BINDING_2D             0x8069
+        -:  226:typedef void (APIENTRYP PFNGLDRAWELEMENTSPROC) (GLenum mode, GLsizei count, GLenum type, const void *indices);
+        -:  227:typedef void (APIENTRYP PFNGLBINDTEXTUREPROC) (GLenum target, GLuint texture);
+        -:  228:typedef void (APIENTRYP PFNGLDELETETEXTURESPROC) (GLsizei n, const GLuint *textures);
+        -:  229:typedef void (APIENTRYP PFNGLGENTEXTURESPROC) (GLsizei n, GLuint *textures);
+        -:  230:#ifdef GL_GLEXT_PROTOTYPES
+        -:  231:GLAPI void APIENTRY glDrawElements (GLenum mode, GLsizei count, GLenum type, const void *indices);
+        -:  232:GLAPI void APIENTRY glBindTexture (GLenum target, GLuint texture);
+        -:  233:GLAPI void APIENTRY glDeleteTextures (GLsizei n, const GLuint *textures);
+        -:  234:GLAPI void APIENTRY glGenTextures (GLsizei n, GLuint *textures);
+        -:  235:#endif
+        -:  236:#endif /* GL_VERSION_1_1 */
+        -:  237:#ifndef GL_VERSION_1_2
+        -:  238:#define GL_CLAMP_TO_EDGE                  0x812F
+        -:  239:#endif /* GL_VERSION_1_2 */
+        -:  240:#ifndef GL_VERSION_1_3
+        -:  241:#define GL_TEXTURE0                       0x84C0
+        -:  242:#define GL_ACTIVE_TEXTURE                 0x84E0
+        -:  243:typedef void (APIENTRYP PFNGLACTIVETEXTUREPROC) (GLenum texture);
+        -:  244:#ifdef GL_GLEXT_PROTOTYPES
+        -:  245:GLAPI void APIENTRY glActiveTexture (GLenum texture);
+        -:  246:#endif
+        -:  247:#endif /* GL_VERSION_1_3 */
+        -:  248:#ifndef GL_VERSION_1_4
+        -:  249:#define GL_BLEND_DST_RGB                  0x80C8
+        -:  250:#define GL_BLEND_SRC_RGB                  0x80C9
+        -:  251:#define GL_BLEND_DST_ALPHA                0x80CA
+        -:  252:#define GL_BLEND_SRC_ALPHA                0x80CB
+        -:  253:#define GL_FUNC_ADD                       0x8006
+        -:  254:typedef void (APIENTRYP PFNGLBLENDFUNCSEPARATEPROC) (GLenum sfactorRGB, GLenum dfactorRGB, GLenum sfactorAlpha, GLenum dfactorAlpha);
+        -:  255:typedef void (APIENTRYP PFNGLBLENDEQUATIONPROC) (GLenum mode);
+        -:  256:#ifdef GL_GLEXT_PROTOTYPES
+        -:  257:GLAPI void APIENTRY glBlendFuncSeparate (GLenum sfactorRGB, GLenum dfactorRGB, GLenum sfactorAlpha, GLenum dfactorAlpha);
+        -:  258:GLAPI void APIENTRY glBlendEquation (GLenum mode);
+        -:  259:#endif
+        -:  260:#endif /* GL_VERSION_1_4 */
+        -:  261:#ifndef GL_VERSION_1_5
+        -:  262:typedef khronos_ssize_t GLsizeiptr;
+        -:  263:typedef khronos_intptr_t GLintptr;
+        -:  264:#define GL_ARRAY_BUFFER                   0x8892
+        -:  265:#define GL_ELEMENT_ARRAY_BUFFER           0x8893
+        -:  266:#define GL_ARRAY_BUFFER_BINDING           0x8894
+        -:  267:#define GL_ELEMENT_ARRAY_BUFFER_BINDING   0x8895
+        -:  268:#define GL_STREAM_DRAW                    0x88E0
+        -:  269:typedef void (APIENTRYP PFNGLBINDBUFFERPROC) (GLenum target, GLuint buffer);
+        -:  270:typedef void (APIENTRYP PFNGLDELETEBUFFERSPROC) (GLsizei n, const GLuint *buffers);
+        -:  271:typedef void (APIENTRYP PFNGLGENBUFFERSPROC) (GLsizei n, GLuint *buffers);
+        -:  272:typedef void (APIENTRYP PFNGLBUFFERDATAPROC) (GLenum target, GLsizeiptr size, const void *data, GLenum usage);
+        -:  273:typedef void (APIENTRYP PFNGLBUFFERSUBDATAPROC) (GLenum target, GLintptr offset, GLsizeiptr size, const void *data);
+        -:  274:#ifdef GL_GLEXT_PROTOTYPES
+        -:  275:GLAPI void APIENTRY glBindBuffer (GLenum target, GLuint buffer);
+        -:  276:GLAPI void APIENTRY glDeleteBuffers (GLsizei n, const GLuint *buffers);
+        -:  277:GLAPI void APIENTRY glGenBuffers (GLsizei n, GLuint *buffers);
+        -:  278:GLAPI void APIENTRY glBufferData (GLenum target, GLsizeiptr size, const void *data, GLenum usage);
+        -:  279:GLAPI void APIENTRY glBufferSubData (GLenum target, GLintptr offset, GLsizeiptr size, const void *data);
+        -:  280:#endif
+        -:  281:#endif /* GL_VERSION_1_5 */
+        -:  282:#ifndef GL_VERSION_2_0
+        -:  283:typedef char GLchar;
+        -:  284:typedef khronos_int16_t GLshort;
+        -:  285:typedef khronos_int8_t GLbyte;
+        -:  286:typedef khronos_uint16_t GLushort;
+        -:  287:#define GL_BLEND_EQUATION_RGB             0x8009
+        -:  288:#define GL_VERTEX_ATTRIB_ARRAY_ENABLED    0x8622
+        -:  289:#define GL_VERTEX_ATTRIB_ARRAY_SIZE       0x8623
+        -:  290:#define GL_VERTEX_ATTRIB_ARRAY_STRIDE     0x8624
+        -:  291:#define GL_VERTEX_ATTRIB_ARRAY_TYPE       0x8625
+        -:  292:#define GL_VERTEX_ATTRIB_ARRAY_POINTER    0x8645
+        -:  293:#define GL_BLEND_EQUATION_ALPHA           0x883D
+        -:  294:#define GL_VERTEX_ATTRIB_ARRAY_NORMALIZED 0x886A
+        -:  295:#define GL_FRAGMENT_SHADER                0x8B30
+        -:  296:#define GL_VERTEX_SHADER                  0x8B31
+        -:  297:#define GL_COMPILE_STATUS                 0x8B81
+        -:  298:#define GL_LINK_STATUS                    0x8B82
+        -:  299:#define GL_INFO_LOG_LENGTH                0x8B84
+        -:  300:#define GL_CURRENT_PROGRAM                0x8B8D
+        -:  301:#define GL_UPPER_LEFT                     0x8CA2
+        -:  302:typedef void (APIENTRYP PFNGLBLENDEQUATIONSEPARATEPROC) (GLenum modeRGB, GLenum modeAlpha);
+        -:  303:typedef void (APIENTRYP PFNGLATTACHSHADERPROC) (GLuint program, GLuint shader);
+        -:  304:typedef void (APIENTRYP PFNGLCOMPILESHADERPROC) (GLuint shader);
+        -:  305:typedef GLuint (APIENTRYP PFNGLCREATEPROGRAMPROC) (void);
+        -:  306:typedef GLuint (APIENTRYP PFNGLCREATESHADERPROC) (GLenum type);
+        -:  307:typedef void (APIENTRYP PFNGLDELETEPROGRAMPROC) (GLuint program);
+        -:  308:typedef void (APIENTRYP PFNGLDELETESHADERPROC) (GLuint shader);
+        -:  309:typedef void (APIENTRYP PFNGLDETACHSHADERPROC) (GLuint program, GLuint shader);
+        -:  310:typedef void (APIENTRYP PFNGLDISABLEVERTEXATTRIBARRAYPROC) (GLuint index);
+        -:  311:typedef void (APIENTRYP PFNGLENABLEVERTEXATTRIBARRAYPROC) (GLuint index);
+        -:  312:typedef GLint (APIENTRYP PFNGLGETATTRIBLOCATIONPROC) (GLuint program, const GLchar *name);
+        -:  313:typedef void (APIENTRYP PFNGLGETPROGRAMIVPROC) (GLuint program, GLenum pname, GLint *params);
+        -:  314:typedef void (APIENTRYP PFNGLGETPROGRAMINFOLOGPROC) (GLuint program, GLsizei bufSize, GLsizei *length, GLchar *infoLog);
+        -:  315:typedef void (APIENTRYP PFNGLGETSHADERIVPROC) (GLuint shader, GLenum pname, GLint *params);
+        -:  316:typedef void (APIENTRYP PFNGLGETSHADERINFOLOGPROC) (GLuint shader, GLsizei bufSize, GLsizei *length, GLchar *infoLog);
+        -:  317:typedef GLint (APIENTRYP PFNGLGETUNIFORMLOCATIONPROC) (GLuint program, const GLchar *name);
+        -:  318:typedef void (APIENTRYP PFNGLGETVERTEXATTRIBIVPROC) (GLuint index, GLenum pname, GLint *params);
+        -:  319:typedef void (APIENTRYP PFNGLGETVERTEXATTRIBPOINTERVPROC) (GLuint index, GLenum pname, void **pointer);
+        -:  320:typedef GLboolean (APIENTRYP PFNGLISPROGRAMPROC) (GLuint program);
+        -:  321:typedef void (APIENTRYP PFNGLLINKPROGRAMPROC) (GLuint program);
+        -:  322:typedef void (APIENTRYP PFNGLSHADERSOURCEPROC) (GLuint shader, GLsizei count, const GLchar *const*string, const GLint *length);
+        -:  323:typedef void (APIENTRYP PFNGLUSEPROGRAMPROC) (GLuint program);
+        -:  324:typedef void (APIENTRYP PFNGLUNIFORM1IPROC) (GLint location, GLint v0);
+        -:  325:typedef void (APIENTRYP PFNGLUNIFORMMATRIX4FVPROC) (GLint location, GLsizei count, GLboolean transpose, const GLfloat *value);
+        -:  326:typedef void (APIENTRYP PFNGLVERTEXATTRIBPOINTERPROC) (GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const void *pointer);
+        -:  327:#ifdef GL_GLEXT_PROTOTYPES
+        -:  328:GLAPI void APIENTRY glBlendEquationSeparate (GLenum modeRGB, GLenum modeAlpha);
+        -:  329:GLAPI void APIENTRY glAttachShader (GLuint program, GLuint shader);
+        -:  330:GLAPI void APIENTRY glCompileShader (GLuint shader);
+        -:  331:GLAPI GLuint APIENTRY glCreateProgram (void);
+        -:  332:GLAPI GLuint APIENTRY glCreateShader (GLenum type);
+        -:  333:GLAPI void APIENTRY glDeleteProgram (GLuint program);
+        -:  334:GLAPI void APIENTRY glDeleteShader (GLuint shader);
+        -:  335:GLAPI void APIENTRY glDetachShader (GLuint program, GLuint shader);
+        -:  336:GLAPI void APIENTRY glDisableVertexAttribArray (GLuint index);
+        -:  337:GLAPI void APIENTRY glEnableVertexAttribArray (GLuint index);
+        -:  338:GLAPI GLint APIENTRY glGetAttribLocation (GLuint program, const GLchar *name);
+        -:  339:GLAPI void APIENTRY glGetProgramiv (GLuint program, GLenum pname, GLint *params);
+        -:  340:GLAPI void APIENTRY glGetProgramInfoLog (GLuint program, GLsizei bufSize, GLsizei *length, GLchar *infoLog);
+        -:  341:GLAPI void APIENTRY glGetShaderiv (GLuint shader, GLenum pname, GLint *params);
+        -:  342:GLAPI void APIENTRY glGetShaderInfoLog (GLuint shader, GLsizei bufSize, GLsizei *length, GLchar *infoLog);
+        -:  343:GLAPI GLint APIENTRY glGetUniformLocation (GLuint program, const GLchar *name);
+        -:  344:GLAPI void APIENTRY glGetVertexAttribiv (GLuint index, GLenum pname, GLint *params);
+        -:  345:GLAPI void APIENTRY glGetVertexAttribPointerv (GLuint index, GLenum pname, void **pointer);
+        -:  346:GLAPI GLboolean APIENTRY glIsProgram (GLuint program);
+        -:  347:GLAPI void APIENTRY glLinkProgram (GLuint program);
+        -:  348:GLAPI void APIENTRY glShaderSource (GLuint shader, GLsizei count, const GLchar *const*string, const GLint *length);
+        -:  349:GLAPI void APIENTRY glUseProgram (GLuint program);
+        -:  350:GLAPI void APIENTRY glUniform1i (GLint location, GLint v0);
+        -:  351:GLAPI void APIENTRY glUniformMatrix4fv (GLint location, GLsizei count, GLboolean transpose, const GLfloat *value);
+        -:  352:GLAPI void APIENTRY glVertexAttribPointer (GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const void *pointer);
+        -:  353:#endif
+        -:  354:#endif /* GL_VERSION_2_0 */
+        -:  355:#ifndef GL_VERSION_2_1
+        -:  356:#define GL_PIXEL_UNPACK_BUFFER            0x88EC
+        -:  357:#define GL_PIXEL_UNPACK_BUFFER_BINDING    0x88EF
+        -:  358:#endif /* GL_VERSION_2_1 */
+        -:  359:#ifndef GL_VERSION_3_0
+        -:  360:typedef khronos_uint16_t GLhalf;
+        -:  361:#define GL_MAJOR_VERSION                  0x821B
+        -:  362:#define GL_MINOR_VERSION                  0x821C
+        -:  363:#define GL_NUM_EXTENSIONS                 0x821D
+        -:  364:#define GL_FRAMEBUFFER_SRGB               0x8DB9
+        -:  365:#define GL_VERTEX_ARRAY_BINDING           0x85B5
+        -:  366:typedef void (APIENTRYP PFNGLGETBOOLEANI_VPROC) (GLenum target, GLuint index, GLboolean *data);
+        -:  367:typedef void (APIENTRYP PFNGLGETINTEGERI_VPROC) (GLenum target, GLuint index, GLint *data);
+        -:  368:typedef const GLubyte *(APIENTRYP PFNGLGETSTRINGIPROC) (GLenum name, GLuint index);
+        -:  369:typedef void (APIENTRYP PFNGLBINDVERTEXARRAYPROC) (GLuint array);
+        -:  370:typedef void (APIENTRYP PFNGLDELETEVERTEXARRAYSPROC) (GLsizei n, const GLuint *arrays);
+        -:  371:typedef void (APIENTRYP PFNGLGENVERTEXARRAYSPROC) (GLsizei n, GLuint *arrays);
+        -:  372:#ifdef GL_GLEXT_PROTOTYPES
+        -:  373:GLAPI const GLubyte *APIENTRY glGetStringi (GLenum name, GLuint index);
+        -:  374:GLAPI void APIENTRY glBindVertexArray (GLuint array);
+        -:  375:GLAPI void APIENTRY glDeleteVertexArrays (GLsizei n, const GLuint *arrays);
+        -:  376:GLAPI void APIENTRY glGenVertexArrays (GLsizei n, GLuint *arrays);
+        -:  377:#endif
+        -:  378:#endif /* GL_VERSION_3_0 */
+        -:  379:#ifndef GL_VERSION_3_1
+        -:  380:#define GL_VERSION_3_1 1
+        -:  381:#define GL_PRIMITIVE_RESTART              0x8F9D
+        -:  382:#endif /* GL_VERSION_3_1 */
+        -:  383:#ifndef GL_VERSION_3_2
+        -:  384:#define GL_VERSION_3_2 1
+        -:  385:typedef struct __GLsync *GLsync;
+        -:  386:typedef khronos_uint64_t GLuint64;
+        -:  387:typedef khronos_int64_t GLint64;
+        -:  388:#define GL_CONTEXT_COMPATIBILITY_PROFILE_BIT 0x00000002
+        -:  389:#define GL_CONTEXT_PROFILE_MASK           0x9126
+        -:  390:typedef void (APIENTRYP PFNGLDRAWELEMENTSBASEVERTEXPROC) (GLenum mode, GLsizei count, GLenum type, const void *indices, GLint basevertex);
+        -:  391:typedef void (APIENTRYP PFNGLGETINTEGER64I_VPROC) (GLenum target, GLuint index, GLint64 *data);
+        -:  392:#ifdef GL_GLEXT_PROTOTYPES
+        -:  393:GLAPI void APIENTRY glDrawElementsBaseVertex (GLenum mode, GLsizei count, GLenum type, const void *indices, GLint basevertex);
+        -:  394:#endif
+        -:  395:#endif /* GL_VERSION_3_2 */
+        -:  396:#ifndef GL_VERSION_3_3
+        -:  397:#define GL_VERSION_3_3 1
+        -:  398:#define GL_SAMPLER_BINDING                0x8919
+        -:  399:typedef void (APIENTRYP PFNGLBINDSAMPLERPROC) (GLuint unit, GLuint sampler);
+        -:  400:#ifdef GL_GLEXT_PROTOTYPES
+        -:  401:GLAPI void APIENTRY glBindSampler (GLuint unit, GLuint sampler);
+        -:  402:#endif
+        -:  403:#endif /* GL_VERSION_3_3 */
+        -:  404:#ifndef GL_VERSION_4_1
+        -:  405:typedef void (APIENTRYP PFNGLGETFLOATI_VPROC) (GLenum target, GLuint index, GLfloat *data);
+        -:  406:typedef void (APIENTRYP PFNGLGETDOUBLEI_VPROC) (GLenum target, GLuint index, GLdouble *data);
+        -:  407:#endif /* GL_VERSION_4_1 */
+        -:  408:#ifndef GL_VERSION_4_3
+        -:  409:typedef void (APIENTRY  *GLDEBUGPROC)(GLenum source,GLenum type,GLuint id,GLenum severity,GLsizei length,const GLchar *message,const void *userParam);
+        -:  410:#endif /* GL_VERSION_4_3 */
+        -:  411:#ifndef GL_VERSION_4_5
+        -:  412:#define GL_CLIP_ORIGIN                    0x935C
+        -:  413:typedef void (APIENTRYP PFNGLGETTRANSFORMFEEDBACKI_VPROC) (GLuint xfb, GLenum pname, GLuint index, GLint *param);
+        -:  414:typedef void (APIENTRYP PFNGLGETTRANSFORMFEEDBACKI64_VPROC) (GLuint xfb, GLenum pname, GLuint index, GLint64 *param);
+        -:  415:#endif /* GL_VERSION_4_5 */
+        -:  416:#ifndef GL_ARB_bindless_texture
+        -:  417:typedef khronos_uint64_t GLuint64EXT;
+        -:  418:#endif /* GL_ARB_bindless_texture */
+        -:  419:#ifndef GL_ARB_cl_event
+        -:  420:struct _cl_context;
+        -:  421:struct _cl_event;
+        -:  422:#endif /* GL_ARB_cl_event */
+        -:  423:#ifndef GL_ARB_clip_control
+        -:  424:#define GL_ARB_clip_control 1
+        -:  425:#endif /* GL_ARB_clip_control */
+        -:  426:#ifndef GL_ARB_debug_output
+        -:  427:typedef void (APIENTRY  *GLDEBUGPROCARB)(GLenum source,GLenum type,GLuint id,GLenum severity,GLsizei length,const GLchar *message,const void *userParam);
+        -:  428:#endif /* GL_ARB_debug_output */
+        -:  429:#ifndef GL_EXT_EGL_image_storage
+        -:  430:typedef void *GLeglImageOES;
+        -:  431:#endif /* GL_EXT_EGL_image_storage */
+        -:  432:#ifndef GL_EXT_direct_state_access
+        -:  433:typedef void (APIENTRYP PFNGLGETFLOATI_VEXTPROC) (GLenum pname, GLuint index, GLfloat *params);
+        -:  434:typedef void (APIENTRYP PFNGLGETDOUBLEI_VEXTPROC) (GLenum pname, GLuint index, GLdouble *params);
+        -:  435:typedef void (APIENTRYP PFNGLGETPOINTERI_VEXTPROC) (GLenum pname, GLuint index, void **params);
+        -:  436:typedef void (APIENTRYP PFNGLGETVERTEXARRAYINTEGERI_VEXTPROC) (GLuint vaobj, GLuint index, GLenum pname, GLint *param);
+        -:  437:typedef void (APIENTRYP PFNGLGETVERTEXARRAYPOINTERI_VEXTPROC) (GLuint vaobj, GLuint index, GLenum pname, void **param);
+        -:  438:#endif /* GL_EXT_direct_state_access */
+        -:  439:#ifndef GL_NV_draw_vulkan_image
+        -:  440:typedef void (APIENTRY  *GLVULKANPROCNV)(void);
+        -:  441:#endif /* GL_NV_draw_vulkan_image */
+        -:  442:#ifndef GL_NV_gpu_shader5
+        -:  443:typedef khronos_int64_t GLint64EXT;
+        -:  444:#endif /* GL_NV_gpu_shader5 */
+        -:  445:#ifndef GL_NV_vertex_buffer_unified_memory
+        -:  446:typedef void (APIENTRYP PFNGLGETINTEGERUI64I_VNVPROC) (GLenum value, GLuint index, GLuint64EXT *result);
+        -:  447:#endif /* GL_NV_vertex_buffer_unified_memory */
+        -:  448:#ifdef __cplusplus
+        -:  449:}
+        -:  450:#endif
+        -:  451:#endif
+        -:  452:
+        -:  453:#ifndef GL3W_API
+        -:  454:#define GL3W_API
+        -:  455:#endif
+        -:  456:
+        -:  457:#ifndef __gl_h_
+        -:  458:#define __gl_h_
+        -:  459:#endif
+        -:  460:
+        -:  461:#ifdef __cplusplus
+        -:  462:extern "C" {
+        -:  463:#endif
+        -:  464:
+        -:  465:#define GL3W_OK 0
+        -:  466:#define GL3W_ERROR_INIT -1
+        -:  467:#define GL3W_ERROR_LIBRARY_OPEN -2
+        -:  468:#define GL3W_ERROR_OPENGL_VERSION -3
+        -:  469:
+        -:  470:typedef void (*GL3WglProc)(void);
+        -:  471:typedef GL3WglProc (*GL3WGetProcAddressProc)(const char *proc);
+        -:  472:
+        -:  473:/* gl3w api */
+        -:  474:GL3W_API int imgl3wInit(void);
+        -:  475:GL3W_API int imgl3wInit2(GL3WGetProcAddressProc proc);
+        -:  476:GL3W_API int imgl3wIsSupported(int major, int minor);
+        -:  477:GL3W_API GL3WglProc imgl3wGetProcAddress(const char *proc);
+        -:  478:
+        -:  479:/* gl3w internal state */
+        -:  480:union ImGL3WProcs {
+        -:  481:    GL3WglProc ptr[59];
+        -:  482:    struct {
+        -:  483:        PFNGLACTIVETEXTUREPROC            ActiveTexture;
+        -:  484:        PFNGLATTACHSHADERPROC             AttachShader;
+        -:  485:        PFNGLBINDBUFFERPROC               BindBuffer;
+        -:  486:        PFNGLBINDSAMPLERPROC              BindSampler;
+        -:  487:        PFNGLBINDTEXTUREPROC              BindTexture;
+        -:  488:        PFNGLBINDVERTEXARRAYPROC          BindVertexArray;
+        -:  489:        PFNGLBLENDEQUATIONPROC            BlendEquation;
+        -:  490:        PFNGLBLENDEQUATIONSEPARATEPROC    BlendEquationSeparate;
+        -:  491:        PFNGLBLENDFUNCSEPARATEPROC        BlendFuncSeparate;
+        -:  492:        PFNGLBUFFERDATAPROC               BufferData;
+        -:  493:        PFNGLBUFFERSUBDATAPROC            BufferSubData;
+        -:  494:        PFNGLCLEARPROC                    Clear;
+        -:  495:        PFNGLCLEARCOLORPROC               ClearColor;
+        -:  496:        PFNGLCOMPILESHADERPROC            CompileShader;
+        -:  497:        PFNGLCREATEPROGRAMPROC            CreateProgram;
+        -:  498:        PFNGLCREATESHADERPROC             CreateShader;
+        -:  499:        PFNGLDELETEBUFFERSPROC            DeleteBuffers;
+        -:  500:        PFNGLDELETEPROGRAMPROC            DeleteProgram;
+        -:  501:        PFNGLDELETESHADERPROC             DeleteShader;
+        -:  502:        PFNGLDELETETEXTURESPROC           DeleteTextures;
+        -:  503:        PFNGLDELETEVERTEXARRAYSPROC       DeleteVertexArrays;
+        -:  504:        PFNGLDETACHSHADERPROC             DetachShader;
+        -:  505:        PFNGLDISABLEPROC                  Disable;
+        -:  506:        PFNGLDISABLEVERTEXATTRIBARRAYPROC DisableVertexAttribArray;
+        -:  507:        PFNGLDRAWELEMENTSPROC             DrawElements;
+        -:  508:        PFNGLDRAWELEMENTSBASEVERTEXPROC   DrawElementsBaseVertex;
+        -:  509:        PFNGLENABLEPROC                   Enable;
+        -:  510:        PFNGLENABLEVERTEXATTRIBARRAYPROC  EnableVertexAttribArray;
+        -:  511:        PFNGLFLUSHPROC                    Flush;
+        -:  512:        PFNGLGENBUFFERSPROC               GenBuffers;
+        -:  513:        PFNGLGENTEXTURESPROC              GenTextures;
+        -:  514:        PFNGLGENVERTEXARRAYSPROC          GenVertexArrays;
+        -:  515:        PFNGLGETATTRIBLOCATIONPROC        GetAttribLocation;
+        -:  516:        PFNGLGETERRORPROC                 GetError;
+        -:  517:        PFNGLGETINTEGERVPROC              GetIntegerv;
+        -:  518:        PFNGLGETPROGRAMINFOLOGPROC        GetProgramInfoLog;
+        -:  519:        PFNGLGETPROGRAMIVPROC             GetProgramiv;
+        -:  520:        PFNGLGETSHADERINFOLOGPROC         GetShaderInfoLog;
+        -:  521:        PFNGLGETSHADERIVPROC              GetShaderiv;
+        -:  522:        PFNGLGETSTRINGPROC                GetString;
+        -:  523:        PFNGLGETSTRINGIPROC               GetStringi;
+        -:  524:        PFNGLGETUNIFORMLOCATIONPROC       GetUniformLocation;
+        -:  525:        PFNGLGETVERTEXATTRIBPOINTERVPROC  GetVertexAttribPointerv;
+        -:  526:        PFNGLGETVERTEXATTRIBIVPROC        GetVertexAttribiv;
+        -:  527:        PFNGLISENABLEDPROC                IsEnabled;
+        -:  528:        PFNGLISPROGRAMPROC                IsProgram;
+        -:  529:        PFNGLLINKPROGRAMPROC              LinkProgram;
+        -:  530:        PFNGLPIXELSTOREIPROC              PixelStorei;
+        -:  531:        PFNGLPOLYGONMODEPROC              PolygonMode;
+        -:  532:        PFNGLREADPIXELSPROC               ReadPixels;
+        -:  533:        PFNGLSCISSORPROC                  Scissor;
+        -:  534:        PFNGLSHADERSOURCEPROC             ShaderSource;
+        -:  535:        PFNGLTEXIMAGE2DPROC               TexImage2D;
+        -:  536:        PFNGLTEXPARAMETERIPROC            TexParameteri;
+        -:  537:        PFNGLUNIFORM1IPROC                Uniform1i;
+        -:  538:        PFNGLUNIFORMMATRIX4FVPROC         UniformMatrix4fv;
+        -:  539:        PFNGLUSEPROGRAMPROC               UseProgram;
+        -:  540:        PFNGLVERTEXATTRIBPOINTERPROC      VertexAttribPointer;
+        -:  541:        PFNGLVIEWPORTPROC                 Viewport;
+        -:  542:    } gl;
+        -:  543:};
+        -:  544:
+        -:  545:GL3W_API extern union ImGL3WProcs imgl3wProcs;
+        -:  546:
+        -:  547:/* OpenGL functions */
+        -:  548:#define glActiveTexture                   imgl3wProcs.gl.ActiveTexture
+        -:  549:#define glAttachShader                    imgl3wProcs.gl.AttachShader
+        -:  550:#define glBindBuffer                      imgl3wProcs.gl.BindBuffer
+        -:  551:#define glBindSampler                     imgl3wProcs.gl.BindSampler
+        -:  552:#define glBindTexture                     imgl3wProcs.gl.BindTexture
+        -:  553:#define glBindVertexArray                 imgl3wProcs.gl.BindVertexArray
+        -:  554:#define glBlendEquation                   imgl3wProcs.gl.BlendEquation
+        -:  555:#define glBlendEquationSeparate           imgl3wProcs.gl.BlendEquationSeparate
+        -:  556:#define glBlendFuncSeparate               imgl3wProcs.gl.BlendFuncSeparate
+        -:  557:#define glBufferData                      imgl3wProcs.gl.BufferData
+        -:  558:#define glBufferSubData                   imgl3wProcs.gl.BufferSubData
+        -:  559:#define glClear                           imgl3wProcs.gl.Clear
+        -:  560:#define glClearColor                      imgl3wProcs.gl.ClearColor
+        -:  561:#define glCompileShader                   imgl3wProcs.gl.CompileShader
+        -:  562:#define glCreateProgram                   imgl3wProcs.gl.CreateProgram
+        -:  563:#define glCreateShader                    imgl3wProcs.gl.CreateShader
+        -:  564:#define glDeleteBuffers                   imgl3wProcs.gl.DeleteBuffers
+        -:  565:#define glDeleteProgram                   imgl3wProcs.gl.DeleteProgram
+        -:  566:#define glDeleteShader                    imgl3wProcs.gl.DeleteShader
+        -:  567:#define glDeleteTextures                  imgl3wProcs.gl.DeleteTextures
+        -:  568:#define glDeleteVertexArrays              imgl3wProcs.gl.DeleteVertexArrays
+        -:  569:#define glDetachShader                    imgl3wProcs.gl.DetachShader
+        -:  570:#define glDisable                         imgl3wProcs.gl.Disable
+        -:  571:#define glDisableVertexAttribArray        imgl3wProcs.gl.DisableVertexAttribArray
+        -:  572:#define glDrawElements                    imgl3wProcs.gl.DrawElements
+        -:  573:#define glDrawElementsBaseVertex          imgl3wProcs.gl.DrawElementsBaseVertex
+        -:  574:#define glEnable                          imgl3wProcs.gl.Enable
+        -:  575:#define glEnableVertexAttribArray         imgl3wProcs.gl.EnableVertexAttribArray
+        -:  576:#define glFlush                           imgl3wProcs.gl.Flush
+        -:  577:#define glGenBuffers                      imgl3wProcs.gl.GenBuffers
+        -:  578:#define glGenTextures                     imgl3wProcs.gl.GenTextures
+        -:  579:#define glGenVertexArrays                 imgl3wProcs.gl.GenVertexArrays
+        -:  580:#define glGetAttribLocation               imgl3wProcs.gl.GetAttribLocation
+        -:  581:#define glGetError                        imgl3wProcs.gl.GetError
+        -:  582:#define glGetIntegerv                     imgl3wProcs.gl.GetIntegerv
+        -:  583:#define glGetProgramInfoLog               imgl3wProcs.gl.GetProgramInfoLog
+        -:  584:#define glGetProgramiv                    imgl3wProcs.gl.GetProgramiv
+        -:  585:#define glGetShaderInfoLog                imgl3wProcs.gl.GetShaderInfoLog
+        -:  586:#define glGetShaderiv                     imgl3wProcs.gl.GetShaderiv
+        -:  587:#define glGetString                       imgl3wProcs.gl.GetString
+        -:  588:#define glGetStringi                      imgl3wProcs.gl.GetStringi
+        -:  589:#define glGetUniformLocation              imgl3wProcs.gl.GetUniformLocation
+        -:  590:#define glGetVertexAttribPointerv         imgl3wProcs.gl.GetVertexAttribPointerv
+        -:  591:#define glGetVertexAttribiv               imgl3wProcs.gl.GetVertexAttribiv
+        -:  592:#define glIsEnabled                       imgl3wProcs.gl.IsEnabled
+        -:  593:#define glIsProgram                       imgl3wProcs.gl.IsProgram
+        -:  594:#define glLinkProgram                     imgl3wProcs.gl.LinkProgram
+        -:  595:#define glPixelStorei                     imgl3wProcs.gl.PixelStorei
+        -:  596:#define glPolygonMode                     imgl3wProcs.gl.PolygonMode
+        -:  597:#define glReadPixels                      imgl3wProcs.gl.ReadPixels
+        -:  598:#define glScissor                         imgl3wProcs.gl.Scissor
+        -:  599:#define glShaderSource                    imgl3wProcs.gl.ShaderSource
+        -:  600:#define glTexImage2D                      imgl3wProcs.gl.TexImage2D
+        -:  601:#define glTexParameteri                   imgl3wProcs.gl.TexParameteri
+        -:  602:#define glUniform1i                       imgl3wProcs.gl.Uniform1i
+        -:  603:#define glUniformMatrix4fv                imgl3wProcs.gl.UniformMatrix4fv
+        -:  604:#define glUseProgram                      imgl3wProcs.gl.UseProgram
+        -:  605:#define glVertexAttribPointer             imgl3wProcs.gl.VertexAttribPointer
+        -:  606:#define glViewport                        imgl3wProcs.gl.Viewport
+        -:  607:
+        -:  608:#ifdef __cplusplus
+        -:  609:}
+        -:  610:#endif
+        -:  611:
+        -:  612:#endif
+        -:  613:
+        -:  614:#ifdef IMGL3W_IMPL
+        -:  615:#ifdef __cplusplus
+        -:  616:extern "C" {
+        -:  617:#endif
+        -:  618:
+        -:  619:#include <stdlib.h>
+        -:  620:
+        -:  621:#define GL3W_ARRAY_SIZE(x)  (sizeof(x) / sizeof((x)[0]))
+        -:  622:
+        -:  623:#if defined(_WIN32)
+        -:  624:#ifndef WIN32_LEAN_AND_MEAN
+        -:  625:#define WIN32_LEAN_AND_MEAN 1
+        -:  626:#endif
+        -:  627:#include <windows.h>
+        -:  628:
+        -:  629:static HMODULE libgl;
+        -:  630:typedef PROC(__stdcall* GL3WglGetProcAddr)(LPCSTR);
+        -:  631:static GL3WglGetProcAddr wgl_get_proc_address;
+        -:  632:
+        -:  633:static int open_libgl(void)
+        -:  634:{
+        -:  635:    libgl = LoadLibraryA("opengl32.dll");
+        -:  636:    if (!libgl)
+        -:  637:        return GL3W_ERROR_LIBRARY_OPEN;
+        -:  638:    wgl_get_proc_address = (GL3WglGetProcAddr)GetProcAddress(libgl, "wglGetProcAddress");
+        -:  639:    return GL3W_OK;
+        -:  640:}
+        -:  641:
+        -:  642:static void close_libgl(void) { FreeLibrary(libgl); }
+        -:  643:static GL3WglProc get_proc(const char *proc)
+        -:  644:{
+        -:  645:    GL3WglProc res;
+        -:  646:    res = (GL3WglProc)wgl_get_proc_address(proc);
+        -:  647:    if (!res)
+        -:  648:        res = (GL3WglProc)GetProcAddress(libgl, proc);
+        -:  649:    return res;
+        -:  650:}
+        -:  651:#elif defined(__APPLE__)
+        -:  652:#include <dlfcn.h>
+        -:  653:
+        -:  654:static void *libgl;
+        -:  655:static int open_libgl(void)
+        -:  656:{
+        -:  657:    libgl = dlopen("/System/Library/Frameworks/OpenGL.framework/OpenGL", RTLD_LAZY | RTLD_LOCAL);
+        -:  658:    if (!libgl)
+        -:  659:        return GL3W_ERROR_LIBRARY_OPEN;
+        -:  660:    return GL3W_OK;
+        -:  661:}
+        -:  662:
+        -:  663:static void close_libgl(void) { dlclose(libgl); }
+        -:  664:
+        -:  665:static GL3WglProc get_proc(const char *proc)
+        -:  666:{
+        -:  667:    GL3WglProc res;
+        -:  668:    *(void **)(&res) = dlsym(libgl, proc);
+        -:  669:    return res;
+        -:  670:}
+        -:  671:#else
+        -:  672:#include <dlfcn.h>
+        -:  673:
+        -:  674:static void* libgl;  // OpenGL library
+        -:  675:static void* libglx;  // GLX library
+        -:  676:static void* libegl;  // EGL library
+        -:  677:static GL3WGetProcAddressProc gl_get_proc_address;
+        -:  678:
+function close_libgl called 1 returned 100% blocks executed 80%
+        1:  679:static void close_libgl(void)
+        -:  680:{
+        1:  681:    if (libgl) {
+        1:  681-block 2
+branch  0 taken 1 (fallthrough)
+branch  1 taken 0
+        1:  682:        dlclose(libgl);
+        1:  682-block 3
+call    0 returned 1
+        1:  683:        libgl = NULL;
+        -:  684:    }
+        1:  685:    if (libegl) {
+        1:  685-block 5
+branch  0 taken 1 (fallthrough)
+branch  1 taken 0
+        1:  686:        dlclose(libegl);
+        1:  686-block 6
+call    0 returned 1
+        1:  687:        libegl = NULL;
+        -:  688:    }
+        1:  689:    if (libglx) {
+        1:  689-block 8
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+    #####:  690:        dlclose(libglx);
+    %%%%%:  690-block 9
+call    0 never executed
+    #####:  691:        libglx = NULL;
+        -:  692:    }
+        1:  693:}
+        -:  694:
+function is_library_loaded called 1 returned 100% blocks executed 100%
+        1:  695:static int is_library_loaded(const char* name, void** lib)
+        -:  696:{
+        1:  697:    *lib = dlopen(name, RTLD_LAZY | RTLD_LOCAL | RTLD_NOLOAD);
+        1:  697-block 2
+call    0 returned 1
+        1:  698:    return *lib != NULL;
+        -:  699:}
+        -:  700:
+function open_libs called 1 returned 100% blocks executed 22%
+        1:  701:static int open_libs(void)
+        -:  702:{
+        -:  703:    // On Linux we have two APIs to get process addresses: EGL and GLX.
+        -:  704:    // EGL is supported under both X11 and Wayland, whereas GLX is X11-specific.
+        -:  705:
+        1:  706:    libgl = NULL;
+        1:  707:    libegl = NULL;
+        1:  708:    libglx = NULL;
+        -:  709:
+        -:  710:    // First check what's already loaded, the windowing library might have
+        -:  711:    // already loaded either EGL or GLX and we want to use the same one.
+        -:  712:
+       1*:  713:    if (is_library_loaded("libEGL.so.1", &libegl) ||
+        1:  713-block 2
+call    0 returned 1
+branch  1 taken 0 (fallthrough)
+branch  2 taken 1
+branch  3 never executed (fallthrough)
+branch  4 never executed
+        1:  713-block 6
+    %%%%%:  713-block 7
+        1:  713-block 8
+branch  5 taken 1 (fallthrough)
+branch  6 taken 0
+    #####:  714:        is_library_loaded("libGLX.so.0", &libglx)) {
+    %%%%%:  714-block 4
+call    0 never executed
+        1:  715:        libgl = dlopen("libOpenGL.so.0", RTLD_LAZY | RTLD_LOCAL);
+        1:  715-block 9
+call    0 returned 1
+        1:  716:        if (libgl)
+branch  0 taken 1 (fallthrough)
+branch  1 taken 0
+        1:  717:            return GL3W_OK;
+        1:  717-block 11
+        -:  718:        else
+    #####:  719:            close_libgl();
+    %%%%%:  719-block 12
+call    0 never executed
+        -:  720:    }
+        -:  721:
+    #####:  722:    if (is_library_loaded("libGL.so", &libgl))
+    %%%%%:  722-block 13
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  723:        return GL3W_OK;
+    %%%%%:  723-block 15
+    #####:  724:    if (is_library_loaded("libGL.so.1", &libgl))
+    %%%%%:  724-block 16
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  725:        return GL3W_OK;
+    %%%%%:  725-block 18
+    #####:  726:    if (is_library_loaded("libGL.so.3", &libgl))
+    %%%%%:  726-block 19
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  727:        return GL3W_OK;
+    %%%%%:  727-block 21
+        -:  728:
+        -:  729:    // Neither is already loaded, so we have to load one.  Try EGL first
+        -:  730:    // because it is supported under both X11 and Wayland.
+        -:  731:
+        -:  732:    // Load OpenGL + EGL
+    #####:  733:    libgl = dlopen("libOpenGL.so.0", RTLD_LAZY | RTLD_LOCAL);
+    %%%%%:  733-block 22
+call    0 never executed
+    #####:  734:    libegl = dlopen("libEGL.so.1", RTLD_LAZY | RTLD_LOCAL);
+call    0 never executed
+    #####:  735:    if (libgl && libegl)
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  735-block 25
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    #####:  736:        return GL3W_OK;
+    %%%%%:  736-block 26
+        -:  737:    else
+    #####:  738:        close_libgl();
+    %%%%%:  738-block 27
+call    0 never executed
+        -:  739:
+        -:  740:    // Fall back to legacy libGL, which includes GLX
+        -:  741:    // While most systems use libGL.so.1, NetBSD seems to use that libGL.so.3. See https://github.com/ocornut/imgui/issues/6983
+    #####:  742:    libgl = dlopen("libGL.so", RTLD_LAZY | RTLD_LOCAL);
+call    0 never executed
+    #####:  743:    if (!libgl)
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  744:        libgl = dlopen("libGL.so.1", RTLD_LAZY | RTLD_LOCAL);
+    %%%%%:  744-block 30
+call    0 never executed
+    #####:  745:    if (!libgl)
+    %%%%%:  745-block 32
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  746:        libgl = dlopen("libGL.so.3", RTLD_LAZY | RTLD_LOCAL);
+    %%%%%:  746-block 33
+call    0 never executed
+        -:  747:
+    #####:  748:    if (libgl)
+    %%%%%:  748-block 35
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  749:        return GL3W_OK;
+    %%%%%:  749-block 36
+        -:  750:
+    #####:  751:    return GL3W_ERROR_LIBRARY_OPEN;
+    %%%%%:  751-block 37
+        -:  752:}
+        -:  753:
+function open_libgl called 1 returned 100% blocks executed 50%
+        1:  754:static int open_libgl(void)
+        -:  755:{
+        1:  756:    int res = open_libs();
+        1:  756-block 2
+call    0 returned 1
+        1:  757:    if (res)
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+    #####:  758:        return res;
+    %%%%%:  758-block 4
+        -:  759:
+        1:  760:    if (libegl)
+        1:  760-block 5
+branch  0 taken 1 (fallthrough)
+branch  1 taken 0
+        1:  761:        *(void**)(&gl_get_proc_address) = dlsym(libegl, "eglGetProcAddress");
+        1:  761-block 6
+call    0 returned 1
+    #####:  762:    else if (libglx)
+    %%%%%:  762-block 8
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  763:        *(void**)(&gl_get_proc_address) = dlsym(libglx, "glXGetProcAddressARB");
+    %%%%%:  763-block 9
+call    0 never executed
+        -:  764:    else
+    #####:  765:        *(void**)(&gl_get_proc_address) = dlsym(libgl, "glXGetProcAddressARB");
+    %%%%%:  765-block 11
+call    0 never executed
+        -:  766:
+        1:  767:    if (!gl_get_proc_address) {
+        1:  767-block 13
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+    #####:  768:        close_libgl();
+    %%%%%:  768-block 14
+call    0 never executed
+    #####:  769:        return GL3W_ERROR_LIBRARY_OPEN;
+        -:  770:    }
+        -:  771:
+        1:  772:    return GL3W_OK;
+        1:  772-block 16
+        -:  773:}
+        -:  774:
+function get_proc called 59 returned 100% blocks executed 62%
+       59:  775:static GL3WglProc get_proc(const char* proc)
+        -:  776:{
+       59:  777:    GL3WglProc res = NULL;
+        -:  778:
+        -:  779:    // Before EGL version 1.5, eglGetProcAddress doesn't support querying core
+        -:  780:    // functions and may return a dummy function if we try, so try to load the
+        -:  781:    // function from the GL library directly first.
+       59:  782:    if (libegl)
+       59:  782-block 2
+branch  0 taken 59 (fallthrough)
+branch  1 taken 0
+       59:  783:        *(void**)(&res) = dlsym(libgl, proc);
+       59:  783-block 3
+call    0 returned 59
+        -:  784:
+       59:  785:    if (!res)
+       59:  785-block 5
+branch  0 taken 0 (fallthrough)
+branch  1 taken 59
+    #####:  786:        res = gl_get_proc_address(proc);
+    %%%%%:  786-block 6
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  786-block 7
+        -:  787:
+      59*:  788:    if (!libegl && !res)
+       59:  788-block 8
+branch  0 taken 0 (fallthrough)
+branch  1 taken 59
+    %%%%%:  788-block 9
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    #####:  789:        *(void**)(&res) = dlsym(libgl, proc);
+    %%%%%:  789-block 10
+call    0 never executed
+        -:  790:
+       59:  791:    return res;
+       59:  791-block 12
+       59:  791-block 13
+        -:  792:}
+        -:  793:#endif
+        -:  794:
+        -:  795:static struct { int major, minor; } version;
+        -:  796:
+function parse_version called 1 returned 100% blocks executed 54%
+        1:  797:static int parse_version(void)
+        -:  798:{
+        1:  799:    if (!glGetIntegerv)
+        1:  799-block 2
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+    #####:  800:        return GL3W_ERROR_INIT;
+    %%%%%:  800-block 3
+        1:  801:    glGetIntegerv(GL_MAJOR_VERSION, &version.major);
+        1:  801-block 4
+call    0 returned 1
+        1:  802:    glGetIntegerv(GL_MINOR_VERSION, &version.minor);
+call    0 returned 1
+       1*:  803:    if (version.major == 0 && version.minor == 0)
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+    %%%%%:  803-block 7
+branch  2 never executed (fallthrough)
+branch  3 never executed
+        -:  804:    {
+        -:  805:        // Query GL_VERSION in desktop GL 2.x, the string will start with "<major>.<minor>"
+    #####:  806:        if (const char* gl_version = (const char*)glGetString(GL_VERSION))
+    %%%%%:  806-block 8
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  807:            sscanf(gl_version, "%d.%d", &version.major, &version.minor);
+    %%%%%:  807-block 10
+        -:  808:    }
+        1:  809:    if (version.major < 2)
+        1:  809-block 11
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+    #####:  810:        return GL3W_ERROR_OPENGL_VERSION;
+    %%%%%:  810-block 12
+        1:  811:    return GL3W_OK;
+        1:  811-block 13
+        -:  812:}
+        -:  813:
+        -:  814:static void load_procs(GL3WGetProcAddressProc proc);
+        -:  815:
+function imgl3wInit called 1 returned 100% blocks executed 86%
+        1:  816:int imgl3wInit(void)
+        -:  817:{
+        1:  818:    int res = open_libgl();
+        1:  818-block 2
+call    0 returned 1
+        1:  819:    if (res)
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+    #####:  820:        return res;
+    %%%%%:  820-block 4
+        1:  821:    atexit(close_libgl);
+        1:  821-block 5
+call    0 returned 1
+        1:  822:    return imgl3wInit2(get_proc);
+call    0 returned 1
+        -:  823:}
+        -:  824:
+function imgl3wInit2 called 1 returned 100% blocks executed 100%
+        1:  825:int imgl3wInit2(GL3WGetProcAddressProc proc)
+        -:  826:{
+        1:  827:    load_procs(proc);
+        1:  827-block 2
+call    0 returned 1
+        1:  828:    return parse_version();
+call    0 returned 1
+        -:  829:}
+        -:  830:
+function imgl3wIsSupported called 0 returned 0% blocks executed 0%
+    #####:  831:int imgl3wIsSupported(int major, int minor)
+        -:  832:{
+    #####:  833:    if (major < 2)
+    %%%%%:  833-block 2
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  834:        return 0;
+    %%%%%:  834-block 3
+    #####:  835:    if (version.major == major)
+    %%%%%:  835-block 4
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  836:        return version.minor >= minor;
+    %%%%%:  836-block 5
+    #####:  837:    return version.major >= major;
+    %%%%%:  837-block 6
+        -:  838:}
+        -:  839:
+function imgl3wGetProcAddress called 0 returned 0% blocks executed 0%
+    #####:  840:GL3WglProc imgl3wGetProcAddress(const char *proc) { return get_proc(proc); }
+    %%%%%:  840-block 2
+call    0 never executed
+        -:  841:
+        -:  842:static const char *proc_names[] = {
+        -:  843:    "glActiveTexture",
+        -:  844:    "glAttachShader",
+        -:  845:    "glBindBuffer",
+        -:  846:    "glBindSampler",
+        -:  847:    "glBindTexture",
+        -:  848:    "glBindVertexArray",
+        -:  849:    "glBlendEquation",
+        -:  850:    "glBlendEquationSeparate",
+        -:  851:    "glBlendFuncSeparate",
+        -:  852:    "glBufferData",
+        -:  853:    "glBufferSubData",
+        -:  854:    "glClear",
+        -:  855:    "glClearColor",
+        -:  856:    "glCompileShader",
+        -:  857:    "glCreateProgram",
+        -:  858:    "glCreateShader",
+        -:  859:    "glDeleteBuffers",
+        -:  860:    "glDeleteProgram",
+        -:  861:    "glDeleteShader",
+        -:  862:    "glDeleteTextures",
+        -:  863:    "glDeleteVertexArrays",
+        -:  864:    "glDetachShader",
+        -:  865:    "glDisable",
+        -:  866:    "glDisableVertexAttribArray",
+        -:  867:    "glDrawElements",
+        -:  868:    "glDrawElementsBaseVertex",
+        -:  869:    "glEnable",
+        -:  870:    "glEnableVertexAttribArray",
+        -:  871:    "glFlush",
+        -:  872:    "glGenBuffers",
+        -:  873:    "glGenTextures",
+        -:  874:    "glGenVertexArrays",
+        -:  875:    "glGetAttribLocation",
+        -:  876:    "glGetError",
+        -:  877:    "glGetIntegerv",
+        -:  878:    "glGetProgramInfoLog",
+        -:  879:    "glGetProgramiv",
+        -:  880:    "glGetShaderInfoLog",
+        -:  881:    "glGetShaderiv",
+        -:  882:    "glGetString",
+        -:  883:    "glGetStringi",
+        -:  884:    "glGetUniformLocation",
+        -:  885:    "glGetVertexAttribPointerv",
+        -:  886:    "glGetVertexAttribiv",
+        -:  887:    "glIsEnabled",
+        -:  888:    "glIsProgram",
+        -:  889:    "glLinkProgram",
+        -:  890:    "glPixelStorei",
+        -:  891:    "glPolygonMode",
+        -:  892:    "glReadPixels",
+        -:  893:    "glScissor",
+        -:  894:    "glShaderSource",
+        -:  895:    "glTexImage2D",
+        -:  896:    "glTexParameteri",
+        -:  897:    "glUniform1i",
+        -:  898:    "glUniformMatrix4fv",
+        -:  899:    "glUseProgram",
+        -:  900:    "glVertexAttribPointer",
+        -:  901:    "glViewport",
+        -:  902:};
+        -:  903:
+        -:  904:GL3W_API union ImGL3WProcs imgl3wProcs;
+        -:  905:
+function load_procs called 1 returned 100% blocks executed 100%
+        1:  906:static void load_procs(GL3WGetProcAddressProc proc)
+        -:  907:{
+        -:  908:    size_t i;
+       60:  909:    for (i = 0; i < GL3W_ARRAY_SIZE(proc_names); i++)
+        1:  909-block 2
+       60:  909-block 5
+branch  0 taken 59
+branch  1 taken 1 (fallthrough)
+       59:  910:        imgl3wProcs.ptr[i] = proc(proc_names[i]);
+       59:  910-block 3
+call    0 returned 59
+        1:  911:}
+        -:  912:
+        -:  913:#ifdef __cplusplus
+        -:  914:}
+        -:  915:#endif
+        -:  916:#endif

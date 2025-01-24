@@ -1,0 +1,2019 @@
+        -:    0:Source:/usr/include/c++/14.2.1/bits/regex_executor.tcc
+        -:    0:Graph:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/app/windows/consoleWindow.cpp.gcno
+        -:    0:Data:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/app/windows/consoleWindow.cpp.gcda
+        -:    0:Runs:1
+        -:    1:// class template regex -*- C++ -*-
+        -:    2:
+        -:    3:// Copyright (C) 2013-2024 Free Software Foundation, Inc.
+        -:    4://
+        -:    5:// This file is part of the GNU ISO C++ Library.  This library is free
+        -:    6:// software; you can redistribute it and/or modify it under the
+        -:    7:// terms of the GNU General Public License as published by the
+        -:    8:// Free Software Foundation; either version 3, or (at your option)
+        -:    9:// any later version.
+        -:   10:
+        -:   11:// This library is distributed in the hope that it will be useful,
+        -:   12:// but WITHOUT ANY WARRANTY; without even the implied warranty of
+        -:   13:// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+        -:   14:// GNU General Public License for more details.
+        -:   15:
+        -:   16:// Under Section 7 of GPL version 3, you are granted additional
+        -:   17:// permissions described in the GCC Runtime Library Exception, version
+        -:   18:// 3.1, as published by the Free Software Foundation.
+        -:   19:
+        -:   20:// You should have received a copy of the GNU General Public License and
+        -:   21:// a copy of the GCC Runtime Library Exception along with this program;
+        -:   22:// see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+        -:   23:// <http://www.gnu.org/licenses/>.
+        -:   24:
+        -:   25:/**
+        -:   26: *  @file bits/regex_executor.tcc
+        -:   27: *  This is an internal header file, included by other library headers.
+        -:   28: *  Do not attempt to use it directly. @headername{regex}
+        -:   29: */
+        -:   30:
+        -:   31:namespace std _GLIBCXX_VISIBILITY(default)
+        -:   32:{
+        -:   33:_GLIBCXX_BEGIN_NAMESPACE_VERSION
+        -:   34:
+        -:   35:namespace __detail
+        -:   36:{
+        -:   37:  template<typename _BiIter, typename _Alloc, typename _TraitsT,
+        -:   38:	   bool __dfs_mode>
+    #####:   39:    bool _Executor<_BiIter, _Alloc, _TraitsT, __dfs_mode>::
+        -:   40:    _M_search()
+        -:   41:    {
+    #####:   42:      if (_M_search_from_first())
+    #####:   43:	return true;
+    #####:   44:      if (_M_flags & regex_constants::match_continuous)
+    #####:   45:	return false;
+    #####:   46:      _M_flags |= regex_constants::match_prev_avail;
+    #####:   47:      while (_M_begin != _M_end)
+        -:   48:	{
+    #####:   49:	  ++_M_begin;
+    #####:   50:	  if (_M_search_from_first())
+    #####:   51:	    return true;
+        -:   52:	}
+    #####:   53:      return false;
+        -:   54:    }
+------------------
+_ZNSt8__detail9_ExecutorIN9__gnu_cxx17__normal_iteratorIPKcNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEESaINS5_9sub_matchISB_EEENS5_12regex_traitsIcEELb1EE9_M_searchEv:
+function _ZNSt8__detail9_ExecutorIN9__gnu_cxx17__normal_iteratorIPKcNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEESaINS5_9sub_matchISB_EEENS5_12regex_traitsIcEELb1EE9_M_searchEv called 0 returned 0% blocks executed 0%
+    #####:   39:    bool _Executor<_BiIter, _Alloc, _TraitsT, __dfs_mode>::
+        -:   40:    _M_search()
+        -:   41:    {
+    #####:   42:      if (_M_search_from_first())
+    %%%%%:   42-block 2
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:   43:	return true;
+    %%%%%:   43-block 4
+    #####:   44:      if (_M_flags & regex_constants::match_continuous)
+    %%%%%:   44-block 5
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:   45:	return false;
+    %%%%%:   45-block 7
+    #####:   46:      _M_flags |= regex_constants::match_prev_avail;
+    %%%%%:   46-block 8
+call    0 never executed
+    #####:   47:      while (_M_begin != _M_end)
+    %%%%%:   47-block 14
+call    0 never executed
+branch  1 never executed
+branch  2 never executed (fallthrough)
+        -:   48:	{
+    #####:   49:	  ++_M_begin;
+    %%%%%:   49-block 9
+call    0 never executed
+    #####:   50:	  if (_M_search_from_first())
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:   51:	    return true;
+    %%%%%:   51-block 12
+        -:   52:	}
+    #####:   53:      return false;
+    %%%%%:   53-block 16
+        -:   54:    }
+------------------
+_ZNSt8__detail9_ExecutorIN9__gnu_cxx17__normal_iteratorIPKcNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEESaINS5_9sub_matchISB_EEENS5_12regex_traitsIcEELb0EE9_M_searchEv:
+function _ZNSt8__detail9_ExecutorIN9__gnu_cxx17__normal_iteratorIPKcNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEESaINS5_9sub_matchISB_EEENS5_12regex_traitsIcEELb0EE9_M_searchEv called 0 returned 0% blocks executed 0%
+    #####:   39:    bool _Executor<_BiIter, _Alloc, _TraitsT, __dfs_mode>::
+        -:   40:    _M_search()
+        -:   41:    {
+    #####:   42:      if (_M_search_from_first())
+    %%%%%:   42-block 2
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:   43:	return true;
+    %%%%%:   43-block 4
+    #####:   44:      if (_M_flags & regex_constants::match_continuous)
+    %%%%%:   44-block 5
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:   45:	return false;
+    %%%%%:   45-block 7
+    #####:   46:      _M_flags |= regex_constants::match_prev_avail;
+    %%%%%:   46-block 8
+call    0 never executed
+    #####:   47:      while (_M_begin != _M_end)
+    %%%%%:   47-block 14
+call    0 never executed
+branch  1 never executed
+branch  2 never executed (fallthrough)
+        -:   48:	{
+    #####:   49:	  ++_M_begin;
+    %%%%%:   49-block 9
+call    0 never executed
+    #####:   50:	  if (_M_search_from_first())
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:   51:	    return true;
+    %%%%%:   51-block 12
+        -:   52:	}
+    #####:   53:      return false;
+    %%%%%:   53-block 16
+        -:   54:    }
+------------------
+        -:   55:
+        -:   56:  // The _M_main function operates in different modes, DFS mode or BFS mode,
+        -:   57:  // indicated by template parameter __dfs_mode, and dispatches to one of the
+        -:   58:  // _M_main_dispatch overloads.
+        -:   59:  //
+        -:   60:  // ------------------------------------------------------------
+        -:   61:  //
+        -:   62:  // DFS mode:
+        -:   63:  //
+        -:   64:  // It applies a Depth-First-Search (aka backtracking) on given NFA and input
+        -:   65:  // string.
+        -:   66:  // At the very beginning the executor stands in the start state, then it
+        -:   67:  // tries every possible state transition in current state recursively. Some
+        -:   68:  // state transitions consume input string, say, a single-char-matcher or a
+        -:   69:  // back-reference matcher; some don't, like assertion or other anchor nodes.
+        -:   70:  // When the input is exhausted and/or the current state is an accepting
+        -:   71:  // state, the whole executor returns true.
+        -:   72:  //
+        -:   73:  // TODO: This approach is exponentially slow for certain input.
+        -:   74:  //       Try to compile the NFA to a DFA.
+        -:   75:  //
+        -:   76:  // Time complexity: \Omega(match_length), O(2^(_M_nfa.size()))
+        -:   77:  // Space complexity: \theta(match_results.size() + match_length)
+        -:   78:  //
+        -:   79:  template<typename _BiIter, typename _Alloc, typename _TraitsT,
+        -:   80:	   bool __dfs_mode>
+function _ZNSt8__detail9_ExecutorIN9__gnu_cxx17__normal_iteratorIPKcNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEESaINS5_9sub_matchISB_EEENS5_12regex_traitsIcEELb1EE16_M_main_dispatchENSH_11_Match_modeESt17integral_constantIbLb1EE called 0 returned 0% blocks executed 0%
+    #####:   81:    bool _Executor<_BiIter, _Alloc, _TraitsT, __dfs_mode>::
+        -:   82:    _M_main_dispatch(_Match_mode __match_mode, __dfs)
+        -:   83:    {
+    #####:   84:      _M_has_sol = false;
+    #####:   85:      *_M_states._M_get_sol_pos() = _BiIter();
+    %%%%%:   85-block 2
+call    0 never executed
+call    1 never executed
+    #####:   86:      _M_cur_results = _M_results;
+call    0 never executed
+    #####:   87:      _M_dfs(__match_mode, _M_states._M_start);
+call    0 never executed
+    #####:   88:      return _M_has_sol;
+        -:   89:    }
+        -:   90:
+        -:   91:  // ------------------------------------------------------------
+        -:   92:  //
+        -:   93:  // BFS mode:
+        -:   94:  //
+        -:   95:  // Russ Cox's article (http://swtch.com/~rsc/regexp/regexp1.html)
+        -:   96:  // explained this algorithm clearly.
+        -:   97:  //
+        -:   98:  // It first computes epsilon closure (states that can be achieved without
+        -:   99:  // consuming characters) for every state that's still matching,
+        -:  100:  // using the same DFS algorithm, but doesn't re-enter states (using
+        -:  101:  // _M_states._M_visited to check), nor follow _S_opcode_match.
+        -:  102:  //
+        -:  103:  // Then apply DFS using every _S_opcode_match (in _M_states._M_match_queue)
+        -:  104:  // as the start state.
+        -:  105:  //
+        -:  106:  // It significantly reduces potential duplicate states, so has a better
+        -:  107:  // upper bound; but it requires more overhead.
+        -:  108:  //
+        -:  109:  // Time complexity: \Omega(match_length * match_results.size())
+        -:  110:  //                  O(match_length * _M_nfa.size() * match_results.size())
+        -:  111:  // Space complexity: \Omega(_M_nfa.size() + match_results.size())
+        -:  112:  //                   O(_M_nfa.size() * match_results.size())
+        -:  113:  template<typename _BiIter, typename _Alloc, typename _TraitsT,
+        -:  114:	   bool __dfs_mode>
+function _ZNSt8__detail9_ExecutorIN9__gnu_cxx17__normal_iteratorIPKcNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEESaINS5_9sub_matchISB_EEENS5_12regex_traitsIcEELb0EE16_M_main_dispatchENSH_11_Match_modeESt17integral_constantIbLb0EE called 0 returned 0% blocks executed 0%
+    #####:  115:    bool _Executor<_BiIter, _Alloc, _TraitsT, __dfs_mode>::
+        -:  116:    _M_main_dispatch(_Match_mode __match_mode, __bfs)
+        -:  117:    {
+    #####:  118:      _M_states._M_queue(_M_states._M_start, _M_results);
+    %%%%%:  118-block 2
+call    0 never executed
+    #####:  119:      bool __ret = false;
+    #####:  120:      while (1)
+    %%%%%:  120-block 31
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  120-block 32
+    %%%%%:  120-block 34
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed
+    %%%%%:  120-block 37
+    $$$$$:  120-block 47
+call    5 never executed
+        -:  121:	{
+    #####:  122:	  _M_has_sol = false;
+    #####:  123:	  if (_M_states._M_match_queue.empty())
+    %%%%%:  123-block 4
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  124:	    break;
+    %%%%%:  124-block 6
+    #####:  125:	  std::fill_n(_M_states._M_visited_states, _M_nfa.size(), false);
+    %%%%%:  125-block 7
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+    $$$$$:  125-block 43
+    #####:  126:	  auto __old_queue = std::move(_M_states._M_match_queue);
+    %%%%%:  126-block 9
+call    0 never executed
+call    1 never executed
+    #####:  127:	  auto __alloc = _M_cur_results.get_allocator();
+call    0 never executed
+    #####:  128:	  for (auto& __task : __old_queue)
+call    0 never executed
+call    1 never executed
+    %%%%%:  128-block 14
+call    2 never executed
+    %%%%%:  128-block 20
+call    3 never executed
+    %%%%%:  128-block 21
+call    4 never executed
+branch  5 never executed
+branch  6 never executed (fallthrough)
+        -:  129:	    {
+    #####:  130:	      _M_cur_results = _ResultsVec(std::move(__task.second), __alloc);
+call    0 never executed
+call    1 never executed
+call    2 never executed
+call    3 never executed
+    #####:  131:	      _M_dfs(__match_mode, __task.first);
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:  132:	    }
+    #####:  133:	  if (__match_mode == _Match_mode::_Prefix)
+    %%%%%:  133-block 23
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  134:	    __ret |= _M_has_sol;
+    %%%%%:  134-block 24
+    #####:  135:	  if (_M_current == _M_end)
+    %%%%%:  135-block 25
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  136:	    break;
+    %%%%%:  136-block 27
+    #####:  137:	  ++_M_current;
+    %%%%%:  137-block 28
+call    0 never executed
+        -:  138:	}
+    #####:  139:      if (__match_mode == _Match_mode::_Exact)
+    %%%%%:  139-block 38
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  140:	__ret = _M_has_sol;
+    %%%%%:  140-block 39
+    #####:  141:      _M_states._M_match_queue.clear();
+    %%%%%:  141-block 40
+call    0 never executed
+    #####:  142:      return __ret;
+    %%%%%:  142-block 42
+        -:  143:    }
+        -:  144:
+        -:  145:  // Return whether now match the given sub-NFA.
+        -:  146:  template<typename _BiIter, typename _Alloc, typename _TraitsT,
+        -:  147:	   bool __dfs_mode>
+    #####:  148:    bool _Executor<_BiIter, _Alloc, _TraitsT, __dfs_mode>::
+        -:  149:    _M_lookahead(_StateIdT __next)
+        -:  150:    {
+        -:  151:      // Backreferences may refer to captured content.
+        -:  152:      // We may want to make this faster by not copying,
+        -:  153:      // but let's not be clever prematurely.
+    #####:  154:      _ResultsVec __what(_M_cur_results);
+    #####:  155:      _Executor __sub(_M_current, _M_end, __what, _M_re, _M_flags);
+    #####:  156:      __sub._M_states._M_start = __next;
+    #####:  157:      if (__sub._M_search_from_first())
+        -:  158:	{
+    #####:  159:	  for (size_t __i = 0; __i < __what.size(); __i++)
+    #####:  160:	    if (__what[__i].matched)
+    #####:  161:	      _M_cur_results[__i] = __what[__i];
+    #####:  162:	  return true;
+        -:  163:	}
+    #####:  164:      return false;
+    #####:  165:    }
+------------------
+_ZNSt8__detail9_ExecutorIN9__gnu_cxx17__normal_iteratorIPKcNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEESaINS5_9sub_matchISB_EEENS5_12regex_traitsIcEELb1EE12_M_lookaheadEl:
+function _ZNSt8__detail9_ExecutorIN9__gnu_cxx17__normal_iteratorIPKcNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEESaINS5_9sub_matchISB_EEENS5_12regex_traitsIcEELb1EE12_M_lookaheadEl called 0 returned 0% blocks executed 0%
+    #####:  148:    bool _Executor<_BiIter, _Alloc, _TraitsT, __dfs_mode>::
+        -:  149:    _M_lookahead(_StateIdT __next)
+        -:  150:    {
+        -:  151:      // Backreferences may refer to captured content.
+        -:  152:      // We may want to make this faster by not copying,
+        -:  153:      // but let's not be clever prematurely.
+    #####:  154:      _ResultsVec __what(_M_cur_results);
+    %%%%%:  154-block 2
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  155:      _Executor __sub(_M_current, _M_end, __what, _M_re, _M_flags);
+    %%%%%:  155-block 3
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  156:      __sub._M_states._M_start = __next;
+    #####:  157:      if (__sub._M_search_from_first())
+    %%%%%:  157-block 4
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  157-block 5
+branch  3 never executed (fallthrough)
+branch  4 never executed
+        -:  158:	{
+    #####:  159:	  for (size_t __i = 0; __i < __what.size(); __i++)
+    %%%%%:  159-block 6
+    %%%%%:  159-block 12
+    %%%%%:  159-block 13
+call    0 never executed
+branch  1 never executed
+branch  2 never executed (fallthrough)
+    #####:  160:	    if (__what[__i].matched)
+    %%%%%:  160-block 7
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  161:	      _M_cur_results[__i] = __what[__i];
+    %%%%%:  161-block 9
+call    0 never executed
+call    1 never executed
+call    2 never executed
+    #####:  162:	  return true;
+    %%%%%:  162-block 15
+        -:  163:	}
+    #####:  164:      return false;
+    %%%%%:  164-block 16
+    #####:  165:    }
+    %%%%%:  165-block 17
+call    0 never executed
+call    1 never executed
+    $$$$$:  165-block 21
+call    2 never executed
+    $$$$$:  165-block 23
+call    3 never executed
+------------------
+_ZNSt8__detail9_ExecutorIN9__gnu_cxx17__normal_iteratorIPKcNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEESaINS5_9sub_matchISB_EEENS5_12regex_traitsIcEELb0EE12_M_lookaheadEl:
+function _ZNSt8__detail9_ExecutorIN9__gnu_cxx17__normal_iteratorIPKcNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEESaINS5_9sub_matchISB_EEENS5_12regex_traitsIcEELb0EE12_M_lookaheadEl called 0 returned 0% blocks executed 0%
+    #####:  148:    bool _Executor<_BiIter, _Alloc, _TraitsT, __dfs_mode>::
+        -:  149:    _M_lookahead(_StateIdT __next)
+        -:  150:    {
+        -:  151:      // Backreferences may refer to captured content.
+        -:  152:      // We may want to make this faster by not copying,
+        -:  153:      // but let's not be clever prematurely.
+    #####:  154:      _ResultsVec __what(_M_cur_results);
+    %%%%%:  154-block 2
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  155:      _Executor __sub(_M_current, _M_end, __what, _M_re, _M_flags);
+    %%%%%:  155-block 3
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  156:      __sub._M_states._M_start = __next;
+    #####:  157:      if (__sub._M_search_from_first())
+    %%%%%:  157-block 4
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  157-block 5
+branch  3 never executed (fallthrough)
+branch  4 never executed
+        -:  158:	{
+    #####:  159:	  for (size_t __i = 0; __i < __what.size(); __i++)
+    %%%%%:  159-block 6
+    %%%%%:  159-block 12
+    %%%%%:  159-block 13
+call    0 never executed
+branch  1 never executed
+branch  2 never executed (fallthrough)
+    #####:  160:	    if (__what[__i].matched)
+    %%%%%:  160-block 7
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  161:	      _M_cur_results[__i] = __what[__i];
+    %%%%%:  161-block 9
+call    0 never executed
+call    1 never executed
+call    2 never executed
+    #####:  162:	  return true;
+    %%%%%:  162-block 15
+        -:  163:	}
+    #####:  164:      return false;
+    %%%%%:  164-block 16
+    #####:  165:    }
+    %%%%%:  165-block 17
+call    0 never executed
+call    1 never executed
+    $$$$$:  165-block 21
+call    2 never executed
+    $$$$$:  165-block 23
+call    3 never executed
+------------------
+        -:  166:
+        -:  167:  // __rep_count records how many times (__rep_count.second)
+        -:  168:  // this node is visited under certain input iterator
+        -:  169:  // (__rep_count.first). This prevent the executor from entering
+        -:  170:  // infinite loop by refusing to continue when it's already been
+        -:  171:  // visited more than twice. It's `twice` instead of `once` because
+        -:  172:  // we need to spare one more time for potential group capture.
+        -:  173:  template<typename _BiIter, typename _Alloc, typename _TraitsT,
+        -:  174:	   bool __dfs_mode>
+    #####:  175:    void _Executor<_BiIter, _Alloc, _TraitsT, __dfs_mode>::
+        -:  176:    _M_rep_once_more(_Match_mode __match_mode, _StateIdT __i)
+        -:  177:    {
+    #####:  178:      const auto& __state = _M_nfa[__i];
+    #####:  179:      auto& __rep_count = _M_rep_count[__i];
+    #####:  180:      if (__rep_count.second == 0 || __rep_count.first != _M_current)
+        -:  181:	{
+    #####:  182:	  auto __back = __rep_count;
+    #####:  183:	  __rep_count.first = _M_current;
+    #####:  184:	  __rep_count.second = 1;
+    #####:  185:	  _M_dfs(__match_mode, __state._M_alt);
+    #####:  186:	  __rep_count = __back;
+        -:  187:	}
+        -:  188:      else
+        -:  189:	{
+    #####:  190:	  if (__rep_count.second < 2)
+        -:  191:	    {
+    #####:  192:	      __rep_count.second++;
+    #####:  193:	      _M_dfs(__match_mode, __state._M_alt);
+    #####:  194:	      __rep_count.second--;
+        -:  195:	    }
+        -:  196:	}
+    #####:  197:    }
+------------------
+_ZNSt8__detail9_ExecutorIN9__gnu_cxx17__normal_iteratorIPKcNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEESaINS5_9sub_matchISB_EEENS5_12regex_traitsIcEELb1EE16_M_rep_once_moreENSH_11_Match_modeEl:
+function _ZNSt8__detail9_ExecutorIN9__gnu_cxx17__normal_iteratorIPKcNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEESaINS5_9sub_matchISB_EEENS5_12regex_traitsIcEELb1EE16_M_rep_once_moreENSH_11_Match_modeEl called 0 returned 0% blocks executed 0%
+    #####:  175:    void _Executor<_BiIter, _Alloc, _TraitsT, __dfs_mode>::
+        -:  176:    _M_rep_once_more(_Match_mode __match_mode, _StateIdT __i)
+        -:  177:    {
+    #####:  178:      const auto& __state = _M_nfa[__i];
+    %%%%%:  178-block 2
+call    0 never executed
+    #####:  179:      auto& __rep_count = _M_rep_count[__i];
+call    0 never executed
+    #####:  180:      if (__rep_count.second == 0 || __rep_count.first != _M_current)
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  180-block 5
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed
+    %%%%%:  180-block 7
+    %%%%%:  180-block 8
+    %%%%%:  180-block 9
+branch  5 never executed (fallthrough)
+branch  6 never executed
+        -:  181:	{
+    #####:  182:	  auto __back = __rep_count;
+    %%%%%:  182-block 10
+call    0 never executed
+    #####:  183:	  __rep_count.first = _M_current;
+    #####:  184:	  __rep_count.second = 1;
+    #####:  185:	  _M_dfs(__match_mode, __state._M_alt);
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  186:	  __rep_count = __back;
+    %%%%%:  186-block 12
+call    0 never executed
+        -:  187:	}
+        -:  188:      else
+        -:  189:	{
+    #####:  190:	  if (__rep_count.second < 2)
+    %%%%%:  190-block 14
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  191:	    {
+    #####:  192:	      __rep_count.second++;
+    #####:  193:	      _M_dfs(__match_mode, __state._M_alt);
+    %%%%%:  193-block 15
+call    0 never executed
+    #####:  194:	      __rep_count.second--;
+        -:  195:	    }
+        -:  196:	}
+    #####:  197:    }
+    %%%%%:  197-block 17
+------------------
+_ZNSt8__detail9_ExecutorIN9__gnu_cxx17__normal_iteratorIPKcNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEESaINS5_9sub_matchISB_EEENS5_12regex_traitsIcEELb0EE16_M_rep_once_moreENSH_11_Match_modeEl:
+function _ZNSt8__detail9_ExecutorIN9__gnu_cxx17__normal_iteratorIPKcNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEESaINS5_9sub_matchISB_EEENS5_12regex_traitsIcEELb0EE16_M_rep_once_moreENSH_11_Match_modeEl called 0 returned 0% blocks executed 0%
+    #####:  175:    void _Executor<_BiIter, _Alloc, _TraitsT, __dfs_mode>::
+        -:  176:    _M_rep_once_more(_Match_mode __match_mode, _StateIdT __i)
+        -:  177:    {
+    #####:  178:      const auto& __state = _M_nfa[__i];
+    %%%%%:  178-block 2
+call    0 never executed
+    #####:  179:      auto& __rep_count = _M_rep_count[__i];
+call    0 never executed
+    #####:  180:      if (__rep_count.second == 0 || __rep_count.first != _M_current)
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  180-block 5
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed
+    %%%%%:  180-block 7
+    %%%%%:  180-block 8
+    %%%%%:  180-block 9
+branch  5 never executed (fallthrough)
+branch  6 never executed
+        -:  181:	{
+    #####:  182:	  auto __back = __rep_count;
+    %%%%%:  182-block 10
+call    0 never executed
+    #####:  183:	  __rep_count.first = _M_current;
+    #####:  184:	  __rep_count.second = 1;
+    #####:  185:	  _M_dfs(__match_mode, __state._M_alt);
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  186:	  __rep_count = __back;
+    %%%%%:  186-block 12
+call    0 never executed
+        -:  187:	}
+        -:  188:      else
+        -:  189:	{
+    #####:  190:	  if (__rep_count.second < 2)
+    %%%%%:  190-block 14
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  191:	    {
+    #####:  192:	      __rep_count.second++;
+    #####:  193:	      _M_dfs(__match_mode, __state._M_alt);
+    %%%%%:  193-block 15
+call    0 never executed
+    #####:  194:	      __rep_count.second--;
+        -:  195:	    }
+        -:  196:	}
+    #####:  197:    }
+    %%%%%:  197-block 17
+------------------
+        -:  198:
+        -:  199:  // _M_alt branch is "match once more", while _M_next is "get me out
+        -:  200:  // of this quantifier". Executing _M_next first or _M_alt first don't
+        -:  201:  // mean the same thing, and we need to choose the correct order under
+        -:  202:  // given greedy mode.
+        -:  203:  template<typename _BiIter, typename _Alloc, typename _TraitsT,
+        -:  204:	   bool __dfs_mode>
+    #####:  205:    void _Executor<_BiIter, _Alloc, _TraitsT, __dfs_mode>::
+        -:  206:    _M_handle_repeat(_Match_mode __match_mode, _StateIdT __i)
+        -:  207:    {
+    #####:  208:      const auto& __state = _M_nfa[__i];
+        -:  209:
+        -:  210:      // Greedy.
+    #####:  211:      if (!__state._M_neg)
+        -:  212:	{
+    #####:  213:	  _M_rep_once_more(__match_mode, __i);
+        -:  214:	  // If it's DFS executor and already accepted, we're done.
+    #####:  215:	  if (!__dfs_mode || !_M_has_sol)
+    #####:  216:	    _M_dfs(__match_mode, __state._M_next);
+        -:  217:	}
+        -:  218:      else // Non-greedy mode
+        -:  219:	{
+        -:  220:	  if (__dfs_mode)
+        -:  221:	    {
+        -:  222:	      // vice-versa.
+    #####:  223:	      _M_dfs(__match_mode, __state._M_next);
+    #####:  224:	      if (!_M_has_sol)
+    #####:  225:		_M_rep_once_more(__match_mode, __i);
+        -:  226:	    }
+        -:  227:	  else
+        -:  228:	    {
+        -:  229:	      // DON'T attempt anything, because there's already another
+        -:  230:	      // state with higher priority accepted. This state cannot
+        -:  231:	      // be better by attempting its next node.
+    #####:  232:	      if (!_M_has_sol)
+        -:  233:		{
+    #####:  234:		  _M_dfs(__match_mode, __state._M_next);
+        -:  235:		  // DON'T attempt anything if it's already accepted. An
+        -:  236:		  // accepted state *must* be better than a solution that
+        -:  237:		  // matches a non-greedy quantifier one more time.
+    #####:  238:		  if (!_M_has_sol)
+    #####:  239:		    _M_rep_once_more(__match_mode, __i);
+        -:  240:		}
+        -:  241:	    }
+        -:  242:	}
+    #####:  243:    }
+------------------
+_ZNSt8__detail9_ExecutorIN9__gnu_cxx17__normal_iteratorIPKcNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEESaINS5_9sub_matchISB_EEENS5_12regex_traitsIcEELb1EE16_M_handle_repeatENSH_11_Match_modeEl:
+function _ZNSt8__detail9_ExecutorIN9__gnu_cxx17__normal_iteratorIPKcNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEESaINS5_9sub_matchISB_EEENS5_12regex_traitsIcEELb1EE16_M_handle_repeatENSH_11_Match_modeEl called 0 returned 0% blocks executed 0%
+    #####:  205:    void _Executor<_BiIter, _Alloc, _TraitsT, __dfs_mode>::
+        -:  206:    _M_handle_repeat(_Match_mode __match_mode, _StateIdT __i)
+        -:  207:    {
+    #####:  208:      const auto& __state = _M_nfa[__i];
+    %%%%%:  208-block 2
+call    0 never executed
+        -:  209:
+        -:  210:      // Greedy.
+    #####:  211:      if (!__state._M_neg)
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  212:	{
+    #####:  213:	  _M_rep_once_more(__match_mode, __i);
+    %%%%%:  213-block 4
+call    0 never executed
+        -:  214:	  // If it's DFS executor and already accepted, we're done.
+    #####:  215:	  if (!__dfs_mode || !_M_has_sol)
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  216:	    _M_dfs(__match_mode, __state._M_next);
+    %%%%%:  216-block 6
+call    0 never executed
+        -:  217:	}
+        -:  218:      else // Non-greedy mode
+        -:  219:	{
+        -:  220:	  if (__dfs_mode)
+        -:  221:	    {
+        -:  222:	      // vice-versa.
+    #####:  223:	      _M_dfs(__match_mode, __state._M_next);
+    %%%%%:  223-block 7
+call    0 never executed
+    #####:  224:	      if (!_M_has_sol)
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  225:		_M_rep_once_more(__match_mode, __i);
+    %%%%%:  225-block 9
+call    0 never executed
+        -:  226:	    }
+        -:  227:	  else
+        -:  228:	    {
+        -:  229:	      // DON'T attempt anything, because there's already another
+        -:  230:	      // state with higher priority accepted. This state cannot
+        -:  231:	      // be better by attempting its next node.
+        -:  232:	      if (!_M_has_sol)
+        -:  233:		{
+        -:  234:		  _M_dfs(__match_mode, __state._M_next);
+        -:  235:		  // DON'T attempt anything if it's already accepted. An
+        -:  236:		  // accepted state *must* be better than a solution that
+        -:  237:		  // matches a non-greedy quantifier one more time.
+        -:  238:		  if (!_M_has_sol)
+        -:  239:		    _M_rep_once_more(__match_mode, __i);
+        -:  240:		}
+        -:  241:	    }
+        -:  242:	}
+    #####:  243:    }
+------------------
+_ZNSt8__detail9_ExecutorIN9__gnu_cxx17__normal_iteratorIPKcNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEESaINS5_9sub_matchISB_EEENS5_12regex_traitsIcEELb0EE16_M_handle_repeatENSH_11_Match_modeEl:
+function _ZNSt8__detail9_ExecutorIN9__gnu_cxx17__normal_iteratorIPKcNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEESaINS5_9sub_matchISB_EEENS5_12regex_traitsIcEELb0EE16_M_handle_repeatENSH_11_Match_modeEl called 0 returned 0% blocks executed 0%
+    #####:  205:    void _Executor<_BiIter, _Alloc, _TraitsT, __dfs_mode>::
+        -:  206:    _M_handle_repeat(_Match_mode __match_mode, _StateIdT __i)
+        -:  207:    {
+    #####:  208:      const auto& __state = _M_nfa[__i];
+    %%%%%:  208-block 2
+call    0 never executed
+        -:  209:
+        -:  210:      // Greedy.
+    #####:  211:      if (!__state._M_neg)
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  212:	{
+    #####:  213:	  _M_rep_once_more(__match_mode, __i);
+    %%%%%:  213-block 4
+call    0 never executed
+        -:  214:	  // If it's DFS executor and already accepted, we're done.
+        -:  215:	  if (!__dfs_mode || !_M_has_sol)
+    #####:  216:	    _M_dfs(__match_mode, __state._M_next);
+call    0 never executed
+        -:  217:	}
+        -:  218:      else // Non-greedy mode
+        -:  219:	{
+        -:  220:	  if (__dfs_mode)
+        -:  221:	    {
+        -:  222:	      // vice-versa.
+        -:  223:	      _M_dfs(__match_mode, __state._M_next);
+        -:  224:	      if (!_M_has_sol)
+        -:  225:		_M_rep_once_more(__match_mode, __i);
+        -:  226:	    }
+        -:  227:	  else
+        -:  228:	    {
+        -:  229:	      // DON'T attempt anything, because there's already another
+        -:  230:	      // state with higher priority accepted. This state cannot
+        -:  231:	      // be better by attempting its next node.
+    #####:  232:	      if (!_M_has_sol)
+    %%%%%:  232-block 6
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  233:		{
+    #####:  234:		  _M_dfs(__match_mode, __state._M_next);
+    %%%%%:  234-block 7
+call    0 never executed
+        -:  235:		  // DON'T attempt anything if it's already accepted. An
+        -:  236:		  // accepted state *must* be better than a solution that
+        -:  237:		  // matches a non-greedy quantifier one more time.
+    #####:  238:		  if (!_M_has_sol)
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  239:		    _M_rep_once_more(__match_mode, __i);
+    %%%%%:  239-block 9
+call    0 never executed
+        -:  240:		}
+        -:  241:	    }
+        -:  242:	}
+    #####:  243:    }
+------------------
+        -:  244:
+        -:  245:  template<typename _BiIter, typename _Alloc, typename _TraitsT,
+        -:  246:	   bool __dfs_mode>
+    #####:  247:    void _Executor<_BiIter, _Alloc, _TraitsT, __dfs_mode>::
+        -:  248:    _M_handle_subexpr_begin(_Match_mode __match_mode, _StateIdT __i)
+        -:  249:    {
+    #####:  250:      const auto& __state = _M_nfa[__i];
+        -:  251:
+    #####:  252:      auto& __res = _M_cur_results[__state._M_subexpr];
+    #####:  253:      auto __back = __res.first;
+    #####:  254:      __res.first = _M_current;
+    #####:  255:      _M_dfs(__match_mode, __state._M_next);
+    #####:  256:      __res.first = __back;
+    #####:  257:    }
+------------------
+_ZNSt8__detail9_ExecutorIN9__gnu_cxx17__normal_iteratorIPKcNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEESaINS5_9sub_matchISB_EEENS5_12regex_traitsIcEELb1EE23_M_handle_subexpr_beginENSH_11_Match_modeEl:
+function _ZNSt8__detail9_ExecutorIN9__gnu_cxx17__normal_iteratorIPKcNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEESaINS5_9sub_matchISB_EEENS5_12regex_traitsIcEELb1EE23_M_handle_subexpr_beginENSH_11_Match_modeEl called 0 returned 0% blocks executed 0%
+    #####:  247:    void _Executor<_BiIter, _Alloc, _TraitsT, __dfs_mode>::
+        -:  248:    _M_handle_subexpr_begin(_Match_mode __match_mode, _StateIdT __i)
+        -:  249:    {
+    #####:  250:      const auto& __state = _M_nfa[__i];
+    %%%%%:  250-block 2
+call    0 never executed
+        -:  251:
+    #####:  252:      auto& __res = _M_cur_results[__state._M_subexpr];
+call    0 never executed
+    #####:  253:      auto __back = __res.first;
+    #####:  254:      __res.first = _M_current;
+    #####:  255:      _M_dfs(__match_mode, __state._M_next);
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  256:      __res.first = __back;
+    #####:  257:    }
+    %%%%%:  257-block 5
+------------------
+_ZNSt8__detail9_ExecutorIN9__gnu_cxx17__normal_iteratorIPKcNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEESaINS5_9sub_matchISB_EEENS5_12regex_traitsIcEELb0EE23_M_handle_subexpr_beginENSH_11_Match_modeEl:
+function _ZNSt8__detail9_ExecutorIN9__gnu_cxx17__normal_iteratorIPKcNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEESaINS5_9sub_matchISB_EEENS5_12regex_traitsIcEELb0EE23_M_handle_subexpr_beginENSH_11_Match_modeEl called 0 returned 0% blocks executed 0%
+    #####:  247:    void _Executor<_BiIter, _Alloc, _TraitsT, __dfs_mode>::
+        -:  248:    _M_handle_subexpr_begin(_Match_mode __match_mode, _StateIdT __i)
+        -:  249:    {
+    #####:  250:      const auto& __state = _M_nfa[__i];
+    %%%%%:  250-block 2
+call    0 never executed
+        -:  251:
+    #####:  252:      auto& __res = _M_cur_results[__state._M_subexpr];
+call    0 never executed
+    #####:  253:      auto __back = __res.first;
+    #####:  254:      __res.first = _M_current;
+    #####:  255:      _M_dfs(__match_mode, __state._M_next);
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  256:      __res.first = __back;
+    #####:  257:    }
+    %%%%%:  257-block 5
+------------------
+        -:  258:
+        -:  259:  template<typename _BiIter, typename _Alloc, typename _TraitsT,
+        -:  260:	   bool __dfs_mode>
+    #####:  261:    void _Executor<_BiIter, _Alloc, _TraitsT, __dfs_mode>::
+        -:  262:    _M_handle_subexpr_end(_Match_mode __match_mode, _StateIdT __i)
+        -:  263:    {
+    #####:  264:      const auto& __state = _M_nfa[__i];
+        -:  265:
+    #####:  266:      auto& __res = _M_cur_results[__state._M_subexpr];
+    #####:  267:      auto __back = __res;
+    #####:  268:      __res.second = _M_current;
+    #####:  269:      __res.matched = true;
+    #####:  270:      _M_dfs(__match_mode, __state._M_next);
+    #####:  271:      __res = __back;
+    #####:  272:    }
+------------------
+_ZNSt8__detail9_ExecutorIN9__gnu_cxx17__normal_iteratorIPKcNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEESaINS5_9sub_matchISB_EEENS5_12regex_traitsIcEELb1EE21_M_handle_subexpr_endENSH_11_Match_modeEl:
+function _ZNSt8__detail9_ExecutorIN9__gnu_cxx17__normal_iteratorIPKcNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEESaINS5_9sub_matchISB_EEENS5_12regex_traitsIcEELb1EE21_M_handle_subexpr_endENSH_11_Match_modeEl called 0 returned 0% blocks executed 0%
+    #####:  261:    void _Executor<_BiIter, _Alloc, _TraitsT, __dfs_mode>::
+        -:  262:    _M_handle_subexpr_end(_Match_mode __match_mode, _StateIdT __i)
+        -:  263:    {
+    #####:  264:      const auto& __state = _M_nfa[__i];
+    %%%%%:  264-block 2
+call    0 never executed
+        -:  265:
+    #####:  266:      auto& __res = _M_cur_results[__state._M_subexpr];
+call    0 never executed
+    #####:  267:      auto __back = __res;
+    #####:  268:      __res.second = _M_current;
+    #####:  269:      __res.matched = true;
+    #####:  270:      _M_dfs(__match_mode, __state._M_next);
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  271:      __res = __back;
+    %%%%%:  271-block 5
+call    0 never executed
+    #####:  272:    }
+------------------
+_ZNSt8__detail9_ExecutorIN9__gnu_cxx17__normal_iteratorIPKcNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEESaINS5_9sub_matchISB_EEENS5_12regex_traitsIcEELb0EE21_M_handle_subexpr_endENSH_11_Match_modeEl:
+function _ZNSt8__detail9_ExecutorIN9__gnu_cxx17__normal_iteratorIPKcNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEESaINS5_9sub_matchISB_EEENS5_12regex_traitsIcEELb0EE21_M_handle_subexpr_endENSH_11_Match_modeEl called 0 returned 0% blocks executed 0%
+    #####:  261:    void _Executor<_BiIter, _Alloc, _TraitsT, __dfs_mode>::
+        -:  262:    _M_handle_subexpr_end(_Match_mode __match_mode, _StateIdT __i)
+        -:  263:    {
+    #####:  264:      const auto& __state = _M_nfa[__i];
+    %%%%%:  264-block 2
+call    0 never executed
+        -:  265:
+    #####:  266:      auto& __res = _M_cur_results[__state._M_subexpr];
+call    0 never executed
+    #####:  267:      auto __back = __res;
+    #####:  268:      __res.second = _M_current;
+    #####:  269:      __res.matched = true;
+    #####:  270:      _M_dfs(__match_mode, __state._M_next);
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  271:      __res = __back;
+    %%%%%:  271-block 5
+call    0 never executed
+    #####:  272:    }
+------------------
+        -:  273:
+        -:  274:  template<typename _BiIter, typename _Alloc, typename _TraitsT,
+        -:  275:	   bool __dfs_mode>
+    #####:  276:    inline void _Executor<_BiIter, _Alloc, _TraitsT, __dfs_mode>::
+        -:  277:    _M_handle_line_begin_assertion(_Match_mode __match_mode, _StateIdT __i)
+        -:  278:    {
+    #####:  279:      const auto& __state = _M_nfa[__i];
+    #####:  280:      if (_M_at_begin())
+    #####:  281:	_M_dfs(__match_mode, __state._M_next);
+    #####:  282:    }
+------------------
+_ZNSt8__detail9_ExecutorIN9__gnu_cxx17__normal_iteratorIPKcNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEESaINS5_9sub_matchISB_EEENS5_12regex_traitsIcEELb1EE30_M_handle_line_begin_assertionENSH_11_Match_modeEl:
+function _ZNSt8__detail9_ExecutorIN9__gnu_cxx17__normal_iteratorIPKcNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEESaINS5_9sub_matchISB_EEENS5_12regex_traitsIcEELb1EE30_M_handle_line_begin_assertionENSH_11_Match_modeEl called 0 returned 0% blocks executed 0%
+    #####:  276:    inline void _Executor<_BiIter, _Alloc, _TraitsT, __dfs_mode>::
+        -:  277:    _M_handle_line_begin_assertion(_Match_mode __match_mode, _StateIdT __i)
+        -:  278:    {
+    #####:  279:      const auto& __state = _M_nfa[__i];
+    %%%%%:  279-block 2
+call    0 never executed
+    #####:  280:      if (_M_at_begin())
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  281:	_M_dfs(__match_mode, __state._M_next);
+    %%%%%:  281-block 5
+call    0 never executed
+    #####:  282:    }
+------------------
+_ZNSt8__detail9_ExecutorIN9__gnu_cxx17__normal_iteratorIPKcNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEESaINS5_9sub_matchISB_EEENS5_12regex_traitsIcEELb0EE30_M_handle_line_begin_assertionENSH_11_Match_modeEl:
+function _ZNSt8__detail9_ExecutorIN9__gnu_cxx17__normal_iteratorIPKcNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEESaINS5_9sub_matchISB_EEENS5_12regex_traitsIcEELb0EE30_M_handle_line_begin_assertionENSH_11_Match_modeEl called 0 returned 0% blocks executed 0%
+    #####:  276:    inline void _Executor<_BiIter, _Alloc, _TraitsT, __dfs_mode>::
+        -:  277:    _M_handle_line_begin_assertion(_Match_mode __match_mode, _StateIdT __i)
+        -:  278:    {
+    #####:  279:      const auto& __state = _M_nfa[__i];
+    %%%%%:  279-block 2
+call    0 never executed
+    #####:  280:      if (_M_at_begin())
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  281:	_M_dfs(__match_mode, __state._M_next);
+    %%%%%:  281-block 5
+call    0 never executed
+    #####:  282:    }
+------------------
+        -:  283:
+        -:  284:  template<typename _BiIter, typename _Alloc, typename _TraitsT,
+        -:  285:	   bool __dfs_mode>
+    #####:  286:    inline void _Executor<_BiIter, _Alloc, _TraitsT, __dfs_mode>::
+        -:  287:    _M_handle_line_end_assertion(_Match_mode __match_mode, _StateIdT __i)
+        -:  288:    {
+    #####:  289:      const auto& __state = _M_nfa[__i];
+    #####:  290:      if (_M_at_end())
+    #####:  291:	_M_dfs(__match_mode, __state._M_next);
+    #####:  292:    }
+------------------
+_ZNSt8__detail9_ExecutorIN9__gnu_cxx17__normal_iteratorIPKcNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEESaINS5_9sub_matchISB_EEENS5_12regex_traitsIcEELb1EE28_M_handle_line_end_assertionENSH_11_Match_modeEl:
+function _ZNSt8__detail9_ExecutorIN9__gnu_cxx17__normal_iteratorIPKcNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEESaINS5_9sub_matchISB_EEENS5_12regex_traitsIcEELb1EE28_M_handle_line_end_assertionENSH_11_Match_modeEl called 0 returned 0% blocks executed 0%
+    #####:  286:    inline void _Executor<_BiIter, _Alloc, _TraitsT, __dfs_mode>::
+        -:  287:    _M_handle_line_end_assertion(_Match_mode __match_mode, _StateIdT __i)
+        -:  288:    {
+    #####:  289:      const auto& __state = _M_nfa[__i];
+    %%%%%:  289-block 2
+call    0 never executed
+    #####:  290:      if (_M_at_end())
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  291:	_M_dfs(__match_mode, __state._M_next);
+    %%%%%:  291-block 5
+call    0 never executed
+    #####:  292:    }
+------------------
+_ZNSt8__detail9_ExecutorIN9__gnu_cxx17__normal_iteratorIPKcNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEESaINS5_9sub_matchISB_EEENS5_12regex_traitsIcEELb0EE28_M_handle_line_end_assertionENSH_11_Match_modeEl:
+function _ZNSt8__detail9_ExecutorIN9__gnu_cxx17__normal_iteratorIPKcNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEESaINS5_9sub_matchISB_EEENS5_12regex_traitsIcEELb0EE28_M_handle_line_end_assertionENSH_11_Match_modeEl called 0 returned 0% blocks executed 0%
+    #####:  286:    inline void _Executor<_BiIter, _Alloc, _TraitsT, __dfs_mode>::
+        -:  287:    _M_handle_line_end_assertion(_Match_mode __match_mode, _StateIdT __i)
+        -:  288:    {
+    #####:  289:      const auto& __state = _M_nfa[__i];
+    %%%%%:  289-block 2
+call    0 never executed
+    #####:  290:      if (_M_at_end())
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  291:	_M_dfs(__match_mode, __state._M_next);
+    %%%%%:  291-block 5
+call    0 never executed
+    #####:  292:    }
+------------------
+        -:  293:
+        -:  294:  template<typename _BiIter, typename _Alloc, typename _TraitsT,
+        -:  295:	   bool __dfs_mode>
+    #####:  296:    inline void _Executor<_BiIter, _Alloc, _TraitsT, __dfs_mode>::
+        -:  297:    _M_handle_word_boundary(_Match_mode __match_mode, _StateIdT __i)
+        -:  298:    {
+    #####:  299:      const auto& __state = _M_nfa[__i];
+    #####:  300:      if (_M_word_boundary() == !__state._M_neg)
+    #####:  301:	_M_dfs(__match_mode, __state._M_next);
+    #####:  302:    }
+------------------
+_ZNSt8__detail9_ExecutorIN9__gnu_cxx17__normal_iteratorIPKcNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEESaINS5_9sub_matchISB_EEENS5_12regex_traitsIcEELb1EE23_M_handle_word_boundaryENSH_11_Match_modeEl:
+function _ZNSt8__detail9_ExecutorIN9__gnu_cxx17__normal_iteratorIPKcNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEESaINS5_9sub_matchISB_EEENS5_12regex_traitsIcEELb1EE23_M_handle_word_boundaryENSH_11_Match_modeEl called 0 returned 0% blocks executed 0%
+    #####:  296:    inline void _Executor<_BiIter, _Alloc, _TraitsT, __dfs_mode>::
+        -:  297:    _M_handle_word_boundary(_Match_mode __match_mode, _StateIdT __i)
+        -:  298:    {
+    #####:  299:      const auto& __state = _M_nfa[__i];
+    %%%%%:  299-block 2
+call    0 never executed
+    #####:  300:      if (_M_word_boundary() == !__state._M_neg)
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  301:	_M_dfs(__match_mode, __state._M_next);
+    %%%%%:  301-block 5
+call    0 never executed
+    #####:  302:    }
+------------------
+_ZNSt8__detail9_ExecutorIN9__gnu_cxx17__normal_iteratorIPKcNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEESaINS5_9sub_matchISB_EEENS5_12regex_traitsIcEELb0EE23_M_handle_word_boundaryENSH_11_Match_modeEl:
+function _ZNSt8__detail9_ExecutorIN9__gnu_cxx17__normal_iteratorIPKcNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEESaINS5_9sub_matchISB_EEENS5_12regex_traitsIcEELb0EE23_M_handle_word_boundaryENSH_11_Match_modeEl called 0 returned 0% blocks executed 0%
+    #####:  296:    inline void _Executor<_BiIter, _Alloc, _TraitsT, __dfs_mode>::
+        -:  297:    _M_handle_word_boundary(_Match_mode __match_mode, _StateIdT __i)
+        -:  298:    {
+    #####:  299:      const auto& __state = _M_nfa[__i];
+    %%%%%:  299-block 2
+call    0 never executed
+    #####:  300:      if (_M_word_boundary() == !__state._M_neg)
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  301:	_M_dfs(__match_mode, __state._M_next);
+    %%%%%:  301-block 5
+call    0 never executed
+    #####:  302:    }
+------------------
+        -:  303:
+        -:  304:  // Here __state._M_alt offers a single start node for a sub-NFA.
+        -:  305:  // We recursively invoke our algorithm to match the sub-NFA.
+        -:  306:  template<typename _BiIter, typename _Alloc, typename _TraitsT,
+        -:  307:	   bool __dfs_mode>
+    #####:  308:    void _Executor<_BiIter, _Alloc, _TraitsT, __dfs_mode>::
+        -:  309:    _M_handle_subexpr_lookahead(_Match_mode __match_mode, _StateIdT __i)
+        -:  310:    {
+    #####:  311:      const auto& __state = _M_nfa[__i];
+    #####:  312:      if (_M_lookahead(__state._M_alt) == !__state._M_neg)
+    #####:  313:	_M_dfs(__match_mode, __state._M_next);
+    #####:  314:    }
+------------------
+_ZNSt8__detail9_ExecutorIN9__gnu_cxx17__normal_iteratorIPKcNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEESaINS5_9sub_matchISB_EEENS5_12regex_traitsIcEELb1EE27_M_handle_subexpr_lookaheadENSH_11_Match_modeEl:
+function _ZNSt8__detail9_ExecutorIN9__gnu_cxx17__normal_iteratorIPKcNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEESaINS5_9sub_matchISB_EEENS5_12regex_traitsIcEELb1EE27_M_handle_subexpr_lookaheadENSH_11_Match_modeEl called 0 returned 0% blocks executed 0%
+    #####:  308:    void _Executor<_BiIter, _Alloc, _TraitsT, __dfs_mode>::
+        -:  309:    _M_handle_subexpr_lookahead(_Match_mode __match_mode, _StateIdT __i)
+        -:  310:    {
+    #####:  311:      const auto& __state = _M_nfa[__i];
+    %%%%%:  311-block 2
+call    0 never executed
+    #####:  312:      if (_M_lookahead(__state._M_alt) == !__state._M_neg)
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  313:	_M_dfs(__match_mode, __state._M_next);
+    %%%%%:  313-block 5
+call    0 never executed
+    #####:  314:    }
+------------------
+_ZNSt8__detail9_ExecutorIN9__gnu_cxx17__normal_iteratorIPKcNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEESaINS5_9sub_matchISB_EEENS5_12regex_traitsIcEELb0EE27_M_handle_subexpr_lookaheadENSH_11_Match_modeEl:
+function _ZNSt8__detail9_ExecutorIN9__gnu_cxx17__normal_iteratorIPKcNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEESaINS5_9sub_matchISB_EEENS5_12regex_traitsIcEELb0EE27_M_handle_subexpr_lookaheadENSH_11_Match_modeEl called 0 returned 0% blocks executed 0%
+    #####:  308:    void _Executor<_BiIter, _Alloc, _TraitsT, __dfs_mode>::
+        -:  309:    _M_handle_subexpr_lookahead(_Match_mode __match_mode, _StateIdT __i)
+        -:  310:    {
+    #####:  311:      const auto& __state = _M_nfa[__i];
+    %%%%%:  311-block 2
+call    0 never executed
+    #####:  312:      if (_M_lookahead(__state._M_alt) == !__state._M_neg)
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  313:	_M_dfs(__match_mode, __state._M_next);
+    %%%%%:  313-block 5
+call    0 never executed
+    #####:  314:    }
+------------------
+        -:  315:
+        -:  316:  template<typename _BiIter, typename _Alloc, typename _TraitsT,
+        -:  317:	   bool __dfs_mode>
+    #####:  318:    void _Executor<_BiIter, _Alloc, _TraitsT, __dfs_mode>::
+        -:  319:    _M_handle_match(_Match_mode __match_mode, _StateIdT __i)
+        -:  320:    {
+    #####:  321:      const auto& __state = _M_nfa[__i];
+        -:  322:
+    #####:  323:      if (_M_current == _M_end)
+    #####:  324:	return;
+        -:  325:      if (__dfs_mode)
+        -:  326:	{
+    #####:  327:	  if (__state._M_matches(*_M_current))
+        -:  328:	    {
+    #####:  329:	      ++_M_current;
+    #####:  330:	      _M_dfs(__match_mode, __state._M_next);
+    #####:  331:	      --_M_current;
+        -:  332:	    }
+        -:  333:	}
+        -:  334:      else
+    #####:  335:	if (__state._M_matches(*_M_current))
+    #####:  336:	  _M_states._M_queue(__state._M_next, _M_cur_results);
+        -:  337:    }
+------------------
+_ZNSt8__detail9_ExecutorIN9__gnu_cxx17__normal_iteratorIPKcNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEESaINS5_9sub_matchISB_EEENS5_12regex_traitsIcEELb1EE15_M_handle_matchENSH_11_Match_modeEl:
+function _ZNSt8__detail9_ExecutorIN9__gnu_cxx17__normal_iteratorIPKcNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEESaINS5_9sub_matchISB_EEENS5_12regex_traitsIcEELb1EE15_M_handle_matchENSH_11_Match_modeEl called 0 returned 0% blocks executed 0%
+    #####:  318:    void _Executor<_BiIter, _Alloc, _TraitsT, __dfs_mode>::
+        -:  319:    _M_handle_match(_Match_mode __match_mode, _StateIdT __i)
+        -:  320:    {
+    #####:  321:      const auto& __state = _M_nfa[__i];
+    %%%%%:  321-block 2
+call    0 never executed
+        -:  322:
+    #####:  323:      if (_M_current == _M_end)
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  324:	return;
+    %%%%%:  324-block 5
+        -:  325:      if (__dfs_mode)
+        -:  326:	{
+    #####:  327:	  if (__state._M_matches(*_M_current))
+    %%%%%:  327-block 6
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed
+        -:  328:	    {
+    #####:  329:	      ++_M_current;
+    %%%%%:  329-block 9
+call    0 never executed
+    #####:  330:	      _M_dfs(__match_mode, __state._M_next);
+call    0 never executed
+    #####:  331:	      --_M_current;
+call    0 never executed
+        -:  332:	    }
+        -:  333:	}
+        -:  334:      else
+        -:  335:	if (__state._M_matches(*_M_current))
+        -:  336:	  _M_states._M_queue(__state._M_next, _M_cur_results);
+        -:  337:    }
+------------------
+_ZNSt8__detail9_ExecutorIN9__gnu_cxx17__normal_iteratorIPKcNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEESaINS5_9sub_matchISB_EEENS5_12regex_traitsIcEELb0EE15_M_handle_matchENSH_11_Match_modeEl:
+function _ZNSt8__detail9_ExecutorIN9__gnu_cxx17__normal_iteratorIPKcNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEESaINS5_9sub_matchISB_EEENS5_12regex_traitsIcEELb0EE15_M_handle_matchENSH_11_Match_modeEl called 0 returned 0% blocks executed 0%
+    #####:  318:    void _Executor<_BiIter, _Alloc, _TraitsT, __dfs_mode>::
+        -:  319:    _M_handle_match(_Match_mode __match_mode, _StateIdT __i)
+        -:  320:    {
+    #####:  321:      const auto& __state = _M_nfa[__i];
+    %%%%%:  321-block 2
+call    0 never executed
+        -:  322:
+    #####:  323:      if (_M_current == _M_end)
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  324:	return;
+    %%%%%:  324-block 5
+        -:  325:      if (__dfs_mode)
+        -:  326:	{
+        -:  327:	  if (__state._M_matches(*_M_current))
+        -:  328:	    {
+        -:  329:	      ++_M_current;
+        -:  330:	      _M_dfs(__match_mode, __state._M_next);
+        -:  331:	      --_M_current;
+        -:  332:	    }
+        -:  333:	}
+        -:  334:      else
+    #####:  335:	if (__state._M_matches(*_M_current))
+    %%%%%:  335-block 6
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    #####:  336:	  _M_states._M_queue(__state._M_next, _M_cur_results);
+    %%%%%:  336-block 9
+call    0 never executed
+        -:  337:    }
+------------------
+        -:  338:
+        -:  339:  template<typename _BiIter, typename _TraitsT>
+        -:  340:    struct _Backref_matcher
+        -:  341:    {
+        -:  342:      _Backref_matcher(bool /* __icase */, const _TraitsT& __traits)
+        -:  343:      : _M_traits(__traits) { }
+        -:  344:
+        -:  345:      bool
+        -:  346:      _M_apply(_BiIter __expected_begin,
+        -:  347:	       _BiIter __expected_end, _BiIter __actual_begin,
+        -:  348:	       _BiIter __actual_end)
+        -:  349:      {
+        -:  350:	return _M_traits.transform(__expected_begin, __expected_end)
+        -:  351:	    == _M_traits.transform(__actual_begin, __actual_end);
+        -:  352:      }
+        -:  353:
+        -:  354:      const _TraitsT& _M_traits;
+        -:  355:    };
+        -:  356:
+        -:  357:  template<typename _BiIter, typename _CharT>
+        -:  358:    struct _Backref_matcher<_BiIter, std::regex_traits<_CharT>>
+        -:  359:    {
+        -:  360:      using _TraitsT = std::regex_traits<_CharT>;
+function _ZNSt8__detail16_Backref_matcherIN9__gnu_cxx17__normal_iteratorIPKcNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEENS5_12regex_traitsIcEEEC2EbRKSD_ called 0 returned 0% blocks executed 0%
+    #####:  361:      _Backref_matcher(bool __icase, const _TraitsT& __traits)
+    #####:  362:      : _M_icase(__icase), _M_traits(__traits) { }
+        -:  363:
+        -:  364:      bool
+function _ZNSt8__detail16_Backref_matcherIN9__gnu_cxx17__normal_iteratorIPKcNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEENS5_12regex_traitsIcEEE8_M_applyESB_SB_SB_SB_ called 0 returned 0% blocks executed 0%
+    #####:  365:      _M_apply(_BiIter __expected_begin,
+        -:  366:	       _BiIter __expected_end, _BiIter __actual_begin,
+        -:  367:	       _BiIter __actual_end)
+        -:  368:      {
+    #####:  369:	if (!_M_icase)
+    %%%%%:  369-block 2
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  370:	  return _GLIBCXX_STD_A::__equal4(__expected_begin, __expected_end,
+    %%%%%:  370-block 3
+call    0 never executed
+    #####:  371:			       __actual_begin, __actual_end);
+        -:  372:	typedef std::ctype<_CharT> __ctype_type;
+    #####:  373:	const auto& __fctyp = use_facet<__ctype_type>(_M_traits.getloc());
+    %%%%%:  373-block 5
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+    %%%%%:  373-block 7
+call    4 never executed
+    $$$$$:  373-block 11
+call    5 never executed
+    #####:  374:	return _GLIBCXX_STD_A::__equal4(__expected_begin, __expected_end,
+call    0 never executed
+        -:  375:			     __actual_begin, __actual_end,
+function _ZZNSt8__detail16_Backref_matcherIN9__gnu_cxx17__normal_iteratorIPKcNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEENS5_12regex_traitsIcEEE8_M_applyESB_SB_SB_SB_ENKUlccE_clEcc called 0 returned 0% blocks executed 0%
+    #####:  376:			     [this, &__fctyp](_CharT __lhs, _CharT __rhs)
+        -:  377:			     {
+    #####:  378:			       return __fctyp.tolower(__lhs)
+    %%%%%:  378-block 2
+call    0 never executed
+    #####:  379:				 == __fctyp.tolower(__rhs);
+call    0 never executed
+    #####:  380:			     });
+        -:  381:      }
+        -:  382:
+        -:  383:      bool _M_icase;
+        -:  384:      const _TraitsT& _M_traits;
+        -:  385:    };
+        -:  386:
+        -:  387:  // First fetch the matched result from _M_cur_results as __submatch;
+        -:  388:  // then compare it with
+        -:  389:  // (_M_current, _M_current + (__submatch.second - __submatch.first)).
+        -:  390:  // If matched, keep going; else just return and try another state.
+        -:  391:  template<typename _BiIter, typename _Alloc, typename _TraitsT,
+        -:  392:	   bool __dfs_mode>
+    #####:  393:    void _Executor<_BiIter, _Alloc, _TraitsT, __dfs_mode>::
+        -:  394:    _M_handle_backref(_Match_mode __match_mode, _StateIdT __i)
+        -:  395:    {
+    #####:  396:      __glibcxx_assert(__dfs_mode);
+        -:  397:
+    #####:  398:      const auto& __state = _M_nfa[__i];
+    #####:  399:      auto& __submatch = _M_cur_results[__state._M_backref_index];
+    #####:  400:      if (!__submatch.matched)
+    #####:  401:	return;
+    #####:  402:      auto __last = _M_current;
+    #####:  403:      for (auto __tmp = __submatch.first;
+    #####:  404:	   __last != _M_end && __tmp != __submatch.second;
+    #####:  405:	   ++__tmp)
+    #####:  406:	++__last;
+    #####:  407:      if (_Backref_matcher<_BiIter, _TraitsT>(
+    #####:  408:	      _M_re.flags() & regex_constants::icase,
+    #####:  409:	      _M_re._M_automaton->_M_traits)._M_apply(
+        -:  410:		  __submatch.first, __submatch.second, _M_current, __last))
+        -:  411:	{
+    #####:  412:	  if (__last != _M_current)
+        -:  413:	    {
+    #####:  414:	      auto __backup = _M_current;
+    #####:  415:	      _M_current = __last;
+    #####:  416:	      _M_dfs(__match_mode, __state._M_next);
+    #####:  417:	      _M_current = __backup;
+        -:  418:	    }
+        -:  419:	  else
+    #####:  420:	    _M_dfs(__match_mode, __state._M_next);
+        -:  421:	}
+        -:  422:    }
+------------------
+_ZNSt8__detail9_ExecutorIN9__gnu_cxx17__normal_iteratorIPKcNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEESaINS5_9sub_matchISB_EEENS5_12regex_traitsIcEELb1EE17_M_handle_backrefENSH_11_Match_modeEl:
+function _ZNSt8__detail9_ExecutorIN9__gnu_cxx17__normal_iteratorIPKcNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEESaINS5_9sub_matchISB_EEENS5_12regex_traitsIcEELb1EE17_M_handle_backrefENSH_11_Match_modeEl called 0 returned 0% blocks executed 0%
+    #####:  393:    void _Executor<_BiIter, _Alloc, _TraitsT, __dfs_mode>::
+    %%%%%:  393-block 2
+        -:  394:    _M_handle_backref(_Match_mode __match_mode, _StateIdT __i)
+        -:  395:    {
+    #####:  396:      __glibcxx_assert(__dfs_mode);
+    %%%%%:  396-block 4
+        -:  397:
+    #####:  398:      const auto& __state = _M_nfa[__i];
+    %%%%%:  398-block 5
+call    0 never executed
+    #####:  399:      auto& __submatch = _M_cur_results[__state._M_backref_index];
+call    0 never executed
+    #####:  400:      if (!__submatch.matched)
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  401:	return;
+    %%%%%:  401-block 8
+    #####:  402:      auto __last = _M_current;
+    #####:  403:      for (auto __tmp = __submatch.first;
+    %%%%%:  403-block 9
+    #####:  404:	   __last != _M_end && __tmp != __submatch.second;
+    %%%%%:  404-block 12
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:  404-block 14
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:  404-block 16
+    %%%%%:  404-block 17
+    %%%%%:  404-block 18
+branch  6 never executed
+branch  7 never executed (fallthrough)
+    #####:  405:	   ++__tmp)
+call    0 never executed
+    #####:  406:	++__last;
+    %%%%%:  406-block 10
+call    0 never executed
+    #####:  407:      if (_Backref_matcher<_BiIter, _TraitsT>(
+call    0 never executed
+    $$$$$:  407-block 32
+    #####:  408:	      _M_re.flags() & regex_constants::icase,
+call    0 never executed
+    #####:  409:	      _M_re._M_automaton->_M_traits)._M_apply(
+    %%%%%:  409-block 19
+call    0 never executed
+call    1 never executed
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed (throw)
+    %%%%%:  409-block 24
+branch  5 never executed (fallthrough)
+branch  6 never executed
+        -:  410:		  __submatch.first, __submatch.second, _M_current, __last))
+        -:  411:	{
+    #####:  412:	  if (__last != _M_current)
+    %%%%%:  412-block 25
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+        -:  413:	    {
+    #####:  414:	      auto __backup = _M_current;
+    #####:  415:	      _M_current = __last;
+    #####:  416:	      _M_dfs(__match_mode, __state._M_next);
+    %%%%%:  416-block 27
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  417:	      _M_current = __backup;
+    %%%%%:  417-block 28
+        -:  418:	    }
+        -:  419:	  else
+    #####:  420:	    _M_dfs(__match_mode, __state._M_next);
+    %%%%%:  420-block 29
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:  421:	}
+        -:  422:    }
+------------------
+_ZNSt8__detail9_ExecutorIN9__gnu_cxx17__normal_iteratorIPKcNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEESaINS5_9sub_matchISB_EEENS5_12regex_traitsIcEELb0EE17_M_handle_backrefENSH_11_Match_modeEl:
+function _ZNSt8__detail9_ExecutorIN9__gnu_cxx17__normal_iteratorIPKcNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEESaINS5_9sub_matchISB_EEENS5_12regex_traitsIcEELb0EE17_M_handle_backrefENSH_11_Match_modeEl called 0 returned 0% blocks executed 0%
+    #####:  393:    void _Executor<_BiIter, _Alloc, _TraitsT, __dfs_mode>::
+    %%%%%:  393-block 2
+        -:  394:    _M_handle_backref(_Match_mode __match_mode, _StateIdT __i)
+        -:  395:    {
+    #####:  396:      __glibcxx_assert(__dfs_mode);
+    %%%%%:  396-block 4
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  397:
+    #####:  398:      const auto& __state = _M_nfa[__i];
+    %%%%%:  398-block 7
+call    0 never executed
+    #####:  399:      auto& __submatch = _M_cur_results[__state._M_backref_index];
+call    0 never executed
+    #####:  400:      if (!__submatch.matched)
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  401:	return;
+    %%%%%:  401-block 10
+    #####:  402:      auto __last = _M_current;
+    #####:  403:      for (auto __tmp = __submatch.first;
+    %%%%%:  403-block 11
+    #####:  404:	   __last != _M_end && __tmp != __submatch.second;
+    %%%%%:  404-block 14
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:  404-block 16
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:  404-block 18
+    %%%%%:  404-block 19
+    %%%%%:  404-block 20
+branch  6 never executed
+branch  7 never executed (fallthrough)
+    #####:  405:	   ++__tmp)
+call    0 never executed
+    #####:  406:	++__last;
+    %%%%%:  406-block 12
+call    0 never executed
+    #####:  407:      if (_Backref_matcher<_BiIter, _TraitsT>(
+call    0 never executed
+    $$$$$:  407-block 34
+    #####:  408:	      _M_re.flags() & regex_constants::icase,
+call    0 never executed
+    #####:  409:	      _M_re._M_automaton->_M_traits)._M_apply(
+    %%%%%:  409-block 21
+call    0 never executed
+call    1 never executed
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed (throw)
+    %%%%%:  409-block 26
+branch  5 never executed (fallthrough)
+branch  6 never executed
+        -:  410:		  __submatch.first, __submatch.second, _M_current, __last))
+        -:  411:	{
+    #####:  412:	  if (__last != _M_current)
+    %%%%%:  412-block 27
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+        -:  413:	    {
+    #####:  414:	      auto __backup = _M_current;
+    #####:  415:	      _M_current = __last;
+    #####:  416:	      _M_dfs(__match_mode, __state._M_next);
+    %%%%%:  416-block 29
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  417:	      _M_current = __backup;
+    %%%%%:  417-block 30
+        -:  418:	    }
+        -:  419:	  else
+    #####:  420:	    _M_dfs(__match_mode, __state._M_next);
+    %%%%%:  420-block 31
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:  421:	}
+        -:  422:    }
+------------------
+        -:  423:
+        -:  424:  template<typename _BiIter, typename _Alloc, typename _TraitsT,
+        -:  425:	   bool __dfs_mode>
+    #####:  426:    void _Executor<_BiIter, _Alloc, _TraitsT, __dfs_mode>::
+        -:  427:    _M_handle_accept(_Match_mode __match_mode, _StateIdT)
+        -:  428:    {
+        -:  429:      if _GLIBCXX17_CONSTEXPR (__dfs_mode)
+        -:  430:	{
+    #####:  431:	  __glibcxx_assert(!_M_has_sol);
+    #####:  432:	  if (__match_mode == _Match_mode::_Exact)
+    #####:  433:	    _M_has_sol = _M_current == _M_end;
+        -:  434:	  else
+    #####:  435:	    _M_has_sol = true;
+    #####:  436:	  if (_M_current == _M_begin
+    #####:  437:	      && (_M_flags & regex_constants::match_not_null))
+    #####:  438:	    _M_has_sol = false;
+    #####:  439:	  if (_M_has_sol)
+        -:  440:	    {
+    #####:  441:	      if (_M_nfa._M_flags & regex_constants::ECMAScript)
+    #####:  442:		_M_results = _M_cur_results;
+        -:  443:	      else // POSIX
+        -:  444:		{
+    #####:  445:		  __glibcxx_assert(_M_states._M_get_sol_pos());
+        -:  446:		  // Here's POSIX's logic: match the longest one. However
+        -:  447:		  // we never know which one (lhs or rhs of "|") is longer
+        -:  448:		  // unless we try both of them and compare the results.
+        -:  449:		  // The member variable _M_sol_pos records the end
+        -:  450:		  // position of the last successful match. It's better
+        -:  451:		  // to be larger, because POSIX regex is always greedy.
+        -:  452:		  // TODO: This could be slow.
+    #####:  453:		  if (*_M_states._M_get_sol_pos() == _BiIter()
+    #####:  454:		      || std::distance(_M_begin,
+    #####:  455:				       *_M_states._M_get_sol_pos())
+    #####:  456:			 < std::distance(_M_begin, _M_current))
+        -:  457:		    {
+    #####:  458:		      *_M_states._M_get_sol_pos() = _M_current;
+    #####:  459:		      _M_results = _M_cur_results;
+        -:  460:		    }
+        -:  461:		}
+        -:  462:	    }
+        -:  463:	}
+        -:  464:      else
+        -:  465:	{
+    #####:  466:	  if (_M_current == _M_begin
+    #####:  467:	      && (_M_flags & regex_constants::match_not_null))
+    #####:  468:	    return;
+    #####:  469:	  if (__match_mode == _Match_mode::_Prefix || _M_current == _M_end)
+    #####:  470:	    if (!_M_has_sol)
+        -:  471:	      {
+    #####:  472:		_M_has_sol = true;
+    #####:  473:		_M_results = _M_cur_results;
+        -:  474:	      }
+        -:  475:	}
+    #####:  476:    }
+------------------
+_ZNSt8__detail9_ExecutorIN9__gnu_cxx17__normal_iteratorIPKcNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEESaINS5_9sub_matchISB_EEENS5_12regex_traitsIcEELb1EE16_M_handle_acceptENSH_11_Match_modeEl:
+function _ZNSt8__detail9_ExecutorIN9__gnu_cxx17__normal_iteratorIPKcNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEESaINS5_9sub_matchISB_EEENS5_12regex_traitsIcEELb1EE16_M_handle_acceptENSH_11_Match_modeEl called 0 returned 0% blocks executed 0%
+    #####:  426:    void _Executor<_BiIter, _Alloc, _TraitsT, __dfs_mode>::
+    %%%%%:  426-block 2
+        -:  427:    _M_handle_accept(_Match_mode __match_mode, _StateIdT)
+        -:  428:    {
+        -:  429:      if _GLIBCXX17_CONSTEXPR (__dfs_mode)
+        -:  430:	{
+    #####:  431:	  __glibcxx_assert(!_M_has_sol);
+    %%%%%:  431-block 4
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  431-block 5
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    #####:  432:	  if (__match_mode == _Match_mode::_Exact)
+    %%%%%:  432-block 8
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  433:	    _M_has_sol = _M_current == _M_end;
+    %%%%%:  433-block 9
+call    0 never executed
+        -:  434:	  else
+    #####:  435:	    _M_has_sol = true;
+    %%%%%:  435-block 11
+    #####:  436:	  if (_M_current == _M_begin
+    %%%%%:  436-block 12
+call    0 never executed
+    #####:  437:	      && (_M_flags & regex_constants::match_not_null))
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  437-block 14
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed
+    %%%%%:  437-block 16
+    %%%%%:  437-block 17
+    %%%%%:  437-block 18
+branch  5 never executed (fallthrough)
+branch  6 never executed
+    #####:  438:	    _M_has_sol = false;
+    %%%%%:  438-block 19
+    #####:  439:	  if (_M_has_sol)
+    %%%%%:  439-block 20
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  440:	    {
+    #####:  441:	      if (_M_nfa._M_flags & regex_constants::ECMAScript)
+    %%%%%:  441-block 21
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  442:		_M_results = _M_cur_results;
+    %%%%%:  442-block 23
+call    0 never executed
+        -:  443:	      else // POSIX
+        -:  444:		{
+    #####:  445:		  __glibcxx_assert(_M_states._M_get_sol_pos());
+    %%%%%:  445-block 26
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  445-block 27
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed
+        -:  446:		  // Here's POSIX's logic: match the longest one. However
+        -:  447:		  // we never know which one (lhs or rhs of "|") is longer
+        -:  448:		  // unless we try both of them and compare the results.
+        -:  449:		  // The member variable _M_sol_pos records the end
+        -:  450:		  // position of the last successful match. It's better
+        -:  451:		  // to be larger, because POSIX regex is always greedy.
+        -:  452:		  // TODO: This could be slow.
+    #####:  453:		  if (*_M_states._M_get_sol_pos() == _BiIter()
+    %%%%%:  453-block 31
+call    0 never executed
+call    1 never executed
+call    2 never executed
+    #####:  454:		      || std::distance(_M_begin,
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  454-block 42
+    %%%%%:  454-block 49
+    %%%%%:  454-block 50
+    %%%%%:  454-block 51
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    #####:  455:				       *_M_states._M_get_sol_pos())
+    %%%%%:  455-block 35
+call    0 never executed
+    #####:  456:			 < std::distance(_M_begin, _M_current))
+    %%%%%:  456-block 48
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  457:		    {
+    #####:  458:		      *_M_states._M_get_sol_pos() = _M_current;
+    %%%%%:  458-block 52
+call    0 never executed
+    #####:  459:		      _M_results = _M_cur_results;
+call    0 never executed
+        -:  460:		    }
+        -:  461:		}
+        -:  462:	    }
+        -:  463:	}
+        -:  464:      else
+        -:  465:	{
+        -:  466:	  if (_M_current == _M_begin
+        -:  467:	      && (_M_flags & regex_constants::match_not_null))
+        -:  468:	    return;
+        -:  469:	  if (__match_mode == _Match_mode::_Prefix || _M_current == _M_end)
+        -:  470:	    if (!_M_has_sol)
+        -:  471:	      {
+        -:  472:		_M_has_sol = true;
+        -:  473:		_M_results = _M_cur_results;
+        -:  474:	      }
+        -:  475:	}
+    #####:  476:    }
+------------------
+_ZNSt8__detail9_ExecutorIN9__gnu_cxx17__normal_iteratorIPKcNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEESaINS5_9sub_matchISB_EEENS5_12regex_traitsIcEELb0EE16_M_handle_acceptENSH_11_Match_modeEl:
+function _ZNSt8__detail9_ExecutorIN9__gnu_cxx17__normal_iteratorIPKcNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEESaINS5_9sub_matchISB_EEENS5_12regex_traitsIcEELb0EE16_M_handle_acceptENSH_11_Match_modeEl called 0 returned 0% blocks executed 0%
+    #####:  426:    void _Executor<_BiIter, _Alloc, _TraitsT, __dfs_mode>::
+        -:  427:    _M_handle_accept(_Match_mode __match_mode, _StateIdT)
+        -:  428:    {
+        -:  429:      if _GLIBCXX17_CONSTEXPR (__dfs_mode)
+        -:  430:	{
+        -:  431:	  __glibcxx_assert(!_M_has_sol);
+        -:  432:	  if (__match_mode == _Match_mode::_Exact)
+        -:  433:	    _M_has_sol = _M_current == _M_end;
+        -:  434:	  else
+        -:  435:	    _M_has_sol = true;
+        -:  436:	  if (_M_current == _M_begin
+        -:  437:	      && (_M_flags & regex_constants::match_not_null))
+        -:  438:	    _M_has_sol = false;
+        -:  439:	  if (_M_has_sol)
+        -:  440:	    {
+        -:  441:	      if (_M_nfa._M_flags & regex_constants::ECMAScript)
+        -:  442:		_M_results = _M_cur_results;
+        -:  443:	      else // POSIX
+        -:  444:		{
+        -:  445:		  __glibcxx_assert(_M_states._M_get_sol_pos());
+        -:  446:		  // Here's POSIX's logic: match the longest one. However
+        -:  447:		  // we never know which one (lhs or rhs of "|") is longer
+        -:  448:		  // unless we try both of them and compare the results.
+        -:  449:		  // The member variable _M_sol_pos records the end
+        -:  450:		  // position of the last successful match. It's better
+        -:  451:		  // to be larger, because POSIX regex is always greedy.
+        -:  452:		  // TODO: This could be slow.
+        -:  453:		  if (*_M_states._M_get_sol_pos() == _BiIter()
+        -:  454:		      || std::distance(_M_begin,
+        -:  455:				       *_M_states._M_get_sol_pos())
+        -:  456:			 < std::distance(_M_begin, _M_current))
+        -:  457:		    {
+        -:  458:		      *_M_states._M_get_sol_pos() = _M_current;
+        -:  459:		      _M_results = _M_cur_results;
+        -:  460:		    }
+        -:  461:		}
+        -:  462:	    }
+        -:  463:	}
+        -:  464:      else
+        -:  465:	{
+    #####:  466:	  if (_M_current == _M_begin
+    %%%%%:  466-block 2
+call    0 never executed
+    #####:  467:	      && (_M_flags & regex_constants::match_not_null))
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  467-block 4
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed
+    %%%%%:  467-block 6
+    %%%%%:  467-block 7
+    %%%%%:  467-block 8
+branch  5 never executed (fallthrough)
+branch  6 never executed
+    #####:  468:	    return;
+    %%%%%:  468-block 9
+    #####:  469:	  if (__match_mode == _Match_mode::_Prefix || _M_current == _M_end)
+    %%%%%:  469-block 10
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  469-block 11
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed
+    %%%%%:  469-block 13
+    %%%%%:  469-block 14
+    %%%%%:  469-block 15
+branch  5 never executed (fallthrough)
+branch  6 never executed
+    #####:  470:	    if (!_M_has_sol)
+    %%%%%:  470-block 16
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  471:	      {
+    #####:  472:		_M_has_sol = true;
+    #####:  473:		_M_results = _M_cur_results;
+    %%%%%:  473-block 17
+call    0 never executed
+        -:  474:	      }
+        -:  475:	}
+        -:  476:    }
+------------------
+        -:  477:
+        -:  478:  template<typename _BiIter, typename _Alloc, typename _TraitsT,
+        -:  479:	   bool __dfs_mode>
+    #####:  480:    void _Executor<_BiIter, _Alloc, _TraitsT, __dfs_mode>::
+        -:  481:    _M_handle_alternative(_Match_mode __match_mode, _StateIdT __i)
+        -:  482:    {
+    #####:  483:      const auto& __state = _M_nfa[__i];
+        -:  484:
+    #####:  485:      if (_M_nfa._M_flags & regex_constants::ECMAScript)
+        -:  486:	{
+        -:  487:	  // TODO: Fix BFS support. It is wrong.
+    #####:  488:	  _M_dfs(__match_mode, __state._M_alt);
+        -:  489:	  // Pick lhs if it matches. Only try rhs if it doesn't.
+    #####:  490:	  if (!_M_has_sol)
+    #####:  491:	    _M_dfs(__match_mode, __state._M_next);
+        -:  492:	}
+        -:  493:      else
+        -:  494:	{
+        -:  495:	  // Try both and compare the result.
+        -:  496:	  // See "case _S_opcode_accept:" handling above.
+    #####:  497:	  _M_dfs(__match_mode, __state._M_alt);
+    #####:  498:	  auto __has_sol = _M_has_sol;
+    #####:  499:	  _M_has_sol = false;
+    #####:  500:	  _M_dfs(__match_mode, __state._M_next);
+    #####:  501:	  _M_has_sol |= __has_sol;
+        -:  502:	}
+    #####:  503:    }
+------------------
+_ZNSt8__detail9_ExecutorIN9__gnu_cxx17__normal_iteratorIPKcNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEESaINS5_9sub_matchISB_EEENS5_12regex_traitsIcEELb1EE21_M_handle_alternativeENSH_11_Match_modeEl:
+function _ZNSt8__detail9_ExecutorIN9__gnu_cxx17__normal_iteratorIPKcNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEESaINS5_9sub_matchISB_EEENS5_12regex_traitsIcEELb1EE21_M_handle_alternativeENSH_11_Match_modeEl called 0 returned 0% blocks executed 0%
+    #####:  480:    void _Executor<_BiIter, _Alloc, _TraitsT, __dfs_mode>::
+        -:  481:    _M_handle_alternative(_Match_mode __match_mode, _StateIdT __i)
+        -:  482:    {
+    #####:  483:      const auto& __state = _M_nfa[__i];
+    %%%%%:  483-block 2
+call    0 never executed
+        -:  484:
+    #####:  485:      if (_M_nfa._M_flags & regex_constants::ECMAScript)
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+        -:  486:	{
+        -:  487:	  // TODO: Fix BFS support. It is wrong.
+    #####:  488:	  _M_dfs(__match_mode, __state._M_alt);
+    %%%%%:  488-block 5
+call    0 never executed
+        -:  489:	  // Pick lhs if it matches. Only try rhs if it doesn't.
+    #####:  490:	  if (!_M_has_sol)
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  491:	    _M_dfs(__match_mode, __state._M_next);
+    %%%%%:  491-block 7
+call    0 never executed
+        -:  492:	}
+        -:  493:      else
+        -:  494:	{
+        -:  495:	  // Try both and compare the result.
+        -:  496:	  // See "case _S_opcode_accept:" handling above.
+    #####:  497:	  _M_dfs(__match_mode, __state._M_alt);
+    %%%%%:  497-block 8
+call    0 never executed
+    #####:  498:	  auto __has_sol = _M_has_sol;
+    #####:  499:	  _M_has_sol = false;
+    #####:  500:	  _M_dfs(__match_mode, __state._M_next);
+call    0 never executed
+    #####:  501:	  _M_has_sol |= __has_sol;
+        -:  502:	}
+    #####:  503:    }
+------------------
+_ZNSt8__detail9_ExecutorIN9__gnu_cxx17__normal_iteratorIPKcNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEESaINS5_9sub_matchISB_EEENS5_12regex_traitsIcEELb0EE21_M_handle_alternativeENSH_11_Match_modeEl:
+function _ZNSt8__detail9_ExecutorIN9__gnu_cxx17__normal_iteratorIPKcNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEESaINS5_9sub_matchISB_EEENS5_12regex_traitsIcEELb0EE21_M_handle_alternativeENSH_11_Match_modeEl called 0 returned 0% blocks executed 0%
+    #####:  480:    void _Executor<_BiIter, _Alloc, _TraitsT, __dfs_mode>::
+        -:  481:    _M_handle_alternative(_Match_mode __match_mode, _StateIdT __i)
+        -:  482:    {
+    #####:  483:      const auto& __state = _M_nfa[__i];
+    %%%%%:  483-block 2
+call    0 never executed
+        -:  484:
+    #####:  485:      if (_M_nfa._M_flags & regex_constants::ECMAScript)
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+        -:  486:	{
+        -:  487:	  // TODO: Fix BFS support. It is wrong.
+    #####:  488:	  _M_dfs(__match_mode, __state._M_alt);
+    %%%%%:  488-block 5
+call    0 never executed
+        -:  489:	  // Pick lhs if it matches. Only try rhs if it doesn't.
+    #####:  490:	  if (!_M_has_sol)
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  491:	    _M_dfs(__match_mode, __state._M_next);
+    %%%%%:  491-block 7
+call    0 never executed
+        -:  492:	}
+        -:  493:      else
+        -:  494:	{
+        -:  495:	  // Try both and compare the result.
+        -:  496:	  // See "case _S_opcode_accept:" handling above.
+    #####:  497:	  _M_dfs(__match_mode, __state._M_alt);
+    %%%%%:  497-block 8
+call    0 never executed
+    #####:  498:	  auto __has_sol = _M_has_sol;
+    #####:  499:	  _M_has_sol = false;
+    #####:  500:	  _M_dfs(__match_mode, __state._M_next);
+call    0 never executed
+    #####:  501:	  _M_has_sol |= __has_sol;
+        -:  502:	}
+    #####:  503:    }
+------------------
+        -:  504:
+        -:  505:  template<typename _BiIter, typename _Alloc, typename _TraitsT,
+        -:  506:	   bool __dfs_mode>
+    #####:  507:    void _Executor<_BiIter, _Alloc, _TraitsT, __dfs_mode>::
+        -:  508:    _M_dfs(_Match_mode __match_mode, _StateIdT __i)
+        -:  509:    {
+    #####:  510:      if (_M_states._M_visited(__i))
+    #####:  511:	return;
+        -:  512:
+    #####:  513:      switch (_M_nfa[__i]._M_opcode())
+        -:  514:	{
+    #####:  515:	case _S_opcode_repeat:
+    #####:  516:	  _M_handle_repeat(__match_mode, __i); break;
+    #####:  517:	case _S_opcode_subexpr_begin:
+    #####:  518:	  _M_handle_subexpr_begin(__match_mode, __i); break;
+    #####:  519:	case _S_opcode_subexpr_end:
+    #####:  520:	  _M_handle_subexpr_end(__match_mode, __i); break;
+    #####:  521:	case _S_opcode_line_begin_assertion:
+    #####:  522:	  _M_handle_line_begin_assertion(__match_mode, __i); break;
+    #####:  523:	case _S_opcode_line_end_assertion:
+    #####:  524:	  _M_handle_line_end_assertion(__match_mode, __i); break;
+    #####:  525:	case _S_opcode_word_boundary:
+    #####:  526:	  _M_handle_word_boundary(__match_mode, __i); break;
+    #####:  527:	case _S_opcode_subexpr_lookahead:
+    #####:  528:	  _M_handle_subexpr_lookahead(__match_mode, __i); break;
+    #####:  529:	case _S_opcode_match:
+    #####:  530:	  _M_handle_match(__match_mode, __i); break;
+    #####:  531:	case _S_opcode_backref:
+    #####:  532:	  _M_handle_backref(__match_mode, __i); break;
+    #####:  533:	case _S_opcode_accept:
+    #####:  534:	  _M_handle_accept(__match_mode, __i); break;
+    #####:  535:	case _S_opcode_alternative:
+    #####:  536:	  _M_handle_alternative(__match_mode, __i); break;
+    #####:  537:	default:
+    #####:  538:	  __glibcxx_assert(false);
+        -:  539:	}
+        -:  540:    }
+------------------
+_ZNSt8__detail9_ExecutorIN9__gnu_cxx17__normal_iteratorIPKcNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEESaINS5_9sub_matchISB_EEENS5_12regex_traitsIcEELb1EE6_M_dfsENSH_11_Match_modeEl:
+function _ZNSt8__detail9_ExecutorIN9__gnu_cxx17__normal_iteratorIPKcNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEESaINS5_9sub_matchISB_EEENS5_12regex_traitsIcEELb1EE6_M_dfsENSH_11_Match_modeEl called 0 returned 0% blocks executed 0%
+    #####:  507:    void _Executor<_BiIter, _Alloc, _TraitsT, __dfs_mode>::
+        -:  508:    _M_dfs(_Match_mode __match_mode, _StateIdT __i)
+        -:  509:    {
+    #####:  510:      if (_M_states._M_visited(__i))
+    %%%%%:  510-block 2
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  511:	return;
+    %%%%%:  511-block 4
+        -:  512:
+    #####:  513:      switch (_M_nfa[__i]._M_opcode())
+    %%%%%:  513-block 5
+call    0 never executed
+call    1 never executed
+branch  2 never executed
+branch  3 never executed
+branch  4 never executed
+branch  5 never executed
+branch  6 never executed
+branch  7 never executed
+branch  8 never executed
+branch  9 never executed
+branch 10 never executed
+branch 11 never executed
+branch 12 never executed
+branch 13 never executed
+        -:  514:	{
+    #####:  515:	case _S_opcode_repeat:
+    #####:  516:	  _M_handle_repeat(__match_mode, __i); break;
+    %%%%%:  516-block 8
+call    0 never executed
+    #####:  517:	case _S_opcode_subexpr_begin:
+    #####:  518:	  _M_handle_subexpr_begin(__match_mode, __i); break;
+    %%%%%:  518-block 9
+call    0 never executed
+    #####:  519:	case _S_opcode_subexpr_end:
+    #####:  520:	  _M_handle_subexpr_end(__match_mode, __i); break;
+    %%%%%:  520-block 10
+call    0 never executed
+    #####:  521:	case _S_opcode_line_begin_assertion:
+    #####:  522:	  _M_handle_line_begin_assertion(__match_mode, __i); break;
+    %%%%%:  522-block 11
+call    0 never executed
+    #####:  523:	case _S_opcode_line_end_assertion:
+    #####:  524:	  _M_handle_line_end_assertion(__match_mode, __i); break;
+    %%%%%:  524-block 12
+call    0 never executed
+    #####:  525:	case _S_opcode_word_boundary:
+    #####:  526:	  _M_handle_word_boundary(__match_mode, __i); break;
+    %%%%%:  526-block 13
+call    0 never executed
+    #####:  527:	case _S_opcode_subexpr_lookahead:
+    #####:  528:	  _M_handle_subexpr_lookahead(__match_mode, __i); break;
+    %%%%%:  528-block 14
+call    0 never executed
+    #####:  529:	case _S_opcode_match:
+    #####:  530:	  _M_handle_match(__match_mode, __i); break;
+    %%%%%:  530-block 15
+call    0 never executed
+    #####:  531:	case _S_opcode_backref:
+    #####:  532:	  _M_handle_backref(__match_mode, __i); break;
+    %%%%%:  532-block 16
+call    0 never executed
+    #####:  533:	case _S_opcode_accept:
+    #####:  534:	  _M_handle_accept(__match_mode, __i); break;
+    %%%%%:  534-block 17
+call    0 never executed
+    #####:  535:	case _S_opcode_alternative:
+    #####:  536:	  _M_handle_alternative(__match_mode, __i); break;
+    %%%%%:  536-block 18
+call    0 never executed
+    #####:  537:	default:
+    %%%%%:  537-block 19
+    #####:  538:	  __glibcxx_assert(false);
+    %%%%%:  538-block 21
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  539:	}
+        -:  540:    }
+------------------
+_ZNSt8__detail9_ExecutorIN9__gnu_cxx17__normal_iteratorIPKcNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEESaINS5_9sub_matchISB_EEENS5_12regex_traitsIcEELb0EE6_M_dfsENSH_11_Match_modeEl:
+function _ZNSt8__detail9_ExecutorIN9__gnu_cxx17__normal_iteratorIPKcNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEESaINS5_9sub_matchISB_EEENS5_12regex_traitsIcEELb0EE6_M_dfsENSH_11_Match_modeEl called 0 returned 0% blocks executed 0%
+    #####:  507:    void _Executor<_BiIter, _Alloc, _TraitsT, __dfs_mode>::
+        -:  508:    _M_dfs(_Match_mode __match_mode, _StateIdT __i)
+        -:  509:    {
+    #####:  510:      if (_M_states._M_visited(__i))
+    %%%%%:  510-block 2
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  511:	return;
+    %%%%%:  511-block 4
+        -:  512:
+    #####:  513:      switch (_M_nfa[__i]._M_opcode())
+    %%%%%:  513-block 5
+call    0 never executed
+call    1 never executed
+branch  2 never executed
+branch  3 never executed
+branch  4 never executed
+branch  5 never executed
+branch  6 never executed
+branch  7 never executed
+branch  8 never executed
+branch  9 never executed
+branch 10 never executed
+branch 11 never executed
+branch 12 never executed
+branch 13 never executed
+        -:  514:	{
+    #####:  515:	case _S_opcode_repeat:
+    #####:  516:	  _M_handle_repeat(__match_mode, __i); break;
+    %%%%%:  516-block 8
+call    0 never executed
+    #####:  517:	case _S_opcode_subexpr_begin:
+    #####:  518:	  _M_handle_subexpr_begin(__match_mode, __i); break;
+    %%%%%:  518-block 9
+call    0 never executed
+    #####:  519:	case _S_opcode_subexpr_end:
+    #####:  520:	  _M_handle_subexpr_end(__match_mode, __i); break;
+    %%%%%:  520-block 10
+call    0 never executed
+    #####:  521:	case _S_opcode_line_begin_assertion:
+    #####:  522:	  _M_handle_line_begin_assertion(__match_mode, __i); break;
+    %%%%%:  522-block 11
+call    0 never executed
+    #####:  523:	case _S_opcode_line_end_assertion:
+    #####:  524:	  _M_handle_line_end_assertion(__match_mode, __i); break;
+    %%%%%:  524-block 12
+call    0 never executed
+    #####:  525:	case _S_opcode_word_boundary:
+    #####:  526:	  _M_handle_word_boundary(__match_mode, __i); break;
+    %%%%%:  526-block 13
+call    0 never executed
+    #####:  527:	case _S_opcode_subexpr_lookahead:
+    #####:  528:	  _M_handle_subexpr_lookahead(__match_mode, __i); break;
+    %%%%%:  528-block 14
+call    0 never executed
+    #####:  529:	case _S_opcode_match:
+    #####:  530:	  _M_handle_match(__match_mode, __i); break;
+    %%%%%:  530-block 15
+call    0 never executed
+    #####:  531:	case _S_opcode_backref:
+    #####:  532:	  _M_handle_backref(__match_mode, __i); break;
+    %%%%%:  532-block 16
+call    0 never executed
+    #####:  533:	case _S_opcode_accept:
+    #####:  534:	  _M_handle_accept(__match_mode, __i); break;
+    %%%%%:  534-block 17
+call    0 never executed
+    #####:  535:	case _S_opcode_alternative:
+    #####:  536:	  _M_handle_alternative(__match_mode, __i); break;
+    %%%%%:  536-block 18
+call    0 never executed
+    #####:  537:	default:
+    %%%%%:  537-block 19
+    #####:  538:	  __glibcxx_assert(false);
+    %%%%%:  538-block 21
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  539:	}
+        -:  540:    }
+------------------
+        -:  541:
+        -:  542:  // Return whether now is at some word boundary.
+        -:  543:  template<typename _BiIter, typename _Alloc, typename _TraitsT,
+        -:  544:	   bool __dfs_mode>
+    #####:  545:    bool _Executor<_BiIter, _Alloc, _TraitsT, __dfs_mode>::
+        -:  546:    _M_word_boundary() const
+        -:  547:    {
+    #####:  548:      if (_M_current == _M_begin && (_M_flags & regex_constants::match_not_bow))
+    #####:  549:	return false;
+    #####:  550:      if (_M_current == _M_end && (_M_flags & regex_constants::match_not_eow))
+    #####:  551:	return false;
+        -:  552:
+    #####:  553:      bool __left_is_word = false;
+    #####:  554:      if (_M_current != _M_begin
+    #####:  555:	  || (_M_flags & regex_constants::match_prev_avail))
+        -:  556:	{
+    #####:  557:	  auto __prev = _M_current;
+    #####:  558:	  if (_M_is_word(*std::prev(__prev)))
+    #####:  559:	    __left_is_word = true;
+        -:  560:	}
+    #####:  561:      bool __right_is_word =
+    #####:  562:        _M_current != _M_end && _M_is_word(*_M_current);
+        -:  563:
+    #####:  564:      return __left_is_word != __right_is_word;
+        -:  565:    }
+        -:  566:} // namespace __detail
+        -:  567:
+        -:  568:_GLIBCXX_END_NAMESPACE_VERSION
+        -:  569:} // namespace

@@ -1,0 +1,1319 @@
+        -:    0:Source:/home/rc/ZathuraDbg/vendor/ImGuiColorTextEdit/vendor/regex/include/boost/regex/v5/perl_matcher.hpp
+        -:    0:Graph:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/home/rc/ZathuraDbg/vendor/ImGuiColorTextEdit/TextEditor.cpp.gcno
+        -:    0:Data:/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir/home/rc/ZathuraDbg/vendor/ImGuiColorTextEdit/TextEditor.cpp.gcda
+        -:    0:Runs:1
+        -:    1:/*
+        -:    2: *
+        -:    3: * Copyright (c) 2002
+        -:    4: * John Maddock
+        -:    5: *
+        -:    6: * Use, modification and distribution are subject to the 
+        -:    7: * Boost Software License, Version 1.0. (See accompanying file 
+        -:    8: * LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+        -:    9: *
+        -:   10: */
+        -:   11:
+        -:   12:#ifndef BOOST_REGEX_MATCHER_HPP
+        -:   13:#define BOOST_REGEX_MATCHER_HPP
+        -:   14:
+        -:   15:#include <boost/regex/v5/iterator_category.hpp>
+        -:   16:
+        -:   17:#ifdef BOOST_REGEX_MSVC
+        -:   18:#  pragma warning(push)
+        -:   19:#pragma warning(disable : 4251 4459)
+        -:   20:#if BOOST_REGEX_MSVC < 1700
+        -:   21:#     pragma warning(disable : 4231)
+        -:   22:#endif
+        -:   23:#  if BOOST_REGEX_MSVC < 1600
+        -:   24:#     pragma warning(disable : 4660)
+        -:   25:#  endif
+        -:   26:#if BOOST_REGEX_MSVC < 1910
+        -:   27:#pragma warning(disable:4800)
+        -:   28:#endif
+        -:   29:#endif
+        -:   30:
+        -:   31:namespace boost{
+        -:   32:namespace BOOST_REGEX_DETAIL_NS{
+        -:   33:
+        -:   34://
+        -:   35:// error checking API:
+        -:   36://
+function _ZN5boost13re_detail_50014verify_optionsEjNS_15regex_constants12_match_flagsE called 0 returned 0% blocks executed 0%
+    #####:   37:inline void  verify_options(boost::regex_constants::syntax_option_type, match_flag_type mf)
+        -:   38:{
+        -:   39:   //
+        -:   40:   // can't mix match_extra with POSIX matching rules:
+        -:   41:   //
+    #####:   42:   if ((mf & match_extra) && (mf & match_posix))
+    %%%%%:   42-block 2
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:   42-block 4
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:   42-block 6
+    %%%%%:   42-block 7
+    %%%%%:   42-block 8
+branch  6 never executed (fallthrough)
+branch  7 never executed
+        -:   43:   {
+    #####:   44:      std::logic_error msg("Usage Error: Can't mix regular expression captures with POSIX matching rules");
+    %%%%%:   44-block 9
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:   45:#ifndef BOOST_REGEX_STANDALONE
+        -:   46:      throw_exception(msg);
+        -:   47:#else
+    #####:   48:      throw msg;
+    %%%%%:   48-block 10
+call    0 never executed
+call    1 never executed
+call    2 never executed
+        -:   49:#endif
+    =====:   50:   }
+    $$$$$:   50-block 14
+call    0 never executed
+    #####:   51:}
+    %%%%%:   51-block 13
+        -:   52://
+        -:   53:// function can_start:
+        -:   54://
+        -:   55:template <class charT>
+        -:   56:inline bool can_start(charT c, const unsigned char* map, unsigned char mask)
+        -:   57:{
+        -:   58:   return ((c < static_cast<charT>(0)) ? true : ((c >= static_cast<charT>(1 << CHAR_BIT)) ? true : map[c] & mask));
+        -:   59:}
+function _ZN5boost13re_detail_5009can_startEcPKhh called 0 returned 0% blocks executed 0%
+    #####:   60:inline bool can_start(char c, const unsigned char* map, unsigned char mask)
+        -:   61:{
+    #####:   62:   return map[(unsigned char)c] & mask;
+    %%%%%:   62-block 2
+        -:   63:}
+        -:   64:inline bool can_start(signed char c, const unsigned char* map, unsigned char mask)
+        -:   65:{
+        -:   66:   return map[(unsigned char)c] & mask;
+        -:   67:}
+        -:   68:inline bool can_start(unsigned char c, const unsigned char* map, unsigned char mask)
+        -:   69:{
+        -:   70:   return map[c] & mask;
+        -:   71:}
+        -:   72:inline bool can_start(unsigned short c, const unsigned char* map, unsigned char mask)
+        -:   73:{
+        -:   74:   return ((c >= (1 << CHAR_BIT)) ? true : map[c] & mask);
+        -:   75:}
+        -:   76:#if defined(WCHAR_MIN) && (WCHAR_MIN == 0) && !defined(BOOST_NO_INTRINSIC_WCHAR_T)
+        -:   77:inline bool can_start(wchar_t c, const unsigned char* map, unsigned char mask)
+        -:   78:{
+        -:   79:   return ((c >= static_cast<wchar_t>(1u << CHAR_BIT)) ? true : map[c] & mask);
+        -:   80:}
+        -:   81:#endif
+        -:   82:#if !defined(BOOST_NO_INTRINSIC_WCHAR_T)
+        -:   83:inline bool can_start(unsigned int c, const unsigned char* map, unsigned char mask)
+        -:   84:{
+        -:   85:   return (((c >= static_cast<unsigned int>(1u << CHAR_BIT)) ? true : map[c] & mask));
+        -:   86:}
+        -:   87:#endif
+        -:   88:
+        -:   89:template <class C, class T, class A>
+function _ZN5boost13re_detail_50014string_compareIcSt11char_traitsIcESaIcEEEiRKNSt7__cxx1112basic_stringIT_T0_T1_EEPKS7_ called 0 returned 0% blocks executed 0%
+    #####:   90:inline int string_compare(const std::basic_string<C,T,A>& s, const C* p)
+        -:   91:{ 
+    #####:   92:   if(0 == *p)
+    %%%%%:   92-block 2
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:   93:   {
+    #####:   94:      if(s.empty() || ((s.size() == 1) && (s[0] == 0)))
+    %%%%%:   94-block 3
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    %%%%%:   94-block 5
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed
+    %%%%%:   94-block 7
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed
+    %%%%%:   94-block 9
+    %%%%%:   94-block 10
+    %%%%%:   94-block 11
+branch  9 never executed (fallthrough)
+branch 10 never executed
+    #####:   95:         return 0;
+    %%%%%:   95-block 12
+        -:   96:   }
+    #####:   97:   return s.compare(p); 
+    %%%%%:   97-block 13
+call    0 never executed
+        -:   98:}
+        -:   99:template <class Seq, class C>
+        -:  100:inline int string_compare(const Seq& s, const C* p)
+        -:  101:{
+        -:  102:   std::size_t i = 0;
+        -:  103:   while((i < s.size()) && (p[i] == s[i]))
+        -:  104:   {
+        -:  105:      ++i;
+        -:  106:   }
+        -:  107:   return (i == s.size()) ? -(int)p[i] : (int)s[i] - (int)p[i];
+        -:  108:}
+        -:  109:# define STR_COMP(s,p) string_compare(s,p)
+        -:  110:
+        -:  111:template<class charT>
+function _ZN5boost13re_detail_50017re_skip_past_nullIcEEPKT_S4_ called 0 returned 0% blocks executed 0%
+    #####:  112:inline const charT* re_skip_past_null(const charT* p)
+        -:  113:{
+    #####:  114:  while (*p != static_cast<charT>(0)) ++p;
+    %%%%%:  114-block 2
+    %%%%%:  114-block 3
+    %%%%%:  114-block 4
+branch  0 never executed
+branch  1 never executed (fallthrough)
+    #####:  115:  return ++p;
+    %%%%%:  115-block 5
+        -:  116:}
+        -:  117:
+        -:  118:template <class iterator, class charT, class traits_type, class char_classT>
+    #####:  119:iterator  re_is_set_member(iterator next, 
+        -:  120:                          iterator last, 
+        -:  121:                          const re_set_long<char_classT>* set_, 
+        -:  122:                          const regex_data<charT, traits_type>& e, bool icase)
+        -:  123:{   
+    #####:  124:   const charT* p = reinterpret_cast<const charT*>(set_+1);
+        -:  125:   iterator ptr;
+        -:  126:   unsigned int i;
+        -:  127:   //bool icase = e.m_flags & regex_constants::icase;
+        -:  128:
+    #####:  129:   if(next == last) return next;
+        -:  130:
+        -:  131:   typedef typename traits_type::string_type traits_string_type;
+    #####:  132:   const ::boost::regex_traits_wrapper<traits_type>& traits_inst = *(e.m_ptraits);
+        -:  133:   
+        -:  134:   // dwa 9/13/00 suppress incorrect MSVC warning - it claims this is never
+        -:  135:   // referenced
+        -:  136:   (void)traits_inst;
+        -:  137:
+        -:  138:   // try and match a single character, could be a multi-character
+        -:  139:   // collating element...
+    #####:  140:   for(i = 0; i < set_->csingles; ++i)
+        -:  141:   {
+    #####:  142:      ptr = next;
+    #####:  143:      if(*p == static_cast<charT>(0))
+        -:  144:      {
+        -:  145:         // treat null string as special case:
+    #####:  146:         if(traits_inst.translate(*ptr, icase))
+        -:  147:         {
+    #####:  148:            ++p;
+    #####:  149:            continue;
+        -:  150:         }
+    #####:  151:         return set_->isnot ? next : (ptr == next) ? ++next : ptr;
+        -:  152:      }
+        -:  153:      else
+        -:  154:      {
+    #####:  155:         while(*p && (ptr != last))
+        -:  156:         {
+    #####:  157:            if(traits_inst.translate(*ptr, icase) != *p)
+    #####:  158:               break;
+    #####:  159:            ++p;
+    #####:  160:            ++ptr;
+        -:  161:         }
+        -:  162:
+    #####:  163:         if(*p == static_cast<charT>(0)) // if null we've matched
+    #####:  164:            return set_->isnot ? next : (ptr == next) ? ++next : ptr;
+        -:  165:
+    #####:  166:         p = re_skip_past_null(p);     // skip null
+        -:  167:      }
+        -:  168:   }
+        -:  169:
+    #####:  170:   charT col = traits_inst.translate(*next, icase);
+        -:  171:
+        -:  172:
+    #####:  173:   if(set_->cranges || set_->cequivalents)
+        -:  174:   {
+    #####:  175:      traits_string_type s1;
+        -:  176:      //
+        -:  177:      // try and match a range, NB only a single character can match
+    #####:  178:      if(set_->cranges)
+        -:  179:      {
+    #####:  180:         if((e.m_flags & regex_constants::collate) == 0)
+    #####:  181:            s1.assign(1, col);
+        -:  182:         else
+        -:  183:         {
+    #####:  184:            charT a[2] = { col, charT(0), };
+    #####:  185:            s1 = traits_inst.transform(a, a + 1);
+        -:  186:         }
+    #####:  187:         for(i = 0; i < set_->cranges; ++i)
+        -:  188:         {
+    #####:  189:            if(STR_COMP(s1, p) >= 0)
+        -:  190:            {
+    #####:  191:               do{ ++p; }while(*p);
+    #####:  192:               ++p;
+    #####:  193:               if(STR_COMP(s1, p) <= 0)
+    #####:  194:                  return set_->isnot ? next : ++next;
+        -:  195:            }
+        -:  196:            else
+        -:  197:            {
+        -:  198:               // skip first string
+    #####:  199:               do{ ++p; }while(*p);
+    #####:  200:               ++p;
+        -:  201:            }
+        -:  202:            // skip second string
+    #####:  203:            do{ ++p; }while(*p);
+    #####:  204:            ++p;
+        -:  205:         }
+        -:  206:      }
+        -:  207:      //
+        -:  208:      // try and match an equivalence class, NB only a single character can match
+    #####:  209:      if(set_->cequivalents)
+        -:  210:      {
+    #####:  211:         charT a[2] = { col, charT(0), };
+    #####:  212:         s1 = traits_inst.transform_primary(a, a +1);
+    #####:  213:         for(i = 0; i < set_->cequivalents; ++i)
+        -:  214:         {
+    #####:  215:            if(STR_COMP(s1, p) == 0)
+    #####:  216:               return set_->isnot ? next : ++next;
+        -:  217:            // skip string
+    #####:  218:            do{ ++p; }while(*p);
+    #####:  219:            ++p;
+        -:  220:         }
+        -:  221:      }
+    #####:  222:   }
+    #####:  223:   if(traits_inst.isctype(col, set_->cclasses) == true)
+    #####:  224:      return set_->isnot ? next : ++next;
+    #####:  225:   if((set_->cnclasses != 0) && (traits_inst.isctype(col, set_->cnclasses) == false))
+    #####:  226:      return set_->isnot ? next : ++next;
+    #####:  227:   return set_->isnot ? ++next : next;
+        -:  228:}
+------------------
+_ZN5boost13re_detail_50016re_is_set_memberIPccNS_12regex_traitsIcNS_16cpp_regex_traitsIcEEEEjEET_S7_S7_PKNS0_11re_set_longIT2_EERKNS0_10regex_dataIT0_T1_EEb:
+function _ZN5boost13re_detail_50016re_is_set_memberIPccNS_12regex_traitsIcNS_16cpp_regex_traitsIcEEEEjEET_S7_S7_PKNS0_11re_set_longIT2_EERKNS0_10regex_dataIT0_T1_EEb called 0 returned 0% blocks executed 0%
+    #####:  119:iterator  re_is_set_member(iterator next, 
+        -:  120:                          iterator last, 
+        -:  121:                          const re_set_long<char_classT>* set_, 
+        -:  122:                          const regex_data<charT, traits_type>& e, bool icase)
+        -:  123:{   
+    #####:  124:   const charT* p = reinterpret_cast<const charT*>(set_+1);
+        -:  125:   iterator ptr;
+        -:  126:   unsigned int i;
+        -:  127:   //bool icase = e.m_flags & regex_constants::icase;
+        -:  128:
+    #####:  129:   if(next == last) return next;
+    %%%%%:  129-block 2
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  129-block 3
+        -:  130:
+        -:  131:   typedef typename traits_type::string_type traits_string_type;
+    #####:  132:   const ::boost::regex_traits_wrapper<traits_type>& traits_inst = *(e.m_ptraits);
+    %%%%%:  132-block 4
+call    0 never executed
+        -:  133:   
+        -:  134:   // dwa 9/13/00 suppress incorrect MSVC warning - it claims this is never
+        -:  135:   // referenced
+        -:  136:   (void)traits_inst;
+        -:  137:
+        -:  138:   // try and match a single character, could be a multi-character
+        -:  139:   // collating element...
+    #####:  140:   for(i = 0; i < set_->csingles; ++i)
+    %%%%%:  140-block 33
+    %%%%%:  140-block 34
+branch  0 never executed
+branch  1 never executed (fallthrough)
+        -:  141:   {
+    #####:  142:      ptr = next;
+    #####:  143:      if(*p == static_cast<charT>(0))
+    %%%%%:  143-block 6
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  144:      {
+        -:  145:         // treat null string as special case:
+    #####:  146:         if(traits_inst.translate(*ptr, icase))
+    %%%%%:  146-block 7
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+        -:  147:         {
+    #####:  148:            ++p;
+    #####:  149:            continue;
+    %%%%%:  149-block 9
+        -:  150:         }
+    #####:  151:         return set_->isnot ? next : (ptr == next) ? ++next : ptr;
+    %%%%%:  151-block 10
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  151-block 11
+    %%%%%:  151-block 12
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    %%%%%:  151-block 13
+    %%%%%:  151-block 14
+    %%%%%:  151-block 15
+    %%%%%:  151-block 16
+        -:  152:      }
+        -:  153:      else
+        -:  154:      {
+    #####:  155:         while(*p && (ptr != last))
+    %%%%%:  155-block 17
+    %%%%%:  155-block 22
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  155-block 23
+branch  2 never executed
+branch  3 never executed (fallthrough)
+        -:  156:         {
+    #####:  157:            if(traits_inst.translate(*ptr, icase) != *p)
+    %%%%%:  157-block 18
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  158:               break;
+    %%%%%:  158-block 20
+    #####:  159:            ++p;
+    #####:  160:            ++ptr;
+    %%%%%:  160-block 21
+        -:  161:         }
+        -:  162:
+    #####:  163:         if(*p == static_cast<charT>(0)) // if null we've matched
+    %%%%%:  163-block 24
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  164:            return set_->isnot ? next : (ptr == next) ? ++next : ptr;
+    %%%%%:  164-block 25
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  164-block 26
+    %%%%%:  164-block 27
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    %%%%%:  164-block 28
+    %%%%%:  164-block 29
+    %%%%%:  164-block 30
+    %%%%%:  164-block 31
+        -:  165:
+    #####:  166:         p = re_skip_past_null(p);     // skip null
+    %%%%%:  166-block 32
+call    0 never executed
+        -:  167:      }
+        -:  168:   }
+        -:  169:
+    #####:  170:   charT col = traits_inst.translate(*next, icase);
+    %%%%%:  170-block 35
+call    0 never executed
+        -:  171:
+        -:  172:
+    #####:  173:   if(set_->cranges || set_->cequivalents)
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  173-block 37
+branch  2 never executed (fallthrough)
+branch  3 never executed
+        -:  174:   {
+    #####:  175:      traits_string_type s1;
+    %%%%%:  175-block 38
+call    0 never executed
+        -:  176:      //
+        -:  177:      // try and match a range, NB only a single character can match
+    #####:  178:      if(set_->cranges)
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  179:      {
+    #####:  180:         if((e.m_flags & regex_constants::collate) == 0)
+    %%%%%:  180-block 40
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  181:            s1.assign(1, col);
+    %%%%%:  181-block 41
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:  182:         else
+        -:  183:         {
+    #####:  184:            charT a[2] = { col, charT(0), };
+    #####:  185:            s1 = traits_inst.transform(a, a + 1);
+    %%%%%:  185-block 42
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  185-block 43
+call    3 never executed
+call    4 never executed
+    $$$$$:  185-block 104
+        -:  186:         }
+    #####:  187:         for(i = 0; i < set_->cranges; ++i)
+    %%%%%:  187-block 46
+    %%%%%:  187-block 60
+branch  0 never executed
+branch  1 never executed (fallthrough)
+        -:  188:         {
+    #####:  189:            if(STR_COMP(s1, p) >= 0)
+    %%%%%:  189-block 47
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+        -:  190:            {
+    #####:  191:               do{ ++p; }while(*p);
+    %%%%%:  191-block 49
+branch  0 never executed
+branch  1 never executed (fallthrough)
+    #####:  192:               ++p;
+    #####:  193:               if(STR_COMP(s1, p) <= 0)
+    %%%%%:  193-block 50
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  194:                  return set_->isnot ? next : ++next;
+    %%%%%:  194-block 52
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  194-block 53
+    %%%%%:  194-block 54
+    %%%%%:  194-block 55
+        -:  195:            }
+        -:  196:            else
+        -:  197:            {
+        -:  198:               // skip first string
+    #####:  199:               do{ ++p; }while(*p);
+    %%%%%:  199-block 56
+branch  0 never executed
+branch  1 never executed (fallthrough)
+    #####:  200:               ++p;
+    %%%%%:  200-block 57
+        -:  201:            }
+        -:  202:            // skip second string
+    #####:  203:            do{ ++p; }while(*p);
+    %%%%%:  203-block 58
+branch  0 never executed
+branch  1 never executed (fallthrough)
+    #####:  204:            ++p;
+    %%%%%:  204-block 59
+        -:  205:         }
+        -:  206:      }
+        -:  207:      //
+        -:  208:      // try and match an equivalence class, NB only a single character can match
+    #####:  209:      if(set_->cequivalents)
+    %%%%%:  209-block 61
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  210:      {
+    #####:  211:         charT a[2] = { col, charT(0), };
+    #####:  212:         s1 = traits_inst.transform_primary(a, a +1);
+    %%%%%:  212-block 62
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  212-block 63
+call    3 never executed
+call    4 never executed
+    $$$$$:  212-block 106
+    #####:  213:         for(i = 0; i < set_->cequivalents; ++i)
+    %%%%%:  213-block 74
+branch  0 never executed
+branch  1 never executed (fallthrough)
+        -:  214:         {
+    #####:  215:            if(STR_COMP(s1, p) == 0)
+    %%%%%:  215-block 66
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  216:               return set_->isnot ? next : ++next;
+    %%%%%:  216-block 68
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  216-block 69
+    %%%%%:  216-block 70
+    %%%%%:  216-block 71
+    %%%%%:  216-block 76
+        -:  217:            // skip string
+    #####:  218:            do{ ++p; }while(*p);
+    %%%%%:  218-block 72
+branch  0 never executed
+branch  1 never executed (fallthrough)
+    #####:  219:            ++p;
+    %%%%%:  219-block 73
+        -:  220:         }
+        -:  221:      }
+    #####:  222:   }
+    %%%%%:  222-block 77
+    %%%%%:  222-block 78
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    $$$$$:  222-block 108
+call    3 never executed
+    #####:  223:   if(traits_inst.isctype(col, set_->cclasses) == true)
+    %%%%%:  223-block 83
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  224:      return set_->isnot ? next : ++next;
+    %%%%%:  224-block 85
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  224-block 86
+    %%%%%:  224-block 87
+    %%%%%:  224-block 88
+    #####:  225:   if((set_->cnclasses != 0) && (traits_inst.isctype(col, set_->cnclasses) == false))
+    %%%%%:  225-block 89
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  225-block 90
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed
+    %%%%%:  225-block 92
+    %%%%%:  225-block 93
+    %%%%%:  225-block 94
+branch  5 never executed (fallthrough)
+branch  6 never executed
+    #####:  226:      return set_->isnot ? next : ++next;
+    %%%%%:  226-block 95
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  226-block 96
+    %%%%%:  226-block 97
+    %%%%%:  226-block 98
+    #####:  227:   return set_->isnot ? ++next : next;
+    %%%%%:  227-block 99
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  227-block 100
+    %%%%%:  227-block 101
+    %%%%%:  227-block 102
+        -:  228:}
+------------------
+_ZN5boost13re_detail_50016re_is_set_memberIPKccNS_12regex_traitsIcNS_16cpp_regex_traitsIcEEEEjEET_S8_S8_PKNS0_11re_set_longIT2_EERKNS0_10regex_dataIT0_T1_EEb:
+function _ZN5boost13re_detail_50016re_is_set_memberIPKccNS_12regex_traitsIcNS_16cpp_regex_traitsIcEEEEjEET_S8_S8_PKNS0_11re_set_longIT2_EERKNS0_10regex_dataIT0_T1_EEb called 0 returned 0% blocks executed 0%
+    #####:  119:iterator  re_is_set_member(iterator next, 
+        -:  120:                          iterator last, 
+        -:  121:                          const re_set_long<char_classT>* set_, 
+        -:  122:                          const regex_data<charT, traits_type>& e, bool icase)
+        -:  123:{   
+    #####:  124:   const charT* p = reinterpret_cast<const charT*>(set_+1);
+        -:  125:   iterator ptr;
+        -:  126:   unsigned int i;
+        -:  127:   //bool icase = e.m_flags & regex_constants::icase;
+        -:  128:
+    #####:  129:   if(next == last) return next;
+    %%%%%:  129-block 2
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  129-block 3
+        -:  130:
+        -:  131:   typedef typename traits_type::string_type traits_string_type;
+    #####:  132:   const ::boost::regex_traits_wrapper<traits_type>& traits_inst = *(e.m_ptraits);
+    %%%%%:  132-block 4
+call    0 never executed
+        -:  133:   
+        -:  134:   // dwa 9/13/00 suppress incorrect MSVC warning - it claims this is never
+        -:  135:   // referenced
+        -:  136:   (void)traits_inst;
+        -:  137:
+        -:  138:   // try and match a single character, could be a multi-character
+        -:  139:   // collating element...
+    #####:  140:   for(i = 0; i < set_->csingles; ++i)
+    %%%%%:  140-block 33
+    %%%%%:  140-block 34
+branch  0 never executed
+branch  1 never executed (fallthrough)
+        -:  141:   {
+    #####:  142:      ptr = next;
+    #####:  143:      if(*p == static_cast<charT>(0))
+    %%%%%:  143-block 6
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  144:      {
+        -:  145:         // treat null string as special case:
+    #####:  146:         if(traits_inst.translate(*ptr, icase))
+    %%%%%:  146-block 7
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+        -:  147:         {
+    #####:  148:            ++p;
+    #####:  149:            continue;
+    %%%%%:  149-block 9
+        -:  150:         }
+    #####:  151:         return set_->isnot ? next : (ptr == next) ? ++next : ptr;
+    %%%%%:  151-block 10
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  151-block 11
+    %%%%%:  151-block 12
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    %%%%%:  151-block 13
+    %%%%%:  151-block 14
+    %%%%%:  151-block 15
+    %%%%%:  151-block 16
+        -:  152:      }
+        -:  153:      else
+        -:  154:      {
+    #####:  155:         while(*p && (ptr != last))
+    %%%%%:  155-block 17
+    %%%%%:  155-block 22
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  155-block 23
+branch  2 never executed
+branch  3 never executed (fallthrough)
+        -:  156:         {
+    #####:  157:            if(traits_inst.translate(*ptr, icase) != *p)
+    %%%%%:  157-block 18
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  158:               break;
+    %%%%%:  158-block 20
+    #####:  159:            ++p;
+    #####:  160:            ++ptr;
+    %%%%%:  160-block 21
+        -:  161:         }
+        -:  162:
+    #####:  163:         if(*p == static_cast<charT>(0)) // if null we've matched
+    %%%%%:  163-block 24
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  164:            return set_->isnot ? next : (ptr == next) ? ++next : ptr;
+    %%%%%:  164-block 25
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  164-block 26
+    %%%%%:  164-block 27
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    %%%%%:  164-block 28
+    %%%%%:  164-block 29
+    %%%%%:  164-block 30
+    %%%%%:  164-block 31
+        -:  165:
+    #####:  166:         p = re_skip_past_null(p);     // skip null
+    %%%%%:  166-block 32
+call    0 never executed
+        -:  167:      }
+        -:  168:   }
+        -:  169:
+    #####:  170:   charT col = traits_inst.translate(*next, icase);
+    %%%%%:  170-block 35
+call    0 never executed
+        -:  171:
+        -:  172:
+    #####:  173:   if(set_->cranges || set_->cequivalents)
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  173-block 37
+branch  2 never executed (fallthrough)
+branch  3 never executed
+        -:  174:   {
+    #####:  175:      traits_string_type s1;
+    %%%%%:  175-block 38
+call    0 never executed
+        -:  176:      //
+        -:  177:      // try and match a range, NB only a single character can match
+    #####:  178:      if(set_->cranges)
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  179:      {
+    #####:  180:         if((e.m_flags & regex_constants::collate) == 0)
+    %%%%%:  180-block 40
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  181:            s1.assign(1, col);
+    %%%%%:  181-block 41
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:  182:         else
+        -:  183:         {
+    #####:  184:            charT a[2] = { col, charT(0), };
+    #####:  185:            s1 = traits_inst.transform(a, a + 1);
+    %%%%%:  185-block 42
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  185-block 43
+call    3 never executed
+call    4 never executed
+    $$$$$:  185-block 104
+        -:  186:         }
+    #####:  187:         for(i = 0; i < set_->cranges; ++i)
+    %%%%%:  187-block 46
+    %%%%%:  187-block 60
+branch  0 never executed
+branch  1 never executed (fallthrough)
+        -:  188:         {
+    #####:  189:            if(STR_COMP(s1, p) >= 0)
+    %%%%%:  189-block 47
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+        -:  190:            {
+    #####:  191:               do{ ++p; }while(*p);
+    %%%%%:  191-block 49
+branch  0 never executed
+branch  1 never executed (fallthrough)
+    #####:  192:               ++p;
+    #####:  193:               if(STR_COMP(s1, p) <= 0)
+    %%%%%:  193-block 50
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  194:                  return set_->isnot ? next : ++next;
+    %%%%%:  194-block 52
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  194-block 53
+    %%%%%:  194-block 54
+    %%%%%:  194-block 55
+        -:  195:            }
+        -:  196:            else
+        -:  197:            {
+        -:  198:               // skip first string
+    #####:  199:               do{ ++p; }while(*p);
+    %%%%%:  199-block 56
+branch  0 never executed
+branch  1 never executed (fallthrough)
+    #####:  200:               ++p;
+    %%%%%:  200-block 57
+        -:  201:            }
+        -:  202:            // skip second string
+    #####:  203:            do{ ++p; }while(*p);
+    %%%%%:  203-block 58
+branch  0 never executed
+branch  1 never executed (fallthrough)
+    #####:  204:            ++p;
+    %%%%%:  204-block 59
+        -:  205:         }
+        -:  206:      }
+        -:  207:      //
+        -:  208:      // try and match an equivalence class, NB only a single character can match
+    #####:  209:      if(set_->cequivalents)
+    %%%%%:  209-block 61
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  210:      {
+    #####:  211:         charT a[2] = { col, charT(0), };
+    #####:  212:         s1 = traits_inst.transform_primary(a, a +1);
+    %%%%%:  212-block 62
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    %%%%%:  212-block 63
+call    3 never executed
+call    4 never executed
+    $$$$$:  212-block 106
+    #####:  213:         for(i = 0; i < set_->cequivalents; ++i)
+    %%%%%:  213-block 74
+branch  0 never executed
+branch  1 never executed (fallthrough)
+        -:  214:         {
+    #####:  215:            if(STR_COMP(s1, p) == 0)
+    %%%%%:  215-block 66
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  216:               return set_->isnot ? next : ++next;
+    %%%%%:  216-block 68
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  216-block 69
+    %%%%%:  216-block 70
+    %%%%%:  216-block 71
+    %%%%%:  216-block 76
+        -:  217:            // skip string
+    #####:  218:            do{ ++p; }while(*p);
+    %%%%%:  218-block 72
+branch  0 never executed
+branch  1 never executed (fallthrough)
+    #####:  219:            ++p;
+    %%%%%:  219-block 73
+        -:  220:         }
+        -:  221:      }
+    #####:  222:   }
+    %%%%%:  222-block 77
+    %%%%%:  222-block 78
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    $$$$$:  222-block 108
+call    3 never executed
+    #####:  223:   if(traits_inst.isctype(col, set_->cclasses) == true)
+    %%%%%:  223-block 83
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  224:      return set_->isnot ? next : ++next;
+    %%%%%:  224-block 85
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  224-block 86
+    %%%%%:  224-block 87
+    %%%%%:  224-block 88
+    #####:  225:   if((set_->cnclasses != 0) && (traits_inst.isctype(col, set_->cnclasses) == false))
+    %%%%%:  225-block 89
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  225-block 90
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed
+    %%%%%:  225-block 92
+    %%%%%:  225-block 93
+    %%%%%:  225-block 94
+branch  5 never executed (fallthrough)
+branch  6 never executed
+    #####:  226:      return set_->isnot ? next : ++next;
+    %%%%%:  226-block 95
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  226-block 96
+    %%%%%:  226-block 97
+    %%%%%:  226-block 98
+    #####:  227:   return set_->isnot ? ++next : next;
+    %%%%%:  227-block 99
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  227-block 100
+    %%%%%:  227-block 101
+    %%%%%:  227-block 102
+        -:  228:}
+------------------
+        -:  229:
+        -:  230:template <class BidiIterator>
+        -:  231:class repeater_count
+        -:  232:{
+        -:  233:   repeater_count** stack;
+        -:  234:   repeater_count* next;
+        -:  235:   int state_id;
+        -:  236:   std::size_t count;        // the number of iterations so far
+        -:  237:   BidiIterator start_pos;   // where the last repeat started
+        -:  238:
+function _ZN5boost13re_detail_50014repeater_countIPKcE12unwind_untilEiPS4_i called 0 returned 0% blocks executed 0%
+    #####:  239:   repeater_count* unwind_until(int n, repeater_count* p, int current_recursion_id)
+        -:  240:   { 
+    #####:  241:      while(p && (p->state_id != n))
+    %%%%%:  241-block 2
+    %%%%%:  241-block 11
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  241-block 12
+branch  2 never executed
+branch  3 never executed (fallthrough)
+        -:  242:      {
+    #####:  243:         if(-2 - current_recursion_id == p->state_id)
+    %%%%%:  243-block 3
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  244:            return 0;
+    %%%%%:  244-block 4
+    #####:  245:         p = p->next;
+    #####:  246:         if(p && (p->state_id < 0))
+    %%%%%:  246-block 5
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  246-block 6
+branch  2 never executed (fallthrough)
+branch  3 never executed
+        -:  247:         {
+    #####:  248:            p = unwind_until(p->state_id, p, current_recursion_id);
+    %%%%%:  248-block 7
+call    0 never executed
+    #####:  249:            if(!p)
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  250:               return p;
+    %%%%%:  250-block 9
+    #####:  251:            p = p->next;
+    %%%%%:  251-block 10
+        -:  252:         }
+        -:  253:      }
+    #####:  254:      return p;
+    %%%%%:  254-block 13
+        -:  255:   }
+        -:  256:public:
+function _ZN5boost13re_detail_50014repeater_countIPKcEC2EPPS4_ called 0 returned 0% blocks executed 0%
+    #####:  257:   repeater_count(repeater_count** s) : stack(s), next(0), state_id(-1), count(0), start_pos() {}
+        -:  258:   
+function _ZN5boost13re_detail_50014repeater_countIPKcEC2EiPPS4_S3_i called 0 returned 0% blocks executed 0%
+    #####:  259:   repeater_count(int i, repeater_count** s, BidiIterator start, int current_recursion_id)
+    #####:  260:      : start_pos(start)
+        -:  261:   {
+    #####:  262:      state_id = i;
+    #####:  263:      stack = s;
+    #####:  264:      next = *stack;
+    #####:  265:      *stack = this;
+    #####:  266:      if((state_id > next->state_id) && (next->state_id >= 0))
+    %%%%%:  266-block 2
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  266-block 3
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    #####:  267:         count = 0;
+    %%%%%:  267-block 4
+        -:  268:      else
+        -:  269:      {
+    #####:  270:         repeater_count* p = next;
+    #####:  271:         p = unwind_until(state_id, p, current_recursion_id);
+    %%%%%:  271-block 5
+call    0 never executed
+    #####:  272:         if(p)
+branch  0 never executed (fallthrough)
+branch  1 never executed
+        -:  273:         {
+    #####:  274:            count = p->count;
+    #####:  275:            start_pos = p->start_pos;
+    %%%%%:  275-block 7
+        -:  276:         }
+        -:  277:         else
+    #####:  278:            count = 0;
+    %%%%%:  278-block 8
+        -:  279:      }
+    #####:  280:   }
+function _ZN5boost13re_detail_50014repeater_countIPKcED2Ev called 0 returned 0% blocks executed 0%
+    #####:  281:   ~repeater_count()
+        -:  282:   {
+    #####:  283:      if(next)
+    %%%%%:  283-block 2
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  284:         *stack = next;
+    %%%%%:  284-block 3
+    #####:  285:   }
+function _ZN5boost13re_detail_50014repeater_countIPKcE9get_countEv called 0 returned 0% blocks executed 0%
+    #####:  286:   std::size_t get_count() { return count; }
+    %%%%%:  286-block 2
+function _ZN5boost13re_detail_50014repeater_countIPKcE6get_idEv called 0 returned 0% blocks executed 0%
+    #####:  287:   int get_id() { return state_id; }
+    %%%%%:  287-block 2
+function _ZN5boost13re_detail_50014repeater_countIPKcEppEv called 0 returned 0% blocks executed 0%
+    #####:  288:   std::size_t operator++() { return ++count; }
+    %%%%%:  288-block 2
+function _ZN5boost13re_detail_50014repeater_countIPKcE17check_null_repeatERKS3_m called 0 returned 0% blocks executed 0%
+    #####:  289:   bool check_null_repeat(const BidiIterator& pos, std::size_t max)
+        -:  290:   {
+        -:  291:      // this is called when we are about to start a new repeat,
+        -:  292:      // if the last one was NULL move our count to max,
+        -:  293:      // otherwise save the current position.
+    #####:  294:      bool result = (count == 0) ? false : (pos == start_pos);
+    %%%%%:  294-block 2
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    %%%%%:  294-block 3
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    %%%%%:  294-block 4
+    %%%%%:  294-block 5
+    #####:  295:      if(result)
+    %%%%%:  295-block 6
+branch  0 never executed (fallthrough)
+branch  1 never executed
+    #####:  296:         count = max;
+    %%%%%:  296-block 7
+        -:  297:      else
+    #####:  298:         start_pos = pos;
+    %%%%%:  298-block 8
+    #####:  299:      return result;
+    %%%%%:  299-block 9
+        -:  300:   }
+        -:  301:};
+        -:  302:
+        -:  303:struct saved_state;
+        -:  304:
+        -:  305:enum saved_state_type
+        -:  306:{
+        -:  307:   saved_type_end = 0,
+        -:  308:   saved_type_paren = 1,
+        -:  309:   saved_type_recurse = 2,
+        -:  310:   saved_type_assertion = 3,
+        -:  311:   saved_state_alt = 4,
+        -:  312:   saved_state_repeater_count = 5,
+        -:  313:   saved_state_extra_block = 6,
+        -:  314:   saved_state_greedy_single_repeat = 7,
+        -:  315:   saved_state_rep_slow_dot = 8,
+        -:  316:   saved_state_rep_fast_dot = 9,
+        -:  317:   saved_state_rep_char = 10,
+        -:  318:   saved_state_rep_short_set = 11,
+        -:  319:   saved_state_rep_long_set = 12,
+        -:  320:   saved_state_non_greedy_long_repeat = 13, 
+        -:  321:   saved_state_count = 14
+        -:  322:};
+        -:  323:
+        -:  324:#ifdef BOOST_REGEX_MSVC
+        -:  325:#  pragma warning(push)
+        -:  326:#if BOOST_REGEX_MSVC >= 1800
+        -:  327:#pragma warning(disable:26495)
+        -:  328:#endif
+        -:  329:#endif
+        -:  330:template <class Results>
+        -:  331:struct recursion_info
+        -:  332:{
+        -:  333:   typedef typename Results::value_type value_type;
+        -:  334:   typedef typename value_type::iterator iterator;
+        -:  335:   int idx;
+        -:  336:   const re_syntax_base* preturn_address;
+        -:  337:   Results results;
+        -:  338:   repeater_count<iterator>* repeater_stack;
+        -:  339:   iterator location_of_start;
+        -:  340:};
+        -:  341:#ifdef BOOST_REGEX_MSVC
+        -:  342:#  pragma warning(pop)
+        -:  343:#endif
+        -:  344:
+        -:  345:template <class BidiIterator, class Allocator, class traits>
+        -:  346:class perl_matcher
+        -:  347:{
+        -:  348:public:
+        -:  349:   typedef typename traits::char_type char_type;
+        -:  350:   typedef perl_matcher<BidiIterator, Allocator, traits> self_type;
+        -:  351:   typedef bool (self_type::*matcher_proc_type)();
+        -:  352:   typedef std::size_t traits_size_type;
+        -:  353:   typedef typename is_byte<char_type>::width_type width_type;
+        -:  354:   typedef typename std::iterator_traits<BidiIterator>::difference_type difference_type;
+        -:  355:   typedef match_results<BidiIterator, Allocator> results_type;
+        -:  356:
+function _ZN5boost13re_detail_50012perl_matcherIPKcSaINS_9sub_matchIS3_EEENS_12regex_traitsIcNS_16cpp_regex_traitsIcEEEEEC2ES3_S3_RNS_13match_resultsIS3_S6_EERKNS_11basic_regexIcSA_EENS_15regex_constants12_match_flagsES3_ called 0 returned 0% blocks executed 0%
+    #####:  357:   perl_matcher(BidiIterator first, BidiIterator end, 
+        -:  358:      match_results<BidiIterator, Allocator>& what, 
+        -:  359:      const basic_regex<char_type, traits>& e,
+        -:  360:      match_flag_type f,
+        -:  361:      BidiIterator l_base)
+    #####:  362:      :  m_result(what), base(first), last(end), 
+    #####:  363:         position(first), backstop(l_base), re(e), traits_inst(e.get_traits()), 
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  364:         m_independent(false), next_count(&rep_obj), rep_obj(&next_count)
+    %%%%%:  364-block 4
+call    0 never executed
+    #####:  365:      , m_recursions(0)
+    %%%%%:  365-block 2
+call    0 never executed
+call    1 never executed
+        -:  366:   {
+    #####:  367:      construct_init(e, f);
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  368:   }
+    %%%%%:  368-block 7
+    $$$$$:  368-block 8
+call    0 never executed
+    $$$$$:  368-block 10
+call    1 never executed
+    $$$$$:  368-block 12
+call    2 never executed
+        -:  369:
+        -:  370:   bool match();
+        -:  371:   bool find();
+        -:  372:
+        -:  373:   void setf(match_flag_type f)
+        -:  374:   { m_match_flags |= f; }
+        -:  375:   void unsetf(match_flag_type f)
+        -:  376:   { m_match_flags &= ~f; }
+        -:  377:
+        -:  378:private:
+        -:  379:   void construct_init(const basic_regex<char_type, traits>& e, match_flag_type f);
+        -:  380:
+        -:  381:   bool find_imp();
+        -:  382:   bool match_imp();
+        -:  383:   void estimate_max_state_count(std::random_access_iterator_tag*);
+        -:  384:   void estimate_max_state_count(void*);
+        -:  385:   bool match_prefix();
+        -:  386:   bool match_all_states();
+        -:  387:
+        -:  388:   // match procs, stored in s_match_vtable:
+        -:  389:   bool match_startmark();
+        -:  390:   bool match_endmark();
+        -:  391:   bool match_literal();
+        -:  392:   bool match_start_line();
+        -:  393:   bool match_end_line();
+        -:  394:   bool match_wild();
+        -:  395:   bool match_match();
+        -:  396:   bool match_word_boundary();
+        -:  397:   bool match_within_word();
+        -:  398:   bool match_word_start();
+        -:  399:   bool match_word_end();
+        -:  400:   bool match_buffer_start();
+        -:  401:   bool match_buffer_end();
+        -:  402:   bool match_backref();
+        -:  403:   bool match_long_set();
+        -:  404:   bool match_set();
+        -:  405:   bool match_jump();
+        -:  406:   bool match_alt();
+        -:  407:   bool match_rep();
+        -:  408:   bool match_combining();
+        -:  409:   bool match_soft_buffer_end();
+        -:  410:   bool match_restart_continue();
+        -:  411:   bool match_long_set_repeat();
+        -:  412:   bool match_set_repeat();
+        -:  413:   bool match_char_repeat();
+        -:  414:   bool match_dot_repeat_fast();
+        -:  415:   bool match_dot_repeat_slow();
+function _ZN5boost13re_detail_50012perl_matcherIPKcSaINS_9sub_matchIS3_EEENS_12regex_traitsIcNS_16cpp_regex_traitsIcEEEEE25match_dot_repeat_dispatchEv called 0 returned 0% blocks executed 0%
+    #####:  416:   bool match_dot_repeat_dispatch()
+        -:  417:   {
+    #####:  418:      return ::boost::is_random_access_iterator<BidiIterator>::value ? match_dot_repeat_fast() : match_dot_repeat_slow();
+    %%%%%:  418-block 2
+call    0 never executed
+        -:  419:   }
+        -:  420:   bool match_backstep();
+        -:  421:   bool match_assert_backref();
+        -:  422:   bool match_toggle_case();
+        -:  423:   bool match_recursion();
+        -:  424:   bool match_fail();
+        -:  425:   bool match_accept();
+        -:  426:   bool match_commit();
+        -:  427:   bool match_then();
+        -:  428:   bool skip_until_paren(int index, bool match = true);
+        -:  429:
+        -:  430:   // find procs stored in s_find_vtable:
+        -:  431:   bool find_restart_any();
+        -:  432:   bool find_restart_word();
+        -:  433:   bool find_restart_line();
+        -:  434:   bool find_restart_buf();
+        -:  435:   bool find_restart_lit();
+        -:  436:
+        -:  437:private:
+        -:  438:   // final result structure to be filled in:
+        -:  439:   match_results<BidiIterator, Allocator>& m_result;
+        -:  440:   // temporary result for POSIX matches:
+        -:  441:   std::unique_ptr<match_results<BidiIterator, Allocator> > m_temp_match;
+        -:  442:   // pointer to actual result structure to fill in:
+        -:  443:   match_results<BidiIterator, Allocator>* m_presult;
+        -:  444:   // start of sequence being searched:
+        -:  445:   BidiIterator base;
+        -:  446:   // end of sequence being searched:
+        -:  447:   BidiIterator last; 
+        -:  448:   // current character being examined:
+        -:  449:   BidiIterator position;
+        -:  450:   // where to restart next search after failed match attempt:
+        -:  451:   BidiIterator restart;
+        -:  452:   // where the current search started from, acts as base for $` during grep:
+        -:  453:   BidiIterator search_base;
+        -:  454:   // how far we can go back when matching lookbehind:
+        -:  455:   BidiIterator backstop;
+        -:  456:   // the expression being examined:
+        -:  457:   const basic_regex<char_type, traits>& re;
+        -:  458:   // the expression's traits class:
+        -:  459:   const ::boost::regex_traits_wrapper<traits>& traits_inst;
+        -:  460:   // the next state in the machine being matched:
+        -:  461:   const re_syntax_base* pstate;
+        -:  462:   // matching flags in use:
+        -:  463:   match_flag_type m_match_flags;
+        -:  464:   // how many states we have examined so far:
+        -:  465:   std::ptrdiff_t state_count;
+        -:  466:   // max number of states to examine before giving up:
+        -:  467:   std::ptrdiff_t max_state_count;
+        -:  468:   // whether we should ignore case or not:
+        -:  469:   bool icase;
+        -:  470:   // set to true when (position == last), indicates that we may have a partial match:
+        -:  471:   bool m_has_partial_match;
+        -:  472:   // set to true whenever we get a match:
+        -:  473:   bool m_has_found_match;
+        -:  474:   // set to true whenever we're inside an independent sub-expression:
+        -:  475:   bool m_independent;
+        -:  476:   // the current repeat being examined:
+        -:  477:   repeater_count<BidiIterator>* next_count;
+        -:  478:   // the first repeat being examined (top of linked list):
+        -:  479:   repeater_count<BidiIterator> rep_obj;
+        -:  480:   // the mask to pass when matching word boundaries:
+        -:  481:   typename traits::char_class_type m_word_mask;
+        -:  482:   // the bitmask to use when determining whether a match_any matches a newline or not:
+        -:  483:   unsigned char match_any_mask;
+        -:  484:   // recursion information:
+        -:  485:   std::vector<recursion_info<results_type> > recursion_stack;
+        -:  486:   //
+        -:  487:   // additional members for non-recursive version:
+        -:  488:   //
+        -:  489:   typedef bool (self_type::*unwind_proc_type)(bool);
+        -:  490:
+        -:  491:   void extend_stack();
+        -:  492:   bool unwind(bool);
+        -:  493:   bool unwind_end(bool);
+        -:  494:   bool unwind_paren(bool);
+        -:  495:   bool unwind_recursion_stopper(bool);
+        -:  496:   bool unwind_assertion(bool);
+        -:  497:   bool unwind_alt(bool);
+        -:  498:   bool unwind_repeater_counter(bool);
+        -:  499:   bool unwind_extra_block(bool);
+        -:  500:   bool unwind_greedy_single_repeat(bool);
+        -:  501:   bool unwind_slow_dot_repeat(bool);
+        -:  502:   bool unwind_fast_dot_repeat(bool);
+        -:  503:   bool unwind_char_repeat(bool);
+        -:  504:   bool unwind_short_set_repeat(bool);
+        -:  505:   bool unwind_long_set_repeat(bool);
+        -:  506:   bool unwind_non_greedy_repeat(bool);
+        -:  507:   bool unwind_recursion(bool);
+        -:  508:   bool unwind_recursion_pop(bool);
+        -:  509:   bool unwind_commit(bool);
+        -:  510:   bool unwind_then(bool);
+        -:  511:   bool unwind_case(bool);
+        -:  512:   void destroy_single_repeat();
+        -:  513:   void push_matched_paren(int index, const sub_match<BidiIterator>& sub);
+        -:  514:   void push_recursion_stopper();
+        -:  515:   void push_assertion(const re_syntax_base* ps, bool positive);
+        -:  516:   void push_alt(const re_syntax_base* ps);
+        -:  517:   void push_repeater_count(int i, repeater_count<BidiIterator>** s);
+        -:  518:   void push_single_repeat(std::size_t c, const re_repeat* r, BidiIterator last_position, int state_id);
+        -:  519:   void push_non_greedy_repeat(const re_syntax_base* ps);
+        -:  520:   void push_recursion(int idx, const re_syntax_base* p, results_type* presults, results_type* presults2);
+        -:  521:   void push_recursion_pop();
+        -:  522:   void push_case_change(bool);
+        -:  523:
+        -:  524:   // pointer to base of stack:
+        -:  525:   saved_state* m_stack_base;
+        -:  526:   // pointer to current stack position:
+        -:  527:   saved_state* m_backup_state;
+        -:  528:   // how many memory blocks have we used up?:
+        -:  529:   unsigned used_block_count;
+        -:  530:   // determines what value to return when unwinding from recursion,
+        -:  531:   // allows for mixed recursive/non-recursive algorithm:
+        -:  532:   bool m_recursive_result;
+        -:  533:   // We have unwound to a lookahead/lookbehind, used by COMMIT/PRUNE/SKIP:
+        -:  534:   bool m_unwound_lookahead;
+        -:  535:   // We have unwound to an alternative, used by THEN:
+        -:  536:   bool m_unwound_alt;
+        -:  537:   // We are unwinding a commit - used by independent subs to determine whether to stop there or carry on unwinding:
+        -:  538:   //bool m_unwind_commit;
+        -:  539:   // Recursion limit:
+        -:  540:   unsigned m_recursions;
+        -:  541:
+        -:  542:#ifdef BOOST_REGEX_MSVC
+        -:  543:#  pragma warning(push)
+        -:  544:#if BOOST_REGEX_MSVC >= 1800
+        -:  545:#pragma warning(disable:26495)
+        -:  546:#endif
+        -:  547:#endif
+        -:  548:   // these operations aren't allowed, so are declared private,
+        -:  549:   // bodies are provided to keep explicit-instantiation requests happy:
+        -:  550:   perl_matcher& operator=(const perl_matcher&)
+        -:  551:   {
+        -:  552:      return *this;
+        -:  553:   }
+        -:  554:   perl_matcher(const perl_matcher& that)
+        -:  555:      : m_result(that.m_result), re(that.re), traits_inst(that.traits_inst), rep_obj(0) {}
+        -:  556:#ifdef BOOST_REGEX_MSVC
+        -:  557:#  pragma warning(pop)
+        -:  558:#endif
+        -:  559:};
+        -:  560:
+        -:  561:} // namespace BOOST_REGEX_DETAIL_NS
+        -:  562:
+        -:  563:#ifdef BOOST_REGEX_MSVC
+        -:  564:#  pragma warning(pop)
+        -:  565:#endif
+        -:  566:
+        -:  567:} // namespace boost
+        -:  568:
+        -:  569://
+        -:  570:// include the implementation of perl_matcher:
+        -:  571://
+        -:  572:#include <boost/regex/v5/perl_matcher_non_recursive.hpp>
+        -:  573:// this one has to be last:
+        -:  574:#include <boost/regex/v5/perl_matcher_common.hpp>
+        -:  575:
+        -:  576:#endif
