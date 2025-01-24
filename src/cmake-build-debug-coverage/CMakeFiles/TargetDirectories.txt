@@ -1,5 +1,0 @@
-/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/Zathura.dir
-/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/run.dir
-/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/clean-all.dir
-/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/edit_cache.dir
-/home/rc/ZathuraDbg/src/cmake-build-debug-coverage/CMakeFiles/rebuild_cache.dir
