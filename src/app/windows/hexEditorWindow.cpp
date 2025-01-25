@@ -414,7 +414,7 @@ void hexEditorWindow(){
         int i = 0;
         for (auto& info: newMemEditWindows){
             char newMemData[info.size];
-            memset(newMemData, 0, info.size);
+            memset(newMemData, 0, info.size - 1);
 
             uc_err err = uc_mem_read(uc, info.address, newMemData, info.size);
             if (err){
