@@ -108,8 +108,8 @@ elseif (WIN32)
     find_package(PkgConfig REQUIRED)
     pkg_check_modules(GLFW REQUIRED glfw3)
     link_libraries(${GLFW_LIBRARIES})
-    add_compile_options(${GLFW_CFLAGS})
-    set(LIBS -lglfw3 -lgdi32 -lopengl32 -limm32 -lstdc++ -lunicorn -lkeystone -lcapstone -lm)
+    add_compile_options(${GLFW_CFLAGS} )
+    set(LIBS -lglfw3 -lgdi32 -lopengl32 -limm32 -lstdc++ -lunicorn -lkeystone -lcapstone -lm -Wl,--stack,16777216)
 endif()
 
 # Define the executable
