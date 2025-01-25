@@ -583,6 +583,7 @@ bool createStack(void* unicornEngine){
         return false;
     }
 
+    free(zeroBuf);
     LOG_INFO("Stack created successfully!");
     return true;
 }
@@ -814,6 +815,6 @@ bool runTempCode(const std::string& codeIn, uint64_t instructionCount){
     uint64_t ip;
     uc_context_reg_read(tempContext, regNameToConstant(getArchIPStr(codeInformation.mode)), &ip);
     updateRegs(true);
-
+    free(tempContext);
     return true;
 }
