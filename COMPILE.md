@@ -24,16 +24,7 @@ sudo apt install gcc-14 g++-14
 
 ### On Arch Linux
 ```sh
-sudo pacman -S base-devel cmake gcc nlohmann-json mesa
-```
-
-- If you're using wayland
-```sh
-sudo pacman -S glfw-wayland
-```
-- If you're using x11
-```sh
-sudo pacman -S glfw-x11
+sudo pacman -S base-devel git cmake boost glfw libglvnd unicorn capstone keystone
 ```
 
 ### On Windows
