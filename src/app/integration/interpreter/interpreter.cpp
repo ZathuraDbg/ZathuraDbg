@@ -584,6 +584,7 @@ bool createStack(void* unicornEngine){
     }
 
     free(zeroBuf);
+    stackArraysZeroed = false;
     LOG_INFO("Stack created successfully!");
     return true;
 }
@@ -667,6 +668,7 @@ bool resetState(){
         return false;
     }
 
+    stackArraysZeroed = false;
     LOG_DEBUG("State reset completed!");
     criticalSection.unlock();
     return true;

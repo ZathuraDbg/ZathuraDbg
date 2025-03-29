@@ -148,6 +148,9 @@ int main(int argc, const char** argv)
         exit(-1);
     }
 
+    stackEditorData = static_cast<char*>(malloc(STACK_SIZE));
+    stackEditorTemp = static_cast<char*>(malloc(STACK_SIZE));
+    stackArraysZeroed = false;
     glfwShowWindow(window);
 
     while (!glfwWindowShouldClose(window))
@@ -190,6 +193,8 @@ int main(int argc, const char** argv)
         runActions();
     }
 
+    free(stackEditorData);
+    free(stackEditorTemp);
     uc_close(uc);
     destroyWindow();
     return 0;

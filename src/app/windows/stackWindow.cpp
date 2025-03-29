@@ -40,9 +40,8 @@ bool stackErrorPopup(){
     return false;
 }
 
-static char data[5 * 1024 * 1024];
-static char temp[5 * 1024 * 1024];
-
+char* stackEditorData;
+char* stackEditorTemp;
 bool stackArraysZeroed = false;
 void stackEditorWindow() {
     const auto io = ImGui::GetIO();
@@ -54,12 +53,12 @@ void stackEditorWindow() {
     }
 
     if (!stackArraysZeroed) {
-         memset(data, 0, sizeof(data));
-         memset(temp, 0, sizeof(temp));
-         stackArraysZeroed = true;
+        memset(stackEditorData, 0, STACK_SIZE);
+        memset(stackEditorTemp, 0, STACK_SIZE);
+        stackArraysZeroed = true;
     }
 
-    const auto err = uc_mem_read(uc, STACK_ADDRESS, temp, STACK_SIZE);
+    const auto err = uc_mem_read(uc, STACK_ADDRESS, stackEditorTemp, STACK_SIZE);
     if ((err == UC_ERR_READ_UNMAPPED) && ((STACK_ADDRESS != 0) && (!showPopupError))) {
         LOG_ERROR("Failed to read memory. Address: " << std::hex << STACK_ADDRESS);
         stackErrorAddr = STACK_ADDRESS;
@@ -79,7 +78,7 @@ void stackEditorWindow() {
         showPopupError = false;
 
     if (updateStack) {
-        copyBigEndian(data, temp, STACK_SIZE);
+        copyBigEndian(stackEditorData, stackEditorTemp, STACK_SIZE);
         updateStack = false;
     }
 
@@ -90,6 +89,6 @@ void stackEditorWindow() {
     stackEditor.FillMemoryRange = fillMemoryWithBytePopup;
     stackEditor.StackFashionAddrSubtraction = true;
 
-    stackEditor.DrawWindow("Stack", reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(data)), STACK_SIZE, STACK_ADDRESS + STACK_SIZE);
+    stackEditor.DrawWindow("Stack", reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(stackEditorData)), STACK_SIZE, STACK_ADDRESS + STACK_SIZE);
     ImGui::PopFont();
 }

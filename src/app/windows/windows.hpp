@@ -100,4 +100,6 @@ extern std::vector<memoryMapInfo> getMemoryMapping(uc_engine* uc);
 extern void memoryMapWindow();
 extern std::pair<size_t, size_t> infoPopup(const std::string& title = "", const std::string& sizeHint = "");
 extern std::vector<newMemEditWindowsInfo> newMemEditWindows;
+extern char* stackEditorData;
+extern char* stackEditorTemp;
 #endif

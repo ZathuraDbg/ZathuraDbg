@@ -351,20 +351,20 @@ std::variant<bool, std::pair<void*, size_t>> setBaseAddr2(uintptr_t baseAddr, ui
     if (baseAddr && editorSize) {
         MEMORY_EDITOR_BASE = baseAddr;
         MEMORY_DEFAULT_SIZE = editorSize;
-        std::pair<void*, size_t> ret = {(void*)baseAddr, editorSize};
+        std::pair<void*, size_t> ret = {reinterpret_cast<void*>(baseAddr), editorSize};
         return ret;
     }
 
     auto [address, size] = infoPopup("Modify Base Address", "8192 bytes default");
     if (address && size){
         MEMORY_EDITOR_BASE = address;
-        std::pair<void*, size_t> ret = {(void*)address, size};
+        std::pair<void*, size_t> ret = {reinterpret_cast<void*>(address), size};
         return ret;
     }
     else if (address && (!size)) {
         MEMORY_EDITOR_BASE = address;
         MEMORY_DEFAULT_SIZE = 8192;
-        std::pair<void*, size_t> ret = {(void*)address, 8192};
+        std::pair<void*, size_t> ret = {reinterpret_cast<void*>(address), 8192};
         return ret;
     }
     else if ((!address && size)){
@@ -412,15 +412,15 @@ void hexEditorWindow(){
 
     if (!newMemEditWindows.empty()) {
         int i = 0;
-        for (auto& info: newMemEditWindows){
-            char newMemData[info.size];
-            memset(newMemData, 0, info.size - 1);
+        for (auto& [memEditor, address, size]: newMemEditWindows){
+            char newMemData[size];
+            memset(newMemData, 0, size - 1);
 
-            uc_err err = uc_mem_read(uc, info.address, newMemData, info.size);
+            uc_err err = uc_mem_read(uc, address, newMemData, size);
             if (err){
             }
 
-            info.memEditor.DrawWindow(("Memory Editor " + std::to_string(++i)).c_str(), (void*)newMemData, info.size, info.address);
+            memEditor.DrawWindow(("Memory Editor " + std::to_string(++i)).c_str(), (void*)newMemData, size, address);
         }
     }
     ImGui::PopFont();
