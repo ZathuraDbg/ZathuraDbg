@@ -49,7 +49,7 @@ std::string parseVals(std::string val){
     val = toUpperCase(val);
     val += " ";
     for (auto& c: val){
-        if (isRegisterValid(regName, codeInformation.mode) && (!foundValidReg)){
+        if (isRegisterValid(regName) && (!foundValidReg)){
             foundValidReg = true;
         }
 
@@ -63,11 +63,11 @@ std::string parseVals(std::string val){
                     registerValue = tempRegisterValueMap[regName];
                 }
                 else{
-                    if (regInfoMap[regName].first <= 64){
-                        registerValue = std::to_string(getRegisterValue(regName, (tempContext != nullptr) ? true : false).eightByteVal);
+                    if (regInfoMap[regName] <= 64){
+                        registerValue = std::to_string(getRegisterValue(regName).eightByteVal);
                     }
-                    else if (regInfoMap[regName].first == 128){
-                        registerValue = std::to_string(getRegisterValue(regName, (tempContext != nullptr) ? true : false).floatVal);
+                    else if (regInfoMap[regName] == 128){
+                        registerValue = std::to_string(getRegisterValue(regName).floatVal);
                     }
                 }
 
@@ -248,18 +248,18 @@ void parseCommands(const std::string& commandIn){
             std::string s = "Register\t\t\t\t\t\tHex";
 
             if (arguments.size() > 1){
-                if (isRegisterValid(toUpperCase(arguments[1]), codeInformation.mode)){
+                if (isRegisterValid(toUpperCase(arguments[1]))){
                     if (std::string regName = toUpperCase(arguments[1]); registerValueMap.contains(regName)){
                         output.emplace_back(s);
                         output.emplace_back(regName + getSpace(12, regName, 4) + registerValueMap[regName]);
                     }
                     else{
-                        if (!getRegisterValue(regName, false).info.is256bit && (!getRegisterValue(regName, false).info.is128bit)){
+                        if (!getRegisterValue(regName).info.is256bit && (!getRegisterValue(regName).info.is128bit)){
                             output.emplace_back(s);
-                            output.emplace_back(regName + getSpace(12, regName, 4) + std::to_string(getRegisterValue(regName, false).eightByteVal));
+                            output.emplace_back(regName + getSpace(12, regName, 4) + std::to_string(getRegisterValue(regName).eightByteVal));
                         }
                         else{
-                           if (getRegisterValue(regName, false).info.is128bit){
+                           if (getRegisterValue(regName).info.is128bit){
                                output.emplace_back(s);
                                if (use32BitLanes){
                                    int firstLaneNum = 0;
@@ -271,7 +271,7 @@ void parseCommands(const std::string& commandIn){
                                        firstLaneNum = (32 + 32 * i);
                                        outStr += std::to_string(firstLaneNum - 1);
                                        outStr += "]";
-                                       output.emplace_back(outStr + getSpace(20, outStr, 12) + std::to_string(getRegisterValue(regName, false).info.arrays.floatArray[i]));
+                                       output.emplace_back(outStr + getSpace(20, outStr, 12) + std::to_string(getRegisterValue(regName).info.arrays.floatArray[i]));
                                        outStr.clear();
                                        outStr = "";
                                    }
@@ -287,7 +287,7 @@ void parseCommands(const std::string& commandIn){
                                            firstLaneNum = (64 + 64 * i);
                                            outStr += std::to_string(firstLaneNum - 1);
                                            outStr += "]";
-                                           output.emplace_back(outStr + getSpace(20, outStr, 12) + std::to_string(getRegisterValue(regName, false).info.arrays.doubleArray[i]));
+                                           output.emplace_back(outStr + getSpace(20, outStr, 12) + std::to_string(getRegisterValue(regName).info.arrays.doubleArray[i]));
                                            outStr.clear();
                                            outStr = "";
                                        }
@@ -307,7 +307,7 @@ void parseCommands(const std::string& commandIn){
                                        firstLaneNum = (32 + 32 * i);
                                        outStr += std::to_string(firstLaneNum - 1);
                                        outStr += "]";
-                                       output.emplace_back(outStr + getSpace(20, outStr, 13) + std::to_string(getRegisterValue(regName, false).info.arrays.floatArray[i]));
+                                       output.emplace_back(outStr + getSpace(20, outStr, 13) + std::to_string(getRegisterValue(regName).info.arrays.floatArray[i]));
                                        outStr.clear();
                                        outStr = "";
                                    }
@@ -322,7 +322,7 @@ void parseCommands(const std::string& commandIn){
                                        firstLaneNum = (64 + 64 * i);
                                        outStr += std::to_string(firstLaneNum - 1);
                                        outStr += "]";
-                                       output.emplace_back(outStr + getSpace(20, outStr, 13) + std::to_string(getRegisterValue(regName, false).info.arrays.doubleArray[i]));
+                                       output.emplace_back(outStr + getSpace(20, outStr, 13) + std::to_string(getRegisterValue(regName).info.arrays.doubleArray[i]));
                                        outStr.clear();
                                        outStr = "";
                                    }

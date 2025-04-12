@@ -24,9 +24,9 @@ void restartDebugging(){
 }
 
 void stepOverAction(){
-    uc_context_restore(uc, context);
+    // uc_context_restore(uc, context);
     LOG_INFO("Stepping over...");
-    const uint64_t instructionPointer = getRegister(getArchIPStr(codeInformation.mode)).registerValueUn.eightByteVal;
+    const uint64_t instructionPointer = getRegister(archIPStr).registerValueUn.eightByteVal;
     const std::string lineNoStr = addressLineNoMap[std::to_string(instructionPointer)];
 
     if (!lineNoStr.empty()){
@@ -72,13 +72,13 @@ void stepInAction(){
 bool debugPaused = false;
 void debugPauseAction(){
     LOG_INFO("Pause action requested!");
-    auto instructionPointer = getRegisterValue(getArchIPStr(codeInformation.mode), false);
+    auto instructionPointer = getRegisterValue(archIPStr);
     const std::string currentLineNo = addressLineNoMap[std::to_string(instructionPointer.eightByteVal)];
     const auto lineNumber = std::atoi(currentLineNo.c_str());
     editor->HighlightDebugCurrentLine(lineNumber - 1);
     debugPaused = true;
-    saveUCContext(uc, context);
-    uc_emu_stop(uc);
+    saveICSnapshot(icicle);
+    // Unimplemented
     LOG_INFO("Code paused successfully!");
 }
 
@@ -296,22 +296,21 @@ void runActions(){
         fileSaveAsTask(saveAsFileDialog());
         saveFileAs = false;
     }
-    if (saveContextToFile){
-        LOG_INFO("Saving file to context requested!");
-        if (context == nullptr || uc == nullptr){
-            saveContextToFile = false;
-            return;
-        }
-
-        fileSaveUCContextAsJson(saveAsFileDialog());
-                    saveContextToFile = false;
-    }
+    // if (saveContextToFile){
+    //     LOG_INFO("Saving file to context requested!");
+    //     if (context == nullptr || uc == nullptr){
+    //         saveContextToFile = false;
+    //         return;
+    //     }
+    //
+    //     fileSaveUCContextAsJson(saveAsFileDialog());
+    //                 saveContextToFile = false;
+    // }
     if (fileLoadContext){
         LOG_INFO("Saving file to context requested!");
         fileLoadUCContextFromJson(openFileDialog());
-        uint64_t ip;
-
-        uc_reg_read(uc, regNameToConstant(getArchIPStr(codeInformation.mode)), &ip);
+        const uint64_t ip = icicle_get_pc(icicle);
+        // uc_reg_read(uc, regNameToConstant(getArchIPStr(codeInformation.mode)), &ip);
         const std::string str =  addressLineNoMap[std::to_string(ip)];
         if (!str.empty()) {
             const int lineNumber = std::atoi(str.c_str());
@@ -321,9 +320,9 @@ void runActions(){
         fileLoadContext = false;
     }
 
-    if (changeEmulationSettingsOpt){
-        changeEmulationSettings();
-    }
+    // if (changeEmulationSettingsOpt){
+    //     changeEmulationSettings();
+    // }
 
     if (toggleBreakpoint){
         debugToggleBreakpoint();
@@ -343,6 +342,7 @@ void runActions(){
 
     if (memoryMapsUI)
     {
-        memoryMapWindow();
+        LOG_INFO("Unimplemented");
+        // memoryMapWindow();
     }
 }

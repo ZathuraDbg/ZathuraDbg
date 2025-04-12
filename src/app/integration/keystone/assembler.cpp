@@ -77,7 +77,7 @@ std::pair<std::string, std::size_t> assemble(const std::string& assemblyString, 
 
 uint64_t lastInstructionLineNo = 0;
 void initInsSizeInfoMap(){
-    LOG_INFO("Upding instruction sizes info map...");
+    LOG_INFO("Updating instruction sizes info map...");
     std::string instructionStr;
 
     uint64_t lineNo = 1;

@@ -82,17 +82,17 @@ void updateRegs(bool useTempContext){
     bool useSecondVal = false;
 
     if (!useTempContext) {
-        if (context == nullptr) {
+        if (snapshot == nullptr) {
             return;
         }
     }
     for (auto [name, value]: registerValueMap) {
-        if (!isRegisterValid(toUpperCase(name), codeInformation.mode)){
+        if (!isRegisterValid(toUpperCase(name))){
             continue;
         }
 
         if (useTempContext){
-            val = getRegister(toLowerCase(name), true);
+            val = getRegister(toLowerCase(name));
         }
         else{
            val = getRegister(toLowerCase(name));
@@ -113,11 +113,11 @@ void updateRegs(bool useTempContext){
                 if (name.contains('[') && name.contains(']') && name.contains(':')){
                     name =  name.substr(0, name.find_first_of('['));
                 }
-                if (regInfoMap[toUpperCase(name)].first <= 64){
+                if (regInfoMap[toUpperCase(name)] <= 64){
                     hex << "0x";
                     hex << std::hex << registerValue.eightByteVal;
                 }
-                else if (regInfoMap[toUpperCase(name)].first == 128 || regInfoMap[toUpperCase(name)].first == 256 || regInfoMap[toUpperCase(name)].first == 512){
+                else if (regInfoMap[toUpperCase(name)]== 128 || regInfoMap[toUpperCase(name)] == 256 || regInfoMap[toUpperCase(name)] == 512){
                     if (registerValue.info.is128bit){
                         if (!use32BitLanes){
                             if (registerValueMap.contains(name + reg64BitLaneStrs[0])) {
@@ -326,13 +326,13 @@ contextMenuOption registerContextMenu(){
 
         const std::string actualName = getRegisterActualName(hoveredReg);
         if (ImGui::MenuItem("Hide Register")) {
-            if (regInfoMap[actualName].first == 128){
+            if (regInfoMap[actualName] == 128){
                 removeRegisterFromView(hoveredReg);
             }
-            else if (regInfoMap[actualName].first == 256){
+            else if (regInfoMap[actualName] == 256){
                 removeRegisterFromView(hoveredReg, 2);
             }
-            else if (regInfoMap[actualName].first == 512){
+            else if (regInfoMap[actualName] == 512){
                 removeRegisterFromView(hoveredReg, 3);
             }
             else{
@@ -421,17 +421,17 @@ void addRegisterToView(const std::string& reg, const registerValueInfoT& registe
 
 
 
-    if (regInfoMap[reg].first <= 64){
+    if (regInfoMap[reg] <= 64){
         regValue= std::to_string(registerInfo.registerValueUn.eightByteVal);
     }
-    else if (regInfoMap[reg].first == 128 ){
+    else if (regInfoMap[reg] == 128 ){
         for (int i = 0; i < (use32BitLanes ? 4 : 2); i++){
             regValues.push_back(std::to_string(use32BitLanes ? registerInfo.registerValueUn.info.arrays.floatArray[i] : registerInfo.registerValueUn.info.arrays.doubleArray[i]));
         }
 
         regValue = regValues[0];
     }
-    else if (regInfoMap[reg].first == 256) {
+    else if (regInfoMap[reg] == 256) {
         if (use32BitLanes) {
             for (const float i: registerInfo.registerValueUn.info.arrays.floatArray) {
                 regValues.push_back(std::to_string(i));
@@ -443,7 +443,7 @@ void addRegisterToView(const std::string& reg, const registerValueInfoT& registe
         }
 
         regValue = regValues[0];
-    } else if (regInfoMap[reg].first == 512) {
+    } else if (regInfoMap[reg] == 512) {
         if (use32BitLanes){
             for (const float i : registerInfo.registerValueUn.info.arrays.floatArray){
                 regValues.push_back(std::to_string(i));
@@ -457,7 +457,7 @@ void addRegisterToView(const std::string& reg, const registerValueInfoT& registe
 
         regValue = regValues[0];
     }
-    else if (regInfoMap[reg].first == 80){
+    else if (regInfoMap[reg] == 80){
         LOG_ERROR("ST* registers are not supported yet!");
         return;
     }
@@ -543,8 +543,8 @@ void addRegisterToView(const std::string& reg, const registerValueInfoT& registe
                 continue;
             }
 
-            if (regInfoMap[reg].first > 64){
-                isRegPresent = isRegisterWithLaneShown(reg.c_str(), regInfoMap[reg].first);
+            if (regInfoMap[reg]> 64){
+                isRegPresent = isRegisterWithLaneShown(reg.c_str(), regInfoMap[reg]);
             }
 
             if ((!registerValueMap.contains(reg)) && !isRegPresent) {
@@ -598,7 +598,7 @@ std::string getRegisterActualName(const std::string& regName) {
 
 uint16_t getRegisterActualSize(std::string str){
     str = getRegisterActualName(str);
-    return regInfoMap[str].first;
+    return regInfoMap[str];
 }
 
 void parseRegisterValueInput(const std::string& regName, const char *regValueFirst, const bool isBigReg){
@@ -630,8 +630,8 @@ void parseRegisterValueInput(const std::string& regName, const char *regValueFir
                         if (!use32BitLanes){
                             arrSize = (regSize == 128 ? 2 : 4);
                             double arr[arrSize];
-                            uc_reg_read(uc, regNameToConstant(realRegName), arr);
-
+                            size_t outSize{};
+                            icicle_reg_read_bytes(icicle, realRegName.c_str(), (uint8_t*)arr, arrSize, &outSize);
                             double val;
                             auto [ptr, ec] = std::from_chars(value.data(), value.data() + value.size(), val);
                             if (ec == std::errc::invalid_argument || ec == std::errc::result_out_of_range){
@@ -644,13 +644,14 @@ void parseRegisterValueInput(const std::string& regName, const char *regValueFir
 
                             arr[laneIndex] = val;
 
-                            uc_err err = uc_reg_write(uc, regNameToConstant(realRegName), arr);
-                            saveUCContext(uc, context);
+                            icicle_reg_write_bytes(icicle, realRegName.c_str(), (uint8_t*)arr, arrSize);
+                            saveICSnapshot(icicle);
                         }
                         else{
                             arrSize = (regSize == 128 ? 4 : 8);
                             float arr[arrSize];
-                            uc_reg_read(uc, regNameToConstant(realRegName), &arr);
+                            size_t outSize{};
+                            icicle_reg_read_bytes(icicle, realRegName.c_str(), (uint8_t*)arr, arrSize, &outSize);
 
                             float val;
                             auto [ptr, ec] = std::from_chars(value.data(), value.data() + value.size(), val);
@@ -664,22 +665,22 @@ void parseRegisterValueInput(const std::string& regName, const char *regValueFir
                             }
                             arr[laneIndex] = val;
 
-                            uc_err err = uc_reg_write(uc, regNameToConstant(realRegName), arr);
-                            saveUCContext(uc, context);
+                            icicle_reg_write_bytes(icicle, realRegName.c_str(), (uint8_t*)arr, arrSize);
+                            saveICSnapshot(icicle);
                         }
                     }
                 }
             }
             else{
-                uc_reg_write(uc, regNameToConstant(regName), &temp);
-                saveUCContext(uc, context);
+                icicle_reg_write_bytes(icicle, regName.c_str(), (uint8_t*)&temp, sizeof(temp));
+                saveICSnapshot(icicle);
             }
         }
         else{
-            if (regName == getArchIPStr(codeInformation.mode)){
+            if (regName == archIPStr){
                 ENTRY_POINT_ADDRESS = strtoul(regValueFirst, nullptr, 16);
             }
-            else if (regName == getArchSBPStr(codeInformation.mode).first || (regName == getArchSBPStr(codeInformation.mode).second)){
+            else if (regName == archSPStr || (regName == archBPStr)){
                 STACK_ADDRESS = strtoul(regValueFirst, nullptr, 16);
             }
             tempRegisterValueMap[regName] = regValueFirst;
@@ -689,7 +690,7 @@ void parseRegisterValueInput(const std::string& regName, const char *regValueFir
 
 void registerWindow() {
     if (codeHasRun){
-        if (tempContext!= nullptr){
+        if (tempSnapshot != nullptr){
             updateRegs(true);
         }
         else{
@@ -713,7 +714,7 @@ void registerWindow() {
 
         int index = 0;
         for (auto regValMapInfo = registerValueMap.begin(); regValMapInfo != registerValueMap.end(); ++index) {
-            if (!isRegisterValid(toUpperCase(regValMapInfo->first), codeInformation.mode)){
+            if (!isRegisterValid(toUpperCase(regValMapInfo->first))){
                 ++regValMapInfo;
                 continue;
             }

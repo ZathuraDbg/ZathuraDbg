@@ -70,6 +70,7 @@ include_directories(
         ${CMAKE_SOURCE_DIR}/../vendor/keystone/include
         ${CMAKE_SOURCE_DIR}/../vendor/capstone/include
         ${CMAKE_SOURCE_DIR}/../vendor/whereami/src
+        ${CMAKE_SOURCE_DIR}/../vendor/icicle-cpp
 )
 
 set(OpenGL_GL_PREFERENCE GLVND)
@@ -93,7 +94,7 @@ if (UNIX AND NOT APPLE)
     link_directories(/usr/lib /usr/local/lib)
     add_compile_options(${GLFW_CFLAGS})
     
-  set(LIBS ${GLFW_LDFLAGS} -lGL -ldl -lstdc++ -lunicorn -lkeystone -lcapstone
+  set(LIBS ${GLFW_LDFLAGS} -lGL -ldl -lstdc++ -lunicorn -lkeystone -lcapstone -L/usr/lib -L/usr/local/lib -licicle
     #    -L${CMAKE_SOURCE_DIR}/../vendor/keystone -l:libkeystone.a  
     # -L${CMAKE_SOURCE_DIR}/../vendor/capstone -l:libcapstone.a 
     -pthread -std=c++23)

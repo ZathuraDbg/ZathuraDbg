@@ -41,6 +41,7 @@ float frameRate = 120;
 
 int main(int argc, const char** argv)
 {
+    setenv("GHIDRA_SRC", "/home/rc/ghidra", 1);
     glfwSetErrorCallback(glfw_error_callback);
     if (!glfwInit())
         return 1;
@@ -142,12 +143,15 @@ int main(int argc, const char** argv)
     stackEditor.OptShowAscii = false;
     stackEditor.Cols = 8;
 
-    if (!createStack(&uc)){
+    if (!createStack(icicle)){
         tinyfd_messageBox("Keystone Engine error!", "Unable to initialize the stack. If the issue persists please create a GitHub issue and report your logs.", "ok", "error", 0);
         LOG_ERROR("Failed to create stack!");
         exit(-1);
     }
 
+    stackEditorData = static_cast<char*>(malloc(STACK_SIZE));
+    stackEditorTemp = static_cast<char*>(malloc(STACK_SIZE));
+    stackArraysZeroed = false;
     glfwShowWindow(window);
 
     while (!glfwWindowShouldClose(window))
@@ -190,7 +194,12 @@ int main(int argc, const char** argv)
         runActions();
     }
 
-    uc_close(uc);
+    free(stackEditorData);
+    free(stackEditorTemp);
+    if (icicle != nullptr)
+    {
+        icicle_free(icicle);
+    }
     destroyWindow();
     return 0;
 }

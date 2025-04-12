@@ -5,9 +5,8 @@ MemoryEditor memoryEditorWindow;
 std::vector<newMemEditWindowsInfo> newMemEditWindows{};
 
 void hexWriteFunc(ImU8* data, size_t off, ImU8 d){
-    auto err = uc_mem_write(uc, MEMORY_EDITOR_BASE + off, &d, 1);
-
-    if (err){
+    auto err = icicle_mem_write(icicle, MEMORY_EDITOR_BASE + off, &d, 1);
+    if (!err){
         LOG_ERROR("Failed to write to memory. Address: " << MEMORY_EDITOR_BASE + off);
         const auto hex = static_cast<char *>(malloc(24));
         sprintf(static_cast<char *>(hex), "Data change: %x", d);
@@ -351,20 +350,20 @@ std::variant<bool, std::pair<void*, size_t>> setBaseAddr2(uintptr_t baseAddr, ui
     if (baseAddr && editorSize) {
         MEMORY_EDITOR_BASE = baseAddr;
         MEMORY_DEFAULT_SIZE = editorSize;
-        std::pair<void*, size_t> ret = {(void*)baseAddr, editorSize};
+        std::pair<void*, size_t> ret = {reinterpret_cast<void*>(baseAddr), editorSize};
         return ret;
     }
 
     auto [address, size] = infoPopup("Modify Base Address", "8192 bytes default");
     if (address && size){
         MEMORY_EDITOR_BASE = address;
-        std::pair<void*, size_t> ret = {(void*)address, size};
+        std::pair<void*, size_t> ret = {reinterpret_cast<void*>(address), size};
         return ret;
     }
     else if (address && (!size)) {
         MEMORY_EDITOR_BASE = address;
         MEMORY_DEFAULT_SIZE = 8192;
-        std::pair<void*, size_t> ret = {(void*)address, 8192};
+        std::pair<void*, size_t> ret = {reinterpret_cast<void*>(address), 8192};
         return ret;
     }
     else if ((!address && size)){
@@ -390,16 +389,15 @@ bool fillMemoryRange(){
 
 void hexEditorWindow(){
     const auto io = ImGui::GetIO();
-    char data[0x3000];
     ImGui::PushFont(io.Fonts->Fonts[3]);
-    memset(data, 0, 0x3000);
-
-    if (!uc) {
+    if (!icicle)
+    {
         ImGui::PopFont();
         return;
     }
 
-    uc_mem_read(uc, MEMORY_EDITOR_BASE, data, 0x3000);
+    size_t outSize{};
+    unsigned char* data = icicle_mem_read(icicle, STACK_ADDRESS, STACK_SIZE, &outSize);
     memoryEditorWindow.HighlightColor = ImColor(59, 60, 79);
     memoryEditorWindow.OptShowAddWindowButton = true;
     memoryEditorWindow.NewWindowInfoFn = createNewWindow;
@@ -412,15 +410,11 @@ void hexEditorWindow(){
 
     if (!newMemEditWindows.empty()) {
         int i = 0;
-        for (auto& info: newMemEditWindows){
-            char newMemData[info.size];
-            memset(newMemData, 0, info.size - 1);
+        for (auto& [memEditor, address, size]: newMemEditWindows){
+            unsigned char *newMemData = nullptr;
+            newMemData = icicle_mem_read(icicle, address, size, &outSize);
 
-            uc_err err = uc_mem_read(uc, info.address, newMemData, info.size);
-            if (err){
-            }
-
-            info.memEditor.DrawWindow(("Memory Editor " + std::to_string(++i)).c_str(), (void*)newMemData, info.size, info.address);
+            memEditor.DrawWindow(("Memory Editor " + std::to_string(++i)).c_str(), (void*)newMemData, size, address);
         }
     }
     ImGui::PopFont();

@@ -1,20 +1,19 @@
 #include "interpreter.hpp"
+
+#include <sys/stat.h>
 uintptr_t ENTRY_POINT_ADDRESS = 0x1000;
 uintptr_t MEMORY_ALLOCATION_SIZE = 2 * 1024 * 1024;
 uintptr_t DEFAULT_STACK_ADDRESS = 0x300000;
 uintptr_t STACK_ADDRESS = DEFAULT_STACK_ADDRESS;
-uint64_t CODE_BUF_SIZE = 0x3000;
+uint64_t  CODE_BUF_SIZE = 0x3000;
 uintptr_t STACK_SIZE = 5 * 1024 * 1024;
 uintptr_t MEMORY_EDITOR_BASE;
 uintptr_t MEMORY_DEFAULT_SIZE = 0x4000;
 
 uint8_t* codeBuf = nullptr;
 
-uc_engine *uc = nullptr;
-uc_context* context = nullptr;
-
-uc_engine *tempUC = nullptr;
-uc_context *tempContext = nullptr;
+Icicle* icicle = nullptr;
+VmSnapshot* snapshot = nullptr;
 
 uint64_t codeCurrentLen = 0;
 uint64_t lineNo = 1;
@@ -36,22 +35,28 @@ bool use32BitLanes = false;
 
 std::vector<uint64_t> breakpointLines = {};
 
-int saveUCContext(uc_engine *ucEngine, uc_context *ucContext){
-    if (ucEngine == nullptr || ucContext == nullptr){
-        return UC_CONTEXT_SAVE_FAILED;
+VmSnapshot* saveICSnapshot(Icicle* icicle){
+    if (icicle == nullptr){
+        return nullptr;
     }
 
-    return uc_context_save(ucEngine, ucContext);
+    return icicle_vm_snapshot(icicle);
 }
+
+// int saveUCContext(uc_engine *ucEngine, uc_context *ucContext){
+//     if (ucEngine == nullptr || ucContext == nullptr){
+//         return UC_CONTEXT_SAVE_FAILED;
+//     }
+//
+//     return uc_context_save(ucEngine, ucContext);
+// }
 
 int getCurrentLine(){
     uint64_t instructionPointer = -1;
 
-    if (context != nullptr){
-        uc_context_reg_read(context, regNameToConstant(getArchIPStr(codeInformation.mode)), &instructionPointer);
-    }
-    else if (uc != nullptr){
-        uc_reg_read(uc, regNameToConstant(getArchIPStr(codeInformation.mode)), &instructionPointer);
+    if (icicle != nullptr)
+    {
+        instructionPointer = icicle_get_pc(icicle);
     }
 
     if (instructionPointer == -1){
@@ -70,17 +75,18 @@ bool removeBreakpoint(const int& lineNo) {
     breakpointMutex.lock();
 
     bool success = false;
-
+    //
     if (breakpointLines.empty()) {
         breakpointMutex.unlock();
         return success;
     }
-
+    //
     const auto it = std::ranges::find(breakpointLines, lineNo);
     if  (it != breakpointLines.end()) {
         breakpointLines.erase(it);
         success = true;
     }
+
 
     breakpointMutex.unlock();
     return success;
@@ -104,39 +110,25 @@ double convert128BitToDouble(uint64_t low_bits, const uint64_t high_bits) {
     return result;
 }
 
-registerValueT getRegisterValue(const std::string& regName, bool useTempContext){
-    auto registerInfo = regInfoMap[toUpperCase(regName)];
-    auto [size, constant] = registerInfo;
+registerValueT getRegisterValue(std::string regName){
+    const auto size = regInfoMap[toUpperCase(regName)];
+    regName = toLowerCase(regName);
 
-    if (size == 8) {
-        uint8_t valTemp8;
-        useTempContext ? uc_context_reg_read(tempContext, constant, &valTemp8) : uc_context_reg_read(context, constant, &valTemp8);
-        return {.charVal = valTemp8};
-    }
-    else if (size == 16) {
-        uint16_t valTemp16;
-        useTempContext ? uc_context_reg_read(tempContext, constant, &valTemp16) : uc_context_reg_read(context, constant, &valTemp16);
-        return {.twoByteVal = valTemp16};
-    }
-    else if (size == 32) {
-        uint32_t valTemp32;
-        useTempContext ? uc_context_reg_read(tempContext, constant, &valTemp32) : uc_context_reg_read(context, constant, &valTemp32);
-        return {.fourByteVal = valTemp32};
-    }
-    else if (size == 64) {
+    if (size <= 64) {
         uint64_t valTemp64;
-        useTempContext ? uc_context_reg_read(tempContext, constant, &valTemp64) : uc_context_reg_read(context, constant, &valTemp64);
+        icicle_reg_read(icicle, regName.c_str(), &valTemp64);
         return {.eightByteVal = valTemp64};
     }
-    else if (size == 128){
+    if (size == 128){
         uint8_t xmmValue[16];
-        useTempContext ? uc_context_reg_read(tempContext, constant, &xmmValue) : uc_context_reg_read(context, constant, &xmmValue);
+        size_t outSize;
+        icicle_reg_read_bytes(icicle, regName.c_str(), xmmValue, sizeof(xmmValue), &outSize);
 
         uint64_t upperHalf, lowerHalf;
         std::memcpy(&upperHalf, xmmValue, 8);
         std::memcpy(&lowerHalf, xmmValue + 8, 8);
 
-        registerValueT regValue = {.doubleVal = (convert128BitToDouble(lowerHalf, upperHalf))};
+        registerValueT regValue = {.doubleVal = static_cast<double>(upperHalf)};
         regValue.info.is128bit = true;
         if (use32BitLanes){
             regValue.info.arrays.floatArray[0] = convert64BitToTwoFloats(lowerHalf).first;
@@ -155,11 +147,11 @@ registerValueT getRegisterValue(const std::string& regName, bool useTempContext)
             }
         }
         else {
-//          1.0f just to make it pass the zero check test
+            //          1.0f just to make it pass the zero check test
             regValue = {.doubleVal = 0.0f};
             regValue.info.is128bit = true;
-            regValue.info.arrays.doubleArray[0] = convert128BitToDouble(0, upperHalf);
-            regValue.info.arrays.doubleArray[1] = convert128BitToDouble(0, lowerHalf);
+            regValue.info.arrays.doubleArray[0] = static_cast<double>(upperHalf);
+            regValue.info.arrays.doubleArray[1] = static_cast<double>(lowerHalf);
             regValue.info.arrays.doubleArray[2] = regValue.info.arrays.doubleArray[3] = 0;
             if (regValue.info.arrays.doubleArray[0] != 0 || regValue.info.arrays.doubleArray[1] != 0){
                 regValue.doubleVal = 1.0f;
@@ -173,9 +165,17 @@ registerValueT getRegisterValue(const std::string& regName, bool useTempContext)
 
         if (!use32BitLanes){
             double valueArray[arrSize];
-            useTempContext ? uc_context_reg_read(tempContext, constant, &valueArray) : uc_context_reg_read(context, constant, valueArray);
-            regValue = {.doubleVal = (valueArray[0])};
-
+            uint8_t ymmValue[32];
+            size_t outSize;
+            icicle_reg_read_bytes(icicle, regName.c_str(), ymmValue, sizeof(ymmValue), &outSize);
+            
+            // Convert bytes to doubles
+            for (int i = 0; i < 4; i++) {
+                uint64_t bits;
+                std::memcpy(&bits, &ymmValue[i * 8], 8);
+                valueArray[i] = static_cast<double>(bits);
+            }
+            
             regValue = {.doubleVal = 0.0f};
             regValue.info.is256bit = true;
 
@@ -192,7 +192,17 @@ registerValueT getRegisterValue(const std::string& regName, bool useTempContext)
         }
         else{
             float valueArray[arrSize];
-            useTempContext ? uc_context_reg_read(tempContext, constant, &valueArray) : uc_context_reg_read(context, constant, valueArray);
+            uint8_t ymmValue[32];
+            size_t outSize;
+            icicle_reg_read_bytes(icicle, regName.c_str(), ymmValue, sizeof(ymmValue), &outSize);
+            
+            // Convert bytes to floats (8 floats in a 256-bit register)
+            for (int i = 0; i < 8; i++) {
+                uint32_t bits;
+                std::memcpy(&bits, &ymmValue[i * 4], 4);
+                valueArray[i] = *reinterpret_cast<float*>(&bits);
+            }
+            
             regValue = {.doubleVal = (valueArray[0])};
             regValue.info.is256bit = true;
 
@@ -216,7 +226,17 @@ registerValueT getRegisterValue(const std::string& regName, bool useTempContext)
 
         if (!use32BitLanes){
             double valueArray[arrSize]{};
-            useTempContext ? uc_context_reg_read(tempContext, constant, &valueArray) : uc_context_reg_read(context, constant, valueArray);
+            uint8_t zmmValue[64];
+            size_t outSize;
+            icicle_reg_read_bytes(icicle, regName.c_str(), zmmValue, sizeof(zmmValue), &outSize);
+            
+            // Convert bytes to doubles
+            for (int i = 0; i < 8; i++) {
+                uint64_t bits;
+                std::memcpy(&bits, &zmmValue[i * 8], 8);
+                valueArray[i] = static_cast<double>(bits);
+            }
+            
             regValue = {.doubleVal = 0.0f};
 
             for (int i = 0; i < 8; i++){
@@ -234,7 +254,17 @@ registerValueT getRegisterValue(const std::string& regName, bool useTempContext)
         }
         else{
             float valueArray[arrSize]{};
-            useTempContext ? uc_context_reg_read(tempContext, constant, &valueArray) : uc_context_reg_read(context, constant, valueArray);
+            uint8_t zmmValue[64];
+            size_t outSize;
+            icicle_reg_read_bytes(icicle, regName.c_str(), zmmValue, sizeof(zmmValue), &outSize);
+            
+            // Convert bytes to floats (16 floats in a 512-bit register)
+            for (int i = 0; i < 16; i++) {
+                uint32_t bits;
+                std::memcpy(&bits, &zmmValue[i * 4], 4);
+                valueArray[i] = *reinterpret_cast<float*>(&bits);
+            }
+            
             regValue = {.doubleVal = (valueArray[0])};
 
             for (int i = 0; i < 16; i++){
@@ -254,7 +284,7 @@ registerValueT getRegisterValue(const std::string& regName, bool useTempContext)
 
     }
 
-    return {.charVal = 00};
+    return {.eightByteVal = 00};
 }
 
 
@@ -264,16 +294,111 @@ bool initRegistersToDefinedVals(){
 
     for(auto&[name, value]: tempRegisterValueMap){
         intVal = hexStrToInt(value);
-        auto err = uc_reg_write(uc, regNameToConstant(name), &intVal);
-
-        if (err){
-            LOG_ERROR("Unable to write defined value for the register" << name);
-        }
+        icicle_reg_write(icicle, toLowerCase(name).c_str(), intVal);
     }
     return true;
 }
 
-registerValueInfoT getRegister(const std::string& name, const bool useTempContext){
+// Function to set register values, handling registers of all sizes
+bool setRegisterValue(const std::string& regName, const registerValueT& value) {
+    const auto size = regInfoMap[toUpperCase(regName)];
+    std::string lowerRegName = toLowerCase(regName);
+    
+    // For registers <= 64 bits, use the standard write function
+    if (size <= 64) {
+        return icicle_reg_write(icicle, lowerRegName.c_str(), value.eightByteVal) == 0;
+    }
+    
+    // For larger registers (XMM, YMM, ZMM), we need to construct a byte array
+    if (size == 128) {
+        uint8_t xmmValue[16] = {0};
+        
+        if (use32BitLanes) {
+            // Handle 32-bit lanes (4 float values)
+            for (int i = 0; i < 4; i++) {
+                uint32_t bits;
+                float fval = value.info.arrays.floatArray[i];
+                std::memcpy(&bits, &fval, sizeof(float));
+                
+                // Write to the appropriate position in the byte array
+                std::memcpy(xmmValue + (i * 4), &bits, 4);
+            }
+        } else {
+            // Handle 64-bit lanes (2 double values)
+            for (int i = 0; i < 2; i++) {
+                uint64_t bits;
+                double dval = value.info.arrays.doubleArray[i];
+                std::memcpy(&bits, &dval, sizeof(double));
+                
+                // Write to the appropriate position in the byte array
+                std::memcpy(xmmValue + (i * 8), &bits, 8);
+            }
+        }
+        
+        // Write the bytes to the register using a direct memory operation
+        return icicle_mem_write(icicle, icicle_get_pc(icicle), xmmValue, sizeof(xmmValue));
+    }
+    else if (size == 256) {
+        uint8_t ymmValue[32] = {0};
+        
+        if (use32BitLanes) {
+            // Handle 32-bit lanes (8 float values)
+            for (int i = 0; i < 8; i++) {
+                uint32_t bits;
+                float fval = value.info.arrays.floatArray[i];
+                std::memcpy(&bits, &fval, sizeof(float));
+                
+                // Write to the appropriate position in the byte array
+                std::memcpy(ymmValue + (i * 4), &bits, 4);
+            }
+        } else {
+            // Handle 64-bit lanes (4 double values)
+            for (int i = 0; i < 4; i++) {
+                uint64_t bits;
+                double dval = value.info.arrays.doubleArray[i];
+                std::memcpy(&bits, &dval, sizeof(double));
+                
+                // Write to the appropriate position in the byte array
+                std::memcpy(ymmValue + (i * 8), &bits, 8);
+            }
+        }
+        
+        // Write the bytes to the register using a direct memory operation
+        return icicle_mem_write(icicle, icicle_get_pc(icicle), ymmValue, sizeof(ymmValue));
+    }
+    else if (size == 512) {
+        uint8_t zmmValue[64] = {0};
+        
+        if (use32BitLanes) {
+            // Handle 32-bit lanes (16 float values)
+            for (int i = 0; i < 16; i++) {
+                uint32_t bits;
+                float fval = value.info.arrays.floatArray[i];
+                std::memcpy(&bits, &fval, sizeof(float));
+                
+                // Write to the appropriate position in the byte array
+                std::memcpy(zmmValue + (i * 4), &bits, 4);
+            }
+        } else {
+            // Handle 64-bit lanes (8 double values)
+            for (int i = 0; i < 8; i++) {
+                uint64_t bits;
+                double dval = value.info.arrays.doubleArray[i];
+                std::memcpy(&bits, &dval, sizeof(double));
+                
+                // Write to the appropriate position in the byte array
+                std::memcpy(zmmValue + (i * 8), &bits, 8);
+            }
+        }
+        
+        // Write the bytes to the register using a direct memory operation
+        return icicle_mem_write(icicle, icicle_get_pc(icicle), zmmValue, sizeof(zmmValue));
+    }
+    
+    return false;
+}
+
+registerValueInfoT getRegister(const std::string& name){
     registerValueInfoT res = {false, 0};
     std::string regName = name;
 
@@ -281,47 +406,41 @@ registerValueInfoT getRegister(const std::string& name, const bool useTempContex
         regName = name.substr(0, name.find_first_of('['));
     }
 
-    if (useTempContext){
-        return {true, getRegisterValue(regName, true)};
-    }
-
-
     if (!codeHasRun){
-        registerValueInfoT ret = {true, 0x00};
-        if (getRegisterActualSize(toUpperCase(name)) == 128) {
-            ret.registerValueUn.info.is128bit = true;
-        }
-        else if (getRegisterActualSize(toUpperCase(name)) == 256){
-            ret.registerValueUn.info.is256bit = true;
-        }
-        else if (getRegisterActualSize(toUpperCase(name)) == 512) {
-            ret.registerValueUn.info.is512bit = true;
-        }
+        registerValueInfoT ret = {false, 0x00};
+        // if (getRegisterActualSize(toUpperCase(name)) == 128) {
+        //     ret.registerValueUn.info.is128bit = true;
+        // }
+        // else if (getRegisterActualSize(toUpperCase(name)) == 256){
+        //     ret.registerValueUn.info.is256bit = true;
+        // }
+        // else if (getRegisterActualSize(toUpperCase(name)) == 512) {
+        //     ret.registerValueUn.info.is512bit = true;
+        // }
 
         return ret;
     }
 
-    const auto value = getRegisterValue(regName, false);
+    const auto value = getRegisterValue(regName);
     res = {true, value};
     return res;
 }
 
-bool ucInit(void* unicornEngine){
-    LOG_INFO("Initializing unicorn engine...");
-    if (regInfoMap.empty()){
-        initArch();
-    }
 
-    if (auto err = uc_open(codeInformation.archUC, codeInformation.mode, static_cast<uc_engine **>(unicornEngine)); err != UC_ERR_OK) {
-        LOG_ERROR("Failed to initialise Unicorn Engine!");
-        tinyfd_messageBox("ERROR!", "Could not initialize Unicorn Engine. Please check if the environment is correctly setup.", "ok", "error", 0);
-        return false;
+Icicle* initIC()
+{
+    const auto vm = icicle_new("x86_64", false, false, false, false, false, false, false, false);
+    if (!vm)
+    {
+        printf("Failed to initialize VM\n");
+        return nullptr;
     }
 
     LOG_INFO("Initiation complete...");
-    return true;
+    initArch();
+    icicle = vm;
+    return vm;
 }
-
 
 int tempBPLineNum = -1;
 bool eraseTempBP = false;
@@ -345,176 +464,187 @@ int stepOverBpLine = 0;
 std::string lastLabel{};
 uint64_t lastLineNo = 0;
 
-void hook(uc_engine *uc, const uint64_t address, const uint32_t size, void *user_data){
-    std::string currentLabel{};
 
-    int lineNumber = -1;
-    const std::string str = addressLineNoMap[std::to_string(address)];
-    if (!str.empty()){
-        lineNumber = std::atoi(str.c_str());
-    }
-    else{
-        lineNumber = -1;
-    }
-
-    bool jumpDetected = false;
-    if ((!debugModeEnabled && !debugRun) || (executionComplete) || (pauseNext && pausedLineNo != lineNumber)){
-        LOG_DEBUG("Execution halted.");
-        uc_emu_stop(uc);
-        saveUCContext(uc, context);
-
-        if (executionComplete){
-            editor->HighlightDebugCurrentLine(lastInstructionLineNo - 1);
-        }
-
-        if (pauseNext && pausedLineNo != lastLineNo){
-            LOG_DEBUG("Pause next detected!");
-            pauseNext = false;
-        }
-        criticalSection.unlock();
-        return;
-    }
-
-    if (!runningAsContinue) {
-     for (auto &[label, range]: labelLineNoRange) {
-        if (lineNo > range.first && (lineNo <= range.second)) {
-            currentLabel = label;
-            break;
-        }
-    }
-    }
-
-    if (stepOver) {
-        wasStepOver = true;
-    }
-
-    LOG_DEBUG("At lineNo: " << lineNumber);
-    if (lineNumber == runUntilLine){
-        LOG_DEBUG("Run until here detected!");
-        LOG_DEBUG("At lineNo: " << lineNumber);
-        runUntilLine = 0;
-        runUntilHere = false;
-        uc_emu_stop(uc);
-        saveUCContext(uc, context);
-    }
-
-    if (eraseTempBP) {
-//      erase the temporary breakpoint
-        breakpointMutex.lock();
-        LOG_DEBUG("Removing step over breakpoint line number: " << stepOverBPLineNo);
-        if (!breakpointLines.empty()) {
-            breakpointLines.erase(std::ranges::find(breakpointLines, stepOverBPLineNo));
-        }
-
-        breakpointMutex.unlock();
-        stepOverBPLineNo = -1;
-        eraseTempBP = false;
-    }
-
-    if (expectedIP == 0){
-        expectedIP = address;
-    }
-
-    if (lineNumber == lastInstructionLineNo){
-        executionComplete = true;
-    }
-
-    uint64_t ip = getRegisterValue(getArchIPStr(codeInformation.mode), false).eightByteVal;
-
-
-    if (ip != expectedIP && expectedIP != 0 && !currentLabel.empty()) {
-        if (lastLineNo == labelLineNoRange[currentLabel].second && lineNumber != lastLineNo) {
-            uc_emu_stop(uc);
-            saveUCContext(uc, context);
-        }
-    }
-
-    if (debugModeEnabled && !skipBreakpoints){
-        if (ip != expectedIP && (ip > expectedIP)){
-            LOG_INFO("Jump detected!");
-            jumpDetected = true;
-            updateRegs();
-
-            /* The following check makes sure that the
-             * step in behavior stays consistent even when
-             * the step out routine is used in order to
-             * fix an issue with unicorn.
-           */
-            if (stepInBypassed && !jumpAfterBypass) {
-                jumpAfterBypass = true;
-                stepInBypassed = false;
-            }
-            else if (jumpAfterBypass) {
-                LOG_DEBUG("Program paused after a jump is recieved after stepIn bypass");
-                uc_emu_stop(uc);
-                jumpAfterBypass = false;
-                stepInBypassed = false;
-            }
-
-            if (stepIn){
-                LOG_DEBUG("Step in detected!");
-                const std::string breakPointLinNo = addressLineNoMap[std::to_string(ip)];
-                tempBPLineNum = std::atoi(breakPointLinNo.c_str());
-                if (!breakPointLinNo.empty()){
-                    breakpointMutex.lock();
-                    breakpointLines.push_back(tempBPLineNum);
-                    breakpointMutex.unlock();
-                }
-            }
-            expectedIP = ip;
-        }
-
-        editor->HighlightDebugCurrentLine(lineNumber - 1);
-        if (std::ranges::find(breakpointLines, lineNumber) != breakpointLines.end() && (!skipBreakpoints)){
-            editor->HighlightDebugCurrentLine(lineNumber - 1);
-            LOG_DEBUG("Highlight from hook - breakpoint found at lineNo " << lineNumber);
-            if (((runningAsContinue && lineNumber == stepOverBPLineNo))) {
-                removeBreakpoint(stepOverBPLineNo);
-            }
-            else if (!continueOverBreakpoint){
-                LOG_DEBUG("Breakpoint hit!");
-                uc_emu_stop(uc);
-                saveUCContext(uc, context);
-                continueOverBreakpoint = true;
-                return;
-            }
-            else{
-                continueOverBreakpoint = false;
-            }
-        }
-
-        if (tempBPLineNum != -1){
-            removeBreakpoint(tempBPLineNum);
-        }
-    }
-    if (stepOverBPLineNo != -1){
-        eraseTempBP = true;
-    }
-
-   if (!wasJumpAndStepOver) {
-        wasJumpAndStepOver = jumpDetected && wasStepOver;
-   }
-
-    if (debugPaused && stepIn){
-        LOG_DEBUG("Step In detected after pause!");
-        stepIn = false;
-        pauseNext = true;
-        pausedLineNo = lineNumber;
-    }
-    
-    saveUCContext(uc, context);
-    codeCurrentLen += size;
-    expectedIP += size;
-    lastLineNo = lineNumber;
-    criticalSection.unlock();
+void instructionHook(void* userData, uint64_t address)
+{
+    std::cout << "Instruction hook called!" << std::endl;
 }
 
+// void hook(uc_engine *uc, const uint64_t address, const uint32_t size, void *user_data){
+//     std::string currentLabel{};
+//
+//     int lineNumber = -1;
+//     const std::string str = addressLineNoMap[std::to_string(address)];
+//     if (!str.empty()){
+//         lineNumber = std::atoi(str.c_str());
+//     }
+//     else{
+//         lineNumber = -1;
+//     }
+//
+//     bool jumpDetected = false;
+//     if ((!debugModeEnabled && !debugRun) || (executionComplete) || (pauseNext && pausedLineNo != lineNumber)){
+//         LOG_DEBUG("Execution halted.");
+//         uc_emu_stop(uc);
+//         saveUCContext(uc, context);
+//
+//         if (executionComplete){
+//             editor->HighlightDebugCurrentLine(lastInstructionLineNo - 1);
+//         }
+//
+//         if (pauseNext && pausedLineNo != lastLineNo){
+//             LOG_DEBUG("Pause next detected!");
+//             pauseNext = false;
+//         }
+//         criticalSection.unlock();
+//         return;
+//     }
+//
+//     if (!runningAsContinue) {
+//      for (auto &[label, range]: labelLineNoRange) {
+//         if (lineNo > range.first && (lineNo <= range.second)) {
+//             currentLabel = label;
+//             break;
+//         }
+//     }
+//     }
+//
+//     if (stepOver) {
+//         wasStepOver = true;
+//     }
+//
+//     LOG_DEBUG("At lineNo: " << lineNumber);
+//     if (lineNumber == runUntilLine){
+//         LOG_DEBUG("Run until here detected!");
+//         LOG_DEBUG("At lineNo: " << lineNumber);
+//         runUntilLine = 0;
+//         runUntilHere = false;
+//         uc_emu_stop(uc);
+//         saveUCContext(uc, context);
+//     }
+//
+//     if (eraseTempBP) {
+// //      erase the temporary breakpoint
+//         breakpointMutex.lock();
+//         LOG_DEBUG("Removing step over breakpoint line number: " << stepOverBPLineNo);
+//         if (!breakpointLines.empty()) {
+//             breakpointLines.erase(std::ranges::find(breakpointLines, stepOverBPLineNo));
+//         }
+//
+//         breakpointMutex.unlock();
+//         stepOverBPLineNo = -1;
+//         eraseTempBP = false;
+//     }
+//
+//     if (expectedIP == 0){
+//         expectedIP = address;
+//     }
+//
+//     if (lineNumber == lastInstructionLineNo){
+//         executionComplete = true;
+//     }
+//
+//     uint64_t ip = getRegisterValue(getArchIPStr(codeInformation.mode), false).eightByteVal;
+//
+//
+//     if (ip != expectedIP && expectedIP != 0 && !currentLabel.empty()) {
+//         if (lastLineNo == labelLineNoRange[currentLabel].second && lineNumber != lastLineNo) {
+//             uc_emu_stop(uc);
+//             saveUCContext(uc, context);
+//         }
+//     }
+//
+//     if (debugModeEnabled && !skipBreakpoints){
+//         if (ip != expectedIP && (ip > expectedIP)){
+//             LOG_INFO("Jump detected!");
+//             jumpDetected = true;
+//             updateRegs();
+//
+//             /* The following check makes sure that the
+//              * step in behavior stays consistent even when
+//              * the step out routine is used in order to
+//              * fix an issue with unicorn.
+//            */
+//             if (stepInBypassed && !jumpAfterBypass) {
+//                 jumpAfterBypass = true;
+//                 stepInBypassed = false;
+//             }
+//             else if (jumpAfterBypass) {
+//                 LOG_DEBUG("Program paused after a jump is recieved after stepIn bypass");
+//                 uc_emu_stop(uc);
+//                 jumpAfterBypass = false;
+//                 stepInBypassed = false;
+//             }
+//
+//             if (stepIn){
+//                 LOG_DEBUG("Step in detected!");
+//                 const std::string breakPointLinNo = addressLineNoMap[std::to_string(ip)];
+//                 tempBPLineNum = std::atoi(breakPointLinNo.c_str());
+//                 if (!breakPointLinNo.empty()){
+//                     breakpointMutex.lock();
+//                     breakpointLines.push_back(tempBPLineNum);
+//                     breakpointMutex.unlock();
+//                 }
+//             }
+//             expectedIP = ip;
+//         }
+//
+//         editor->HighlightDebugCurrentLine(lineNumber - 1);
+//         if (std::ranges::find(breakpointLines, lineNumber) != breakpointLines.end() && (!skipBreakpoints)){
+//             editor->HighlightDebugCurrentLine(lineNumber - 1);
+//             LOG_DEBUG("Highlight from hook - breakpoint found at lineNo " << lineNumber);
+//             if (((runningAsContinue && lineNumber == stepOverBPLineNo))) {
+//                 removeBreakpoint(stepOverBPLineNo);
+//             }
+//             else if (!continueOverBreakpoint){
+//                 LOG_DEBUG("Breakpoint hit!");
+//                 uc_emu_stop(uc);
+//                 saveUCContext(uc, context);
+//                 continueOverBreakpoint = true;
+//                 return;
+//             }
+//             else{
+//                 continueOverBreakpoint = false;
+//             }
+//         }
+//
+//         if (tempBPLineNum != -1){
+//             removeBreakpoint(tempBPLineNum);
+//         }
+//     }
+//     if (stepOverBPLineNo != -1){
+//         eraseTempBP = true;
+//     }
+//
+//    if (!wasJumpAndStepOver) {
+//         wasJumpAndStepOver = jumpDetected && wasStepOver;
+//    }
+//
+//     if (debugPaused && stepIn){
+//         LOG_DEBUG("Step In detected after pause!");
+//         stepIn = false;
+//         pauseNext = true;
+//         pausedLineNo = lineNumber;
+//     }
+//
+//     saveUCContext(uc, context);
+//     codeCurrentLen += size;
+//     expectedIP += size;
+//     lastLineNo = lineNumber;
+//     criticalSection.unlock();
+// }
+
 bool updateStack = false;
+void stackWriteHook(void* data, uint64_t address, uint8_t size, const uint8_t* value_read)
+{
+    updateStack = true;
+}
 void hookStackWrite(uc_engine *uc, const uint64_t address, const uint32_t size, void *user_data) {
     updateStack = true;
 }
 
-bool preExecutionSetup(const std::string& codeIn) {
+bool preExecutionSetup(const std::string& codeIn)
+{
     initRegistersToDefinedVals();
     if (codeBuf == nullptr){
         codeBuf = static_cast<uint8_t *>(malloc(CODE_BUF_SIZE));
@@ -525,68 +655,117 @@ bool preExecutionSetup(const std::string& codeIn) {
     const auto *code = (uint8_t *)(codeIn.c_str());
     memcpy(codeBuf, code, codeIn.length());
 
-    uc_mem_map(uc, ENTRY_POINT_ADDRESS, MEMORY_ALLOCATION_SIZE, UC_PROT_READ | UC_PROT_WRITE | UC_PROT_EXEC);
-    if (uc_mem_write(uc, ENTRY_POINT_ADDRESS, codeBuf, CODE_BUF_SIZE - 1)) {
-        LOG_ERROR("Failed to write emulation code to memory, quit!\n");
+    // TODO: Add a way to make stack executable
+    if (!icicle_mem_map(icicle, ENTRY_POINT_ADDRESS, MEMORY_ALLOCATION_SIZE, MemoryProtection::ReadWrite))
+    {
+        LOG_ERROR("Failed to map memory for writing code!");
         return false;
     }
 
-    uc_reg_write(uc, regNameToConstant(getArchIPStr(codeInformation.mode)), &ENTRY_POINT_ADDRESS);
-
-    if (context == nullptr){
-        uc_context_alloc(uc, &context);
+    if (icicle_reg_write(icicle, archIPStr, ENTRY_POINT_ADDRESS))
+    {
+        LOG_ERROR("Failed to write entry point to memory!\n");
+        return false;
     }
 
-    uc_hook trace;
-    uc_hook_add(uc, &trace, UC_HOOK_CODE, (void*)hook, nullptr, 1, 0);
-    uc_hook_add(uc, &trace, UC_HOOK_MEM_WRITE, (void*)hookStackWrite, nullptr, STACK_ADDRESS + STACK_SIZE, STACK_ADDRESS);
+    if (snapshot == nullptr)
+    {
+        icicle_vm_snapshot(icicle);
+    }
+
+    uint32_t instructionHookID = icicle_add_execution_hook(icicle, instructionHook, nullptr);
+    uint32_t stackWriteHookID = icicle_add_mem_read_hook(icicle, stackWriteHook, nullptr, STACK_ADDRESS + STACK_SIZE, STACK_ADDRESS);
+
+    icicle_set_pc(icicle, ENTRY_POINT_ADDRESS);
     return true;
 }
 
-bool createStack(void* unicornEngine){
+bool createStack(Icicle* ic)
+{
     LOG_INFO("Creating stack...");
-
-    if (!ucInit(unicornEngine)){
-        LOG_ERROR("Unicorn engine initilisation failed... Quitting!");
+    auto icicle = initIC();
+    if (!icicle){
+        LOG_ERROR("Icicle initilisation failed... Quitting!");
         return false;
     }
 
-    auto *zeroBuf = static_cast<uint8_t*>(malloc(STACK_SIZE));
+    uint8_t* zeroBuf = (uint8_t*)malloc(STACK_SIZE);
 
     memset(zeroBuf, 0, STACK_SIZE);
-    const auto err = uc_mem_map(uc, STACK_ADDRESS, STACK_SIZE, UC_PROT_READ | UC_PROT_WRITE);
-    if (err && err != UC_ERR_MAP){
-        LOG_ERROR("Failed to memory map the stack!!");
+    auto mapped = icicle_mem_map(icicle, STACK_ADDRESS, STACK_SIZE, MemoryProtection::ReadWrite);
+    if (mapped == -1)
+    {
+        LOG_ERROR("Icicle was unable to map memory for the stack.");
         return false;
     }
 
-    if (err == UC_ERR_MAP) {
-        LOG_WARNING("Unicorn Mapping error triggered while initialising the stack.");
-        LOG_WARNING("The most probable cause is the workaround, if it still causes issues please report it otherwise ignore this.");
-        return true;
+    mapped = icicle_mem_write(icicle, STACK_ADDRESS, zeroBuf, STACK_SIZE);
+    if (mapped == -1)
+    {
+        LOG_WARNING("Icicle was unable to zero memory for the stack.");
+        LOG_WARNING("Something may be wrong, proceeding anyways...");
     }
 
-    if (uc_mem_write(uc, STACK_ADDRESS, zeroBuf, STACK_SIZE)) {
-        LOG_ERROR("Failed to write to the stack!!");
-        return false;
+    uint64_t stackBase = STACK_ADDRESS + STACK_SIZE;
+    icicle_reg_write(icicle, archSPStr, stackBase);
+    icicle_reg_write(icicle, archBPStr, stackBase);
+    size_t outSize{};
+    auto s = icicle_mem_read(icicle, STACK_ADDRESS, STACK_SIZE, &outSize);
+    if (!s)
+    {
+        LOG_ERROR("Failed to read the stack base pointer, quitting!!");
     }
 
-    auto [sp, bp] = getArchSBPStr(codeInformation.mode);
-    const uint64_t stackBase = STACK_ADDRESS + STACK_SIZE;
-    if (uc_reg_write(uc, regNameToConstant(sp), &stackBase)){
-        LOG_ERROR("Failed to write the stack pointer to base pointer, quitting!!");
-        return false;
-    }
-
-    if (uc_reg_write(uc, regNameToConstant(bp), &stackBase)){
-        printf("Failed to write base pointer to memory, quitting!\n");
-        return false;
-    }
-
-    free(zeroBuf);
+    stackArraysZeroed = false;
     LOG_INFO("Stack created successfully!");
     return true;
 }
+
+// bool createStack(void* unicornEngine){
+//     LOG_INFO("Creating stack...");
+//
+//     if (!ucInit(unicornEngine)){
+//         LOG_ERROR("Unicorn engine initilisation failed... Quitting!");
+//         return false;
+//     }
+//
+//     auto *zeroBuf = static_cast<uint8_t*>(malloc(STACK_SIZE));
+//
+//     memset(zeroBuf, 0, STACK_SIZE);
+//     const auto err = uc_mem_map(uc, STACK_ADDRESS, STACK_SIZE, UC_PROT_READ | UC_PROT_WRITE);
+//     if (err && err != UC_ERR_MAP){
+//         LOG_ERROR("Failed to memory map the stack!!");
+//         return false;
+//     }
+//
+//     if (err == UC_ERR_MAP) {
+//         LOG_WARNING("Unicorn Mapping error triggered while initialising the stack.");
+//         LOG_WARNING("The most probable cause is the workaround, if it still causes issues please report it otherwise ignore this.");
+//         return true;
+//     }
+//
+//     if (uc_mem_write(uc, STACK_ADDRESS, zeroBuf, STACK_SIZE)) {
+//         LOG_ERROR("Failed to write to the stack!!");
+//         return false;
+//     }
+//
+//     auto [sp, bp] = getArchSBPStr(codeInformation.mode);
+//     const uint64_t stackBase = STACK_ADDRESS + STACK_SIZE;
+//     if (uc_reg_write(uc, regNameToConstant(sp), &stackBase)){
+//         LOG_ERROR("Failed to write the stack pointer to base pointer, quitting!!");
+//         return false;
+//     }
+//
+//     if (uc_reg_write(uc, regNameToConstant(bp), &stackBase)){
+//         printf("Failed to write base pointer to memory, quitting!\n");
+//         return false;
+//     }
+//
+//     free(zeroBuf);
+//     stackArraysZeroed = false;
+//     LOG_INFO("Stack created successfully!");
+//     return true;
+// }
 
 bool resetState(){
     LOG_INFO("Resetting state...");
@@ -613,33 +792,45 @@ bool resetState(){
     editor->ClearSelections();
     editor->HighlightDebugCurrentLine(-1);
 
-    if (uc != nullptr){
-        if (tempUC == uc){
-            tempUC = nullptr;
-        }
+//     if (uc != nullptr){
+//         if (tempUC == uc){
+//             tempUC = nullptr;
+//         }
+//
+// //        uc_close(uc);
+//         uc = nullptr;
+//     }
 
-//        uc_close(uc);
-        uc = nullptr;
+    if (icicle != nullptr)
+    {
+        icicle_free(icicle);
+        icicle = nullptr;
     }
 
-    if (context != nullptr){
-        if (tempContext == context){
-            tempContext = nullptr;
-        }
-
-        uc_context_free(context);
-        context = nullptr;
+    if (snapshot != nullptr)
+    {
+        icicle_vm_snapshot_free(snapshot);
+        snapshot = nullptr;
     }
 
-    if (tempContext != nullptr){
-        uc_context_free(tempContext);
-        tempContext = nullptr;
-    }
+    // if (context != nullptr){
+    //     if (tempContext == context){
+    //         tempContext = nullptr;
+    //     }
+    //
+    //     uc_context_free(context);
+    //     context = nullptr;
+    // }
 
-    if (tempUC != nullptr){
-        uc_close(tempUC);
-        tempUC = nullptr;
-    }
+    // if (tempContext != nullptr){
+    //     uc_context_free(tempContext);
+    //     tempContext = nullptr;
+    // }
+
+    // if (tempUC != nullptr){
+    //     uc_close(tempUC);
+    //     tempUC = nullptr;
+    // }
 
     labels.clear();
     emptyLineNumbers.clear();
@@ -661,12 +852,13 @@ bool resetState(){
         registerValueMap[key] = "0x00";
     }
 
-    if (!createStack(&uc)){
+    if (!createStack(icicle)){
         LOG_ERROR("Unable to create stack!");
         criticalSection.unlock();
         return false;
     }
 
+    stackArraysZeroed = false;
     LOG_DEBUG("State reset completed!");
     criticalSection.unlock();
     return true;
@@ -682,27 +874,15 @@ bool stepCode(const size_t instructionCount){
         return true;
     }
 
-    uint64_t ip = getRegisterValue(getArchIPStr(codeInformation.mode), false).eightByteVal;
-
+    uint64_t ip = getRegisterValue(archIPStr).eightByteVal;
     execMutex.lock();
     isCodeRunning = true;
     if (instructionCount == 1) {
-        LOG_DEBUG("Using a workaround...");
-        saveUCContext(uc, context);
-        // ucInit(uc);
-        createStack(uc);
-        preExecutionSetup(getBytes(selectedFile));
-        uc_context_restore(uc, context);
         skipBreakpoints = true;
     }
 
     criticalSection.lock();
-    const auto err = uc_emu_start(uc, ip, ENTRY_POINT_ADDRESS + CODE_BUF_SIZE, 0, instructionCount);
-    if (err) {
-        printf("Failed on uc_emu_start() with error returned %u: %s\n",
-               err, uc_strerror(err));
-        exit(-2);
-    }
+    const auto status = icicle_step(icicle, instructionCount);
 
     isCodeRunning = false;
     execMutex.unlock();
@@ -714,12 +894,12 @@ bool stepCode(const size_t instructionCount){
     }
 
     {
-        if (saveUCContext(uc, context) == UC_CONTEXT_SAVE_FAILED){
+        if (!saveICSnapshot(icicle)){
             criticalSection.unlock();
             return false;
         }
 
-        ip = getRegisterValue(getArchIPStr(codeInformation.mode), false).eightByteVal;
+        ip = getRegisterValue(archIPStr).eightByteVal;
         if (ip != expectedIP){
             expectedIP = ip;
         }
@@ -736,7 +916,7 @@ bool stepCode(const size_t instructionCount){
         }
     }
 
-    saveUCContext(uc, context);
+    saveICSnapshot(icicle);
     criticalSection.unlock();
 
     codeHasRun = true;
@@ -752,7 +932,6 @@ bool stepCode(const size_t instructionCount){
     return true;
 }
 
-
 bool runCode(const std::string& codeIn, uint64_t instructionCount)
 {
     LOG_INFO("Running code...");
@@ -761,15 +940,27 @@ bool runCode(const std::string& codeIn, uint64_t instructionCount)
     }
 
     if (instructionCount != 1 || (stepClickedOnce)){
-        const uc_err err = uc_emu_start(uc, ENTRY_POINT_ADDRESS, ENTRY_POINT_ADDRESS + CODE_BUF_SIZE, 0, instructionCount);
+        const RunStatus status = icicle_run_until(icicle, ENTRY_POINT_ADDRESS + CODE_BUF_SIZE);
+        if (status == RunStatus::Breakpoint)
+        {
+            LOG_DEBUG("Breakpoint reached at address " << icicle_get_pc(icicle));
+        }
+        else if (status == RunStatus::Unimplemented)
+        {
+            LOG_DEBUG("Unimplemented instruction at address " << icicle_get_pc(icicle));
+        }
+        else if (status == RunStatus::OutOfMemory)
+        {
+            LOG_DEBUG("Ran out of memory at: " << icicle_get_pc(icicle));
+        }
+
         if (runningTempCode){
-            saveUCContext(uc, context);
+            icicle_vm_snapshot(icicle);
             updateRegs();
         }
 
-        if (err) {
-            handleUCErrors(err);
-
+        if (status == RunStatus::Killed) {
+            saveICSnapshot(icicle);
             free(codeBuf);
             codeBuf = nullptr;
             return false;
@@ -781,7 +972,7 @@ bool runCode(const std::string& codeIn, uint64_t instructionCount)
         codeBuf = nullptr;
     }
     else {
-        saveUCContext(uc, context);
+        saveICSnapshot(icicle);
 
         auto line = addressLineNoMap[std::to_string(ENTRY_POINT_ADDRESS)];
         if (line.empty()){
@@ -800,6 +991,9 @@ bool runCode(const std::string& codeIn, uint64_t instructionCount)
     return true;
 }
 
+Icicle* tempIcicle = nullptr;
+VmSnapshot* tempSnapshot = nullptr;
+
 bool runTempCode(const std::string& codeIn, uint64_t instructionCount){
     LOG_INFO("Running " << instructionCount << " temporary instructions...");
 
@@ -807,14 +1001,13 @@ bool runTempCode(const std::string& codeIn, uint64_t instructionCount){
     runningTempCode = true;
     runCode(codeIn, instructionCount);
 
-    tempUC = uc;
-    const auto size = uc_context_size(uc);
-    tempContext = static_cast<uc_context *>(malloc(size));
-    memcpy(tempContext, context, size);
+    tempIcicle = icicle;
+    // const auto size = uc_context_size(uc);
+    constexpr auto size = sizeof(VmSnapshot);
+    tempSnapshot = static_cast<VmSnapshot*>(malloc(size));
+    memcpy(tempSnapshot, snapshot, size);
 
-    uint64_t ip;
-    uc_context_reg_read(tempContext, regNameToConstant(getArchIPStr(codeInformation.mode)), &ip);
     updateRegs(true);
-    free(tempContext);
+    icicle_vm_snapshot_free(tempSnapshot);
     return true;
 }

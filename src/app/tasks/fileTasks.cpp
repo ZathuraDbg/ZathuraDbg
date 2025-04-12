@@ -55,12 +55,12 @@ bool fileRunTask(const uint64_t instructionCount){
     if (!selectedFile.empty()){
         LOG_DEBUG("Running code from: " << selectedFile);
 
-        if (uc != nullptr){
-            uc_close(uc);
-            uc = nullptr;
+        if (icicle != nullptr){
+            icicle_free(icicle);
+            icicle = nullptr;
         }
 
-        if (createStack(&uc)){
+        if (createStack(icicle)){
             if (instructionCount == 1){
                 std::string bytes = getBytes(selectedFile);
                 if (!bytes.empty()){
@@ -101,13 +101,14 @@ void fileSaveUCContextAsJson(const std::string& jsonFilename){
 
 
 
-    for (auto&[registerName, regInfo]: regInfoMap){
-        if (isRegisterValid(registerName, codeInformation.mode) && (registerName != "INVALID")){
-            registerValueT registerValue = getRegisterValue(registerName, false);
-            if (regInfo.first <= 64){
+    for (const auto &[registerName, size]: regInfoMap){
+        if (isRegisterValid(registerName) && (registerName != "INVALID")){
+            auto regName = registerName;
+            registerValueT registerValue = getRegisterValue(regName);
+            if (size <= 64){
                 contextJson[registerName] = getRegister(registerName).registerValueUn.eightByteVal;
             }
-            else if (regInfo.first == 128){
+            else if (size == 128){
                 // disable saving contexts before code has run
                 if (use32BitLanes) {
                     for (int i = 1; i<5; i++) {
@@ -120,7 +121,7 @@ void fileSaveUCContextAsJson(const std::string& jsonFilename){
                     }
                 }
             }
-            else if (regInfo.first == 256) {
+            else if (size == 256) {
                 if (use32BitLanes) {
                     for (int i = 1; i<9; i++) {
                         contextJson[registerName+ "[" + std::to_string(32 * (i - 1)) + ":" + std::to_string((32 * i) - 1) + "]"] = registerValue.info.arrays.floatArray[i-1];
@@ -160,7 +161,7 @@ void fileLoadUCContextFromJson(const std::string& jsonFilename){
     json j;
     std::stringstream jsonStream;
 
-    if (context == nullptr){
+    if (snapshot == nullptr){
         enableDebugMode = true;
         fileLoadContext = false;
         runActions();
@@ -184,7 +185,7 @@ void fileLoadUCContextFromJson(const std::string& jsonFilename){
             parseRegisterValueInput(jsonIter.key(), value.c_str(), true);
             continue;
         }
-        uc_reg_write(uc, regNameToConstant(jsonIter.key()), &ret);
+        // uc_reg_write(uc, regNameToConstant(jsonIter.key()), &ret);
     }
 
     // only show default regs after loading
