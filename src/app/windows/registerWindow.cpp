@@ -81,13 +81,14 @@ void updateRegs(bool useTempContext){
     registerValueInfoT val;
     bool useSecondVal = false;
 
-    // if (!useTempContext) {
-    //     if (snapshot == nullptr) {
-    //         return;
-    //     }
-    // }
+    if (!useTempContext) {
+        if (snapshot == nullptr) {
+            saveICSnapshot(icicle);
+        }
+    }
+
     for (auto [name, value]: registerValueMap) {
-        if (!isRegisterValid(toUpperCase(name))){
+        if (!isRegisterValid((name))){
             continue;
         }
 
@@ -113,11 +114,11 @@ void updateRegs(bool useTempContext){
                 if (name.contains('[') && name.contains(']') && name.contains(':')){
                     name =  name.substr(0, name.find_first_of('['));
                 }
-                if (regInfoMap[toUpperCase(name)] <= 64){
+                if (regInfoMap[(name)] <= 64){
                     hex << "0x";
                     hex << std::hex << registerValue.eightByteVal;
                 }
-                else if (regInfoMap[toUpperCase(name)]== 128 || regInfoMap[toUpperCase(name)] == 256 || regInfoMap[toUpperCase(name)] == 512){
+                else if (regInfoMap[(name)]== 128 || regInfoMap[(name)] == 256 || regInfoMap[(name)] == 512){
                     if (registerValue.info.is128bit){
                         if (!use32BitLanes){
                             if (registerValueMap.contains(name + reg64BitLaneStrs[0])) {
@@ -158,7 +159,7 @@ void updateRegs(bool useTempContext){
                         }
                         else{
                             for (int i = 0; i < 8; i++){
-                                if (registerValueMap.contains(name + reg64BitLaneStrs[i])) {
+                                if (registerValueMap.contains(name + reg32BitLaneStrs[i])) {
                                     registerValueMap[name + reg32BitLaneStrs[i]] = std::to_string(registerValue.info.arrays.floatArray[i]);
                                 }
                             }
@@ -181,7 +182,7 @@ void updateRegs(bool useTempContext){
                         }
                         else{
                             for (int i = 0; i < 16; i++){
-                                if (registerValueMap.contains(name + reg64BitLaneStrs[i])) {
+                                if (registerValueMap.contains(name + reg32BitLaneStrs[i])) {
                                     registerValueMap[name + reg32BitLaneStrs[i]] = std::to_string(registerValue.info.arrays.floatArray[i]);
                                 }
                             }
@@ -532,12 +533,12 @@ void addRegisterToView(const std::string& reg, const registerValueInfoT& registe
         auto regs = parseRegisters(registerString);
 
         for (auto& reg : regs) {
-            if (!regInfoMap.contains(toUpperCase(reg))) {
+            if (!regInfoMap.contains((reg))) {
                 return;
             }
 
             auto regInfo = getRegister(reg);
-            reg = toUpperCase(reg);
+            reg = (reg);
 
             if (!regInfo.out) {
                 continue;
@@ -548,7 +549,7 @@ void addRegisterToView(const std::string& reg, const registerValueInfoT& registe
             }
 
             if ((!registerValueMap.contains(reg)) && !isRegPresent) {
-                addRegisterToView(toUpperCase(reg), regInfo);
+                addRegisterToView((reg), regInfo);
             }
             // code for removing the register
             else if (regInfo.registerValueUn.info.is512bit || regInfo.registerValueUn.info.is256bit || regInfo.registerValueUn.info.is128bit) {
@@ -617,56 +618,76 @@ void parseRegisterValueInput(const std::string& regName, const char *regValueFir
         {
             if (isBigReg){
                 const std::string realRegName = regName.substr(0, regName.find_first_of('['));
-                const std::string laneStr = regName.substr(regName.find_first_of('[')+1);
-                const int laneNum = std::atoi(laneStr.c_str());
+                const std::string laneStr = regName.substr(regName.find_first_of('[') + 1);
+                
+                // Extract just the first number from the lane string (e.g., "64" from "[64:127]")
+                const int laneStart = std::stoi(laneStr.substr(0, laneStr.find(':')));
                 const auto value = std::string(regValueFirst);
 
                 if (value.contains('.')){
                     int regSize = getRegisterActualSize(regName);
-                    if (regSize == 128 || regSize == 256) {
-                        uint8_t arrSize = 0;
+                    if (regSize == 128 || regSize == 256 || regSize == 512) {
                         int laneIndex = 0;
 
                         if (!use32BitLanes){
-                            arrSize = (regSize == 128 ? 2 : 4);
-                            double arr[arrSize];
-                            size_t outSize{};
-                            icicle_reg_read_bytes(icicle, realRegName.c_str(), (uint8_t*)arr, arrSize, &outSize);
-                            double val;
-                            auto [ptr, ec] = std::from_chars(value.data(), value.data() + value.size(), val);
-                            if (ec == std::errc::invalid_argument || ec == std::errc::result_out_of_range){
-                                val = 0;
+                            // For 64-bit lanes: XMM(0,1), YMM(0-3), ZMM(0-7)
+                            laneIndex = laneStart / 64;
+                            int maxLanes = (regSize == 128) ? 2 : (regSize == 256) ? 4 : 8;
+                            
+                            // Ensure index is within bounds
+                            if (laneIndex >= 0 && laneIndex < maxLanes) {
+                                registerValueT regValue = getRegisterValue(realRegName);
+                                
+                                // Parse the input value
+                                double val = 0.0;
+                                try {
+                                    val = std::stod(value);
+                                } catch (const std::exception& e) {
+                                    LOG_ERROR("Failed to parse double value: " << value);
+                                }
+                                
+                                // Set the value in the correct lane
+                                regValue.info.arrays.doubleArray[laneIndex] = val;
+                                
+                                // Write back the register
+                                bool success = setRegisterValue(realRegName, regValue);
+                                if (!success) {
+                                    LOG_ERROR("Failed to write value to register " << realRegName << " lane " << laneIndex);
+                                }
+                                saveICSnapshot(icicle);
+                            } else {
+                                LOG_ERROR("Lane index out of bounds: " << laneIndex << " (max: " << maxLanes-1 << ")");
                             }
-
-                            if (laneNum != 0){
-                                laneIndex = laneNum / 64;
-                            }
-
-                            arr[laneIndex] = val;
-
-                            icicle_reg_write_bytes(icicle, realRegName.c_str(), (uint8_t*)arr, arrSize);
-                            saveICSnapshot(icicle);
                         }
-                        else{
-                            arrSize = (regSize == 128 ? 4 : 8);
-                            float arr[arrSize];
-                            size_t outSize{};
-                            icicle_reg_read_bytes(icicle, realRegName.c_str(), (uint8_t*)arr, arrSize, &outSize);
-
-                            float val;
-                            auto [ptr, ec] = std::from_chars(value.data(), value.data() + value.size(), val);
-
-                            if (ec == std::errc::invalid_argument || ec == std::errc::result_out_of_range){
-                                val = 0;
+                        else {
+                            // For 32-bit lanes: XMM(0-3), YMM(0-7), ZMM(0-15)
+                            laneIndex = laneStart / 32;
+                            int maxLanes = (regSize == 128) ? 4 : (regSize == 256) ? 8 : 16;
+                            
+                            // Ensure index is within bounds
+                            if (laneIndex >= 0 && laneIndex < maxLanes) {
+                                registerValueT regValue = getRegisterValue(realRegName);
+                                
+                                // Parse the input value
+                                float val = 0.0f;
+                                try {
+                                    val = std::stof(value);
+                                } catch (const std::exception& e) {
+                                    LOG_ERROR("Failed to parse float value: " << value);
+                                }
+                                
+                                // Set the value in the correct lane
+                                regValue.info.arrays.floatArray[laneIndex] = val;
+                                
+                                // Write back the register
+                                bool success = setRegisterValue(realRegName, regValue);
+                                if (!success) {
+                                    LOG_ERROR("Failed to write value to register " << realRegName << " lane " << laneIndex);
+                                }
+                                saveICSnapshot(icicle);
+                            } else {
+                                LOG_ERROR("Lane index out of bounds: " << laneIndex << " (max: " << maxLanes-1 << ")");
                             }
-
-                            if (laneNum != 0){
-                                laneIndex = laneNum / 32;
-                            }
-                            arr[laneIndex] = val;
-
-                            icicle_reg_write_bytes(icicle, realRegName.c_str(), (uint8_t*)arr, arrSize);
-                            saveICSnapshot(icicle);
                         }
                     }
                 }
@@ -822,7 +843,13 @@ void registerWindow() {
 }
 
 bool updateRegistersOnLaneChange() {
-    for (const auto &regName: registerValueMap | std::views::keys) {
+    auto it = registerValueMap.begin();
+    for (int i = 0; i < registerValueMap.size(); i++) {
+        std::string regName = toLowerCase(it.key());
+        if (regName.empty())
+        {
+            break;
+        }
         const auto regSize = getRegisterActualSize(regName);
         if (regSize > 64) {
             int type = 0;
@@ -844,6 +871,10 @@ bool updateRegistersOnLaneChange() {
             removeRegisterFromView(getRegisterActualName(regName), type);
             use32BitLanes = !use32BitLanes;
             addRegisterToView(getRegisterActualName(regName), getRegister(regName));
+        }
+        ++it;
+        if (it == registerValueMap.end()) {
+            break;
         }
     }
     return true;

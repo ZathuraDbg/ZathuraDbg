@@ -56,6 +56,7 @@ extern bool createStack(Icicle* icicle);
 extern bool runTempCode(const std::string& codeIn, uint64_t instructionCount);
 extern bool debugModeEnabled;
 registerValueInfoT getRegister(const std::string& name);
+extern bool setRegisterValue(const std::string& regName, const registerValueT& value);
 extern bool runCode(const std::string& code_in, uint64_t instructionCount);
 extern void showRegs();
 extern uintptr_t ENTRY_POINT_ADDRESS;
