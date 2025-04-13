@@ -81,11 +81,11 @@ void updateRegs(bool useTempContext){
     registerValueInfoT val;
     bool useSecondVal = false;
 
-    if (!useTempContext) {
-        if (snapshot == nullptr) {
-            return;
-        }
-    }
+    // if (!useTempContext) {
+    //     if (snapshot == nullptr) {
+    //         return;
+    //     }
+    // }
     for (auto [name, value]: registerValueMap) {
         if (!isRegisterValid(toUpperCase(name))){
             continue;
@@ -714,7 +714,7 @@ void registerWindow() {
 
         int index = 0;
         for (auto regValMapInfo = registerValueMap.begin(); regValMapInfo != registerValueMap.end(); ++index) {
-            if (!isRegisterValid(toUpperCase(regValMapInfo->first))){
+            if (!isRegisterValid(regValMapInfo->first)){
                 ++regValMapInfo;
                 continue;
             }

@@ -1,5 +1,7 @@
 #include "x86.hpp"
 
+#include "../../utils/stringHelper.hpp"
+
 std::vector<std::string> x86DefaultShownRegs = {"RIP", "RSP", "RBP", "RAX", "RBX", "RCX", "RDX", "RSI", "RDI", "R8", "R9", "R10", "R11", "R12", "R13", "R14", "R15",
     "CS", "DS", "ES", "FS", "GS", "SS"};
 
@@ -74,7 +76,7 @@ bool x86IsRegisterValid(const std::string& reg){
         registerName = registerName.substr(0, registerName.find_first_of('['));
     }
 
-    if (!x86RegInfoMap.contains(registerName)){
+    if (!x86RegInfoMap.contains(toLowerCase(registerName))){
         return false;
     }
 
