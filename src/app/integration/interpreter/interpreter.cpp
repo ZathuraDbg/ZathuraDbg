@@ -1,7 +1,7 @@
 #include "interpreter.hpp"
 
 #include <sys/stat.h>
-uintptr_t ENTRY_POINT_ADDRESS = 0x1000;
+uintptr_t ENTRY_POINT_ADDRESS = 0x10000;
 uintptr_t MEMORY_ALLOCATION_SIZE = 2 * 1024 * 1024;
 uintptr_t DEFAULT_STACK_ADDRESS = 0x300000;
 uintptr_t STACK_ADDRESS = DEFAULT_STACK_ADDRESS;
@@ -39,17 +39,8 @@ VmSnapshot* saveICSnapshot(Icicle* icicle){
     if (icicle == nullptr){
         return nullptr;
     }
-
     return icicle_vm_snapshot(icicle);
 }
-
-// int saveUCContext(uc_engine *ucEngine, uc_context *ucContext){
-//     if (ucEngine == nullptr || ucContext == nullptr){
-//         return UC_CONTEXT_SAVE_FAILED;
-//     }
-//
-//     return uc_context_save(ucEngine, ucContext);
-// }
 
 int getCurrentLine(){
     uint64_t instructionPointer = -1;
@@ -656,17 +647,17 @@ bool preExecutionSetup(const std::string& codeIn)
     memcpy(codeBuf, code, codeIn.length());
 
     // TODO: Add a way to make stack executable
-    if (!icicle_mem_map(icicle, ENTRY_POINT_ADDRESS, MEMORY_ALLOCATION_SIZE, MemoryProtection::ReadWrite))
+    auto e = icicle_mem_map(icicle, ENTRY_POINT_ADDRESS, MEMORY_ALLOCATION_SIZE, MemoryProtection::ExecuteReadWrite);
+    if (e == -1)
     {
         LOG_ERROR("Failed to map memory for writing code!");
         return false;
     }
 
-    if (icicle_reg_write(icicle, archIPStr, ENTRY_POINT_ADDRESS))
-    {
-        LOG_ERROR("Failed to write entry point to memory!\n");
-        return false;
-    }
+    auto k = icicle_mem_write(icicle, ENTRY_POINT_ADDRESS, codeBuf, CODE_BUF_SIZE - 1);
+    size_t l;
+    auto j = icicle_mem_read(icicle, ENTRY_POINT_ADDRESS, CODE_BUF_SIZE, &l);
+    icicle_set_pc(icicle, ENTRY_POINT_ADDRESS);
 
     if (snapshot == nullptr)
     {
@@ -675,8 +666,6 @@ bool preExecutionSetup(const std::string& codeIn)
 
     uint32_t instructionHookID = icicle_add_execution_hook(icicle, instructionHook, nullptr);
     uint32_t stackWriteHookID = icicle_add_mem_read_hook(icicle, stackWriteHook, nullptr, STACK_ADDRESS + STACK_SIZE, STACK_ADDRESS);
-
-    icicle_set_pc(icicle, ENTRY_POINT_ADDRESS);
     return true;
 }
 
@@ -882,8 +871,21 @@ bool stepCode(const size_t instructionCount){
     }
 
     criticalSection.lock();
-    const auto status = icicle_step(icicle, instructionCount);
-
+    size_t siz{};
+    auto j = icicle_mem_read(icicle, ENTRY_POINT_ADDRESS, CODE_BUF_SIZE, &siz);
+    assert(j != NULL);
+    RunStatus status{};
+    if (instructionCount != 0)
+    {
+        status = icicle_step(icicle, instructionCount);
+    }
+    else
+    {
+        status = icicle_run(icicle);
+    }
+    auto k = icicle_get_exception_code(icicle);
+    ip = icicle_get_pc(icicle);
+    editor->HighlightDebugCurrentLine(std::atoll(addressLineNoMap[std::to_string(icicle_get_pc(icicle))].c_str()));
     isCodeRunning = false;
     execMutex.unlock();
     LOG_DEBUG("Code executed by " << instructionCount << ((instructionCount>1) ? " step" : " steps") << ".");
@@ -899,7 +901,7 @@ bool stepCode(const size_t instructionCount){
             return false;
         }
 
-        ip = getRegisterValue(archIPStr).eightByteVal;
+        ip = icicle_get_pc(icicle);
         if (ip != expectedIP){
             expectedIP = ip;
         }

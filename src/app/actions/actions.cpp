@@ -23,26 +23,43 @@ void restartDebugging(){
     LOG_INFO("Debugging restarted successfully.");
 }
 
+uint64_t lineNoToAddress(const uint64_t& lineNo)
+{
+    for (auto& pair : addressLineNoMap)
+    {
+        if (std::atoi(pair.second.c_str()) == lineNo)
+        {
+            return std::stoull(pair.first);
+        }
+    }
+
+    return 0;
+}
+
 void stepOverAction(){
     // uc_context_restore(uc, context);
     LOG_INFO("Stepping over...");
-    const uint64_t instructionPointer = getRegister(archIPStr).registerValueUn.eightByteVal;
-    const std::string lineNoStr = addressLineNoMap[std::to_string(instructionPointer)];
+    const std::string lineNoStr = addressLineNoMap[std::to_string(icicle_get_pc(icicle))];
 
     if (!lineNoStr.empty()){
         const int lineNo = std::atoi(lineNoStr.c_str());
 
         breakpointMutex.lock();
+        auto bpLineNoAddr = lineNoToAddress(lineNo + 1);
+        icicle_add_breakpoint(icicle, bpLineNoAddr);
         breakpointLines.push_back(lineNo + 1);
         breakpointMutex.unlock();
         stepCode(0);
 
+        icicle_remove_breakpoint(icicle, bpLineNoAddr);
         if (stepOverBPLineNo == lineNo){
             LOG_DEBUG("Removing step over breakpoint line number: " << stepOverBPLineNo);
-            removeBreakpoint(stepOverBPLineNo);
             stepOverBPLineNo = -1;
         }
 
+
+        // add a way to distinguish between icicle and user
+        // defined breakpoints
         stepOverBPLineNo = lineNo + 1;
         LOG_INFO("Step over breakpoint line number: " << stepOverBPLineNo << " done");
         continueOverBreakpoint = true;
