@@ -50,7 +50,7 @@ void loadIniFile() {
     LOG_DEBUG("Loaded config file from " << dir.string());
 }
 
-std::string getDataToCopy(std::stringstream &selectedAsmText, const bool asArray) {
+std::string getDataToCopy(const std::stringstream &selectedAsmText, const bool asArray) {
     LOG_INFO("Getting data to copy...");
     const std::string bytes = getBytes(selectedAsmText);
     std::string dataToCopy;
@@ -98,7 +98,6 @@ void mainWindow() {
     ImGui::Begin("Code", &keepWindow, ImGuiWindowFlags_NoCollapse);
 
     setupButtons();
-
     if (!editor->FontInit){
         editor->FontInit = pushFont;
         editor->CreateLabelLineMap = createLabelLineMapCallback;

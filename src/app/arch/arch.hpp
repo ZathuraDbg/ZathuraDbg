@@ -7,6 +7,7 @@
 #include <keystone/keystone.h>
 #include <capstone/capstone.h>
 
+// this is not a complete list of architectures supported by icicle
 typedef enum
 {
     IC_ARCH_AARCH64 = 0,
@@ -16,8 +17,10 @@ typedef enum
     IC_ARCH_ARMV4,
     IC_ARCH_ARMV4T,
     IC_ARCH_ARMV5TEJ,
+    IC_ARCH_ARMV6,
     IC_ARCH_ARMV6M,
     IC_ARCH_ARMV7S,
+    IC_ARCH_ARMV8,
     IC_ARCH_ARMV8R,
     IC_ARCH_I386,
     IC_ARCH_M68K,
@@ -39,6 +42,7 @@ typedef enum
     IC_ARCH_THUMBV4T,
     IC_ARCH_THUMBV5TE,
     IC_ARCH_THUMBV6M,
+    IC_ARCH_THUMBV7M,
     IC_ARCH_THUMBV7NEON,
     IC_ARCH_X86_64,
     IC_ARCH_XTENSA
@@ -53,6 +57,7 @@ struct codeInformationT{
     ks_mode modeKS;
     cs_mode modeCS;
     ks_opt_value syntax;
+    const char* archStr;
 };
 
 extern std::vector<std::string> icArchStr;

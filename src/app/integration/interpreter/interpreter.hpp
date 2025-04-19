@@ -17,6 +17,8 @@
 #include <mutex>
 #include <array>
 #include "icicle.h"
+#include <condition_variable>
+#include "../../actions/actions.hpp"
 
 #define IC_CONTEXT_SAVE_FAILED (-94)
 struct registerValueT{
@@ -57,7 +59,13 @@ extern bool runTempCode(const std::string& codeIn, uint64_t instructionCount);
 extern bool debugModeEnabled;
 registerValueInfoT getRegister(const std::string& name);
 extern bool setRegisterValue(const std::string& regName, const registerValueT& value);
-extern bool runCode(const std::string& code_in, uint64_t instructionCount);
+extern bool runCode(const std::string& codeIn, const bool& execCode);
+extern uint64_t lineNoToAddress(const uint64_t& lineNo);
+extern bool addBreakpoint(const uint64_t& address);
+extern bool stoppedAtBreakpoint;
+extern bool executeCode(Icicle* icicle, const size_t& instructionCount);
+extern bool executionComplete;
+extern bool addBreakpointToLine(const uint64_t& lineNo, const bool& silent = false);
 extern void showRegs();
 extern uintptr_t ENTRY_POINT_ADDRESS;
 extern uintptr_t MEMORY_EDITOR_BASE; // default
@@ -86,6 +94,15 @@ extern uint64_t codeCurrentLen;
 extern Icicle* icicle;
 extern VmSnapshot* snapshot;
 extern int getCurrentLine();
-extern bool removeBreakpoint(const int& lineNo);
+extern bool removeBreakpointFromLineNo(const uint64_t& lineNo);
+extern bool removeBreakpoint(const uint64_t& address);
 extern bool eraseTempBP;
+extern bool isSilentBreakpoint(const uint64_t& lineNo);
+extern std::mutex debugReadyMutex;
+extern std::condition_variable debugReadyCv;
+extern bool isDebugReady;
+extern bool skipEndStep;
+extern void printBreakpoints();
+extern void safeHighlightLine(int lineNo);
+
 #endif

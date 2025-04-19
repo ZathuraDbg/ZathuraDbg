@@ -149,8 +149,8 @@ int main(int argc, const char** argv)
         exit(-1);
     }
 
-    stackEditorData = static_cast<char*>(malloc(STACK_SIZE));
-    stackEditorTemp = static_cast<char*>(malloc(STACK_SIZE));
+    stackEditorData = static_cast<unsigned char*>(malloc(STACK_SIZE));
+    stackEditorTemp = static_cast<unsigned char*>(malloc(STACK_SIZE));
     stackArraysZeroed = false;
     glfwShowWindow(window);
 
@@ -165,6 +165,7 @@ int main(int argc, const char** argv)
         io.ConfigDockingAlwaysTabBar = true;
         isRunning = true;
 
+        processUIUpdates();
         mainWindow();
         if (!isRunning){
             LOG_ERROR("Quitting!");
@@ -199,6 +200,7 @@ int main(int argc, const char** argv)
     if (icicle != nullptr)
     {
         icicle_free(icicle);
+        icicle = nullptr;
     }
     destroyWindow();
     return 0;

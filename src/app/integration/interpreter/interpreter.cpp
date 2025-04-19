@@ -2,11 +2,11 @@
 
 #include <sys/stat.h>
 uintptr_t ENTRY_POINT_ADDRESS = 0x10000;
-uintptr_t MEMORY_ALLOCATION_SIZE = 2 * 1024 * 1024;
-uintptr_t DEFAULT_STACK_ADDRESS = 0x300000;
+uintptr_t MEMORY_ALLOCATION_SIZE = 201000;
+uintptr_t DEFAULT_STACK_ADDRESS = 0x301000;
 uintptr_t STACK_ADDRESS = DEFAULT_STACK_ADDRESS;
-uint64_t  CODE_BUF_SIZE = 0x3000;
-uintptr_t STACK_SIZE = 5 * 1024 * 1024;
+uint64_t  CODE_BUF_SIZE = 0x5000;
+uintptr_t STACK_SIZE = 3 * 1024 * 1024;
 uintptr_t MEMORY_EDITOR_BASE;
 uintptr_t MEMORY_DEFAULT_SIZE = 0x4000;
 
@@ -32,8 +32,14 @@ bool stepOver = false;
 bool stepContinue = false;
 bool executionComplete = false;
 bool use32BitLanes = false;
+bool stoppedAtBreakpoint = false;
+bool skipEndStep = false;
 
 std::vector<uint64_t> breakpointLines = {};
+
+std::mutex debugReadyMutex;
+std::condition_variable debugReadyCv;
+bool isDebugReady = false;
 
 VmSnapshot* saveICSnapshot(Icicle* icicle){
     if (icicle == nullptr){
@@ -62,24 +68,75 @@ int getCurrentLine(){
     return -1;
 }
 
-bool removeBreakpoint(const int& lineNo) {
+bool removeBreakpoint(const uint64_t& address) {
     breakpointMutex.lock();
 
     bool success = false;
     //
-    if (breakpointLines.empty()) {
+    if (breakpointLines.empty() || icicle == nullptr) {
         breakpointMutex.unlock();
         return success;
     }
     //
     const auto it = std::ranges::find(breakpointLines, lineNo);
     if  (it != breakpointLines.end()) {
+        icicle_remove_breakpoint(icicle, address);
         breakpointLines.erase(it);
         success = true;
     }
 
+    breakpointMutex.unlock();
+    return success;
+}
+
+void printBreakpoints()
+{
+    size_t count;
+    uint64_t *bpList = icicle_breakpoint_list(icicle, &count);
+    for (size_t i = 0; i < count; i++)
+    {
+        LOG_INFO("Breakpoint #" << i + 1 << " at address: " << std::hex << bpList[i] << std::hex << " at line: " << (addressLineNoMap[std::to_string(bpList[i])]));
+    }
+}
+
+bool removeBreakpointFromLineNo(const uint64_t& lineNo) {
+    breakpointMutex.lock();
+    bool success = false;
+
+    if (isSilentBreakpoint(lineNo))
+    {
+        // We don't need to remove silent breakpoints
+        LOG_ALERT("Attempt to remove a silent breakpoint. Ignoring.");
+        return true;
+    }
+
+    if (breakpointLines.empty() || icicle == nullptr) {
+        breakpointMutex.unlock();
+        return success;
+    }
+
+    const auto it = std::ranges::find(breakpointLines, lineNo);
+    size_t size;
+    uint64_t* bpList = icicle_breakpoint_list(icicle, &size);
+
+    if (bpList)
+    {
+        for (size_t i = 0; i < size; ++i) {
+            if (bpList[i] == lineNoToAddress(lineNo)) {
+                if  (it != breakpointLines.end()) {
+                    icicle_remove_breakpoint(icicle, lineNoToAddress(lineNo));
+                    breakpointLines.erase(it);
+                    success = true;
+                    LOG_DEBUG("Removed a breakpoint at lineNo " << lineNo);
+                }
+                break;
+            }
+        }
+    }
+
 
     breakpointMutex.unlock();
+
     return success;
 }
 
@@ -439,16 +496,6 @@ registerValueInfoT getRegister(const std::string& name){
 
     if (!codeHasRun){
         registerValueInfoT ret = {false, 0x00};
-        // if (getRegisterActualSize(toUpperCase(name)) == 128) {
-        //     ret.registerValueUn.info.is128bit = true;
-        // }
-        // else if (getRegisterActualSize(toUpperCase(name)) == 256){
-        //     ret.registerValueUn.info.is256bit = true;
-        // }
-        // else if (getRegisterActualSize(toUpperCase(name)) == 512) {
-        //     ret.registerValueUn.info.is512bit = true;
-        // }
-
         return ret;
     }
 
@@ -460,7 +507,18 @@ registerValueInfoT getRegister(const std::string& name){
 
 Icicle* initIC()
 {
-    const auto vm = icicle_new("x86_64", false, false, false, false, false, false, false, false);
+    // Free existing instance and snapshot if they exist
+    if (icicle != nullptr) {
+        LOG_WARNING("initIC called while an existing Icicle instance was present. Freeing old instance.");
+        if (snapshot != nullptr) {
+            icicle_vm_snapshot_free(snapshot);
+            snapshot = nullptr;
+        }
+        icicle_free(icicle);
+        icicle = nullptr;
+    }
+
+    const auto vm = icicle_new(codeInformation.archStr, false, true, false, false, false, false, false, false);
     if (!vm)
     {
         printf("Failed to initialize VM\n");
@@ -496,9 +554,17 @@ std::string lastLabel{};
 uint64_t lastLineNo = 0;
 
 
-void instructionHook(void* userData, uint64_t address)
+void instructionHook(void* userData, const uint64_t address)
 {
-    std::cout << "Instruction hook called!" << std::endl;
+    // Update UI safely with current line
+    const std::string lineNoStr = addressLineNoMap[std::to_string(address)];
+    if (!lineNoStr.empty()) {
+        int lineNo = std::atoi(lineNoStr.c_str());
+        if (lineNo > 0) {
+            // Call safeHighlightLine which is externally defined
+            safeHighlightLine(lineNo - 1);
+        }
+    }
 }
 
 // void hook(uc_engine *uc, const uint64_t address, const uint32_t size, void *user_data){
@@ -666,10 +732,12 @@ void instructionHook(void* userData, uint64_t address)
 // }
 
 bool updateStack = false;
-void stackWriteHook(void* data, uint64_t address, uint8_t size, const uint8_t* value_read)
+void stackWriteHook(void* data, uint64_t address, uint8_t size, const uint64_t valueWritten)
 {
     updateStack = true;
+    return ;
 }
+
 void hookStackWrite(uc_engine *uc, const uint64_t address, const uint32_t size, void *user_data) {
     updateStack = true;
 }
@@ -687,7 +755,7 @@ bool preExecutionSetup(const std::string& codeIn)
     memcpy(codeBuf, code, codeIn.length());
 
     // TODO: Add a way to make stack executable
-    auto e = icicle_mem_map(icicle, ENTRY_POINT_ADDRESS, MEMORY_ALLOCATION_SIZE, MemoryProtection::ExecuteReadWrite);
+    auto e = icicle_mem_map(icicle, ENTRY_POINT_ADDRESS, CODE_BUF_SIZE, MemoryProtection::ExecuteReadWrite);
     if (e == -1)
     {
         LOG_ERROR("Failed to map memory for writing code!");
@@ -699,47 +767,98 @@ bool preExecutionSetup(const std::string& codeIn)
     auto j = icicle_mem_read(icicle, ENTRY_POINT_ADDRESS, CODE_BUF_SIZE, &l);
     icicle_set_pc(icicle, ENTRY_POINT_ADDRESS);
 
+    // Ensure snapshot is taken before signaling ready
     if (snapshot == nullptr)
     {
-        icicle_vm_snapshot(icicle);
+        snapshot = saveICSnapshot(icicle);
+        if (snapshot == nullptr) {
+             LOG_ERROR("Failed to take initial snapshot!");
+        }
     }
 
     uint32_t instructionHookID = icicle_add_execution_hook(icicle, instructionHook, nullptr);
-    uint32_t stackWriteHookID = icicle_add_mem_read_hook(icicle, stackWriteHook, nullptr, STACK_ADDRESS + STACK_SIZE, STACK_ADDRESS);
+    uint32_t stackWriteHookID = icicle_add_mem_write_hook(icicle, stackWriteHook, nullptr, STACK_ADDRESS, STACK_ADDRESS + STACK_SIZE);
+
+    // Signal that debugging setup is complete and ready for execution
+    {
+        std::lock_guard<std::mutex> lk(debugReadyMutex);
+        isDebugReady = true;
+    }
+    debugReadyCv.notify_all();
+    LOG_DEBUG("Debug setup complete, signaled ready.");
+
     return true;
 }
 
 bool createStack(Icicle* ic)
 {
     LOG_INFO("Creating stack...");
-    auto icicle = initIC();
-    if (!icicle){
+    if (ic == nullptr)
+    {
+     ic = initIC();
+    if (!ic){
         LOG_ERROR("Icicle initilisation failed... Quitting!");
         return false;
     }
 
-    uint8_t* zeroBuf = (uint8_t*)malloc(STACK_SIZE);
-
-    memset(zeroBuf, 0, STACK_SIZE);
-    auto mapped = icicle_mem_map(icicle, STACK_ADDRESS, STACK_SIZE, MemoryProtection::ReadWrite);
-    if (mapped == -1)
-    {
-        LOG_ERROR("Icicle was unable to map memory for the stack.");
-        return false;
+    }
+    LOG_INFO("Checking mappings...");
+    // Check if the stack region is already mapped
+    bool already_mapped = false;
+    size_t region_count = 0;
+    MemRegionInfo* regions = icicle_mem_list_mapped(ic, &region_count);
+    
+    if (regions) {
+        for (size_t i = 0; i < region_count; i++) {
+            // Check if this region overlaps with our stack region
+            if ((regions[i].address <= STACK_ADDRESS && 
+                 regions[i].address + regions[i].size > STACK_ADDRESS) ||
+                (regions[i].address >= STACK_ADDRESS && 
+                 regions[i].address < STACK_ADDRESS + STACK_SIZE)) {
+                LOG_INFO("Stack region already mapped - skipping map operation");
+                already_mapped = true;
+                break;
+            }
+        }
+        if (!already_mapped)
+        {
+            LOG_ERROR("stack regions are not mapped yet!");
+        }
+        icicle_mem_list_mapped_free(regions, region_count);
     }
 
-    mapped = icicle_mem_write(icicle, STACK_ADDRESS, zeroBuf, STACK_SIZE);
+    uint8_t* zeroBuf = (uint8_t*)malloc(STACK_SIZE);
+    memset(zeroBuf, 0, STACK_SIZE);
+    LOG_INFO("Stack mapping if not done already.");
+    // Only map if not already mapped
+    if (!already_mapped) {
+        auto mapped = icicle_mem_map(ic, STACK_ADDRESS, STACK_SIZE, MemoryProtection::ReadWrite);
+        if (mapped == -1)
+        {
+            LOG_ERROR("Icicle was unable to map memory for the stack.");
+            free(zeroBuf);
+            return false;
+        }
+        for (uint64_t off = 0; off < STACK_SIZE; off += 0x1000) {
+            size_t out = 0;
+            // A 1‑byte read is enough to trigger the lazy page allocation
+            icicle_mem_read(icicle, STACK_ADDRESS + off, 1, &out);
+        }
+    }
+    LOG_INFO("Attempting a mem_write");
+    auto mapped = icicle_mem_write(ic, STACK_ADDRESS, zeroBuf, STACK_SIZE);
     if (mapped == -1)
     {
         LOG_WARNING("Icicle was unable to zero memory for the stack.");
         LOG_WARNING("Something may be wrong, proceeding anyways...");
     }
+    free(zeroBuf);
 
-    uint64_t stackBase = STACK_ADDRESS + STACK_SIZE;
-    icicle_reg_write(icicle, archSPStr, stackBase);
-    icicle_reg_write(icicle, archBPStr, stackBase);
+    const uint64_t stackBase = STACK_ADDRESS + STACK_SIZE;
+    icicle_reg_write(ic, archSPStr, stackBase);
+    icicle_reg_write(ic, archBPStr, stackBase);
     size_t outSize{};
-    auto s = icicle_mem_read(icicle, STACK_ADDRESS, STACK_SIZE, &outSize);
+    auto s = icicle_mem_read(ic, STACK_ADDRESS, STACK_SIZE, &outSize);
     if (!s)
     {
         LOG_ERROR("Failed to read the stack base pointer, quitting!!");
@@ -750,55 +869,15 @@ bool createStack(Icicle* ic)
     return true;
 }
 
-// bool createStack(void* unicornEngine){
-//     LOG_INFO("Creating stack...");
-//
-//     if (!ucInit(unicornEngine)){
-//         LOG_ERROR("Unicorn engine initilisation failed... Quitting!");
-//         return false;
-//     }
-//
-//     auto *zeroBuf = static_cast<uint8_t*>(malloc(STACK_SIZE));
-//
-//     memset(zeroBuf, 0, STACK_SIZE);
-//     const auto err = uc_mem_map(uc, STACK_ADDRESS, STACK_SIZE, UC_PROT_READ | UC_PROT_WRITE);
-//     if (err && err != UC_ERR_MAP){
-//         LOG_ERROR("Failed to memory map the stack!!");
-//         return false;
-//     }
-//
-//     if (err == UC_ERR_MAP) {
-//         LOG_WARNING("Unicorn Mapping error triggered while initialising the stack.");
-//         LOG_WARNING("The most probable cause is the workaround, if it still causes issues please report it otherwise ignore this.");
-//         return true;
-//     }
-//
-//     if (uc_mem_write(uc, STACK_ADDRESS, zeroBuf, STACK_SIZE)) {
-//         LOG_ERROR("Failed to write to the stack!!");
-//         return false;
-//     }
-//
-//     auto [sp, bp] = getArchSBPStr(codeInformation.mode);
-//     const uint64_t stackBase = STACK_ADDRESS + STACK_SIZE;
-//     if (uc_reg_write(uc, regNameToConstant(sp), &stackBase)){
-//         LOG_ERROR("Failed to write the stack pointer to base pointer, quitting!!");
-//         return false;
-//     }
-//
-//     if (uc_reg_write(uc, regNameToConstant(bp), &stackBase)){
-//         printf("Failed to write base pointer to memory, quitting!\n");
-//         return false;
-//     }
-//
-//     free(zeroBuf);
-//     stackArraysZeroed = false;
-//     LOG_INFO("Stack created successfully!");
-//     return true;
-// }
-
 bool resetState(){
     LOG_INFO("Resetting state...");
     criticalSection.lock();
+
+    {
+        std::lock_guard<std::mutex> lk(debugReadyMutex);
+        isDebugReady = false;
+    }
+
     codeHasRun = false;
     stepClickedOnce = false;
     continueOverBreakpoint = false;
@@ -808,6 +887,7 @@ bool resetState(){
     wasStepOver = false;
     wasJumpAndStepOver = false;
     stackArraysZeroed = false;
+    stoppedAtBreakpoint = false;
     codeCurrentLen = 0;
     codeFinalLen = 0;
     lineNo = 0;
@@ -821,15 +901,6 @@ bool resetState(){
     editor->ClearSelections();
     editor->HighlightDebugCurrentLine(-1);
 
-//     if (uc != nullptr){
-//         if (tempUC == uc){
-//             tempUC = nullptr;
-//         }
-//
-// //        uc_close(uc);
-//         uc = nullptr;
-//     }
-
     if (icicle != nullptr)
     {
         icicle_free(icicle);
@@ -841,25 +912,6 @@ bool resetState(){
         icicle_vm_snapshot_free(snapshot);
         snapshot = nullptr;
     }
-
-    // if (context != nullptr){
-    //     if (tempContext == context){
-    //         tempContext = nullptr;
-    //     }
-    //
-    //     uc_context_free(context);
-    //     context = nullptr;
-    // }
-
-    // if (tempContext != nullptr){
-    //     uc_context_free(tempContext);
-    //     tempContext = nullptr;
-    // }
-
-    // if (tempUC != nullptr){
-    //     uc_close(tempUC);
-    //     tempUC = nullptr;
-    // }
 
     labels.clear();
     emptyLineNumbers.clear();
@@ -881,11 +933,11 @@ bool resetState(){
         registerValueMap[key] = "0x00";
     }
 
-    if (!createStack(icicle)){
-        LOG_ERROR("Unable to create stack!");
-        criticalSection.unlock();
-        return false;
-    }
+    // if (!createStack(icicle)){
+    //     LOG_ERROR("Unable to create stack!");
+    //     criticalSection.unlock();
+    //     return false;
+    // }
 
     stackArraysZeroed = false;
     LOG_DEBUG("State reset completed!");
@@ -893,51 +945,188 @@ bool resetState(){
     return true;
 }
 
+uint64_t lineNoToAddress(const uint64_t& lineNo)
+{
+    for (auto& pair : addressLineNoMap)
+    {
+        if (std::atoi(pair.second.c_str()) == lineNo)
+        {
+            return std::stoull(pair.first);
+        }
+    }
+
+    return 0;
+}
+
+bool isSilentBreakpoint(const uint64_t& lineNo)
+{
+    if (icicle == nullptr)
+    {
+        return false;
+    }
+
+    size_t outSize{};
+    const uint64_t* breakpointList = icicle_breakpoint_list(icicle, &outSize);
+    if (breakpointList == nullptr)
+    {
+        return false;
+    }
+
+    for (int i = 0; i < outSize; i++)
+    {
+        if (breakpointList[i] == lineNoToAddress(lineNo))
+        {
+            if (std::ranges::find(breakpointLines, lineNo) == breakpointLines.end())
+            {
+                // a silent breakpoint is a breakpoint which was internally added by
+                // our code and not by the user
+                return true;
+            }
+            return false;
+        }
+    }
+
+    return false;
+}
+
+bool executeCode(Icicle* icicle, const size_t& instructionCount)
+{
+    if (icicle == nullptr)
+    {
+        LOG_ERROR("Attempted to run code when icicle was not initialised!");
+        return false;
+    }
+
+    if (executionComplete == true)
+    {
+        LOG_ALERT("Attempt to execute code after the code is completely executed. Ignoring.");
+        return true;
+    }
+
+    RunStatus status{};
+
+    if (instructionCount == 0)
+    {
+        if (!icicle_add_breakpoint(icicle, lineNoToAddress(lastInstructionLineNo)))
+        {
+           LOG_ERROR("Failed to add breakpoint at the last instruction. The program may end unexpectedly.");
+        }
+
+        status = icicle_run(icicle);
+
+        if (runUntilHere)
+        {
+            runUntilHere = false;
+            LOG_INFO("Run until here set to false");
+        }
+    }
+    else
+    {
+        if (!icicle_add_breakpoint(icicle, lineNoToAddress(lastInstructionLineNo)))
+        {
+            LOG_ERROR("Failed to add breakpoint at the last instruction. The program may end unexpectedly.");
+        }
+
+       status = icicle_step(icicle, instructionCount);
+    }
+
+    if (stoppedAtBreakpoint)
+    {
+        // implement later
+    }
+
+    const uintptr_t ip = icicle_get_pc(icicle);
+    LOG_INFO("Execution completed! with status code: " << status << " address: " << std::hex << ip);
+    if (status == RunStatus::Breakpoint)
+    {
+        LOG_DEBUG("Breakpoint reached at address " << icicle_get_pc(icicle));
+        if (!skipBreakpoints)
+        {
+            editor->HighlightDebugCurrentLine(std::atoll(addressLineNoMap[std::to_string(icicle_get_pc(icicle))].c_str()));
+        }
+
+        auto lineNo = addressLineNoMap[std::to_string(ip)];
+        if (!lineNo.empty())
+        {
+            if (isSilentBreakpoint(strtoll(lineNo.c_str(), nullptr, 10)))
+            {
+                auto s = icicle_remove_breakpoint(icicle, ip);
+                if (!skipEndStep)
+                {
+                    status = icicle_step(icicle, 1);
+                    executionComplete = true;
+                    stoppedAtBreakpoint = false;
+                }
+
+                editor->HighlightDebugCurrentLine(lastInstructionLineNo);
+            }
+            else
+            {
+                stoppedAtBreakpoint = true;
+            }
+        }
+    }
+    else if (status == RunStatus::Unimplemented)
+    {
+        LOG_DEBUG("Unimplemented instruction at address " << icicle_get_pc(icicle));
+        return false;
+    }
+    else if (status == RunStatus::OutOfMemory)
+    {
+        LOG_DEBUG("Ran out of memory at: " << icicle_get_pc(icicle));
+        return false;
+    }
+    else if (status == UnhandledException)
+    {
+        LOG_DEBUG("Unhandled exception. Code :" << icicle_get_exception_code(icicle));
+    }
+
+    return true;
+}
+
 bool isCodeRunning = false;
 bool skipBreakpoints = false;
 bool runningAsContinue = false;
 bool stepCode(const size_t instructionCount){
-    LOG_DEBUG("Stepping into code...");
+    LOG_DEBUG("Stepping into code requested...");
+
+    {
+        std::unique_lock<std::mutex> lk(debugReadyMutex);
+        debugReadyCv.wait(lk, []{ return isDebugReady; });
+    }
+    LOG_DEBUG("Debug state confirmed ready, proceeding with step.");
+
     if (isCodeRunning || executionComplete){
-        criticalSection.unlock();
+        LOG_DEBUG("Step request ignored: Code already running or execution complete.");
         return true;
     }
 
     uint64_t ip = getRegisterValue(archIPStr).eightByteVal;
-    execMutex.lock();
     isCodeRunning = true;
     if (instructionCount == 1) {
         skipBreakpoints = true;
     }
 
-    criticalSection.lock();
     size_t siz{};
-    auto j = icicle_mem_read(icicle, ENTRY_POINT_ADDRESS, CODE_BUF_SIZE, &siz);
-    assert(j != NULL);
     RunStatus status{};
-    if (instructionCount != 0)
-    {
-        status = icicle_step(icicle, instructionCount);
-    }
-    else
-    {
-        status = icicle_run(icicle);
-    }
-    auto k = icicle_get_exception_code(icicle);
+
+    executeCode(icicle, instructionCount); // This contains the core execution
+
+    // Update state *after* execution
     ip = icicle_get_pc(icicle);
     editor->HighlightDebugCurrentLine(std::atoll(addressLineNoMap[std::to_string(icicle_get_pc(icicle))].c_str()));
-    isCodeRunning = false;
-    execMutex.unlock();
-    LOG_DEBUG("Code executed by " << instructionCount << ((instructionCount>1) ? " step" : " steps") << ".");
+    isCodeRunning = false; // Mark as not running *after* execution
+    LOG_DEBUG("Code executed by " << instructionCount << ((instructionCount > 1) ? " steps" : " step") << ".");
 
     if (executionComplete){
-        LOG_DEBUG("Execution complete...");
+        editor->HighlightDebugCurrentLine(lastInstructionLineNo-1);
+        LOG_DEBUG("Execution complete after step.");
         return true;
     }
 
     {
         if (!saveICSnapshot(icicle)){
-            criticalSection.unlock();
+            LOG_ERROR("Failed to save snapshot after step.");
             return false;
         }
 
@@ -949,17 +1138,14 @@ bool stepCode(const size_t instructionCount){
         const std::string str =  addressLineNoMap[std::to_string(ip)];
         if (!str.empty() && (!executionComplete)){
             lineNo = std::atoi(str.c_str());
-            LOG_DEBUG("Highlight from block 3 - stepCode : line: " << lineNo);
+            LOG_DEBUG("Highlight from stepCode : line: " << lineNo);
             editor->HighlightDebugCurrentLine(lineNo - 1);
         }
         else{
-            criticalSection.unlock();
-            return true;
+             LOG_DEBUG("No line number found for current IP or execution complete.");
+             return true;
         }
     }
-
-    saveICSnapshot(icicle);
-    criticalSection.unlock();
 
     codeHasRun = true;
 
@@ -973,55 +1159,83 @@ bool stepCode(const size_t instructionCount){
 
     return true;
 }
+bool addBreakpoint(const uint64_t& address)
+{
+    if (icicle == nullptr)
+    {
+        return false;
+    }
 
-bool runCode(const std::string& codeIn, uint64_t instructionCount)
+    if (icicle_add_breakpoint(icicle, address))
+    {
+        return true;
+    }
+
+    return false;
+}
+
+bool addBreakpointToLine(const uint64_t& lineNo, const bool& silent)
+{
+    if (icicle == nullptr)
+    {
+        return false;
+    }
+
+    if (icicle_add_breakpoint(icicle, lineNoToAddress(lineNo+1)))
+    {
+        if (!silent)
+        {
+            breakpointLines.push_back(lineNo+1);
+        }
+        return true;
+    }
+
+    return false;
+}
+
+bool runCode(const std::string& codeIn, const bool& execCode)
 {
     LOG_INFO("Running code...");
     if (!preExecutionSetup(codeIn)) {
         return false;
     }
 
-    if (instructionCount != 1 || (stepClickedOnce)){
-        const RunStatus status = icicle_run_until(icicle, ENTRY_POINT_ADDRESS + CODE_BUF_SIZE);
-        if (status == RunStatus::Breakpoint)
+    auto line = addressLineNoMap[std::to_string(ENTRY_POINT_ADDRESS)];
+    if (line.empty()){
+        line = "1";
+    }
+
+    auto val = std::atoi(line.data());
+    editor->HighlightDebugCurrentLine(val - 1);
+    LOG_DEBUG("Highlight from runCode");
+
+    if (execCode || (stepClickedOnce)){
+        addBreakpointToLine(lastInstructionLineNo, true);
+        if (!executeCode(icicle, 0))
         {
-            LOG_DEBUG("Breakpoint reached at address " << icicle_get_pc(icicle));
-        }
-        else if (status == RunStatus::Unimplemented)
-        {
-            LOG_DEBUG("Unimplemented instruction at address " << icicle_get_pc(icicle));
-        }
-        else if (status == RunStatus::OutOfMemory)
-        {
-            LOG_DEBUG("Ran out of memory at: " << icicle_get_pc(icicle));
+            LOG_ERROR("Failed to run code.");
         }
 
+        editor->HighlightDebugCurrentLine(lastInstructionLineNo);
         if (runningTempCode){
             icicle_vm_snapshot(icicle);
             updateRegs();
         }
-
-        if (status == RunStatus::Killed) {
-            saveICSnapshot(icicle);
-            free(codeBuf);
-            codeBuf = nullptr;
-            return false;
-        }
     }
 
-    if (instructionCount != 1){
+    if (!execCode){
         free(codeBuf);
         codeBuf = nullptr;
     }
     else {
         saveICSnapshot(icicle);
 
-        auto line = addressLineNoMap[std::to_string(ENTRY_POINT_ADDRESS)];
+        line = addressLineNoMap[std::to_string(ENTRY_POINT_ADDRESS)];
         if (line.empty()){
             line = "1";
         }
 
-        const auto val = std::atoi(line.data());
+        val = std::atoi(line.data());
         editor->HighlightDebugCurrentLine(val - 1);
         LOG_DEBUG("Highlight from runCode");
         stepClickedOnce = true;
@@ -1044,12 +1258,11 @@ bool runTempCode(const std::string& codeIn, uint64_t instructionCount){
     runCode(codeIn, instructionCount);
 
     tempIcicle = icicle;
-    // const auto size = uc_context_size(uc);
     constexpr auto size = sizeof(VmSnapshot);
     tempSnapshot = static_cast<VmSnapshot*>(malloc(size));
     memcpy(tempSnapshot, snapshot, size);
 
     updateRegs(true);
-    icicle_vm_snapshot_free(tempSnapshot);
+    free(tempSnapshot);
     return true;
 }

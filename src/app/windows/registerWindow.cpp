@@ -92,12 +92,7 @@ void updateRegs(bool useTempContext){
             continue;
         }
 
-        if (useTempContext){
-            val = getRegister(toLowerCase(name));
-        }
-        else{
-           val = getRegister(toLowerCase(name));
-        }
+        val = getRegister(toLowerCase(name));
 
         auto const [isRegValid, registerValue] = val;
 
@@ -180,7 +175,7 @@ void updateRegs(bool useTempContext){
                             hex.clear();
                             continue;
                         }
-                        else{
+                       else{
                             for (int i = 0; i < 16; i++){
                                 if (registerValueMap.contains(name + reg32BitLaneStrs[i])) {
                                     registerValueMap[name + reg32BitLaneStrs[i]] = std::to_string(registerValue.info.arrays.floatArray[i]);
@@ -534,21 +529,20 @@ void addRegisterToView(const std::string& reg, const registerValueInfoT& registe
 
         for (auto& reg : regs) {
             if (!regInfoMap.contains((reg))) {
+                LOG_INFO("Register " << reg << " not found in regInfoMap. Ignoring.");
                 return;
             }
 
             auto regInfo = getRegister(reg);
             reg = (reg);
 
-            if (!regInfo.out) {
-                continue;
-            }
 
             if (regInfoMap[reg]> 64){
                 isRegPresent = isRegisterWithLaneShown(reg.c_str(), regInfoMap[reg]);
             }
 
             if ((!registerValueMap.contains(reg)) && !isRegPresent) {
+                LOG_INFO("Register " << reg << " not found in registerValueMap. Adding...");
                 addRegisterToView((reg), regInfo);
             }
             // code for removing the register
@@ -571,6 +565,7 @@ void addRegisterToView(const std::string& reg, const registerValueInfoT& registe
                 while (true) {
                     fullRegName = reg + laneStrVec[i];
                     if (registerValueMap.contains(fullRegName)){
+                        LOG_INFO("Register " << fullRegName << " is already registered. Removing.");
                         removeRegisterFromView(reg, type);
                         i++;
                         continue;

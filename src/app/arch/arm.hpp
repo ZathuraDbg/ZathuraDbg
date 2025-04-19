@@ -2,9 +2,29 @@
 #define ZATHURA_ARM_HPP
 #include <string>
 #include <unordered_map>
-#include <unicorn/unicorn.h>
+#include <vector>
+#include <utility>
+#include "icicle.h"
 
-extern std::unordered_map<std::string, std::pair<size_t, int>> armRegInfoMap;
-extern std::string armIPStr(uc_mode mode);
-extern std::string arm64IPStr(uc_mode mode);
-#endif
+// ARM register info map
+extern std::unordered_map<std::string, size_t> armRegInfoMap;
+extern std::unordered_map<std::string, size_t> aarch64RegInfoMap;
+// Default registers to show in the UI
+extern std::vector<std::string> armDefaultShownRegs;
+extern std::vector<std::string> aarch64DefaultShownRegs;
+
+// ARM architecture instructions
+extern std::vector<std::string> armArchInstructions;
+extern std::vector<std::string> aarch64ArchInstructions;
+
+// Helper functions
+extern std::string armIPStr(int mode);
+extern std::string aarch64IPStr(int mode);
+extern std::pair<std::string, std::string> armSBPStr(int mode);
+extern std::pair<std::string, std::string> aarch64SBPStr(int mode);
+extern bool armIsRegisterValid(const std::string& reg);
+extern bool aarch64IsRegisterValid(const std::string& reg);
+extern void armModeUpdateCallback();
+extern void aarch64ModeUpdateCallback();
+
+#endif //ZATHURA_ARM_HPP

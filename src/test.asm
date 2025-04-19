@@ -5,8 +5,6 @@ main:
 	punpcklqdq xmm0, xmm0
 	add rbx, rax
 	mov rdi, rbx
-	push rdi
-	push rdi
 	inc rdi
     call subtract_hundred
     call subtract_hundred
@@ -14,7 +12,7 @@ main:
     jne nextblock
     push rax
     push rbx
-    nop
+    mov rax, 0x100
     
 subtract_hundred:
     sub rdi, 0x100

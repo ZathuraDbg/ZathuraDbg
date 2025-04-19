@@ -4,9 +4,9 @@
 MemoryEditor memoryEditorWindow;
 std::vector<newMemEditWindowsInfo> newMemEditWindows{};
 
-void hexWriteFunc(ImU8* data, size_t off, ImU8 d){
-    auto err = icicle_mem_write(icicle, MEMORY_EDITOR_BASE + off, &d, 1);
-    if (!err){
+void hexWriteFunc(ImU8* data, const size_t off, const ImU8 d){
+    auto err = icicle_mem_write(icicle, ENTRY_POINT_ADDRESS + off, &d, 1);
+    if (err == -1){
         LOG_ERROR("Failed to write to memory. Address: " << MEMORY_EDITOR_BASE + off);
         const auto hex = static_cast<char *>(malloc(24));
         sprintf(static_cast<char *>(hex), "Data change: %x", d);
@@ -386,18 +386,31 @@ bool fillMemoryRange(){
     return false;
 }
 
-
+unsigned char zeroArr[0x1000];
 void hexEditorWindow(){
     const auto io = ImGui::GetIO();
     ImGui::PushFont(io.Fonts->Fonts[3]);
-    if (!icicle)
-    {
-        ImGui::PopFont();
-        return;
+    
+    // Initialize zero array if needed
+    static bool zeroArrInitialized = false;
+    if (!zeroArrInitialized) {
+        memset(zeroArr, 0, sizeof(zeroArr));
+        zeroArrInitialized = true;
+    }
+    
+    // Don't return early if icicle is null, just use zeroed memory instead
+    size_t outSize = 0;
+    unsigned char* data = nullptr;
+    
+    if (icicle) {
+        data = icicle_mem_read(icicle, ENTRY_POINT_ADDRESS, CODE_BUF_SIZE, &outSize);
+    }
+    
+    // Fallback to zeroed memory if read fails or icicle is null
+    if (data == NULL) {
+        data = zeroArr;
     }
 
-    size_t outSize{};
-    unsigned char* data = icicle_mem_read(icicle, STACK_ADDRESS, STACK_SIZE, &outSize);
     memoryEditorWindow.HighlightColor = ImColor(59, 60, 79);
     memoryEditorWindow.OptShowAddWindowButton = true;
     memoryEditorWindow.NewWindowInfoFn = createNewWindow;
@@ -411,10 +424,16 @@ void hexEditorWindow(){
     if (!newMemEditWindows.empty()) {
         int i = 0;
         for (auto& [memEditor, address, size]: newMemEditWindows){
-            unsigned char *newMemData = nullptr;
-            newMemData = icicle_mem_read(icicle, address, size, &outSize);
-
-            memEditor.DrawWindow(("Memory Editor " + std::to_string(++i)).c_str(), (void*)newMemData, size, address);
+            unsigned char* newMemData = nullptr;
+            if (icicle) {
+                newMemData = icicle_mem_read(icicle, address, size, &outSize);
+            }
+            
+            if (newMemData == NULL) {
+                memEditor.DrawWindow(("Memory Editor " + std::to_string(++i)).c_str(), (void*)zeroArr, size > 0x1000 ? 0x1000 : size, address);
+            } else {
+                memEditor.DrawWindow(("Memory Editor " + std::to_string(++i)).c_str(), (void*)newMemData, size, address);
+            }
         }
     }
     ImGui::PopFont();

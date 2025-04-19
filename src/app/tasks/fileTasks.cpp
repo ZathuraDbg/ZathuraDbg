@@ -1,4 +1,5 @@
 #include "fileTasks.hpp"
+#include <mutex>
 #include "../app.hpp"
 
 std::filesystem::path getTemporaryPath(){
@@ -14,6 +15,8 @@ std::filesystem::path getTemporaryPath(){
 
     return tempDir;
 }
+
+static std::mutex icicleMutex;
 
 bool fileOpenTask(const std::string& fileName){
     if (!fileName.empty()){
@@ -51,30 +54,26 @@ void fileSaveTask(const std::string &fileName){
         selectedFile = fileName;
     }
 }
-bool fileRunTask(const uint64_t instructionCount){
+bool fileRunTask(const bool& execCode){
     if (!selectedFile.empty()){
         LOG_DEBUG("Running code from: " << selectedFile);
 
-        if (icicle != nullptr){
-            icicle_free(icicle);
-            icicle = nullptr;
+        { // Lock scope for icicle cleanup
+            std::lock_guard<std::mutex> lock(icicleMutex);
+            if (icicle != nullptr){
+                icicle_free(icicle);
+                icicle = nullptr;
+            }
         }
 
         if (createStack(icicle)){
-            if (instructionCount == 1){
-                std::string bytes = getBytes(selectedFile);
-                if (!bytes.empty()){
-                     runCode(bytes, instructionCount);
-                 }
-                else {
-                    LOG_ERROR("Unable to run the code. Either no code is present or invalid architecture is selected.");
-                    return false;
-                }
+            std::string bytes = getBytes(selectedFile);
+            if (!bytes.empty()){
+                runCode(bytes, execCode);
             }
-            else if (instructionCount == -1){
-                startDebugging();
-                debugContinueAction(true);
-                return true;
+            else {
+                LOG_ERROR("Unable to run the code. Either no code is present or invalid architecture is selected.");
+                return false;
             }
         }
         else{

@@ -14,7 +14,7 @@ std::map<std::string, int> labelLineNoMapInternal{};
 tsl::ordered_map<std::string, std::pair<uint64_t, uint64_t>> labelLineNoRange{};
 std::vector<uint16_t> instructionSizes{};
 std::vector<uint64_t> emptyLineNumbers{};
-
+bool valid = false; // temp solution
 std::pair<std::string, std::size_t> assemble(const std::string& assemblyString, const keystoneSettings& ksSettings) {
     LOG_INFO("Assembling code...");
     ks_err err;
@@ -32,9 +32,9 @@ std::pair<std::string, std::size_t> assemble(const std::string& assemblyString, 
             return {"", 0};
         }
 
-        if (ksSettings.optionType){
-            ks_option(ks, ksSettings.optionType, ksSettings.optionValue);
-        }
+        // if (ksSettings.optionType){
+        //     ks_option(ks, ksSettings.optionType, ksSettings.optionValue);
+        // }
 
         LOG_INFO("Keystone object initialised.");
     }
@@ -75,6 +75,58 @@ std::pair<std::string, std::size_t> assemble(const std::string& assemblyString, 
     return assembled;
 }
 
+bool isValidInstruction(const char* instruction)
+{
+    size_t size;
+    size_t count;
+    unsigned char *encode;
+    ks_err err;
+
+    if (ks == nullptr)
+    {
+        LOG_INFO("Keystone object doesn't exists, creating...");
+        err = ks_open(codeInformation.archKS, codeInformation.modeKS, &ks);
+        if (err != KS_ERR_OK)
+        {
+            LOG_ERROR("Failed to initialize Keystone engine: " << ks_strerror(err));
+            ks = nullptr;
+            return false;
+        }
+    }
+
+    auto status = ks_asm(ks, instruction, 0, &encode, &size, &count);
+    if (status == 0 && size != 0)
+    {
+        err = ks_errno(ks);
+        std::string error(ks_strerror(err));
+        if (err == KS_ERR_ASM_SYMBOL_MISSING || err == KS_ERR_OK)
+        {
+            ks_close(ks);
+            ks = nullptr;
+            return true;
+        }
+        else
+        {
+            LOG_ERROR(error);
+        }
+    }
+    else if (status == -1)
+    {
+        err = ks_errno(ks);
+        std::string error(ks_strerror(err));
+        if (err == KS_ERR_ASM_SYMBOL_MISSING || err == KS_ERR_OK)
+        {
+            ks_close(ks);
+            ks = nullptr;
+            return true;
+        }
+    }
+    ks_close(ks);
+    ks = nullptr;
+    return false;
+}
+
+// why does the instruction work but all registers have the value of the stack?
 uint64_t lastInstructionLineNo = 0;
 void initInsSizeInfoMap(){
     LOG_INFO("Updating instruction sizes info map...");
@@ -85,7 +137,7 @@ void initInsSizeInfoMap(){
     uint64_t currentAddr = ENTRY_POINT_ADDRESS;
     uint64_t insCount = 0;
     bool foundFirstLabel = false;
-
+    std::string line{};
     // TODO: Scan for multiline comments and ignore them
     while (std::getline(assembly, instructionStr, '\n')) {
         if (instructionStr.contains(":")){
@@ -142,10 +194,14 @@ void initInsSizeInfoMap(){
                 instructionStr = instructionStr.substr(idx);
             }
         }
+
+        line = instructionStr;
+
         if (instructionStr.starts_with(" ")){
             auto idx = instructionStr.find_first_not_of(' ');
             if (idx != std::string::npos){
                 instructionStr = instructionStr.substr(idx);
+                line = instructionStr;
             }
         }
 
@@ -161,9 +217,49 @@ void initInsSizeInfoMap(){
         instructionStr = toUpperCase(instructionStr);
 
 //       if it's valid instruction
-        if (std::ranges::find(archInstructions, instructionStr) != archInstructions.end()){
+
+        if (codeInformation.archIC == IC_ARCH_AARCH64)
+        {
+            if (instructionStr.contains('.'))
+            {
+                valid = true;
+            }
+        }
+        // if (std::ranges::find(archInstructions, instructionStr) != archInstructions.end() || valid){
+        if (line.empty())
+        {
+            LOG_ERROR("Line is empty");
+        }
+        if (isValidInstruction(line.c_str()) || valid){
+            // if (!line.empty())
+            // {
+            //     if (isValidInstruction(line.c_str()))
+            //     {
+            //         LOG_DEBUG(line << " is a valid instruction");
+            //     }
+            //     else
+            //     {
+            //         LOG_DEBUG(line << " is not a valid instruction");
+            //     }
+            // }
+            // else
+            // {
+            //     LOG_DEBUG("line is empty");
+            // }
+            LOG_DEBUG("Found valid instr " << instructionStr << " at line " << lineNo << " current addr: " << std::hex << currentAddr << std::hex);
             addressLineNoMap.insert({std::to_string(currentAddr), std::to_string(lineNo)});
-            currentAddr += instructionSizes[count];
+            if (codeInformation.archIC == IC_ARCH_AARCH64)
+            {
+                currentAddr += 4; // every instruction in aarch64 is 4 bytes long
+            }
+            else
+            {
+                currentAddr += instructionSizes[count];
+            }
+
+            if (valid)
+                valid = false;
+
             count++;
         }
         else {
@@ -228,6 +324,15 @@ uint64_t countValidInstructions(std::stringstream& asmStream){
 
 void updateInstructionSizes(const std::string& compiledAsm){
     LOG_INFO("Updating instruction sizes...");
+    if (codeInformation.archIC == IC_ARCH_AARCH64)
+    {
+        for (int i = 0; i < totalInstructions; i++)
+        {
+            instructionSizes.push_back(4);
+        }
+        return;
+    }
+
     csh handle;
     cs_insn *instruction;
 
@@ -238,11 +343,13 @@ void updateInstructionSizes(const std::string& compiledAsm){
                                    ENTRY_POINT_ADDRESS, 0, &instruction);
     if (count > 0) {
         for (size_t j = 0; j < count; j++) {
+            LOG_INFO("Instruction -> " << instruction[j].mnemonic << " : " << instruction[j].op_str << " has the size: " << instruction[j].size);
             instructionSizes.push_back(instruction[j].size);
         }
 
         cs_free(instruction, count);
     } else {
+        LOG_ERROR("Failed to get instruction sizes with capstone. Exiting...");
         tinyfd_messageBox("Unable to run the given code!\n",  "Please check the logs and create an issue on GitHub if the issue persists", "ok", "error", 0);
     }
 
@@ -270,9 +377,13 @@ std::string getBytes(const std::string& fileName){
         return "";
     }
 
-    updateInstructionSizes(bytes);
+    if (codeInformation.archIC != IC_ARCH_AARCH64)
+    {
+        updateInstructionSizes(bytes);
+    }
+
     initInsSizeInfoMap();
-    LOG_INFO("Got bytes, now hexlifying...");
+   LOG_INFO("Got bytes, now hexlifying...");
     return hexlify({bytes.data(), size});
 }
 
