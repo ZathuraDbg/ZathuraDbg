@@ -130,6 +130,7 @@ bool removeBreakpointFromLineNo(const uint64_t& lineNo) {
                     breakpointLines.erase(it);
                     success = true;
                     LOG_DEBUG("Removed a breakpoint at lineNo " << lineNo);
+                    editor->RemoveHighlight(lineNo);
                 }
                 break;
             }
