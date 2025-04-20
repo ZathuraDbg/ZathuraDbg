@@ -101,7 +101,7 @@ void stepOverAction(){
             if (!executionComplete) {
                 const std::string newLineStr = addressLineNoMap[std::to_string(icicle_get_pc(icicle))];
                 if (!newLineStr.empty()) {
-                    int newLineNo = std::atoi(newLineStr.c_str());
+                    const int newLineNo = std::atoi(newLineStr.c_str());
                     safeHighlightLine(newLineNo - 1);
                 }
             }
@@ -366,7 +366,6 @@ void runActions(){
 
             skipEndStep = true;
             addBreakpointToLine(runUntilLine, true);
-            printBreakpoints();
             stepCode(0);
             skipEndStep = false;
 

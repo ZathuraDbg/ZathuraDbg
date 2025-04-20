@@ -103,7 +103,7 @@ extern std::mutex debugReadyMutex;
 extern std::condition_variable debugReadyCv;
 extern bool isDebugReady;
 extern bool skipEndStep;
-extern void printBreakpoints();
+// extern void printBreakpoints();
 extern void safeHighlightLine(int lineNo);
 
 #endif

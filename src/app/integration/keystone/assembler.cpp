@@ -15,6 +15,7 @@ tsl::ordered_map<std::string, std::pair<uint64_t, uint64_t>> labelLineNoRange{};
 std::vector<uint16_t> instructionSizes{};
 std::vector<uint64_t> emptyLineNumbers{};
 bool valid = false; // temp solution
+
 std::pair<std::string, std::size_t> assemble(const std::string& assemblyString, const keystoneSettings& ksSettings) {
     LOG_INFO("Assembling code...");
     ks_err err;
@@ -75,34 +76,33 @@ std::pair<std::string, std::size_t> assemble(const std::string& assemblyString, 
     return assembled;
 }
 
-bool isValidInstruction(const char* instruction)
-{
+bool isValidInstruction(ks_engine* ksEngine, const char* instruction) {
     size_t size;
     size_t count;
     unsigned char *encode;
     ks_err err;
 
-    if (ks == nullptr)
+    if (ksEngine == nullptr)
     {
         LOG_INFO("Keystone object doesn't exists, creating...");
-        err = ks_open(codeInformation.archKS, codeInformation.modeKS, &ks);
+        err = ks_open(codeInformation.archKS, codeInformation.modeKS, &ksEngine);
         if (err != KS_ERR_OK)
         {
             LOG_ERROR("Failed to initialize Keystone engine: " << ks_strerror(err));
-            ks = nullptr;
+            ksEngine = nullptr;
             return false;
         }
     }
 
-    auto status = ks_asm(ks, instruction, 0, &encode, &size, &count);
+    const auto status = ks_asm(ksEngine, instruction, 0, &encode, &size, &count);
     if (status == 0 && size != 0)
     {
-        err = ks_errno(ks);
-        std::string error(ks_strerror(err));
+        err = ks_errno(ksEngine);
+        const std::string error(ks_strerror(err));
         if (err == KS_ERR_ASM_SYMBOL_MISSING || err == KS_ERR_OK)
         {
-            ks_close(ks);
-            ks = nullptr;
+            ks_close(ksEngine);
+            ksEngine = nullptr;
             return true;
         }
         else
@@ -112,17 +112,16 @@ bool isValidInstruction(const char* instruction)
     }
     else if (status == -1)
     {
-        err = ks_errno(ks);
+        err = ks_errno(ksEngine);
         std::string error(ks_strerror(err));
         if (err == KS_ERR_ASM_SYMBOL_MISSING || err == KS_ERR_OK)
         {
-            ks_close(ks);
-            ks = nullptr;
+            ks_close(ksEngine);
+            ksEngine = nullptr;
             return true;
         }
     }
-    ks_close(ks);
-    ks = nullptr;
+    ks_close(ksEngine);
     return false;
 }
 
@@ -138,6 +137,7 @@ void initInsSizeInfoMap(){
     uint64_t insCount = 0;
     bool foundFirstLabel = false;
     std::string line{};
+
     // TODO: Scan for multiline comments and ignore them
     while (std::getline(assembly, instructionStr, '\n')) {
         if (instructionStr.contains(":")){
@@ -189,7 +189,7 @@ void initInsSizeInfoMap(){
         }
 
         if (instructionStr.starts_with("\t")){
-            auto idx = instructionStr.find_first_not_of('\t');
+            const auto idx = instructionStr.find_first_not_of('\t');
             if (idx != std::string::npos){
                 instructionStr = instructionStr.substr(idx);
             }
@@ -198,7 +198,7 @@ void initInsSizeInfoMap(){
         line = instructionStr;
 
         if (instructionStr.starts_with(" ")){
-            auto idx = instructionStr.find_first_not_of(' ');
+            const auto idx = instructionStr.find_first_not_of(' ');
             if (idx != std::string::npos){
                 instructionStr = instructionStr.substr(idx);
                 line = instructionStr;
@@ -216,8 +216,6 @@ void initInsSizeInfoMap(){
 
         instructionStr = toUpperCase(instructionStr);
 
-//       if it's valid instruction
-
         if (codeInformation.archIC == IC_ARCH_AARCH64)
         {
             if (instructionStr.contains('.'))
@@ -226,7 +224,8 @@ void initInsSizeInfoMap(){
             }
         }
 
-        if (isValidInstruction(line.c_str()) || valid){
+//       if it's valid instruction
+        if (isValidInstruction(ks, line.c_str()) || valid){
             addressLineNoMap.insert({std::to_string(currentAddr), std::to_string(lineNo)});
             if (codeInformation.archIC == IC_ARCH_AARCH64)
             {
@@ -251,6 +250,9 @@ void initInsSizeInfoMap(){
     if (!labelLineNoRange.empty() && (!addressLineNoMap.empty())) {
         labelLineNoRange[labelLineNoRange.back().first].second = strtol(std::prev(addressLineNoMap.end())->second.data(), nullptr, 10);
     }
+
+    ks_close(ks);
+    ks = nullptr;
     totalInstructions = count;
     LOG_INFO("Updated to instruction size information map.");
     LOG_DEBUG("Total instructions to execute: " << totalInstructions);
@@ -288,7 +290,7 @@ uint64_t countValidInstructions(std::stringstream& asmStream){
         }
 
         instructionStr = toUpperCase(instructionStr);
-        auto spaceIt = instructionStr.find_first_of(' ');
+        const auto spaceIt = instructionStr.find_first_of(' ');
         if (spaceIt != std::string::npos){
             instructionStr = instructionStr.substr(0, spaceIt);
         }

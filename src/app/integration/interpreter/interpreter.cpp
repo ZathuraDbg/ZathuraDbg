@@ -90,15 +90,15 @@ bool removeBreakpoint(const uint64_t& address) {
     return success;
 }
 
-void printBreakpoints()
-{
-    size_t count;
-    uint64_t *bpList = icicle_breakpoint_list(icicle, &count);
-    for (size_t i = 0; i < count; i++)
-    {
-        LOG_INFO("Breakpoint #" << i + 1 << " at address: " << std::hex << bpList[i] << std::hex << " at line: " << (addressLineNoMap[std::to_string(bpList[i])]));
-    }
-}
+// void printBreakpoints()
+// {
+//     size_t count;
+//     uint64_t *bpList = icicle_breakpoint_list(icicle, &count);
+//     for (size_t i = 0; i < count; i++)
+//     {
+//         LOG_INFO("Breakpoint #" << i + 1 << " at address: " << std::hex << bpList[i] << std::hex << " at line: " << (addressLineNoMap[std::to_string(bpList[i])]));
+//     }
+// }
 
 bool removeBreakpointFromLineNo(const uint64_t& lineNo) {
     breakpointMutex.lock();
