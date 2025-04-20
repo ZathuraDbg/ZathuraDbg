@@ -74,7 +74,7 @@ bool removeBreakpoint(const uint64_t& address) {
     breakpointMutex.lock();
 
     bool success = false;
-    if (breakpointLines.empty() || icicle == nullptr) {
+    if (breakpointLines.empty()) {
         breakpointMutex.unlock();
         return success;
     }
@@ -159,7 +159,7 @@ double convert128BitToDouble(uint64_t low_bits, const uint64_t high_bits) {
     return result;
 }
 
-registerValueT getRegisterValue(std::string regName){
+registerValueT getRegisterValue(const std::string& regName){
     const auto size = regInfoMap[regName];
     std::string lowerRegName = toLowerCase(regName);
     
@@ -496,7 +496,7 @@ registerValueInfoT getRegister(const std::string& name){
     }
 
     if (!codeHasRun){
-        registerValueInfoT ret = {false, 0x00};
+        constexpr registerValueInfoT ret = {false, 0x00};
         return ret;
     }
 
@@ -517,6 +517,17 @@ Icicle* initIC()
 
     LOG_INFO("Initiation complete...");
     initArch();
+
+
+    if (!breakpointLines.empty())
+    {
+        for (auto& line : breakpointLines)
+        {
+            // addBreakpointToLine(line);
+            icicle_add_breakpoint(vm, lineNoToAddress(line));
+        }
+    }
+
     icicle = vm;
     return vm;
 }
@@ -1025,7 +1036,13 @@ bool stepCode(const size_t instructionCount){
 
     return true;
 }
-bool addBreakpoint(const uint64_t& address)
+
+uint64_t addressToLineNo(const uint64_t& address)
+{
+    return strtoll(addressLineNoMap[std::to_string(address)].c_str(), nullptr, 10);
+}
+
+bool addBreakpoint(const uint64_t& address, const bool& silent)
 {
     if (icicle == nullptr)
     {
@@ -1034,7 +1051,7 @@ bool addBreakpoint(const uint64_t& address)
 
     if (icicle_add_breakpoint(icicle, address))
     {
-        return true;
+       return true;
     }
 
     return false;
@@ -1042,21 +1059,19 @@ bool addBreakpoint(const uint64_t& address)
 
 bool addBreakpointToLine(const uint64_t& lineNo, const bool& silent)
 {
-    if (icicle == nullptr)
+    const bool skipCheck = icicle == nullptr;
+
+    if (!addBreakpoint(lineNoToAddress(lineNo + 1), silent) && !skipCheck)
     {
         return false;
     }
 
-    if (icicle_add_breakpoint(icicle, lineNoToAddress(lineNo+1)))
+    if (!silent)
     {
-        if (!silent)
-        {
-            breakpointLines.push_back(lineNo+1);
-        }
-        return true;
+        breakpointLines.push_back(lineNo+1);
     }
 
-    return false;
+    return true;
 }
 
 bool runCode(const std::string& codeIn, const bool& execCode)

@@ -201,7 +201,6 @@ void debugToggleBreakpoint(){
     else{
         LOG_DEBUG("Adding the breakpoint at line: " << line);
         addBreakpointToLine(line);
-        editor->HighlightBreakpoints(line);
     }
 }
 
