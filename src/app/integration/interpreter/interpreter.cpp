@@ -111,7 +111,8 @@ bool removeBreakpointFromLineNo(const uint64_t& lineNo) {
         return true;
     }
 
-    if (breakpointLines.empty() || icicle == nullptr) {
+    // prevents adding from working?
+    if (breakpointLines.empty()) {
         breakpointMutex.unlock();
         return success;
     }
@@ -1068,7 +1069,8 @@ bool addBreakpointToLine(const uint64_t& lineNo, const bool& silent)
 
     if (!silent)
     {
-        breakpointLines.push_back(lineNo+1);
+        breakpointLines.push_back(lineNo + 1);
+        editor->HighlightBreakpoints(lineNo);
     }
 
     return true;
