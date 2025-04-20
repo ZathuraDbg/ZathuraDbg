@@ -58,11 +58,9 @@ void startDebugging(){
         debugModeEnabled = true;
     });
     
-    // debugActionsMutex.unlock();
 }
 
 void restartDebugging(){
-    // debugActionsMutex.lock();
     LOG_INFO("Restarting debugging...");
     
     executeInBackground([]{
@@ -71,12 +69,10 @@ void restartDebugging(){
         LOG_INFO("Debugging restarted successfully.");
     });
     
-    // debugActionsMutex.unlock();
 }
 
 
 void stepOverAction(){
-    // debugActionsMutex.lock();
     LOG_INFO("Step over requested...");
 
     executeInBackground([]{
@@ -130,11 +126,9 @@ void stepOverAction(){
         }
     });
     
-    // debugActionsMutex.unlock();
 }
 
 void stepInAction(){
-    // debugActionsMutex.lock();
     LOG_INFO("Stepping in requested...");
 
     executeInBackground([]{
@@ -162,7 +156,6 @@ void stepInAction(){
         LOG_INFO("Stepping in done.");
     });
     
-    // debugActionsMutex.unlock();
 }
 
 bool debugPaused = false;
@@ -181,11 +174,9 @@ void debugPauseAction(){
 }
 
 void debugStopAction(){
-    // debugActionsMutex.lock();
     debugModeEnabled = false;
     resetState();
     LOG_INFO("Debugging stopped successfully.");
-    // debugActionsMutex.unlock();
 }
 
 void debugToggleBreakpoint(){
@@ -226,7 +217,7 @@ bool debugAddBreakpoint(const int lineNum){
 
 bool debugRemoveBreakpoint(const int lineNum){
     LOG_DEBUG("Removing the breakpoint at " << lineNum);
-    auto breakpointIter = (std::ranges::find(breakpointLines, lineNum + 1));
+    const auto breakpointIter = (std::ranges::find(breakpointLines, lineNum + 1));
 
     if (breakpointIter == breakpointLines.end()){
         LOG_DEBUG("No breakpoint exists at line no. " << lineNum);
@@ -299,7 +290,7 @@ void debugContinueAction(const bool skipBP) {
         if (!executionComplete) {
             const std::string lineNoStr = addressLineNoMap[std::to_string(icicle_get_pc(icicle))];
             if (!lineNoStr.empty()) {
-                int lineNo = std::atoi(lineNoStr.c_str());
+                const int lineNo = std::atoi(lineNoStr.c_str());
                 safeHighlightLine(lineNo - 1);
             }
         } else {
@@ -453,16 +444,16 @@ void runActions(){
         saveFileAs = false;
     }
     if (fileLoadContext){
-        LOG_INFO("Loading context from file requested!");
-        executeInBackground([](){
-            fileLoadUCContextFromJson(openFileDialog());
-            const uint64_t ip = icicle_get_pc(icicle);
-            const std::string str = addressLineNoMap[std::to_string(ip)];
-            if (!str.empty()) {
-                const int lineNumber = std::atoi(str.c_str());
-                safeHighlightLine(lineNumber - 1);
-            }
-        });
+        LOG_INFO("Not implemented!");
+        // executeInBackground([](){
+        //     fileLoadUCContextFromJson(openFileDialog());
+        //     const uint64_t ip = icicle_get_pc(icicle);
+        //     const std::string str = addressLineNoMap[std::to_string(ip)];
+        //     if (!str.empty()) {
+        //         const int lineNumber = std::atoi(str.c_str());
+        //         safeHighlightLine(lineNumber - 1);
+        //     }
+        // });
         fileLoadContext = false;
     }
 
@@ -488,7 +479,6 @@ void runActions(){
 
     if (memoryMapsUI)
     {
-        // LOG_INFO("Unimplemented");
         memoryMapWindow();
     }
 }

@@ -27,7 +27,7 @@ void changeEmulationSettings(){
     ImGui::OpenPopup("Emulation Settings");
     static int selectedArch = 0;
     static int selectedMode = 0;
-    // static int selectedSyntax = 2;
+    static int selectedSyntax = 2;
     static auto headerText = "Architecture settings";
 
     static icArch icArch;
@@ -64,12 +64,15 @@ void changeEmulationSettings(){
         ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[SatoshiMedium18]);
         ImGui::Combo("##Dropdown", &selectedArch, architectureStrings, IM_ARRAYSIZE(architectureStrings));
         ImGui::PopFont();
-        ImGui::Dummy({0, 1});
-        ImGui::SameLine(0, 10);
 
         ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[SatoshiMedium18]);
         if (selectedArch == arch::x86){
-            // ImGui::SetNextItemWidth(ImGui::CalcTextSize(x86ModeStr[selectedMode]).x * 2 + 10);
+            ImGui::Dummy({0, 1});
+            ImGui::SameLine(0, 10);
+            ImGui::Text("Syntax: ");
+            ImGui::SameLine(0, ImGui::CalcTextSize("Architecture: ").x - ImGui::CalcTextSize("Mode: ").x + 2);
+            ImGui::SetNextItemWidth(ImGui::CalcTextSize(ksSyntaxOptStr[selectedSyntax]).x * 2 + 10);
+            ImGui::Combo("##Dropdown3", &selectedSyntax, ksSyntaxOptStr, IM_ARRAYSIZE(ksSyntaxOpts));
             icArch = IC_ARCH_X86_64;
             ksArch = KS_ARCH_X86;
             csArch = CS_ARCH_X86;
@@ -81,6 +84,7 @@ void changeEmulationSettings(){
         }
         else if (selectedArch == arch::ARM)
         {
+            ImGui::Dummy({0, 1});
             ImGui::SameLine(0, 10);
             ImGui::Text("Mode: ");
             ImGui::SameLine(0, 50);
@@ -104,6 +108,8 @@ void changeEmulationSettings(){
                 codeInformation.syntax = KS_OPT_SYNTAX_RADIX16;
                 codeInformation.archStr = "thumbv7m";
             }
+
+            // ImGui::Dummy({20, 25});
         }
         else if (selectedArch == arch::ARM64)
         {
@@ -112,8 +118,9 @@ void changeEmulationSettings(){
             csArch = CS_ARCH_AARCH64;
             ksMode = KS_MODE_LITTLE_ENDIAN;
             csMode = CS_MODE_LITTLE_ENDIAN;
-            codeInformation.syntax = KS_OPT_SYNTAX_RADIX16;
+            // codeInformation.syntax = KS_OPT_SYNTAX_RADIX16;
             codeInformation.archStr = "aarch64";
+            ImGui::Dummy({20, 25});
         }
         else {
             tinyfd_messageBox("Unsupported Architecture!", "Only x86 and ARM Architectures are supported with ZathuraDbg at this point."
@@ -124,17 +131,8 @@ void changeEmulationSettings(){
             csMode = CS_MODE_64;
         }
 
-        // ImGui::Dummy({0, 1});
-        ImGui::SameLine(0, 10);
-        // ImGui::Text("Syntax: ");
-        // ImGui::SameLine(0, ImGui::CalcTextSize("Architecture: ").x - ImGui::CalcTextSize("Mode: ").x + 2);
-        // ImGui::SetNextItemWidth(ImGui::CalcTextSize(ksSyntaxOptStr[selectedSyntax]).x * 2 + 10);
-        // ImGui::Combo("##Dropdown3", &selectedSyntax, ksSyntaxOptStr, IM_ARRAYSIZE(ksSyntaxOpts));
         ImGui::PopFont();
-
         ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[SatoshiBold18]);
-        ImGui::Dummy({60, 30});
-
         ImGui::SetCursorPosX(windowSize.y);
         if (ImGui::Button("OK")){
             codeInformation.archIC = icArch;
@@ -172,7 +170,7 @@ void changeEmulationSettings(){
 
 void appMenuBar()
 {
-    bool quit = false;  // not using exit because it's a function from std to avoid confusion
+    bool quit = false;
 
     ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[RubikRegular16]);
     if (ImGui::BeginMainMenuBar())
@@ -182,8 +180,8 @@ void appMenuBar()
             ImGui::MenuItem("Open", "Ctrl+O", &openFile);
             ImGui::MenuItem("Save", "Ctrl+S", &saveFile);
             ImGui::MenuItem("Save As", "Ctrl+Shift+S", &saveFileAs);
-            ImGui::MenuItem("Save context to file", "Ctrl+Shift+M", &saveContextToFile);
-            ImGui::MenuItem("Load context from file", "Ctrl+Shift+O", &fileLoadContext);
+            // ImGui::MenuItem("Save context to file", "Ctrl+Shift+M", &saveContextToFile);
+            // ImGui::MenuItem("Load context from file", "Ctrl+Shift+O", &fileLoadContext);
             ImGui::Separator();
             ImGui::MenuItem("Exit", "Alt+F4", &quit);
             ImGui::Separator();

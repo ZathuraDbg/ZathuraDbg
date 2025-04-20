@@ -32,9 +32,9 @@ std::pair<std::string, std::size_t> assemble(const std::string& assemblyString, 
             return {"", 0};
         }
 
-        // if (ksSettings.optionType){
-        //     ks_option(ks, ksSettings.optionType, ksSettings.optionValue);
-        // }
+        if (ksSettings.optionType && codeInformation.archIC == IC_ARCH_X86_64){
+            ks_option(ks, ksSettings.optionType, ksSettings.optionValue);
+        }
 
         LOG_INFO("Keystone object initialised.");
     }

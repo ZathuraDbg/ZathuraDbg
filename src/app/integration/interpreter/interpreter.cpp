@@ -111,7 +111,6 @@ bool removeBreakpointFromLineNo(const uint64_t& lineNo) {
         return true;
     }
 
-    // prevents adding from working?
     if (breakpointLines.empty()) {
         breakpointMutex.unlock();
         return success;
@@ -1134,7 +1133,7 @@ bool runCode(const std::string& codeIn, const bool& execCode)
 Icicle* tempIcicle = nullptr;
 VmSnapshot* tempSnapshot = nullptr;
 
-bool runTempCode(const std::string& codeIn, uint64_t instructionCount){
+bool runTempCode(const std::string& codeIn, const uint64_t instructionCount){
     LOG_INFO("Running " << instructionCount << " temporary instructions...");
 
     resetState();
