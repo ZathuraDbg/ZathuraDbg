@@ -50,11 +50,6 @@ bool showPopupError = false;
 bool handleStackError() {
     if (!showPopupError) return true;
 
-    // const bool shouldMap = tinyfd_messageBox(
-    //     "Stack in unmapped memory!",
-    //     "The stack value you have set is not mapped by default. Do you want to map it?",
-    //     "okcancel", "error", 0);
-
     if (1) {
         const auto result = icicle_mem_map(icicle, STACK_ADDRESS, STACK_SIZE, MemoryProtection::ReadWrite);
         if (result != 0) {
@@ -75,37 +70,31 @@ bool handleStackError() {
     return false;
 }
 
-// Keep these as globals for compatibility with main.cpp
+static unsigned char* stackBuffer = nullptr;
+
 unsigned char* stackEditorData;
 unsigned char* stackEditorTemp;
-bool stackArraysZeroed = false;
 
 void stackEditorWindow() {
     auto io = ImGui::GetIO();
     ImGui::PushFont(io.Fonts->Fonts[3]);
 
-    // Initialize stack arrays if not already done
-    if (!stackArraysZeroed) {
-        LOG_INFO("Creating stack...");
-        memset(stackEditorData, 0, STACK_SIZE);
-        memset(stackEditorTemp, 0, STACK_SIZE);
-        stackArraysZeroed = true;
+    // Initialize our buffer if not already done
+    if (stackBuffer == nullptr) {
+        stackBuffer = static_cast<unsigned char*>(calloc(1, STACK_SIZE));
+        if (!stackBuffer) {
+            LOG_ERROR("Failed to allocate stack buffer");
+            ImGui::PopFont();
+            return;
+        }
     }
-
-    // // Handle stack error if needed
-    // if (showPopupError && !handleStackError()) {
-    //     ImGui::PopFont();
-    //     return;
-    // }
 
     if (icicle)
     {
         static bool stack_mapped_once = false;
         if (!stack_mapped_once) {
-            // Only try to map once per session, not every frame
             LOG_INFO("Stack mapping if not done already");
 
-            // Try to read memory first to see if it's already mapped
             size_t test_size = 0;
             unsigned char* test_data = icicle_mem_read(icicle, STACK_ADDRESS, 1, &test_size);
             bool already_mapped = (test_data != nullptr);
@@ -129,30 +118,25 @@ void stackEditorWindow() {
             stack_mapped_once = true;
         }
     }
+    
     size_t outSize = 0;
-    auto memData = icicle_mem_read(icicle, STACK_ADDRESS, STACK_SIZE, &outSize);
+    unsigned char* memData = icicle_mem_read(icicle, STACK_ADDRESS, STACK_SIZE, &outSize);
     
     if (!memData) {
-        if (!showPopupError) {
-            // LOG_ERROR("Failed to read memory. Address: 0x" << std::hex << STACK_ADDRESS);
-            memData = stackEditorTemp;
-        }
+        memset(stackBuffer, 0, STACK_SIZE);
     } else {
-        if (updateStack) {
-            copyBigEndian(stackEditorData, memData, STACK_SIZE);
-            updateStack = false;
-        }
+        copyBigEndian(stackBuffer, memData, STACK_SIZE);
+        icicle_free_buffer(memData, outSize);
     }
 
-    // Configure memory editor
     stackEditor.HighlightColor = ImColor(59, 60, 79);
     stackEditor.OptShowAddWindowButton = false;
     stackEditor.OptFillMemoryRange = true;
     stackEditor.FillMemoryRange = fillMemoryWithBytePopup;
     stackEditor.StackFashionAddrSubtraction = true;
+    stackEditor.WriteFn = &stackWriteFunc;
 
-    // Draw the editor window
-    stackEditor.DrawWindow("Stack", reinterpret_cast<void*>(stackEditorData), STACK_SIZE, STACK_ADDRESS + STACK_SIZE);
+    stackEditor.DrawWindow("Stack", reinterpret_cast<void*>(stackBuffer), STACK_SIZE, STACK_ADDRESS + STACK_SIZE);
 
     if (!newMemEditWindows.empty()) {
         int i = 0;
@@ -166,9 +150,17 @@ void stackEditorWindow() {
             else
             {
                 memEditor.DrawWindow(("Memory Editor " + std::to_string(++i)).c_str(), (void*)newMemData, size, address);
+                icicle_free_buffer(newMemData, newMemSize);
             }
         }
     }
 
     ImGui::PopFont();
+}
+
+void cleanupStackEditor() {
+    if (stackBuffer) {
+        free(stackBuffer);
+        stackBuffer = nullptr;
+    }
 }

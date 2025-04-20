@@ -6,7 +6,7 @@ uintptr_t MEMORY_ALLOCATION_SIZE = 201000;
 uintptr_t DEFAULT_STACK_ADDRESS = 0x301000;
 uintptr_t STACK_ADDRESS = DEFAULT_STACK_ADDRESS;
 uint64_t  CODE_BUF_SIZE = 0x5000;
-uintptr_t STACK_SIZE = 3 * 1024 * 1024;
+uintptr_t STACK_SIZE = 64 * 1024;
 uintptr_t MEMORY_EDITOR_BASE;
 uintptr_t MEMORY_DEFAULT_SIZE = 0x4000;
 
@@ -33,6 +33,8 @@ bool stepContinue = false;
 bool executionComplete = false;
 bool use32BitLanes = false;
 bool stoppedAtBreakpoint = false;
+bool nextLineHasBreakpoint = false;
+bool addBreakpointBack = false;
 bool skipEndStep = false;
 
 std::vector<uint64_t> breakpointLines = {};
@@ -72,12 +74,11 @@ bool removeBreakpoint(const uint64_t& address) {
     breakpointMutex.lock();
 
     bool success = false;
-    //
     if (breakpointLines.empty() || icicle == nullptr) {
         breakpointMutex.unlock();
         return success;
     }
-    //
+
     const auto it = std::ranges::find(breakpointLines, lineNo);
     if  (it != breakpointLines.end()) {
         icicle_remove_breakpoint(icicle, address);
@@ -117,7 +118,7 @@ bool removeBreakpointFromLineNo(const uint64_t& lineNo) {
 
     const auto it = std::ranges::find(breakpointLines, lineNo);
     size_t size;
-    uint64_t* bpList = icicle_breakpoint_list(icicle, &size);
+    const uint64_t* bpList = icicle_breakpoint_list(icicle, &size);
 
     if (bpList)
     {
@@ -507,17 +508,6 @@ registerValueInfoT getRegister(const std::string& name){
 
 Icicle* initIC()
 {
-    // Free existing instance and snapshot if they exist
-    if (icicle != nullptr) {
-        LOG_WARNING("initIC called while an existing Icicle instance was present. Freeing old instance.");
-        if (snapshot != nullptr) {
-            icicle_vm_snapshot_free(snapshot);
-            snapshot = nullptr;
-        }
-        icicle_free(icicle);
-        icicle = nullptr;
-    }
-
     const auto vm = icicle_new(codeInformation.archStr, false, true, false, false, false, false, false, false);
     if (!vm)
     {
@@ -557,185 +547,18 @@ uint64_t lastLineNo = 0;
 void instructionHook(void* userData, const uint64_t address)
 {
     // Update UI safely with current line
-    const std::string lineNoStr = addressLineNoMap[std::to_string(address)];
-    if (!lineNoStr.empty()) {
-        int lineNo = std::atoi(lineNoStr.c_str());
-        if (lineNo > 0) {
-            // Call safeHighlightLine which is externally defined
-            safeHighlightLine(lineNo - 1);
-        }
-    }
+    // const std::string lineNoStr = addressLineNoMap[std::to_string(address)];
+    // if (!lineNoStr.empty()) {
+    //     int lineNo = std::atoi(lineNoStr.c_str());
+    //     if (lineNo > 0) {
+    //         safeHighlightLine(lineNo - 1);
+    //     }
+    // }
 }
-
-// void hook(uc_engine *uc, const uint64_t address, const uint32_t size, void *user_data){
-//     std::string currentLabel{};
-//
-//     int lineNumber = -1;
-//     const std::string str = addressLineNoMap[std::to_string(address)];
-//     if (!str.empty()){
-//         lineNumber = std::atoi(str.c_str());
-//     }
-//     else{
-//         lineNumber = -1;
-//     }
-//
-//     bool jumpDetected = false;
-//     if ((!debugModeEnabled && !debugRun) || (executionComplete) || (pauseNext && pausedLineNo != lineNumber)){
-//         LOG_DEBUG("Execution halted.");
-//         uc_emu_stop(uc);
-//         saveUCContext(uc, context);
-//
-//         if (executionComplete){
-//             editor->HighlightDebugCurrentLine(lastInstructionLineNo - 1);
-//         }
-//
-//         if (pauseNext && pausedLineNo != lastLineNo){
-//             LOG_DEBUG("Pause next detected!");
-//             pauseNext = false;
-//         }
-//         criticalSection.unlock();
-//         return;
-//     }
-//
-//     if (!runningAsContinue) {
-//      for (auto &[label, range]: labelLineNoRange) {
-//         if (lineNo > range.first && (lineNo <= range.second)) {
-//             currentLabel = label;
-//             break;
-//         }
-//     }
-//     }
-//
-//     if (stepOver) {
-//         wasStepOver = true;
-//     }
-//
-//     LOG_DEBUG("At lineNo: " << lineNumber);
-//     if (lineNumber == runUntilLine){
-//         LOG_DEBUG("Run until here detected!");
-//         LOG_DEBUG("At lineNo: " << lineNumber);
-//         runUntilLine = 0;
-//         runUntilHere = false;
-//         uc_emu_stop(uc);
-//         saveUCContext(uc, context);
-//     }
-//
-//     if (eraseTempBP) {
-// //      erase the temporary breakpoint
-//         breakpointMutex.lock();
-//         LOG_DEBUG("Removing step over breakpoint line number: " << stepOverBPLineNo);
-//         if (!breakpointLines.empty()) {
-//             breakpointLines.erase(std::ranges::find(breakpointLines, stepOverBPLineNo));
-//         }
-//
-//         breakpointMutex.unlock();
-//         stepOverBPLineNo = -1;
-//         eraseTempBP = false;
-//     }
-//
-//     if (expectedIP == 0){
-//         expectedIP = address;
-//     }
-//
-//     if (lineNumber == lastInstructionLineNo){
-//         executionComplete = true;
-//     }
-//
-//     uint64_t ip = getRegisterValue(getArchIPStr(codeInformation.mode), false).eightByteVal;
-//
-//
-//     if (ip != expectedIP && expectedIP != 0 && !currentLabel.empty()) {
-//         if (lastLineNo == labelLineNoRange[currentLabel].second && lineNumber != lastLineNo) {
-//             uc_emu_stop(uc);
-//             saveUCContext(uc, context);
-//         }
-//     }
-//
-//     if (debugModeEnabled && !skipBreakpoints){
-//         if (ip != expectedIP && (ip > expectedIP)){
-//             LOG_INFO("Jump detected!");
-//             jumpDetected = true;
-//             updateRegs();
-//
-//             /* The following check makes sure that the
-//              * step in behavior stays consistent even when
-//              * the step out routine is used in order to
-//              * fix an issue with unicorn.
-//            */
-//             if (stepInBypassed && !jumpAfterBypass) {
-//                 jumpAfterBypass = true;
-//                 stepInBypassed = false;
-//             }
-//             else if (jumpAfterBypass) {
-//                 LOG_DEBUG("Program paused after a jump is recieved after stepIn bypass");
-//                 uc_emu_stop(uc);
-//                 jumpAfterBypass = false;
-//                 stepInBypassed = false;
-//             }
-//
-//             if (stepIn){
-//                 LOG_DEBUG("Step in detected!");
-//                 const std::string breakPointLinNo = addressLineNoMap[std::to_string(ip)];
-//                 tempBPLineNum = std::atoi(breakPointLinNo.c_str());
-//                 if (!breakPointLinNo.empty()){
-//                     breakpointMutex.lock();
-//                     breakpointLines.push_back(tempBPLineNum);
-//                     breakpointMutex.unlock();
-//                 }
-//             }
-//             expectedIP = ip;
-//         }
-//
-//         editor->HighlightDebugCurrentLine(lineNumber - 1);
-//         if (std::ranges::find(breakpointLines, lineNumber) != breakpointLines.end() && (!skipBreakpoints)){
-//             editor->HighlightDebugCurrentLine(lineNumber - 1);
-//             LOG_DEBUG("Highlight from hook - breakpoint found at lineNo " << lineNumber);
-//             if (((runningAsContinue && lineNumber == stepOverBPLineNo))) {
-//                 removeBreakpoint(stepOverBPLineNo);
-//             }
-//             else if (!continueOverBreakpoint){
-//                 LOG_DEBUG("Breakpoint hit!");
-//                 uc_emu_stop(uc);
-//                 saveUCContext(uc, context);
-//                 continueOverBreakpoint = true;
-//                 return;
-//             }
-//             else{
-//                 continueOverBreakpoint = false;
-//             }
-//         }
-//
-//         if (tempBPLineNum != -1){
-//             removeBreakpoint(tempBPLineNum);
-//         }
-//     }
-//     if (stepOverBPLineNo != -1){
-//         eraseTempBP = true;
-//     }
-//
-//    if (!wasJumpAndStepOver) {
-//         wasJumpAndStepOver = jumpDetected && wasStepOver;
-//    }
-//
-//     if (debugPaused && stepIn){
-//         LOG_DEBUG("Step In detected after pause!");
-//         stepIn = false;
-//         pauseNext = true;
-//         pausedLineNo = lineNumber;
-//     }
-//
-//     saveUCContext(uc, context);
-//     codeCurrentLen += size;
-//     expectedIP += size;
-//     lastLineNo = lineNumber;
-//     criticalSection.unlock();
-// }
-
 bool updateStack = false;
 void stackWriteHook(void* data, uint64_t address, uint8_t size, const uint64_t valueWritten)
 {
     updateStack = true;
-    return ;
 }
 
 void hookStackWrite(uc_engine *uc, const uint64_t address, const uint32_t size, void *user_data) {
@@ -832,7 +655,7 @@ bool createStack(Icicle* ic)
     LOG_INFO("Stack mapping if not done already.");
     // Only map if not already mapped
     if (!already_mapped) {
-        auto mapped = icicle_mem_map(ic, STACK_ADDRESS, STACK_SIZE, MemoryProtection::ReadWrite);
+        const auto mapped = icicle_mem_map(ic, STACK_ADDRESS, STACK_SIZE, MemoryProtection::ReadWrite);
         if (mapped == -1)
         {
             LOG_ERROR("Icicle was unable to map memory for the stack.");
@@ -846,7 +669,7 @@ bool createStack(Icicle* ic)
         }
     }
     LOG_INFO("Attempting a mem_write");
-    auto mapped = icicle_mem_write(ic, STACK_ADDRESS, zeroBuf, STACK_SIZE);
+    const auto mapped = icicle_mem_write(ic, STACK_ADDRESS, zeroBuf, STACK_SIZE);
     if (mapped == -1)
     {
         LOG_WARNING("Icicle was unable to zero memory for the stack.");
@@ -858,7 +681,7 @@ bool createStack(Icicle* ic)
     icicle_reg_write(ic, archSPStr, stackBase);
     icicle_reg_write(ic, archBPStr, stackBase);
     size_t outSize{};
-    auto s = icicle_mem_read(ic, STACK_ADDRESS, STACK_SIZE, &outSize);
+    const auto s = icicle_mem_read(ic, STACK_ADDRESS, STACK_SIZE, &outSize);
     if (!s)
     {
         LOG_ERROR("Failed to read the stack base pointer, quitting!!");
@@ -933,12 +756,6 @@ bool resetState(){
         registerValueMap[key] = "0x00";
     }
 
-    // if (!createStack(icicle)){
-    //     LOG_ERROR("Unable to create stack!");
-    //     criticalSection.unlock();
-    //     return false;
-    // }
-
     stackArraysZeroed = false;
     LOG_DEBUG("State reset completed!");
     criticalSection.unlock();
@@ -989,63 +806,25 @@ bool isSilentBreakpoint(const uint64_t& lineNo)
     return false;
 }
 
-bool executeCode(Icicle* icicle, const size_t& instructionCount)
+bool isCodeExecutedAlready = false;
+bool checkStatusUpdateState(const size_t& instructionCount, RunStatus status, const uint64_t& oldBPAddr)
 {
-    if (icicle == nullptr)
-    {
-        LOG_ERROR("Attempted to run code when icicle was not initialised!");
-        return false;
-    }
-
-    if (executionComplete == true)
-    {
-        LOG_ALERT("Attempt to execute code after the code is completely executed. Ignoring.");
-        return true;
-    }
-
-    RunStatus status{};
-
-    if (instructionCount == 0)
-    {
-        if (!icicle_add_breakpoint(icicle, lineNoToAddress(lastInstructionLineNo)))
-        {
-           LOG_ERROR("Failed to add breakpoint at the last instruction. The program may end unexpectedly.");
-        }
-
-        status = icicle_run(icicle);
-
-        if (runUntilHere)
-        {
-            runUntilHere = false;
-            LOG_INFO("Run until here set to false");
-        }
-    }
-    else
-    {
-        if (!icicle_add_breakpoint(icicle, lineNoToAddress(lastInstructionLineNo)))
-        {
-            LOG_ERROR("Failed to add breakpoint at the last instruction. The program may end unexpectedly.");
-        }
-
-       status = icicle_step(icicle, instructionCount);
-    }
-
-    if (stoppedAtBreakpoint)
-    {
-        // implement later
-    }
-
     const uintptr_t ip = icicle_get_pc(icicle);
     LOG_INFO("Execution completed! with status code: " << status << " address: " << std::hex << ip);
+
+    const std::string lineNoStr = addressLineNoMap[std::to_string(ip)];
+    if (!lineNoStr.empty()) {
+        const int lineNo = std::atoi(lineNoStr.c_str());
+        if (lineNo > 0) {
+            safeHighlightLine(lineNo - 1);
+        }
+    }
+
     if (status == RunStatus::Breakpoint)
     {
         LOG_DEBUG("Breakpoint reached at address " << icicle_get_pc(icicle));
-        if (!skipBreakpoints)
-        {
-            editor->HighlightDebugCurrentLine(std::atoll(addressLineNoMap[std::to_string(icicle_get_pc(icicle))].c_str()));
-        }
 
-        auto lineNo = addressLineNoMap[std::to_string(ip)];
+        const auto lineNo = addressLineNoMap[std::to_string(ip)];
         if (!lineNo.empty())
         {
             if (isSilentBreakpoint(strtoll(lineNo.c_str(), nullptr, 10)))
@@ -1057,12 +836,22 @@ bool executeCode(Icicle* icicle, const size_t& instructionCount)
                     executionComplete = true;
                     stoppedAtBreakpoint = false;
                 }
-
-                editor->HighlightDebugCurrentLine(lastInstructionLineNo);
             }
             else
             {
-                stoppedAtBreakpoint = true;
+                nextLineHasBreakpoint = true;
+
+                /*
+                   When there is a step in request and the current instruction has a breakpoint on it
+                   icicle won't allow us to just step above it
+                   thus we have to use this boolean flag and function call to step above it.
+                */
+
+                // This doesn't have to be done for continues though
+                if (instructionCount == 1)
+                {
+                    executeCode(icicle, 1);
+                }
             }
         }
     }
@@ -1079,9 +868,86 @@ bool executeCode(Icicle* icicle, const size_t& instructionCount)
     else if (status == UnhandledException)
     {
         LOG_DEBUG("Unhandled exception. Code :" << icicle_get_exception_code(icicle));
+        return false;
+    }
+
+    if (addBreakpointBack)
+    {
+        if (oldBPAddr != 0)
+        {
+            icicle_add_breakpoint(icicle, oldBPAddr);
+        }
     }
 
     return true;
+}
+
+bool executeCode(Icicle* icicle, const size_t& instructionCount)
+{
+    if (icicle == nullptr)
+    {
+        LOG_ERROR("Attempted to run code when icicle was not initialised!");
+        return false;
+    }
+
+    if (executionComplete == true)
+    {
+        LOG_ALERT("Attempt to execute code after the code is completely executed. Ignoring.");
+        return true;
+    }
+
+    RunStatus status{};
+    uint64_t currentInstrAddr{};
+
+    // "next" in context of the previous line
+    if (nextLineHasBreakpoint == true)
+    {
+        currentInstrAddr = icicle_get_pc(icicle);
+        icicle_remove_breakpoint(icicle, currentInstrAddr);
+        nextLineHasBreakpoint = false;
+
+        if (instructionCount != 1)
+        {
+            status = icicle_step(icicle, 1);
+            addBreakpointBack = false;
+            if (!checkStatusUpdateState(1, status, 0))
+            {
+                return false;
+            }
+
+            icicle_add_breakpoint(icicle, currentInstrAddr);
+        }
+        else
+        {
+            addBreakpointBack = true;
+        }
+    }
+
+    if (instructionCount == 0)
+    {
+        if (!icicle_add_breakpoint(icicle, lineNoToAddress(lastInstructionLineNo)))
+        {
+           LOG_ERROR("Failed to add breakpoint at the last instruction. The program may end unexpectedly.");
+        }
+
+        status = icicle_run(icicle);
+        if (runUntilHere)
+        {
+            runUntilHere = false;
+            LOG_INFO("Run until here set to false");
+        }
+    }
+    else
+    {
+        if (!icicle_add_breakpoint(icicle, lineNoToAddress(lastInstructionLineNo)))
+        {
+            LOG_ERROR("Failed to add breakpoint at the last instruction. The program may end unexpectedly.");
+        }
+
+       status = icicle_step(icicle, instructionCount);
+    }
+
+    return checkStatusUpdateState(instructionCount, status, currentInstrAddr);
 }
 
 bool isCodeRunning = false;

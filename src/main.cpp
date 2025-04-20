@@ -7,6 +7,7 @@
 #include "../vendor/ImGuiColorTextEdit/TextEditor.h"
 #include "app/app.hpp"
 #include "../vendor/whereami/src/whereami.h"
+#include "app/windows/windows.hpp" // Make sure this imports the stack window functions
 #define GL_SILENCE_DEPRECATION
 #if defined(IMGUI_IMPL_OPENGL_ES2)
 #include <GLES2/gl2.h>
@@ -38,6 +39,12 @@ void destroyWindow(){
 }
 
 float frameRate = 120;
+
+// Forward declaration of cleanup function
+extern void cleanupStackEditor();
+
+// Declare these as null pointers since some code might still reference them
+bool stackArraysZeroed = false;
 
 int main(int argc, const char** argv)
 {
@@ -143,14 +150,14 @@ int main(int argc, const char** argv)
     stackEditor.OptShowAscii = false;
     stackEditor.Cols = 8;
 
-    if (!createStack(icicle)){
-        tinyfd_messageBox("Keystone Engine error!", "Unable to initialize the stack. If the issue persists please create a GitHub issue and report your logs.", "ok", "error", 0);
-        LOG_ERROR("Failed to create stack!");
-        exit(-1);
-    }
+    // if (!createStack(icicle)){
+    //     tinyfd_messageBox("Keystone Engine error!", "Unable to initialize the stack. If the issue persists please create a GitHub issue and report your logs.", "ok", "error", 0);
+    //     LOG_ERROR("Failed to create stack!");
+    //     exit(-1);
+    // }
 
-    stackEditorData = static_cast<unsigned char*>(malloc(STACK_SIZE));
-    stackEditorTemp = static_cast<unsigned char*>(malloc(STACK_SIZE));
+    stackEditorData = nullptr;
+    stackEditorTemp = nullptr;
     stackArraysZeroed = false;
     glfwShowWindow(window);
 
@@ -195,8 +202,19 @@ int main(int argc, const char** argv)
         runActions();
     }
 
-    free(stackEditorData);
-    free(stackEditorTemp);
+    // Cleanup memory
+    cleanupStackEditor();
+    
+    // Free legacy pointers if somehow allocated
+    if (stackEditorData) {
+        free(stackEditorData);
+        stackEditorData = nullptr;
+    }
+    if (stackEditorTemp) {
+        free(stackEditorTemp);
+        stackEditorTemp = nullptr;
+    }
+    
     if (icicle != nullptr)
     {
         icicle_free(icicle);

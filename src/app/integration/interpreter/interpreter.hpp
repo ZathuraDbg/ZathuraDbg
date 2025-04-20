@@ -63,6 +63,7 @@ extern bool runCode(const std::string& codeIn, const bool& execCode);
 extern uint64_t lineNoToAddress(const uint64_t& lineNo);
 extern bool addBreakpoint(const uint64_t& address);
 extern bool stoppedAtBreakpoint;
+extern bool nextLineHasBreakpoint;
 extern bool executeCode(Icicle* icicle, const size_t& instructionCount);
 extern bool executionComplete;
 extern bool addBreakpointToLine(const uint64_t& lineNo, const bool& silent = false);

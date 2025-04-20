@@ -225,28 +225,8 @@ void initInsSizeInfoMap(){
                 valid = true;
             }
         }
-        // if (std::ranges::find(archInstructions, instructionStr) != archInstructions.end() || valid){
-        if (line.empty())
-        {
-            LOG_ERROR("Line is empty");
-        }
+
         if (isValidInstruction(line.c_str()) || valid){
-            // if (!line.empty())
-            // {
-            //     if (isValidInstruction(line.c_str()))
-            //     {
-            //         LOG_DEBUG(line << " is a valid instruction");
-            //     }
-            //     else
-            //     {
-            //         LOG_DEBUG(line << " is not a valid instruction");
-            //     }
-            // }
-            // else
-            // {
-            //     LOG_DEBUG("line is empty");
-            // }
-            LOG_DEBUG("Found valid instr " << instructionStr << " at line " << lineNo << " current addr: " << std::hex << currentAddr << std::hex);
             addressLineNoMap.insert({std::to_string(currentAddr), std::to_string(lineNo)});
             if (codeInformation.archIC == IC_ARCH_AARCH64)
             {

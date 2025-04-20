@@ -103,4 +103,5 @@ extern std::pair<size_t, size_t> infoPopup(const std::string& title = "", const 
 extern std::vector<newMemEditWindowsInfo> newMemEditWindows;
 extern unsigned char* stackEditorData;
 extern unsigned char* stackEditorTemp;
+extern void cleanupStackEditor();
 #endif
