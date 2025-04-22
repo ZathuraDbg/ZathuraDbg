@@ -13,7 +13,6 @@
 #include "../../arch/arch.hpp"
 #include "../../arch/x86.hpp"
 #include "../../../utils/stringHelper.hpp"
-#include "errorHandler.hpp"
 #include <mutex>
 #include <array>
 #include "icicle.h"

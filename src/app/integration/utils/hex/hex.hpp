@@ -9,10 +9,10 @@
 
 struct hexStruct
 {
-    hexStruct(const void* data, unsigned long length) :
+    hexStruct(const void* data, const unsigned long long length) :
         mData(static_cast<const unsigned char*>(data)), mLength(length) { }
     const unsigned char* mData;
-    const unsigned mLength;
+    const unsigned long long mLength;
 };
 
 static std::string hexlify(const hexStruct& dump) {

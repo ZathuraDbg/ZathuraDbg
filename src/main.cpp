@@ -121,7 +121,7 @@ int main(int argc, const char** argv)
     ImGui_ImplOpenGL3_Init(glsl_version);
 
     GLFWimage icons[1];
-    icons[0].pixels = stbi_load("../assets/ZathuraDbg.png", &icons[0].width, &icons[0].height, nullptr, 4);
+    icons[0].pixels = stbi_load(relativeToRealPath(executablePath, "../assets/ZathuraDbg.png").c_str(), &icons[0].width, &icons[0].height, nullptr, 4);
     glfwSetWindowIcon(window, 1, icons); // Set icon
     stbi_image_free(icons[0].pixels);
 
@@ -218,8 +218,9 @@ int main(int argc, const char** argv)
     if (icicle != nullptr)
     {
         icicle_free(icicle);
-        icicle = nullptr;
     }
+
+
     destroyWindow();
     return 0;
 }

@@ -26,12 +26,13 @@ static void* copyBigEndian(void* dst, const void* src, size_t size)
 }
 
 void stackWriteFunc(ImU8* data, const size_t offset, const ImU8 delta) {
-    // Calculate address once
+    {
+        std::lock_guard<std::mutex> lk(debugReadyMutex);
+    }
+
     const uint64_t address = STACK_ADDRESS + STACK_SIZE - offset - 1;
-    
     LOG_INFO("Stack write at 0x" << std::hex << address << ": " << static_cast<int>(delta));
     
-    // Write to memory
     const auto err = icicle_mem_write(icicle, address, &delta, 1);
     if (err == -1) {
         LOG_ERROR("Failed to write to memory. Address: 0x" << std::hex << address);
@@ -46,7 +47,6 @@ void stackWriteFunc(ImU8* data, const size_t offset, const ImU8 delta) {
 uint64_t stackErrorAddr = 0;
 bool showPopupError = false;
 
-// Improved error handling with proper return
 bool handleStackError() {
     if (!showPopupError) return true;
 
@@ -66,6 +66,7 @@ bool handleStackError() {
     if (!isCodeRunning) {
         tempRegisterValueMap[archSPStr] = "0x00";
     }
+
     showPopupError = false;
     return false;
 }
@@ -76,7 +77,7 @@ unsigned char* stackEditorData;
 unsigned char* stackEditorTemp;
 
 void stackEditorWindow() {
-    auto io = ImGui::GetIO();
+    const auto io = ImGui::GetIO();
     ImGui::PushFont(io.Fonts->Fonts[3]);
 
     // Initialize our buffer if not already done
@@ -89,7 +90,7 @@ void stackEditorWindow() {
         }
     }
 
-    if (icicle)
+    if (icicle && isDebugReady)
     {
         static bool stack_mapped_once = false;
         if (!stack_mapped_once) {
@@ -120,7 +121,12 @@ void stackEditorWindow() {
     }
     
     size_t outSize = 0;
-    unsigned char* memData = icicle_mem_read(icicle, STACK_ADDRESS, STACK_SIZE, &outSize);
+    unsigned char* memData = NULL;
+
+    if (isDebugReady)
+    {
+        memData = icicle_mem_read(icicle, STACK_ADDRESS, STACK_SIZE, &outSize);
+    }
     
     if (!memData) {
         memset(stackBuffer, 0, STACK_SIZE);

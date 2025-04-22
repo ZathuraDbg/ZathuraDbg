@@ -8,7 +8,7 @@
 #include <iostream>
 #include <filesystem>
 #include <charconv>
-#include "../../vendor/code/tinyfiledialogs.h"
+#include <tinyfiledialogs.h>
 #include "../../vendor/log/clue.hpp"
 #include <tsl/ordered_map.h>
 #include <unicorn/unicorn.h>

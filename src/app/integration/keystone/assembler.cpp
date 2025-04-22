@@ -24,11 +24,11 @@ std::pair<std::string, std::size_t> assemble(const std::string& assemblyString, 
     unsigned char *encode;
 
     if (ks == nullptr){
-        LOG_INFO("Keystone object doesn't exists, creating...");
+        // LOG_INFO("Keystone object doesn't exists, creating...");
         err = ks_open(ksSettings.arch, ksSettings.mode, &ks);
 
         if (err != KS_ERR_OK) {
-            LOG_ERROR("Failed to initialize Keystone engine: " << ks_strerror(err));
+            // LOG_ERROR("Failed to initialize Keystone engine: " << ks_strerror(err));
             tinyfd_messageBox("ERROR!","Failed to initialize Keystone engine!", "ok", "error", 0);
             return {"", 0};
         }
@@ -45,7 +45,7 @@ std::pair<std::string, std::size_t> assemble(const std::string& assemblyString, 
 
     if (ks_asm(ks, assemblyString.data(), 0, &encode, &size, &count)) {
         err = ks_errno(ks);
-        std::string error(ks_strerror(err));
+        const std::string error(ks_strerror(err));
         if (err == KS_ERR_ASM_INVALIDOPERAND){
             LOG_ERROR("Wrong architecture error!: " << error);
             tinyfd_messageBox("Assembly syntax error!", "The code does not belong to the currently selected architecture!"
@@ -68,8 +68,8 @@ std::pair<std::string, std::size_t> assemble(const std::string& assemblyString, 
     std::pair<std::string, std::size_t> assembled = {std::string(reinterpret_cast<const char *>(encode), size), size};
 
     ks_free(encode);
-    ks_close(ks);
-    ks = nullptr;
+    // ks_close(ks);
+    // ks = nullptr;
 
     codeFinalLen = size;
     LOG_DEBUG("Assembled: " << size << " bytes");
@@ -77,14 +77,14 @@ std::pair<std::string, std::size_t> assemble(const std::string& assemblyString, 
 }
 
 bool isValidInstruction(ks_engine* ksEngine, const char* instruction) {
-    size_t size;
-    size_t count;
-    unsigned char *encode;
+    size_t size{};
+    size_t count{};
+    unsigned char *encode = nullptr;
     ks_err err;
 
     if (ksEngine == nullptr)
     {
-        LOG_INFO("Keystone object doesn't exists, creating...");
+        // LOG_INFO("Keystone object doesn't exists, creating...");
         err = ks_open(codeInformation.archKS, codeInformation.modeKS, &ksEngine);
         if (err != KS_ERR_OK)
         {
@@ -101,8 +101,6 @@ bool isValidInstruction(ks_engine* ksEngine, const char* instruction) {
         const std::string error(ks_strerror(err));
         if (err == KS_ERR_ASM_SYMBOL_MISSING || err == KS_ERR_OK)
         {
-            ks_close(ksEngine);
-            ksEngine = nullptr;
             return true;
         }
         else
@@ -116,12 +114,12 @@ bool isValidInstruction(ks_engine* ksEngine, const char* instruction) {
         std::string error(ks_strerror(err));
         if (err == KS_ERR_ASM_SYMBOL_MISSING || err == KS_ERR_OK)
         {
-            ks_close(ksEngine);
-            ksEngine = nullptr;
+            // ks_close(ksEngine);
+            // ksEngine = nullptr;
             return true;
         }
     }
-    ks_close(ksEngine);
+    // ks_close(ksEngine);
     return false;
 }
 
@@ -265,13 +263,13 @@ uint64_t countValidInstructions(std::stringstream& asmStream){
 
     while (std::getline(asmStream, instructionStr, '\n')) {
         if (instructionStr.starts_with("\t")){
-            auto idx = instructionStr.find_first_not_of('\t');
+            const auto idx = instructionStr.find_first_not_of('\t');
             if (idx != std::string::npos){
                 instructionStr = instructionStr.substr(idx);
             }
         }
         if (instructionStr.starts_with(" ")){
-            auto idx = instructionStr.find_first_not_of(' ');
+            const auto idx = instructionStr.find_first_not_of(' ');
             if (idx != std::string::npos){
                 instructionStr = instructionStr.substr(idx);
             }
@@ -325,7 +323,6 @@ void updateInstructionSizes(const std::string& compiledAsm){
                                    ENTRY_POINT_ADDRESS, 0, &instruction);
     if (count > 0) {
         for (size_t j = 0; j < count; j++) {
-            LOG_INFO("Instruction -> " << instruction[j].mnemonic << " : " << instruction[j].op_str << " has the size: " << instruction[j].size);
             instructionSizes.push_back(instruction[j].size);
         }
 
@@ -352,7 +349,7 @@ std::string getBytes(const std::string& fileName){
     assembly << asmFile.rdbuf();
     asmFile.close();
 
-    keystoneSettings ksSettings = {.arch = codeInformation.archKS, .mode = codeInformation.modeKS, .optionType = KS_OPT_SYNTAX, .optionValue=codeInformation.syntax};
+    const keystoneSettings ksSettings = {.arch = codeInformation.archKS, .mode = codeInformation.modeKS, .optionType = KS_OPT_SYNTAX, .optionValue=codeInformation.syntax};
     auto [bytes, size] = assemble(assembly.str(), ksSettings);
 
     if (size == 0 && bytes.empty()) {

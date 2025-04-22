@@ -36,6 +36,7 @@ bool stoppedAtBreakpoint = false;
 bool nextLineHasBreakpoint = false;
 bool addBreakpointBack = false;
 bool skipEndStep = false;
+bool isEndBreakpointSet = false;
 
 std::vector<uint64_t> breakpointLines = {};
 
@@ -358,10 +359,9 @@ registerValueT getRegisterValue(const std::string& regName){
 
 bool initRegistersToDefinedVals(){
     LOG_INFO("Initialising registers to defined values...");
-    uint64_t intVal;
 
     for(auto&[name, value]: tempRegisterValueMap){
-        intVal = hexStrToInt(value);
+        uint64_t intVal = hexStrToInt(value);
         icicle_reg_write(icicle, toLowerCase(name).c_str(), intVal);
     }
     return true;
@@ -410,7 +410,7 @@ bool setRegisterValue(const std::string& regName, const registerValueT& value) {
         }
         
         // Write the bytes to the register using icicle_reg_write_bytes
-        int result = icicle_reg_write_bytes(icicle, lowerRegName.c_str(), xmmValue, sizeof(xmmValue));
+        const int result = icicle_reg_write_bytes(icicle, lowerRegName.c_str(), xmmValue, sizeof(xmmValue));
         if (result != 0) {
             LOG_ERROR("Failed to write to XMM register " << regName << ", result=" << result);
             return false;
@@ -444,7 +444,7 @@ bool setRegisterValue(const std::string& regName, const registerValueT& value) {
         }
         
         // Write the bytes to the register using icicle_reg_write_bytes
-        int result = icicle_reg_write_bytes(icicle, lowerRegName.c_str(), ymmValue, sizeof(ymmValue));
+        const int result = icicle_reg_write_bytes(icicle, lowerRegName.c_str(), ymmValue, sizeof(ymmValue));
         if (result != 0) {
             LOG_ERROR("Failed to write to YMM register " << regName << ", result=" << result);
             return false;
@@ -556,17 +556,17 @@ std::string lastLabel{};
 uint64_t lastLineNo = 0;
 
 
-void instructionHook(void* userData, const uint64_t address)
-{
-    // Update UI safely with current line
-    // const std::string lineNoStr = addressLineNoMap[std::to_string(address)];
-    // if (!lineNoStr.empty()) {
-    //     int lineNo = std::atoi(lineNoStr.c_str());
-    //     if (lineNo > 0) {
-    //         safeHighlightLine(lineNo - 1);
-    //     }
-    // }
-}
+// void instructionHook(void* userData, const uint64_t address)
+// {
+//     // Update UI safely with current line
+//     // const std::string lineNoStr = addressLineNoMap[std::to_string(address)];
+//     // if (!lineNoStr.empty()) {
+//     //     int lineNo = std::atoi(lineNoStr.c_str());
+//     //     if (lineNo > 0) {
+//     //         safeHighlightLine(lineNo - 1);
+//     //     }
+//     // }
+// }
 bool updateStack = false;
 void stackWriteHook(void* data, uint64_t address, uint8_t size, const uint64_t valueWritten)
 {
@@ -611,7 +611,7 @@ bool preExecutionSetup(const std::string& codeIn)
         }
     }
 
-    uint32_t instructionHookID = icicle_add_execution_hook(icicle, instructionHook, nullptr);
+    // uint32_t instructionHookID = icicle_add_execution_hook(icicle, instructionHook, nullptr);
     uint32_t stackWriteHookID = icicle_add_mem_write_hook(icicle, stackWriteHook, nullptr, STACK_ADDRESS, STACK_ADDRESS + STACK_SIZE);
 
     // Signal that debugging setup is complete and ready for execution
@@ -662,7 +662,7 @@ bool createStack(Icicle* ic)
         icicle_mem_list_mapped_free(regions, region_count);
     }
 
-    uint8_t* zeroBuf = (uint8_t*)malloc(STACK_SIZE);
+    auto* zeroBuf = static_cast<uint8_t*>(malloc(STACK_SIZE));
     memset(zeroBuf, 0, STACK_SIZE);
     LOG_INFO("Stack mapping if not done already.");
     // Only map if not already mapped
@@ -723,6 +723,8 @@ bool resetState(){
     wasJumpAndStepOver = false;
     stackArraysZeroed = false;
     stoppedAtBreakpoint = false;
+    isEndBreakpointSet = false;
+
     codeCurrentLen = 0;
     codeFinalLen = 0;
     lineNo = 0;
@@ -736,16 +738,22 @@ bool resetState(){
     editor->ClearSelections();
     editor->HighlightDebugCurrentLine(-1);
 
+    if (snapshot != nullptr)
+    {
+        icicle_vm_snapshot_free(snapshot);
+        snapshot = nullptr;
+    }
+
     if (icicle != nullptr)
     {
         icicle_free(icicle);
         icicle = nullptr;
     }
 
-    if (snapshot != nullptr)
+    if (ks != nullptr)
     {
-        icicle_vm_snapshot_free(snapshot);
-        snapshot = nullptr;
+        ks_close(ks);
+        ks = nullptr;
     }
 
     labels.clear();
@@ -937,9 +945,13 @@ bool executeCode(Icicle* icicle, const size_t& instructionCount)
 
     if (instructionCount == 0)
     {
-        if (!icicle_add_breakpoint(icicle, lineNoToAddress(lastInstructionLineNo)))
+        if (!icicle_add_breakpoint(icicle, lineNoToAddress(lastInstructionLineNo)) && !isEndBreakpointSet)
         {
            LOG_ERROR("Failed to add breakpoint at the last instruction. The program may end unexpectedly.");
+        }
+        else
+        {
+            isEndBreakpointSet = true;
         }
 
         status = icicle_run(icicle);
@@ -994,7 +1006,6 @@ bool stepCode(const size_t instructionCount){
     ip = icicle_get_pc(icicle);
     editor->HighlightDebugCurrentLine(std::atoll(addressLineNoMap[std::to_string(icicle_get_pc(icicle))].c_str()));
     isCodeRunning = false; // Mark as not running *after* execution
-    LOG_DEBUG("Code executed by " << instructionCount << ((instructionCount > 1) ? " steps" : " step") << ".");
 
     if (executionComplete){
         editor->HighlightDebugCurrentLine(lastInstructionLineNo-1);
@@ -1090,10 +1101,13 @@ bool runCode(const std::string& codeIn, const bool& execCode)
 
     auto val = std::atoi(line.data());
     editor->HighlightDebugCurrentLine(val - 1);
-    LOG_DEBUG("Highlight from runCode");
 
     if (execCode || (stepClickedOnce)){
-        addBreakpointToLine(lastInstructionLineNo, true);
+        if (addBreakpointToLine(lastInstructionLineNo, true))
+        {
+            isEndBreakpointSet = true;
+        }
+
         if (!executeCode(icicle, 0))
         {
             LOG_ERROR("Failed to run code.");

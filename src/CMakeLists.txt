@@ -34,15 +34,13 @@ set(SOURCES
         ${CMAKE_SOURCE_DIR}/app/arch/x86.cpp
         ${CMAKE_SOURCE_DIR}/../vendor/whereami/src/whereami.c
         app/app.cpp
-        ../vendor/code/tinyfiledialogs.c
+        ../vendor/tinyfdialogue/tinyfiledialogs.c
         app/tasks/fileTasks.cpp
         app/tasks/editorTasks.cpp
         utils/fonts.cpp
         ../vendor/json/json.hpp
         utils/stringHelper.cpp
         utils/stringHelper.hpp
-        app/integration/interpreter/errorHandler.cpp
-        app/integration/interpreter/errorHandler.hpp
         app/shortcuts.cpp
         app/shortcuts.hpp
         app/actions/actions.cpp
@@ -62,6 +60,7 @@ include_directories(
         ${CMAKE_SOURCE_DIR}/../vendor/imgui/backends
         ${CMAKE_SOURCE_DIR}/../vendor/ImGuiColorTextEdit/vendor/regex/include
         ${CMAKE_SOURCE_DIR}/../vendor/ordered-map/include
+        ${CMAKE_SOURCE_DIR}/../vendor/tinyfdialogue
         ${CMAKE_SOURCE_DIR}/app/dialogs
         ${CMAKE_SOURCE_DIR}/app/tasks
         ${CMAKE_SOURCE_DIR}/app/arch
@@ -94,7 +93,7 @@ if (UNIX AND NOT APPLE)
     link_directories(/usr/lib /usr/local/lib)
     add_compile_options(${GLFW_CFLAGS})
     
-  set(LIBS ${GLFW_LDFLAGS} -lGL -ldl -lstdc++ -lunicorn -lkeystone -lcapstone -L/usr/lib -L/usr/local/lib -licicle
+  set(LIBS ${GLFW_LDFLAGS} -lGL -ldl -lstdc++ -lkeystone -lcapstone -L/usr/lib -L/usr/local/lib -licicle
     #    -L${CMAKE_SOURCE_DIR}/../vendor/keystone -l:libkeystone.a  
     # -L${CMAKE_SOURCE_DIR}/../vendor/capstone -l:libcapstone.a 
     -pthread -std=c++23)
@@ -109,8 +108,8 @@ elseif (WIN32)
     find_package(PkgConfig REQUIRED)
     pkg_check_modules(GLFW REQUIRED glfw3)
     link_libraries(${GLFW_LIBRARIES})
-    add_compile_options(${GLFW_CFLAGS} )
-    set(LIBS -lglfw3 -lgdi32 -lopengl32 -limm32 -lstdc++ -lunicorn -lkeystone -lcapstone -lm -Wl,--stack,209715200)
+    add_compile_options(${GLFW_CFLAGS})
+    set(LIBS -lglfw3 -lgdi32 -lopengl32 -limm32 -lstdc++ -lkeystone -lcapstone -lm -licicle)
 endif()
 
 # Define the executable
@@ -134,7 +133,7 @@ add_custom_target(clean-all
 file(WRITE ${CMAKE_BINARY_DIR}/clean.cmake "
 file(REMOVE
     ${CMAKE_BINARY_DIR}/bin/${PROJECT_NAME}
-${CMAKE_BINARY_DIR}/CMakeFiles
+    ${CMAKE_BINARY_DIR}/CMakeFiles
     ${CMAKE_BINARY_DIR}/cmake_install.cmake
     ${CMAKE_BINARY_DIR}/Makefile
 )

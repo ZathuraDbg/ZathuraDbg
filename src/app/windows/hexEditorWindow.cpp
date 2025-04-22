@@ -5,7 +5,13 @@ MemoryEditor memoryEditorWindow;
 std::vector<newMemEditWindowsInfo> newMemEditWindows{};
 
 void hexWriteFunc(ImU8* data, const size_t off, const ImU8 d){
-    auto err = icicle_mem_write(icicle, ENTRY_POINT_ADDRESS + off, &d, 1);
+    if (!isDebugReady)
+    {
+        LOG_ERROR("Debug state is not ready, avoiding a write...");
+        return;
+    }
+
+    const auto err = icicle_mem_write(icicle, ENTRY_POINT_ADDRESS + off, &d, 1);
     if (err == -1){
         LOG_ERROR("Failed to write to memory. Address: " << MEMORY_EDITOR_BASE + off);
         const auto hex = static_cast<char *>(malloc(24));
@@ -235,7 +241,7 @@ MemoryEditor::fillRangeInfoT fillMemoryWithBytePopup() {
 void MemoryEditor::GoToPopup(){
     char inputText[200] = "";
     static bool setFocus = true;
-    auto io = ImGui::GetIO();
+    const auto io = ImGui::GetIO();
     ImGui::PushFont(io.Fonts->Fonts[SatoshiBold18]);
 
     ImGui::OpenPopup("Gotopopup");
@@ -271,10 +277,9 @@ void MemoryEditor::GoToPopup(){
         ImGui::SameLine(0, 5);
         ImGui::PushItemWidth(150);
 
-        bool entered;
-        auto flags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackCharFilter;
-        entered = ImGui::InputTextWithHint("##input", "0x...", inputText, IM_ARRAYSIZE(inputText), flags,
-                                           checkHexCharsCallback);
+        constexpr auto flags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackCharFilter;
+        const bool entered = ImGui::InputTextWithHint("##input", "0x...", inputText, IM_ARRAYSIZE(inputText), flags,
+                                                checkHexCharsCallback);
 
         if (setFocus){
             ImGui::SetKeyboardFocusHere(-1);
@@ -402,7 +407,7 @@ void hexEditorWindow(){
     size_t outSize = 0;
     unsigned char* data = nullptr;
     
-    if (icicle) {
+    if (icicle && isDebugReady) {
         data = icicle_mem_read(icicle, ENTRY_POINT_ADDRESS, CODE_BUF_SIZE, &outSize);
     }
     
@@ -425,7 +430,7 @@ void hexEditorWindow(){
         int i = 0;
         for (auto& [memEditor, address, size]: newMemEditWindows){
             unsigned char* newMemData = nullptr;
-            if (icicle) {
+            if (icicle && isDebugReady) {
                 newMemData = icicle_mem_read(icicle, address, size, &outSize);
             }
             

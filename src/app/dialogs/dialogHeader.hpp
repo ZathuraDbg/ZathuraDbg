@@ -5,7 +5,7 @@
 #include <iostream>
 #include <fstream>
 #include <filesystem>
-#include "../../../vendor/code/tinyfiledialogs.h"
+#include <tinyfiledialogs.h>
 #include "../../../vendor/ImGuiColorTextEdit/TextEditor.h"
 #include "../../../vendor/ImGuiColorTextEdit/TextEditor.h"
 #include "../../utils/fonts.hpp"
