@@ -48,7 +48,6 @@ bool stackArraysZeroed = false;
 
 int main(int argc, const char** argv)
 {
-    setenv("GHIDRA_SRC", "/home/rc/ghidra", 1);
     glfwSetErrorCallback(glfw_error_callback);
     if (!glfwInit())
         return 1;

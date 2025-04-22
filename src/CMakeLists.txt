@@ -3,55 +3,107 @@ project(Zathura)
 
 set(CMAKE_CXX_STANDARD 23)
 
+set(PROJECT_ROOT ${CMAKE_SOURCE_DIR})
+set(VENDOR_DIR ${PROJECT_ROOT}/../vendor)
+set(APP_DIR ${PROJECT_ROOT}/app)
+set(UTILS_DIR ${PROJECT_ROOT}/utils)
+
+# Source file groups
+set(SRC_MAIN
+        ${PROJECT_ROOT}/main.cpp
+)
+
+set(SRC_IMGUI
+        ${VENDOR_DIR}/imgui/imgui.cpp
+        ${VENDOR_DIR}/imgui/imgui_draw.cpp
+        ${VENDOR_DIR}/imgui/imgui_tables.cpp
+        ${VENDOR_DIR}/imgui/imgui_widgets.cpp
+        ${VENDOR_DIR}/imgui/backends/imgui_impl_glfw.cpp
+        ${VENDOR_DIR}/imgui/backends/imgui_impl_opengl3.cpp
+        ${VENDOR_DIR}/imgui/misc/cpp/imgui_stdlib.cpp
+)
+
+set(SRC_TEXT_EDITOR
+        ${VENDOR_DIR}/ImGuiColorTextEdit/TextEditor.cpp
+        ${VENDOR_DIR}/ImGuiColorTextEdit/LanguageDefinitions.cpp
+)
+
+set(SRC_DIALOGS
+        ${APP_DIR}/dialogs/fileDialogs.cpp
+)
+
+set(SRC_APP
+        ${APP_DIR}/buttons.cpp
+        ${APP_DIR}/menuBar.cpp
+        ${APP_DIR}/shortcuts.cpp
+        ${APP_DIR}/shortcuts.hpp
+        ${APP_DIR}/app.cpp
+        ${APP_DIR}/codeContextMenu.cpp
+        ${APP_DIR}/codeContextMenu.hpp
+)
+
+set(SRC_WINDOWS
+        ${APP_DIR}/windows/registerWindow.cpp
+        ${APP_DIR}/windows/consoleWindow.cpp
+        ${APP_DIR}/windows/hexEditorWindow.cpp
+        ${APP_DIR}/windows/stackWindow.cpp
+        ${APP_DIR}/windows/memoryMapView.cpp
+)
+
+set(SRC_ARCH
+        ${APP_DIR}/arch/arch.cpp
+        ${APP_DIR}/arch/arch.hpp
+        ${APP_DIR}/arch/arm.cpp
+        ${APP_DIR}/arch/arm.hpp
+        ${APP_DIR}/arch/x86.cpp
+)
+
+set(SRC_INTEGRATION
+        ${APP_DIR}/integration/interpreter/interpreter.cpp
+        ${APP_DIR}/integration/keystone/assembler.cpp
+)
+
+set(SRC_UTILS
+        ${UTILS_DIR}/fonts.cpp
+        ${UTILS_DIR}/stringHelper.cpp
+        ${UTILS_DIR}/stringHelper.hpp
+        ${UTILS_DIR}/uiElements.cpp
+        ${UTILS_DIR}/uiElements.h
+        ${UTILS_DIR}/stb_image.h
+)
+
+set(SRC_TASKS
+        ${APP_DIR}/tasks/fileTasks.cpp
+        ${APP_DIR}/tasks/editorTasks.cpp
+)
+
+set(SRC_ACTIONS
+        ${APP_DIR}/actions/actions.cpp
+        ${APP_DIR}/actions/actions.hpp
+)
+
+set(SRC_VENDOR_MISC
+        ${VENDOR_DIR}/tinyexpr/tinyexpr.c
+        ${VENDOR_DIR}/tinyexpr/tinyexpr.h
+        ${VENDOR_DIR}/whereami/src/whereami.c
+        ${VENDOR_DIR}/tinyfdialogue/tinyfiledialogs.c
+        ${VENDOR_DIR}/json/json.hpp
+)
+
+# Combine all
 set(SOURCES
-        ${CMAKE_SOURCE_DIR}/main.cpp
-        ${CMAKE_SOURCE_DIR}/../vendor/imgui/imgui.cpp
-        ${CMAKE_SOURCE_DIR}/../vendor/tinyexpr/tinyexpr.c
-        ${CMAKE_SOURCE_DIR}/../vendor/imgui/imgui_draw.cpp
-        ${CMAKE_SOURCE_DIR}/../vendor/imgui/imgui_tables.cpp
-        ${CMAKE_SOURCE_DIR}/../vendor/imgui/imgui_widgets.cpp
-        ${CMAKE_SOURCE_DIR}/../vendor/imgui/backends/imgui_impl_glfw.cpp
-        ${CMAKE_SOURCE_DIR}/../vendor/imgui/backends/imgui_impl_opengl3.cpp
-        ${CMAKE_SOURCE_DIR}/../vendor/imgui/misc/cpp/imgui_stdlib.cpp
-        ${CMAKE_SOURCE_DIR}/../vendor/ImGuiColorTextEdit/TextEditor.cpp
-        ${CMAKE_SOURCE_DIR}/../vendor/ImGuiColorTextEdit/LanguageDefinitions.cpp
-        ${CMAKE_SOURCE_DIR}/app/dialogs/fileDialogs.cpp
-        ${CMAKE_SOURCE_DIR}/app/buttons.cpp
-        ${CMAKE_SOURCE_DIR}/app/windows/registerWindow.cpp
-        ${CMAKE_SOURCE_DIR}/app/windows/consoleWindow.cpp
-        ${CMAKE_SOURCE_DIR}/app/windows/hexEditorWindow.cpp
-        ${CMAKE_SOURCE_DIR}/app/windows/stackWindow.cpp
-        ${CMAKE_SOURCE_DIR}/app/menuBar.cpp
-        ${CMAKE_SOURCE_DIR}/app/arch/arch.cpp
-        ${CMAKE_SOURCE_DIR}/app/arch/arch.hpp
-        ${CMAKE_SOURCE_DIR}/app/arch/arch.hpp
-        ${CMAKE_SOURCE_DIR}/app/arch/arch.cpp
-        ${CMAKE_SOURCE_DIR}/app/arch/arm.cpp
-        ${CMAKE_SOURCE_DIR}/app/arch/arm.hpp
-        ${CMAKE_SOURCE_DIR}/app/arch/arm.hpp
-        ${CMAKE_SOURCE_DIR}/app/integration/interpreter/interpreter.cpp
-        ${CMAKE_SOURCE_DIR}/app/integration/keystone/assembler.cpp
-        ${CMAKE_SOURCE_DIR}/app/arch/x86.cpp
-        ${CMAKE_SOURCE_DIR}/../vendor/whereami/src/whereami.c
-        app/app.cpp
-        ../vendor/tinyfdialogue/tinyfiledialogs.c
-        app/tasks/fileTasks.cpp
-        app/tasks/editorTasks.cpp
-        utils/fonts.cpp
-        ../vendor/json/json.hpp
-        utils/stringHelper.cpp
-        utils/stringHelper.hpp
-        app/shortcuts.cpp
-        app/shortcuts.hpp
-        app/actions/actions.cpp
-        app/actions/actions.hpp
-        ${CMAKE_SOURCE_DIR}/../vendor/tinyexpr/tinyexpr.h
-        app/codeContextMenu.cpp
-        app/codeContextMenu.hpp
-        utils/stb_image.h
-        app/windows/memoryMapView.cpp
-        utils/uiElements.cpp
-        utils/uiElements.h
+        ${SRC_MAIN}
+        ${SRC_IMGUI}
+        ${SRC_TEXT_EDITOR}
+        ${SRC_DIALOGS}
+        ${SRC_APP}
+        ${SRC_WINDOWS}
+        ${SRC_ARCH}
+        ${SRC_INTEGRATION}
+        ${SRC_UTILS}
+        ${SRC_TASKS}
+        ${SRC_ACTIONS}
+        ${SRC_VENDOR_MISC}
 )
 
 # Include directories
@@ -94,8 +146,6 @@ if (UNIX AND NOT APPLE)
     add_compile_options(${GLFW_CFLAGS})
     
   set(LIBS ${GLFW_LDFLAGS} -lGL -ldl -lstdc++ -lkeystone -lcapstone -L/usr/lib -L/usr/local/lib -licicle
-    #    -L${CMAKE_SOURCE_DIR}/../vendor/keystone -l:libkeystone.a  
-    # -L${CMAKE_SOURCE_DIR}/../vendor/capstone -l:libcapstone.a 
     -pthread -std=c++23)
 elseif (APPLE)
     message("Mac OS X")
@@ -108,8 +158,8 @@ elseif (WIN32)
     find_package(PkgConfig REQUIRED)
     pkg_check_modules(GLFW REQUIRED glfw3)
     link_libraries(${GLFW_LIBRARIES})
-    add_compile_options(${GLFW_CFLAGS})
-    set(LIBS -lglfw3 -lgdi32 -lopengl32 -limm32 -lstdc++ -lkeystone -lcapstone -lm -licicle)
+    add_compile_options(${GLFW_CFLAGS} -g -O0)
+    set(LIBS -lglfw3 -lgdi32 -lopengl32 -limm32 -lstdc++ -lkeystone -lcapstone -lm -licicle -lws2_32 -lntdll -luserenv -lbcrypt)
 endif()
 
 # Define the executable

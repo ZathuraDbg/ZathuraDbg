@@ -48,6 +48,7 @@ VmSnapshot* saveICSnapshot(Icicle* icicle){
     if (icicle == nullptr){
         return nullptr;
     }
+
     return icicle_vm_snapshot(icicle);
 }
 
@@ -509,6 +510,10 @@ registerValueInfoT getRegister(const std::string& name){
 
 Icicle* initIC()
 {
+    if (!isDebugReady) {
+        LOG_ERROR("Debug is not ready");
+    }
+
     const auto vm = icicle_new(codeInformation.archStr, false, true, false, false, false, false, false, false);
     if (!vm)
     {
@@ -738,12 +743,6 @@ bool resetState(){
     editor->ClearSelections();
     editor->HighlightDebugCurrentLine(-1);
 
-    if (snapshot != nullptr)
-    {
-        icicle_vm_snapshot_free(snapshot);
-        snapshot = nullptr;
-    }
-
     if (icicle != nullptr)
     {
         icicle_free(icicle);
@@ -954,11 +953,21 @@ bool executeCode(Icicle* icicle, const size_t& instructionCount)
             isEndBreakpointSet = true;
         }
 
+        {
+            std::lock_guard<std::mutex> lk(debugReadyMutex);
+            isDebugReady = false;
+        }
+
         status = icicle_run(icicle);
         if (runUntilHere)
         {
             runUntilHere = false;
             LOG_INFO("Run until here set to false");
+        }
+
+        {
+            std::lock_guard<std::mutex> lk(debugReadyMutex);
+            isDebugReady = true;
         }
     }
     else
