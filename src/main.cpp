@@ -96,9 +96,13 @@ int main(int argc, const char** argv)
         }
     }
 
+#ifdef _WIN32
     std::stringstream ss{};
     ss << "GHIDRA_SRC=" << relativeToRealPath(executablePath, "../vendor/ghidra");
     _putenv(ss.str().c_str());
+#elif __linux__
+    setenv("GHIDRA_SRC", relativeToRealPath(executablePath, "../vendor/ghidra/").c_str(), 1);
+#endif
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();

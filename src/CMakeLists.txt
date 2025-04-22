@@ -144,9 +144,9 @@ if (UNIX AND NOT APPLE)
     link_libraries(${GLFW_LIBRARIES})
     link_directories(/usr/lib /usr/local/lib)
     add_compile_options(${GLFW_CFLAGS})
-    
-  set(LIBS ${GLFW_LDFLAGS} -lGL -ldl -lstdc++ -lkeystone -lcapstone -L/usr/lib -L/usr/local/lib -licicle
-    -pthread -std=c++23)
+    add_compile_options(-pthread -std=c++23) 
+    add_compile_options(-O3) 
+    set(LIBS ${GLFW_LDFLAGS} -lGL -ldl -lstdc++ -lkeystone -lcapstone -L/usr/lib -L/usr/local/lib -licicle)
 elseif (APPLE)
     message("Mac OS X")
     find_library(GLFW_LIB glfw3)
