@@ -158,7 +158,7 @@ elseif (WIN32)
     find_package(PkgConfig REQUIRED)
     pkg_check_modules(GLFW REQUIRED glfw3)
     link_libraries(${GLFW_LIBRARIES})
-    add_compile_options(${GLFW_CFLAGS} -g -O0)
+    add_compile_options(${GLFW_CFLAGS} -O3)
     set(LIBS -lglfw3 -lgdi32 -lopengl32 -limm32 -lstdc++ -lkeystone -lcapstone -lm -licicle -lws2_32 -lntdll -luserenv -lbcrypt)
 endif()
 

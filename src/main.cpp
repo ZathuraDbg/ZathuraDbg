@@ -40,9 +40,6 @@ void destroyWindow(){
 
 float frameRate = 120;
 
-// Forward declaration of cleanup function
-extern void cleanupStackEditor();
-
 // Declare these as null pointers since some code might still reference them
 bool stackArraysZeroed = false;
 
@@ -84,8 +81,7 @@ int main(int argc, const char** argv)
     {
         int dirnameLength;
 
-        int length = wai_getExecutablePath(nullptr, 0, &dirnameLength);
-        if (length > 0) {
+        if (const int length = wai_getExecutablePath(nullptr, 0, &dirnameLength); length > 0) {
             char* path = nullptr;
             path = static_cast<char *>(malloc(length + 1));
             if (path == nullptr) {
@@ -99,6 +95,10 @@ int main(int argc, const char** argv)
             free(path);
         }
     }
+
+    std::stringstream ss{};
+    ss << "GHIDRA_SRC=" << relativeToRealPath(executablePath, "../vendor/ghidra");
+    _putenv(ss.str().c_str());
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -125,7 +125,7 @@ int main(int argc, const char** argv)
     stbi_image_free(icons[0].pixels);
 
     // rotate log files after they fill more than 3MB of space
-    std::filesystem::path logPath = executablePath + "/.Zathura.zlog";
+    const std::filesystem::path logPath = executablePath + "/.Zathura.zlog";
     if (std::filesystem::exists(logPath))
     {
         std::ifstream logFile(logPath, std::ifstream::ate | std::ifstream::binary);
@@ -148,17 +148,15 @@ int main(int argc, const char** argv)
     stackEditor.WriteFn = &stackWriteFunc;
     stackEditor.OptShowAscii = false;
     stackEditor.Cols = 8;
-
-    // if (!createStack(icicle)){
-    //     tinyfd_messageBox("Keystone Engine error!", "Unable to initialize the stack. If the issue persists please create a GitHub issue and report your logs.", "ok", "error", 0);
-    //     LOG_ERROR("Failed to create stack!");
-    //     exit(-1);
-    // }
-
     stackEditorData = nullptr;
     stackEditorTemp = nullptr;
     stackArraysZeroed = false;
+
     glfwShowWindow(window);
+
+    if (!getenv("GHIDRA_SRC")) {
+        tinyfd_messageBox("Environment variable missing!", "The environment variable GHIDRA_SRC is missing. The emulator can\'t run without this.", "ok", "warning", 0);
+    }
 
     while (!glfwWindowShouldClose(window))
     {
