@@ -1000,7 +1000,7 @@ bool stepCode(const size_t instructionCount){
         return true;
     }
 
-    uint64_t ip = getRegisterValue(archIPStr).eightByteVal;
+    uint64_t ip = icicle_get_pc(icicle);
     isCodeRunning = true;
     if (instructionCount == 1) {
         skipBreakpoints = true;

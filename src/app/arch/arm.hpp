@@ -13,10 +13,6 @@ extern std::unordered_map<std::string, size_t> aarch64RegInfoMap;
 extern std::vector<std::string> armDefaultShownRegs;
 extern std::vector<std::string> aarch64DefaultShownRegs;
 
-// ARM architecture instructions
-extern std::vector<std::string> armArchInstructions;
-extern std::vector<std::string> aarch64ArchInstructions;
-
 // Helper functions
 extern std::string armIPStr(int mode);
 extern std::string aarch64IPStr(int mode);

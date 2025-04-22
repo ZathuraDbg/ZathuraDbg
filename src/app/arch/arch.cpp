@@ -60,7 +60,6 @@ bool initArch(){
             defaultShownRegs = x86DefaultShownRegs;
             isRegisterValid = x86IsRegisterValid;
             modeUpdateCallback = x86ModeUpdateCallback;
-            archInstructions = x86ArchInstructions;
             return true;
         case IC_ARCH_AARCH64:
             archIPStr = "PC";
@@ -70,7 +69,6 @@ bool initArch(){
             defaultShownRegs = aarch64DefaultShownRegs;
             isRegisterValid = aarch64IsRegisterValid;
             modeUpdateCallback = armModeUpdateCallback;
-            archInstructions = aarch64ArchInstructions;
             return true;
         case IC_ARCH_ARM:
             archIPStr = "PC";
@@ -80,7 +78,6 @@ bool initArch(){
             defaultShownRegs = armDefaultShownRegs;
             isRegisterValid = armIsRegisterValid;
             modeUpdateCallback = armModeUpdateCallback;
-            archInstructions = armArchInstructions;
             return true;
         case IC_ARCH_THUMBV7M:
             archIPStr = "PC";
@@ -90,7 +87,6 @@ bool initArch(){
             defaultShownRegs = armDefaultShownRegs;
             isRegisterValid = armIsRegisterValid;
             modeUpdateCallback = armModeUpdateCallback;
-            archInstructions = armArchInstructions;
         default: ;
     }
 
