@@ -97,19 +97,15 @@ bool isValidInstruction(ks_engine* ksEngine, const char* instruction) {
     const auto status = ks_asm(ksEngine, instruction, 0, &encode, &size, &count);
     if (status == 0 && size != 0)
     {
-        err = ks_errno(ksEngine);
-        const std::string error(ks_strerror(err));
-        if (err == KS_ERR_ASM_SYMBOL_MISSING || err == KS_ERR_OK)
-        {
-            return true;
-        }
-        else
-        {
-            LOG_ERROR(error);
-        }
+        ks_free(encode);
+        return true;
     }
     else if (status == -1)
     {
+        if (encode)
+        {
+            ks_free(encode);
+        }
         err = ks_errno(ksEngine);
         std::string error(ks_strerror(err));
         if (err == KS_ERR_ASM_SYMBOL_MISSING || err == KS_ERR_OK)
@@ -362,13 +358,24 @@ std::string getBytes(const std::string& fileName){
     }
 
     initInsSizeInfoMap();
-   LOG_INFO("Got bytes, now hexlifying...");
-    return hexlify({bytes.data(), size});
+    LOG_INFO("Got bytes, now hexlifying...");
+
+    if (ks)
+    {
+         ks_close(ks);
+         ks = nullptr;
+    }
+   return hexlify({bytes.data(), size});
 }
 
 std::string getBytes(const std::stringstream &assembly){
     const keystoneSettings ksSettings = {.arch = codeInformation.archKS, .mode = codeInformation.modeKS, .optionType = KS_OPT_SYNTAX, .optionValue=codeInformation.syntax};
     auto [bytes, size] = assemble(assembly.str(), ksSettings);
     LOG_INFO("Got bytes, now hexlifying...");
+    if (ks)
+    {
+         ks_close(ks);
+         ks = nullptr;
+    }
     return hexlify({bytes.data(), size});
 }

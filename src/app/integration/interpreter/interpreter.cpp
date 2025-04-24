@@ -604,7 +604,6 @@ bool preExecutionSetup(const std::string& codeIn)
 
     auto k = icicle_mem_write(icicle, ENTRY_POINT_ADDRESS, codeBuf, CODE_BUF_SIZE - 1);
     size_t l;
-    auto j = icicle_mem_read(icicle, ENTRY_POINT_ADDRESS, CODE_BUF_SIZE, &l);
     icicle_set_pc(icicle, ENTRY_POINT_ADDRESS);
 
     // Ensure snapshot is taken before signaling ready
@@ -635,43 +634,45 @@ bool createStack(Icicle* ic)
     LOG_INFO("Creating stack...");
     if (ic == nullptr)
     {
-     ic = initIC();
-    if (!ic){
-        LOG_ERROR("Icicle initilisation failed... Quitting!");
-        return false;
+        ic = initIC();
+        if (!ic){
+            LOG_ERROR("Icicle initilisation failed... Quitting!");
+            return false;
+        }
     }
 
-    }
+
     LOG_INFO("Checking mappings...");
     // Check if the stack region is already mapped
-    bool already_mapped = false;
-    size_t region_count = 0;
-    MemRegionInfo* regions = icicle_mem_list_mapped(ic, &region_count);
-    
+    bool alreadyMapped = false;
+    size_t regionCount = 0;
+    MemRegionInfo* regions = icicle_mem_list_mapped(ic, &regionCount);
+
     if (regions) {
-        for (size_t i = 0; i < region_count; i++) {
+        for (size_t i = 0; i < regionCount; i++) {
             // Check if this region overlaps with our stack region
-            if ((regions[i].address <= STACK_ADDRESS && 
+            if ((regions[i].address <= STACK_ADDRESS &&
                  regions[i].address + regions[i].size > STACK_ADDRESS) ||
-                (regions[i].address >= STACK_ADDRESS && 
+                (regions[i].address >= STACK_ADDRESS &&
                  regions[i].address < STACK_ADDRESS + STACK_SIZE)) {
                 LOG_INFO("Stack region already mapped - skipping map operation");
-                already_mapped = true;
+                alreadyMapped = true;
                 break;
             }
         }
-        if (!already_mapped)
+        if (!alreadyMapped)
         {
             LOG_ERROR("stack regions are not mapped yet!");
         }
-        icicle_mem_list_mapped_free(regions, region_count);
+
+        icicle_mem_list_mapped_free(regions, regionCount);
     }
 
     auto* zeroBuf = static_cast<uint8_t*>(malloc(STACK_SIZE));
     memset(zeroBuf, 0, STACK_SIZE);
     LOG_INFO("Stack mapping if not done already.");
     // Only map if not already mapped
-    if (!already_mapped) {
+    if (!alreadyMapped) {
         const auto mapped = icicle_mem_map(ic, STACK_ADDRESS, STACK_SIZE, MemoryProtection::ReadWrite);
         if (mapped == -1)
         {
@@ -682,7 +683,8 @@ bool createStack(Icicle* ic)
         for (uint64_t off = 0; off < STACK_SIZE; off += 0x1000) {
             size_t out = 0;
             // A 1‑byte read is enough to trigger the lazy page allocation
-            icicle_mem_read(icicle, STACK_ADDRESS + off, 1, &out);
+            const auto s = icicle_mem_read(icicle, STACK_ADDRESS + off, 1, &out);
+            icicle_free_buffer(s, 1);
         }
     }
     LOG_INFO("Attempting a mem_write");
@@ -697,12 +699,13 @@ bool createStack(Icicle* ic)
     const uint64_t stackBase = STACK_ADDRESS + STACK_SIZE;
     icicle_reg_write(ic, archSPStr, stackBase);
     icicle_reg_write(ic, archBPStr, stackBase);
-    size_t outSize{};
-    const auto s = icicle_mem_read(ic, STACK_ADDRESS, STACK_SIZE, &outSize);
-    if (!s)
-    {
-        LOG_ERROR("Failed to read the stack base pointer, quitting!!");
-    }
+    // size_t outSize{};
+
+    // const auto s = icicle_mem_read(ic, STACK_ADDRESS, STACK_SIZE, &outSize);
+    // if (!s)
+    // {
+    //     LOG_ERROR("Failed to read the stack base pointer, quitting!!");
+    // }
 
     stackArraysZeroed = false;
     LOG_INFO("Stack created successfully!");
@@ -776,6 +779,11 @@ bool resetState(){
     }
 
     stackArraysZeroed = false;
+
+    if (codeBuf)
+    {
+        free(codeBuf);
+    }
     LOG_DEBUG("State reset completed!");
     criticalSection.unlock();
     return true;
@@ -802,7 +810,7 @@ bool isSilentBreakpoint(const uint64_t& lineNo)
     }
 
     size_t outSize{};
-    const uint64_t* breakpointList = icicle_breakpoint_list(icicle, &outSize);
+    uint64_t* breakpointList = icicle_breakpoint_list(icicle, &outSize);
     if (breakpointList == nullptr)
     {
         return false;
@@ -814,14 +822,18 @@ bool isSilentBreakpoint(const uint64_t& lineNo)
         {
             if (std::ranges::find(breakpointLines, lineNo) == breakpointLines.end())
             {
+                icicle_breakpoint_list_free(breakpointList, outSize);
                 // a silent breakpoint is a breakpoint which was internally added by
                 // our code and not by the user
                 return true;
             }
+
+            icicle_breakpoint_list_free(breakpointList, outSize);
             return false;
         }
     }
 
+    icicle_breakpoint_list_free(breakpointList, outSize);
     return false;
 }
 
@@ -1023,10 +1035,16 @@ bool stepCode(const size_t instructionCount){
     }
 
     {
-        if (!saveICSnapshot(icicle)){
-            LOG_ERROR("Failed to save snapshot after step.");
-            return false;
+        if (!snapshot)
+        {
+            icicle_vm_snapshot_free(snapshot);
+            snapshot = nullptr;
+             if (!saveICSnapshot(icicle)){
+                LOG_ERROR("Failed to save snapshot after step.");
+                return false;
+            }
         }
+
 
         ip = icicle_get_pc(icicle);
         if (ip != expectedIP){
@@ -1129,7 +1147,7 @@ bool runCode(const std::string& codeIn, const bool& execCode)
         }
     }
 
-    if (!execCode){
+    if (codeBuf){
         free(codeBuf);
         codeBuf = nullptr;
     }

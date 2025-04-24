@@ -392,6 +392,7 @@ bool fillMemoryRange(){
 }
 
 unsigned char zeroArr[0x1000];
+bool dataZerod = false;
 void hexEditorWindow(){
     const auto io = ImGui::GetIO();
     ImGui::PushFont(io.Fonts->Fonts[3]);
@@ -414,6 +415,7 @@ void hexEditorWindow(){
     // Fallback to zeroed memory if read fails or icicle is null
     if (data == NULL) {
         data = zeroArr;
+        dataZerod = true;
     }
 
     memoryEditorWindow.HighlightColor = ImColor(59, 60, 79);
@@ -441,5 +443,12 @@ void hexEditorWindow(){
             }
         }
     }
+
+    if (data && !dataZerod)
+    {
+        icicle_free_buffer(data, CODE_BUF_SIZE);
+    }
+
+    dataZerod = false;
     ImGui::PopFont();
 }

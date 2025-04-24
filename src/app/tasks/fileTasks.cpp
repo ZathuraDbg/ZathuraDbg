@@ -67,7 +67,7 @@ bool fileRunTask(const bool& execCode){
         }
 
         if (createStack(icicle)){
-            std::string bytes = getBytes(selectedFile);
+            const std::string bytes = getBytes(selectedFile);
             if (!bytes.empty()){
                 runCode(bytes, execCode);
             }

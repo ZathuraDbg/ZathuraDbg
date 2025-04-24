@@ -204,8 +204,7 @@ int main(int argc, const char** argv)
     }
 
     // Cleanup memory
-    cleanupStackEditor();
-    
+
     // Free legacy pointers if somehow allocated
     if (stackEditorData) {
         free(stackEditorData);

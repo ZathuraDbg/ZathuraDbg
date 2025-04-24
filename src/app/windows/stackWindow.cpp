@@ -71,8 +71,7 @@ bool handleStackError() {
     return false;
 }
 
-static unsigned char* stackBuffer = nullptr;
-
+static std::unique_ptr<unsigned char[], decltype(&free)> stackBuffer(nullptr, free);
 unsigned char* stackEditorData;
 unsigned char* stackEditorTemp;
 
@@ -81,14 +80,18 @@ void stackEditorWindow() {
     ImGui::PushFont(io.Fonts->Fonts[3]);
 
     // Initialize our buffer if not already done
-    if (stackBuffer == nullptr) {
-        stackBuffer = static_cast<unsigned char*>(calloc(1, STACK_SIZE));
-        if (!stackBuffer) {
-            LOG_ERROR("Failed to allocate stack buffer");
-            ImGui::PopFont();
-            return;
-        }
+    if (!stackBuffer) {
+        stackBuffer.reset(static_cast<unsigned char*>(calloc(1, STACK_SIZE)));
     }
+
+    // if (stackBuffer == nullptr) {
+    //     stackBuffer = static_cast<unsigned char*>(calloc(1, STACK_SIZE));
+    //     if (!stackBuffer) {
+    //         LOG_ERROR("Failed to allocate stack buffer");
+    //         ImGui::PopFont();
+    //         return;
+    //     }
+    // }
 
     if (icicle && isDebugReady)
     {
@@ -129,9 +132,9 @@ void stackEditorWindow() {
     }
     
     if (!memData) {
-        memset(stackBuffer, 0, STACK_SIZE);
+        memset(stackBuffer.get(), 0, STACK_SIZE);
     } else {
-        copyBigEndian(stackBuffer, memData, STACK_SIZE);
+        copyBigEndian(stackBuffer.get(), memData, STACK_SIZE);
         icicle_free_buffer(memData, outSize);
     }
 
@@ -142,7 +145,7 @@ void stackEditorWindow() {
     stackEditor.StackFashionAddrSubtraction = true;
     stackEditor.WriteFn = &stackWriteFunc;
 
-    stackEditor.DrawWindow("Stack", reinterpret_cast<void*>(stackBuffer), STACK_SIZE, STACK_ADDRESS + STACK_SIZE);
+    stackEditor.DrawWindow("Stack", reinterpret_cast<void*>(stackBuffer.get()), STACK_SIZE, STACK_ADDRESS + STACK_SIZE);
 
     if (!newMemEditWindows.empty()) {
         int i = 0;
@@ -160,13 +163,13 @@ void stackEditorWindow() {
             }
         }
     }
-
+    // cleanupStackEditor();
     ImGui::PopFont();
 }
 
-void cleanupStackEditor() {
-    if (stackBuffer) {
-        free(stackBuffer);
-        stackBuffer = nullptr;
-    }
-}
+// void cleanupStackEditor() {
+//     if (stackBuffer) {
+//         free(stackBuffer);
+//         stackBuffer = nullptr;
+//     }
+// }
