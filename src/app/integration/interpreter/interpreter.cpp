@@ -779,6 +779,7 @@ bool resetState(){
     {
         free(codeBuf);
     }
+
     LOG_DEBUG("State reset completed!");
     criticalSection.unlock();
     return true;

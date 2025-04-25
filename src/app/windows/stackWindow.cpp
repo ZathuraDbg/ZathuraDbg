@@ -164,6 +164,7 @@ void stackEditorWindow() {
         }
     }
     // cleanupStackEditor();
+
     ImGui::PopFont();
 }
 
