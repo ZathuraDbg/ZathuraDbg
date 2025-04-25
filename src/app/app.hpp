@@ -8,7 +8,7 @@
 #include <iostream>
 #include <filesystem>
 #include <charconv>
-#include "../../vendor/code/tinyfiledialogs.h"
+#include <tinyfiledialogs.h>
 #include "../../vendor/log/clue.hpp"
 #include <tsl/ordered_map.h>
 #include <unicorn/unicorn.h>
@@ -40,7 +40,7 @@ void loadIniFile();
 bool setupButtons();
 void mainWindow();
 void setupEditor();
-extern  std::string getDataToCopy(std::stringstream &selectedAsmText, const bool asArray);
+extern  std::string getDataToCopy(const std::stringstream &selectedAsmText, const bool asArray);
 extern bool lineNumbersShown;
 extern float frameRate;
 extern std::string executablePath;

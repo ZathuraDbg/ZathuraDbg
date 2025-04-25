@@ -13,14 +13,15 @@
 #include "../../arch/arch.hpp"
 #include "../../arch/x86.hpp"
 #include "../../../utils/stringHelper.hpp"
-#include "errorHandler.hpp"
 #include <mutex>
 #include <array>
-#define UC_CONTEXT_SAVE_FAILED -94
+#include "icicle.h"
+#include <condition_variable>
+#include "../../actions/actions.hpp"
+#include "../../vendor/ImGuiColorTextEdit/TextEditor.h"
+
+#define IC_CONTEXT_SAVE_FAILED (-94)
 struct registerValueT{
-    uint8_t charVal{};
-    uint16_t twoByteVal{};
-    uint32_t fourByteVal{};
     uint64_t eightByteVal{};
     float floatVal{};
     double doubleVal{};
@@ -29,8 +30,8 @@ struct registerValueT{
         bool is256bit = false;
         bool is512bit = false;
         union {
-            double doubleArray[8]{};
-            float floatArray[16];
+            double doubleArray[8];
+            float floatArray[16]{};
         } arrays;
     } info;
 };
@@ -40,7 +41,7 @@ typedef struct{
     registerValueT registerValueUn;
 } registerValueInfoT;
 
-extern int saveUCContext(uc_engine *ucEngine, uc_context *ucContext);
+extern VmSnapshot* saveICSnapshot(Icicle* icicle);
 extern std::mutex execMutex;
 extern std::mutex breakpointMutex;
 extern bool skipBreakpoints;
@@ -53,14 +54,19 @@ extern bool wasJumpAndStepOver;
 extern bool stepInBypassed;
 extern bool wasStepOver;
 extern bool isCodeRunning;
-extern bool createStack(void* unicornEngine);
+extern bool createStack(Icicle* icicle);
 extern bool runTempCode(const std::string& codeIn, uint64_t instructionCount);
 extern bool debugModeEnabled;
-registerValueInfoT getRegister(const std::string& name, bool useTempContext = false);
-extern uc_context *tempContext;
-extern bool ucInit(void* unicornEngine);
-extern uc_engine *uc;
-extern bool runCode(const std::string& code_in, uint64_t instructionCount);
+registerValueInfoT getRegister(const std::string& name);
+extern bool setRegisterValue(const std::string& regName, const registerValueT& value);
+extern bool runCode(const std::string& codeIn, const bool& execCode);
+extern uint64_t lineNoToAddress(const uint64_t& lineNo);
+// bool addBreakpoint(const uint64_t& address, const bool& silent);
+extern bool stoppedAtBreakpoint;
+extern bool nextLineHasBreakpoint;
+extern bool executeCode(Icicle* icicle, const size_t& instructionCount);
+extern bool executionComplete;
+extern bool addBreakpointToLine(const uint64_t& lineNo, const bool& silent = false);
 extern void showRegs();
 extern uintptr_t ENTRY_POINT_ADDRESS;
 extern uintptr_t MEMORY_EDITOR_BASE; // default
@@ -72,7 +78,6 @@ extern bool updateStack;
 extern uintptr_t STACK_SIZE;
 extern int tempBPLineNum;
 extern uint64_t CODE_BUF_SIZE;
-extern uc_context* context;
 extern bool stepCode(size_t instructionCount = 1);
 extern std::vector<uint64_t> breakpointLines;
 extern bool resetState();
@@ -81,11 +86,24 @@ extern bool stepIn;
 extern bool stepOver;
 extern bool stepContinue;
 extern bool use32BitLanes;
-extern registerValueT getRegisterValue(const std::string& regName, bool useTempContext);
+extern registerValueT getRegisterValue(const std::string& regName);
+extern Icicle* tempIcicle;
+extern VmSnapshot* tempSnapshot;
 extern uint64_t expectedIP;
 extern int stepOverBPLineNo;
 extern uint64_t codeCurrentLen;
+extern Icicle* icicle;
+extern VmSnapshot* snapshot;
 extern int getCurrentLine();
-extern bool removeBreakpoint(const int& lineNo);
+extern bool removeBreakpointFromLineNo(const uint64_t& lineNo);
+extern bool removeBreakpoint(const uint64_t& address);
 extern bool eraseTempBP;
+extern bool isSilentBreakpoint(const uint64_t& lineNo);
+extern std::mutex debugReadyMutex;
+extern std::condition_variable debugReadyCv;
+extern bool isDebugReady;
+extern bool skipEndStep;
+// extern void printBreakpoints();
+extern void safeHighlightLine(int lineNo);
+
 #endif

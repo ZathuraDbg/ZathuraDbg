@@ -7,7 +7,6 @@
 #include "../integration/interpreter/interpreter.hpp"
 #include "../../../vendor/imgui/misc/cpp/imgui_stdlib.h"
 #include "../arch/arch.hpp"
-#include <list>
 #include <regex>
 #include "../../vendor/tinyexpr/tinyexpr.h"
 #include "../actions/actions.hpp"
@@ -30,12 +29,13 @@ typedef struct
 {
     uint64_t start;
     uint64_t end;
-    uint32_t perms;
+    MemoryProtection perms;
 } memoryMapInfo;
 
 enum arch{
     x86 = 0,
     ARM,
+    ARM64,
     RISCV,
     PowerPC
 };
@@ -60,7 +60,6 @@ extern bool enableDebugMode;
 extern bool memoryMapsUI;
 
 extern const uc_mode x86UCModes[];
-extern const uc_mode armUCModes[];
 extern const char* x86ModeStr[];
 extern const char* armModeStr[];
 extern const cs_arch csArchs[];
@@ -80,6 +79,7 @@ extern void registerWindow();
 extern void updateRegs(bool useTempContext = false);
 extern void consoleWindow();
 extern void hexEditorWindow();
+extern unsigned char zeroArr[0x1000];
 extern uint64_t hexStrToInt(const std::string& val);
 extern void stackEditorWindow();
 extern std::vector<std::string> parseRegisters(std::string registerString);
@@ -100,6 +100,7 @@ extern std::vector<memoryMapInfo> getMemoryMapping(uc_engine* uc);
 extern void memoryMapWindow();
 extern std::pair<size_t, size_t> infoPopup(const std::string& title = "", const std::string& sizeHint = "");
 extern std::vector<newMemEditWindowsInfo> newMemEditWindows;
-extern char* stackEditorData;
-extern char* stackEditorTemp;
+extern unsigned char* stackEditorData;
+extern unsigned char* stackEditorTemp;
+extern void cleanupStackEditor();
 #endif

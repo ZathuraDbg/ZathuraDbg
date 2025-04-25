@@ -78,21 +78,21 @@ bool setupButtons() {
     ImGui::Separator();
     ImGui::SameLine();
 
-    if (ImGui::Button(ICON_CI_DEBUG_START, ImVec2(20, 20))){
-        debugRun = true;
-    }
-
-     if (ImGui::IsItemHovered()) {
-        ImGui::BeginTooltip();
-        ImGui::Text("Run (F10)");
-        ImGui::EndTooltip();
-    }
-
-    ImGui::SameLine();
-    ImGui::Separator();
-    ImGui::SameLine();
-
     if (!debugModeEnabled){
+        if (ImGui::Button(ICON_CI_DEBUG_START, ImVec2(20, 20))){
+            debugRun = true;
+        }
+
+         if (ImGui::IsItemHovered()) {
+            ImGui::BeginTooltip();
+            ImGui::Text("Run (F10)");
+            ImGui::EndTooltip();
+        }
+
+        ImGui::SameLine();
+        ImGui::Separator();
+        ImGui::SameLine();
+
         if (ImGui::Button(ICON_CI_DEBUG, ImVec2(20, 20))){
             enableDebugMode = true;
         }

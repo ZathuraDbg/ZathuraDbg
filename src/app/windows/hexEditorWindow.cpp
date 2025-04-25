@@ -4,10 +4,15 @@
 MemoryEditor memoryEditorWindow;
 std::vector<newMemEditWindowsInfo> newMemEditWindows{};
 
-void hexWriteFunc(ImU8* data, size_t off, ImU8 d){
-    auto err = uc_mem_write(uc, MEMORY_EDITOR_BASE + off, &d, 1);
+void hexWriteFunc(ImU8* data, const size_t off, const ImU8 d){
+    if (!isDebugReady)
+    {
+        LOG_ERROR("Debug state is not ready, avoiding a write...");
+        return;
+    }
 
-    if (err){
+    const auto err = icicle_mem_write(icicle, ENTRY_POINT_ADDRESS + off, &d, 1);
+    if (err == -1){
         LOG_ERROR("Failed to write to memory. Address: " << MEMORY_EDITOR_BASE + off);
         const auto hex = static_cast<char *>(malloc(24));
         sprintf(static_cast<char *>(hex), "Data change: %x", d);
@@ -236,7 +241,7 @@ MemoryEditor::fillRangeInfoT fillMemoryWithBytePopup() {
 void MemoryEditor::GoToPopup(){
     char inputText[200] = "";
     static bool setFocus = true;
-    auto io = ImGui::GetIO();
+    const auto io = ImGui::GetIO();
     ImGui::PushFont(io.Fonts->Fonts[SatoshiBold18]);
 
     ImGui::OpenPopup("Gotopopup");
@@ -272,10 +277,9 @@ void MemoryEditor::GoToPopup(){
         ImGui::SameLine(0, 5);
         ImGui::PushItemWidth(150);
 
-        bool entered;
-        auto flags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackCharFilter;
-        entered = ImGui::InputTextWithHint("##input", "0x...", inputText, IM_ARRAYSIZE(inputText), flags,
-                                           checkHexCharsCallback);
+        constexpr auto flags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackCharFilter;
+        const bool entered = ImGui::InputTextWithHint("##input", "0x...", inputText, IM_ARRAYSIZE(inputText), flags,
+                                                checkHexCharsCallback);
 
         if (setFocus){
             ImGui::SetKeyboardFocusHere(-1);
@@ -387,19 +391,33 @@ bool fillMemoryRange(){
     return false;
 }
 
-
+unsigned char zeroArr[0x1000];
+bool dataZerod = false;
 void hexEditorWindow(){
     const auto io = ImGui::GetIO();
-    char data[0x3000];
     ImGui::PushFont(io.Fonts->Fonts[3]);
-    memset(data, 0, 0x3000);
-
-    if (!uc) {
-        ImGui::PopFont();
-        return;
+    
+    // Initialize zero array if needed
+    static bool zeroArrInitialized = false;
+    if (!zeroArrInitialized) {
+        memset(zeroArr, 0, sizeof(zeroArr));
+        zeroArrInitialized = true;
+    }
+    
+    // Don't return early if icicle is null, just use zeroed memory instead
+    size_t outSize = 0;
+    unsigned char* data = nullptr;
+    
+    if (icicle && isDebugReady) {
+        data = icicle_mem_read(icicle, ENTRY_POINT_ADDRESS, CODE_BUF_SIZE, &outSize);
+    }
+    
+    // Fallback to zeroed memory if read fails or icicle is null
+    if (data == NULL) {
+        data = zeroArr;
+        dataZerod = true;
     }
 
-    uc_mem_read(uc, MEMORY_EDITOR_BASE, data, 0x3000);
     memoryEditorWindow.HighlightColor = ImColor(59, 60, 79);
     memoryEditorWindow.OptShowAddWindowButton = true;
     memoryEditorWindow.NewWindowInfoFn = createNewWindow;
@@ -413,15 +431,24 @@ void hexEditorWindow(){
     if (!newMemEditWindows.empty()) {
         int i = 0;
         for (auto& [memEditor, address, size]: newMemEditWindows){
-            char newMemData[size];
-            memset(newMemData, 0, size - 1);
-
-            uc_err err = uc_mem_read(uc, address, newMemData, size);
-            if (err){
+            unsigned char* newMemData = nullptr;
+            if (icicle && isDebugReady) {
+                newMemData = icicle_mem_read(icicle, address, size, &outSize);
             }
-
-            memEditor.DrawWindow(("Memory Editor " + std::to_string(++i)).c_str(), (void*)newMemData, size, address);
+            
+            if (newMemData == NULL) {
+                memEditor.DrawWindow(("Memory Editor " + std::to_string(++i)).c_str(), (void*)zeroArr, size > 0x1000 ? 0x1000 : size, address);
+            } else {
+                memEditor.DrawWindow(("Memory Editor " + std::to_string(++i)).c_str(), (void*)newMemData, size, address);
+            }
         }
     }
+
+    if (data && !dataZerod)
+    {
+        icicle_free_buffer(data, CODE_BUF_SIZE);
+    }
+
+    dataZerod = false;
     ImGui::PopFont();
 }

@@ -15,7 +15,7 @@ void setupEditor() {
 
 
     editor = new TextEditor();
-    editor->SetLanguageDefinition(TextEditor::LanguageDefinitionId::Asmx86_64);
+    editor->SetLanguageDefinition(TextEditor::LanguageDefinitionId::Asm);
     editor->SetPalette(TextEditor::PaletteId::Catppuccin);
     editor->SetShowWhitespacesEnabled(false);
     editor->SetReadOnlyEnabled(false);
@@ -27,7 +27,7 @@ void setupEditor() {
     }
     else
     {
-        std::string str((std::istreambuf_iterator<char>(selectedFileStream)), std::istreambuf_iterator<char>());
+        const std::string str((std::istreambuf_iterator<char>(selectedFileStream)), std::istreambuf_iterator<char>());
         editor->SetText(str);
     }
 
@@ -44,13 +44,13 @@ void setupViewPort() {
 
 
 void loadIniFile() {
-    std::string filename = relativeToRealPath(executablePath, "config.zlyt");
+    const std::string filename = relativeToRealPath(executablePath, "config.zlyt");
     const std::filesystem::path dir(filename);
     ImGui::LoadIniSettingsFromDisk(dir.string().c_str());
     LOG_DEBUG("Loaded config file from " << dir.string());
 }
 
-std::string getDataToCopy(std::stringstream &selectedAsmText, const bool asArray) {
+std::string getDataToCopy(const std::stringstream &selectedAsmText, const bool asArray) {
     LOG_INFO("Getting data to copy...");
     const std::string bytes = getBytes(selectedAsmText);
     std::string dataToCopy;
@@ -98,7 +98,6 @@ void mainWindow() {
     ImGui::Begin("Code", &keepWindow, ImGuiWindowFlags_NoCollapse);
 
     setupButtons();
-
     if (!editor->FontInit){
         editor->FontInit = pushFont;
         editor->CreateLabelLineMap = createLabelLineMapCallback;

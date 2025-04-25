@@ -12,6 +12,7 @@
 #include "../tasks/editorTasks.hpp"
 #include "../../app/integration/utils/hex/hex.hpp"
 #include "../../../vendor/keystone/include/keystone/keystone.h"
+#include <map>
 
 #define ASM_FILE_NAME selectedFile.c_str()
 

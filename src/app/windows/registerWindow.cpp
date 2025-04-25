@@ -82,21 +82,17 @@ void updateRegs(bool useTempContext){
     bool useSecondVal = false;
 
     if (!useTempContext) {
-        if (context == nullptr) {
-            return;
+        if (snapshot == nullptr) {
+            saveICSnapshot(icicle);
         }
     }
+
     for (auto [name, value]: registerValueMap) {
-        if (!isRegisterValid(toUpperCase(name), codeInformation.mode)){
+        if (!isRegisterValid((name))){
             continue;
         }
 
-        if (useTempContext){
-            val = getRegister(toLowerCase(name), true);
-        }
-        else{
-           val = getRegister(toLowerCase(name));
-        }
+        val = getRegister(toLowerCase(name));
 
         auto const [isRegValid, registerValue] = val;
 
@@ -113,11 +109,11 @@ void updateRegs(bool useTempContext){
                 if (name.contains('[') && name.contains(']') && name.contains(':')){
                     name =  name.substr(0, name.find_first_of('['));
                 }
-                if (regInfoMap[toUpperCase(name)].first <= 64){
+                if (regInfoMap[(name)] <= 64){
                     hex << "0x";
                     hex << std::hex << registerValue.eightByteVal;
                 }
-                else if (regInfoMap[toUpperCase(name)].first == 128 || regInfoMap[toUpperCase(name)].first == 256 || regInfoMap[toUpperCase(name)].first == 512){
+                else if (regInfoMap[(name)]== 128 || regInfoMap[(name)] == 256 || regInfoMap[(name)] == 512){
                     if (registerValue.info.is128bit){
                         if (!use32BitLanes){
                             if (registerValueMap.contains(name + reg64BitLaneStrs[0])) {
@@ -158,7 +154,7 @@ void updateRegs(bool useTempContext){
                         }
                         else{
                             for (int i = 0; i < 8; i++){
-                                if (registerValueMap.contains(name + reg64BitLaneStrs[i])) {
+                                if (registerValueMap.contains(name + reg32BitLaneStrs[i])) {
                                     registerValueMap[name + reg32BitLaneStrs[i]] = std::to_string(registerValue.info.arrays.floatArray[i]);
                                 }
                             }
@@ -179,9 +175,9 @@ void updateRegs(bool useTempContext){
                             hex.clear();
                             continue;
                         }
-                        else{
+                       else{
                             for (int i = 0; i < 16; i++){
-                                if (registerValueMap.contains(name + reg64BitLaneStrs[i])) {
+                                if (registerValueMap.contains(name + reg32BitLaneStrs[i])) {
                                     registerValueMap[name + reg32BitLaneStrs[i]] = std::to_string(registerValue.info.arrays.floatArray[i]);
                                 }
                             }
@@ -326,13 +322,13 @@ contextMenuOption registerContextMenu(){
 
         const std::string actualName = getRegisterActualName(hoveredReg);
         if (ImGui::MenuItem("Hide Register")) {
-            if (regInfoMap[actualName].first == 128){
+            if (regInfoMap[actualName] == 128){
                 removeRegisterFromView(hoveredReg);
             }
-            else if (regInfoMap[actualName].first == 256){
+            else if (regInfoMap[actualName] == 256){
                 removeRegisterFromView(hoveredReg, 2);
             }
-            else if (regInfoMap[actualName].first == 512){
+            else if (regInfoMap[actualName] == 512){
                 removeRegisterFromView(hoveredReg, 3);
             }
             else{
@@ -421,17 +417,17 @@ void addRegisterToView(const std::string& reg, const registerValueInfoT& registe
 
 
 
-    if (regInfoMap[reg].first <= 64){
+    if (regInfoMap[reg] <= 64){
         regValue= std::to_string(registerInfo.registerValueUn.eightByteVal);
     }
-    else if (regInfoMap[reg].first == 128 ){
+    else if (regInfoMap[reg] == 128 ){
         for (int i = 0; i < (use32BitLanes ? 4 : 2); i++){
             regValues.push_back(std::to_string(use32BitLanes ? registerInfo.registerValueUn.info.arrays.floatArray[i] : registerInfo.registerValueUn.info.arrays.doubleArray[i]));
         }
 
         regValue = regValues[0];
     }
-    else if (regInfoMap[reg].first == 256) {
+    else if (regInfoMap[reg] == 256) {
         if (use32BitLanes) {
             for (const float i: registerInfo.registerValueUn.info.arrays.floatArray) {
                 regValues.push_back(std::to_string(i));
@@ -443,7 +439,7 @@ void addRegisterToView(const std::string& reg, const registerValueInfoT& registe
         }
 
         regValue = regValues[0];
-    } else if (regInfoMap[reg].first == 512) {
+    } else if (regInfoMap[reg] == 512) {
         if (use32BitLanes){
             for (const float i : registerInfo.registerValueUn.info.arrays.floatArray){
                 regValues.push_back(std::to_string(i));
@@ -457,7 +453,7 @@ void addRegisterToView(const std::string& reg, const registerValueInfoT& registe
 
         regValue = regValues[0];
     }
-    else if (regInfoMap[reg].first == 80){
+    else if (regInfoMap[reg] == 80){
         LOG_ERROR("ST* registers are not supported yet!");
         return;
     }
@@ -532,23 +528,22 @@ void addRegisterToView(const std::string& reg, const registerValueInfoT& registe
         auto regs = parseRegisters(registerString);
 
         for (auto& reg : regs) {
-            if (!regInfoMap.contains(toUpperCase(reg))) {
+            if (!regInfoMap.contains((reg))) {
+                LOG_INFO("Register " << reg << " not found in regInfoMap. Ignoring.");
                 return;
             }
 
             auto regInfo = getRegister(reg);
-            reg = toUpperCase(reg);
+            reg = (reg);
 
-            if (!regInfo.out) {
-                continue;
-            }
 
-            if (regInfoMap[reg].first > 64){
-                isRegPresent = isRegisterWithLaneShown(reg.c_str(), regInfoMap[reg].first);
+            if (regInfoMap[reg]> 64){
+                isRegPresent = isRegisterWithLaneShown(reg.c_str(), regInfoMap[reg]);
             }
 
             if ((!registerValueMap.contains(reg)) && !isRegPresent) {
-                addRegisterToView(toUpperCase(reg), regInfo);
+                LOG_INFO("Register " << reg << " not found in registerValueMap. Adding...");
+                addRegisterToView((reg), regInfo);
             }
             // code for removing the register
             else if (regInfo.registerValueUn.info.is512bit || regInfo.registerValueUn.info.is256bit || regInfo.registerValueUn.info.is128bit) {
@@ -570,6 +565,7 @@ void addRegisterToView(const std::string& reg, const registerValueInfoT& registe
                 while (true) {
                     fullRegName = reg + laneStrVec[i];
                     if (registerValueMap.contains(fullRegName)){
+                        LOG_INFO("Register " << fullRegName << " is already registered. Removing.");
                         removeRegisterFromView(reg, type);
                         i++;
                         continue;
@@ -598,7 +594,7 @@ std::string getRegisterActualName(const std::string& regName) {
 
 uint16_t getRegisterActualSize(std::string str){
     str = getRegisterActualName(str);
-    return regInfoMap[str].first;
+    return regInfoMap[str];
 }
 
 void parseRegisterValueInput(const std::string& regName, const char *regValueFirst, const bool isBigReg){
@@ -617,69 +613,90 @@ void parseRegisterValueInput(const std::string& regName, const char *regValueFir
         {
             if (isBigReg){
                 const std::string realRegName = regName.substr(0, regName.find_first_of('['));
-                const std::string laneStr = regName.substr(regName.find_first_of('[')+1);
-                const int laneNum = std::atoi(laneStr.c_str());
+                const std::string laneStr = regName.substr(regName.find_first_of('[') + 1);
+                
+                // Extract just the first number from the lane string (e.g., "64" from "[64:127]")
+                const int laneStart = std::stoi(laneStr.substr(0, laneStr.find(':')));
                 const auto value = std::string(regValueFirst);
 
                 if (value.contains('.')){
                     int regSize = getRegisterActualSize(regName);
-                    if (regSize == 128 || regSize == 256) {
-                        uint8_t arrSize = 0;
+                    if (regSize == 128 || regSize == 256 || regSize == 512) {
                         int laneIndex = 0;
 
                         if (!use32BitLanes){
-                            arrSize = (regSize == 128 ? 2 : 4);
-                            double arr[arrSize];
-                            uc_reg_read(uc, regNameToConstant(realRegName), arr);
-
-                            double val;
-                            auto [ptr, ec] = std::from_chars(value.data(), value.data() + value.size(), val);
-                            if (ec == std::errc::invalid_argument || ec == std::errc::result_out_of_range){
-                                val = 0;
+                            // For 64-bit lanes: XMM(0,1), YMM(0-3), ZMM(0-7)
+                            laneIndex = laneStart / 64;
+                            int maxLanes = (regSize == 128) ? 2 : (regSize == 256) ? 4 : 8;
+                            
+                            // Ensure index is within bounds
+                            if (laneIndex >= 0 && laneIndex < maxLanes) {
+                                registerValueT regValue = getRegisterValue(realRegName);
+                                
+                                // Parse the input value
+                                double val = 0.0;
+                                try {
+                                    val = std::stod(value);
+                                } catch (const std::exception& e) {
+                                    LOG_ERROR("Failed to parse double value: " << value);
+                                }
+                                
+                                // Set the value in the correct lane
+                                regValue.info.arrays.doubleArray[laneIndex] = val;
+                                
+                                // Write back the register
+                                bool success = setRegisterValue(realRegName, regValue);
+                                if (!success) {
+                                    LOG_ERROR("Failed to write value to register " << realRegName << " lane " << laneIndex);
+                                }
+                                saveICSnapshot(icicle);
+                            } else {
+                                LOG_ERROR("Lane index out of bounds: " << laneIndex << " (max: " << maxLanes-1 << ")");
                             }
-
-                            if (laneNum != 0){
-                                laneIndex = laneNum / 64;
-                            }
-
-                            arr[laneIndex] = val;
-
-                            uc_err err = uc_reg_write(uc, regNameToConstant(realRegName), arr);
-                            saveUCContext(uc, context);
                         }
-                        else{
-                            arrSize = (regSize == 128 ? 4 : 8);
-                            float arr[arrSize];
-                            uc_reg_read(uc, regNameToConstant(realRegName), &arr);
-
-                            float val;
-                            auto [ptr, ec] = std::from_chars(value.data(), value.data() + value.size(), val);
-
-                            if (ec == std::errc::invalid_argument || ec == std::errc::result_out_of_range){
-                                val = 0;
+                        else {
+                            // For 32-bit lanes: XMM(0-3), YMM(0-7), ZMM(0-15)
+                            laneIndex = laneStart / 32;
+                            int maxLanes = (regSize == 128) ? 4 : (regSize == 256) ? 8 : 16;
+                            
+                            // Ensure index is within bounds
+                            if (laneIndex >= 0 && laneIndex < maxLanes) {
+                                registerValueT regValue = getRegisterValue(realRegName);
+                                
+                                // Parse the input value
+                                float val = 0.0f;
+                                try {
+                                    val = std::stof(value);
+                                } catch (const std::exception& e) {
+                                    LOG_ERROR("Failed to parse float value: " << value);
+                                }
+                                
+                                // Set the value in the correct lane
+                                regValue.info.arrays.floatArray[laneIndex] = val;
+                                
+                                // Write back the register
+                                bool success = setRegisterValue(realRegName, regValue);
+                                if (!success) {
+                                    LOG_ERROR("Failed to write value to register " << realRegName << " lane " << laneIndex);
+                                }
+                                saveICSnapshot(icicle);
+                            } else {
+                                LOG_ERROR("Lane index out of bounds: " << laneIndex << " (max: " << maxLanes-1 << ")");
                             }
-
-                            if (laneNum != 0){
-                                laneIndex = laneNum / 32;
-                            }
-                            arr[laneIndex] = val;
-
-                            uc_err err = uc_reg_write(uc, regNameToConstant(realRegName), arr);
-                            saveUCContext(uc, context);
                         }
                     }
                 }
             }
             else{
-                uc_reg_write(uc, regNameToConstant(regName), &temp);
-                saveUCContext(uc, context);
+                icicle_reg_write_bytes(icicle, regName.c_str(), (uint8_t*)&temp, sizeof(temp));
+                saveICSnapshot(icicle);
             }
         }
         else{
-            if (regName == getArchIPStr(codeInformation.mode)){
+            if (regName == archIPStr){
                 ENTRY_POINT_ADDRESS = strtoul(regValueFirst, nullptr, 16);
             }
-            else if (regName == getArchSBPStr(codeInformation.mode).first || (regName == getArchSBPStr(codeInformation.mode).second)){
+            else if (regName == archSPStr || (regName == archBPStr)){
                 STACK_ADDRESS = strtoul(regValueFirst, nullptr, 16);
             }
             tempRegisterValueMap[regName] = regValueFirst;
@@ -689,7 +706,7 @@ void parseRegisterValueInput(const std::string& regName, const char *regValueFir
 
 void registerWindow() {
     if (codeHasRun){
-        if (tempContext!= nullptr){
+        if (tempSnapshot != nullptr){
             updateRegs(true);
         }
         else{
@@ -713,7 +730,7 @@ void registerWindow() {
 
         int index = 0;
         for (auto regValMapInfo = registerValueMap.begin(); regValMapInfo != registerValueMap.end(); ++index) {
-            if (!isRegisterValid(toUpperCase(regValMapInfo->first), codeInformation.mode)){
+            if (!isRegisterValid(regValMapInfo->first)){
                 ++regValMapInfo;
                 continue;
             }
@@ -821,7 +838,13 @@ void registerWindow() {
 }
 
 bool updateRegistersOnLaneChange() {
-    for (const auto &regName: registerValueMap | std::views::keys) {
+    auto it = registerValueMap.begin();
+    for (int i = 0; i < registerValueMap.size(); i++) {
+        std::string regName = toLowerCase(it.key());
+        if (regName.empty())
+        {
+            break;
+        }
         const auto regSize = getRegisterActualSize(regName);
         if (regSize > 64) {
             int type = 0;
@@ -843,6 +866,10 @@ bool updateRegistersOnLaneChange() {
             removeRegisterFromView(getRegisterActualName(regName), type);
             use32BitLanes = !use32BitLanes;
             addRegisterToView(getRegisterActualName(regName), getRegister(regName));
+        }
+        ++it;
+        if (it == registerValueMap.end()) {
+            break;
         }
     }
     return true;

@@ -7,6 +7,8 @@
 #include "../vendor/ImGuiColorTextEdit/TextEditor.h"
 #include "app/app.hpp"
 #include "../vendor/whereami/src/whereami.h"
+#include "app/windows/windows.hpp" // Make sure this imports the stack window functions
+#include <map>
 #define GL_SILENCE_DEPRECATION
 #if defined(IMGUI_IMPL_OPENGL_ES2)
 #include <GLES2/gl2.h>
@@ -38,6 +40,9 @@ void destroyWindow(){
 }
 
 float frameRate = 120;
+
+// Declare these as null pointers since some code might still reference them
+bool stackArraysZeroed = false;
 
 int main(int argc, const char** argv)
 {
@@ -77,8 +82,7 @@ int main(int argc, const char** argv)
     {
         int dirnameLength;
 
-        int length = wai_getExecutablePath(nullptr, 0, &dirnameLength);
-        if (length > 0) {
+        if (const int length = wai_getExecutablePath(nullptr, 0, &dirnameLength); length > 0) {
             char* path = nullptr;
             path = static_cast<char *>(malloc(length + 1));
             if (path == nullptr) {
@@ -92,6 +96,14 @@ int main(int argc, const char** argv)
             free(path);
         }
     }
+
+#ifdef _WIN32
+    std::stringstream ss{};
+    ss << "GHIDRA_SRC=" << relativeToRealPath(executablePath, "../vendor/ghidra");
+    _putenv(ss.str().c_str());
+#elif __linux__
+    setenv("GHIDRA_SRC", relativeToRealPath(executablePath, "../vendor/ghidra/").c_str(), 1);
+#endif
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -113,12 +125,12 @@ int main(int argc, const char** argv)
     ImGui_ImplOpenGL3_Init(glsl_version);
 
     GLFWimage icons[1];
-    icons[0].pixels = stbi_load("../assets/ZathuraDbg.png", &icons[0].width, &icons[0].height, nullptr, 4);
+    icons[0].pixels = stbi_load(relativeToRealPath(executablePath, "../assets/ZathuraDbg.png").c_str(), &icons[0].width, &icons[0].height, nullptr, 4);
     glfwSetWindowIcon(window, 1, icons); // Set icon
     stbi_image_free(icons[0].pixels);
 
     // rotate log files after they fill more than 3MB of space
-    std::filesystem::path logPath = executablePath + "/.Zathura.zlog";
+    const std::filesystem::path logPath = executablePath + "/.Zathura.zlog";
     if (std::filesystem::exists(logPath))
     {
         std::ifstream logFile(logPath, std::ifstream::ate | std::ifstream::binary);
@@ -141,17 +153,18 @@ int main(int argc, const char** argv)
     stackEditor.WriteFn = &stackWriteFunc;
     stackEditor.OptShowAscii = false;
     stackEditor.Cols = 8;
-
-    if (!createStack(&uc)){
-        tinyfd_messageBox("Keystone Engine error!", "Unable to initialize the stack. If the issue persists please create a GitHub issue and report your logs.", "ok", "error", 0);
-        LOG_ERROR("Failed to create stack!");
-        exit(-1);
-    }
+    stackEditorData = nullptr;
+    stackEditorTemp = nullptr;
+    stackArraysZeroed = false;
 
     stackEditorData = static_cast<char*>(malloc(STACK_SIZE));
     stackEditorTemp = static_cast<char*>(malloc(STACK_SIZE));
     stackArraysZeroed = false;
     glfwShowWindow(window);
+
+    if (!getenv("GHIDRA_SRC")) {
+        tinyfd_messageBox("Environment variable missing!", "The environment variable GHIDRA_SRC is missing. The emulator can\'t run without this.", "ok", "warning", 0);
+    }
 
     while (!glfwWindowShouldClose(window))
     {
@@ -164,6 +177,7 @@ int main(int argc, const char** argv)
         io.ConfigDockingAlwaysTabBar = true;
         isRunning = true;
 
+        processUIUpdates();
         mainWindow();
         if (!isRunning){
             LOG_ERROR("Quitting!");
@@ -193,9 +207,23 @@ int main(int argc, const char** argv)
         runActions();
     }
 
-    free(stackEditorData);
-    free(stackEditorTemp);
-    uc_close(uc);
+    // Cleanup memory
+
+    // Free legacy pointers if somehow allocated
+    if (stackEditorData) {
+        free(stackEditorData);
+        stackEditorData = nullptr;
+    }
+    if (stackEditorTemp) {
+        free(stackEditorTemp);
+        stackEditorTemp = nullptr;
+    }
+    
+    if (icicle != nullptr)
+    {
+        icicle_free(icicle);
+    }
+
     destroyWindow();
     return 0;
 }

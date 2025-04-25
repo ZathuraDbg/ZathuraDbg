@@ -19,43 +19,43 @@ void manageShortcuts(){
     io.WantCaptureKeyboard = true;
     io.WantTextInput = true;
 
-    if (isCtrlShortcut && (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_S)))){
+    if (isCtrlShortcut && (ImGui::IsKeyPressed(ImGuiKey_S))){
         saveFile = true;
     }
-    if (isCtrlShiftShortcut && (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_S)))){
+    if (isCtrlShiftShortcut && (ImGui::IsKeyPressed(ImGuiKey_S))){
         saveFileAs = true;
     }
-    if (isCtrlShortcut && (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_O)))){
+    if (isCtrlShortcut && (ImGui::IsKeyPressed(ImGuiKey_O))){
         openFile = true;
     }
-    if (isCtrlShortcut && (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Period)))){
+    if (isCtrlShortcut && (ImGui::IsKeyPressed(ImGuiKey_Period))){
         changeEmulationSettingsOpt = true;
     }
-    if (isCtrlShortcut && (ImGui::IsKeyDown(ImGui::GetKeyIndex(ImGuiKey_F7))))
+    if (isCtrlShortcut && (ImGui::IsKeyDown(ImGuiKey_F7)))
     {
         memoryMapsUI = true;
     }
-    if (isCtrlShiftShortcut && (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_M)))){
+    if (isCtrlShiftShortcut && (ImGui::IsKeyPressed(ImGuiKey_M))){
        saveContextToFile = true;
     }
-    if (isCtrlShiftShortcut && (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_O)))){
+    if (isCtrlShiftShortcut && (ImGui::IsKeyPressed(ImGuiKey_O))){
         fileLoadContext = true;
     }
-    if (isCtrlOnly && IsKeyPressed(GetKeyIndex(ImGuiKey_GraveAccent))){
+    if (isCtrlOnly && IsKeyPressed(ImGuiKey_GraveAccent)){
         use32BitLanes = !use32BitLanes;
         updateRegistersOnLaneChange();
     }
-    if (isShiftOnly && (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_F5)))){
+    if (isShiftOnly && (ImGui::IsKeyPressed(ImGuiKey_F5))){
         if (debugModeEnabled){
             debugStop = true;
         }
         return;
     }
-    else if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_F5))){
+    else if (ImGui::IsKeyPressed(ImGuiKey_F5)){
         if (!debugModeEnabled){
             enableDebugMode = true;
         }
-        else if ((isCtrlShortcut) &&ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_F5))){
+        else if ((isCtrlShortcut) &&ImGui::IsKeyPressed(ImGuiKey_F5)){
             debugRestart = true;
         }
         else{
@@ -63,26 +63,26 @@ void manageShortcuts(){
         }
     }
     if (debugModeEnabled){
-        if (isCtrlShortcut && (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_J)))){
+        if (isCtrlShortcut && (ImGui::IsKeyPressed(ImGuiKey_J))){
             debugStepIn = true;
         }
-        if (isCtrlShortcut && (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_K)))){
+        if (isCtrlShortcut && (ImGui::IsKeyPressed(ImGuiKey_K))){
             debugStepOver = true;
         }
     }
-    if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_F9))){
+    if (ImGui::IsKeyPressed(ImGuiKey_F9)){
         toggleBreakpoint = true;
     }
-    if (IsKeyPressed(GetKeyIndex(ImGuiKey_F3))){
+    if (IsKeyPressed(ImGuiKey_F3)){
         runSelectedCode = true;
     }
-    if (IsKeyPressed(GetKeyIndex(ImGuiKey_F4))){
+    if (IsKeyPressed(ImGuiKey_F4)){
         goToDefinition = true;
     }
-    if (IsKeyPressed(GetKeyIndex(ImGuiKey_F6))){
+    if (IsKeyPressed(ImGuiKey_F6)){
         debugPause = true;
     }
-    if (IsKeyPressed(GetKeyIndex(ImGuiKey_F10))){
+    if (IsKeyPressed(ImGuiKey_F10)){
         debugRun = true;
     }
 }

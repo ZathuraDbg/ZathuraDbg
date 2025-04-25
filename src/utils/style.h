@@ -12,7 +12,7 @@ static ImVec4 hexToImVec4(const char* hex)
     float b = static_cast<float>((value & 0x0000FF00) >> 8) / 255.0f;
     float a = static_cast<float>(value & 0x000000FF) / 255.0f;
 
-    return {r, g, b, 1};
+    return {r, g, b, a};
 }
 
 static void setupAppStyle()
@@ -45,7 +45,6 @@ static void setupAppStyle()
     style.GrabRounding = 20.0f;
     style.TabRounding = 0.0f;
     style.TabBorderSize = 0.0f;
-    style.TabMinWidthForCloseButton = 0.0f;
     style.ColorButtonPosition = ImGuiDir_Right;
     style.ButtonTextAlign = ImVec2(0.5f, 0.5f);
     style.SelectableTextAlign = ImVec2(0.0f, 0.0f);

@@ -1,85 +1,176 @@
 #include <thread>
+#include <condition_variable>
+#include <functional>
 #include "actions.hpp"
 #include "../integration/interpreter/interpreter.hpp"
+
+std::mutex uiUpdateMutex;
+bool pendingUIUpdate = false;
+int pendingHighlightLine = -1;
+
+void executeInBackground(std::function<void()> func) {
+    std::thread([func]() {
+        func();
+    }).detach();
+}
+
+void safeHighlightLine(int lineNo) {
+    std::lock_guard<std::mutex> lock(uiUpdateMutex);
+    pendingUIUpdate = true;
+    pendingHighlightLine = lineNo;
+}
+
+void processUIUpdates() {
+    std::lock_guard<std::mutex> lock(uiUpdateMutex);
+    if (pendingUIUpdate) {
+        if (pendingHighlightLine >= 0) {
+            editor->HighlightDebugCurrentLine(pendingHighlightLine);
+        }
+        pendingUIUpdate = false;
+    }
+}
 
 void startDebugging(){
     LOG_INFO("Starting debugging...");
 
-    resetState();
-    if (!fileRunTask(1)) {
-        LOG_ERROR("Unable to start debugging.");
-        LOG_ERROR("fileRunTask failed!");
-        return;
+    // Reset isDebugReady flag before starting setup
+    {
+        std::lock_guard<std::mutex> lk(debugReadyMutex);
+        isDebugReady = false;
     }
 
-    LOG_INFO("Debugging started successfully.");
-    debugModeEnabled = true;
+    // Execute setup in a background thread to prevent UI freezing
+    executeInBackground([]{
+        if (!fileRunTask(false)) {
+            LOG_ERROR("Unable to start debugging.");
+            LOG_ERROR("fileRunTask failed!");
+            // Ensure we don't deadlock if setup failed
+            {
+                std::lock_guard<std::mutex> lk(debugReadyMutex);
+                isDebugReady = true; // Signal ready (even on failure) to unblock any waiters
+            }
+            debugReadyCv.notify_all();
+            return;
+        }
+
+        // Note: preExecutionSetup should now signal isDebugReady and notify
+        LOG_INFO("Debugging initialization sequence completed in background thread");
+        debugModeEnabled = true;
+    });
+    
 }
 
 void restartDebugging(){
     LOG_INFO("Restarting debugging...");
-    resetState();
-    fileRunTask(1);
-    LOG_INFO("Debugging restarted successfully.");
+    
+    executeInBackground([]{
+        resetState();
+        fileRunTask(false);
+        LOG_INFO("Debugging restarted successfully.");
+    });
+    
 }
 
+
 void stepOverAction(){
-    uc_context_restore(uc, context);
-    LOG_INFO("Stepping over...");
-    const uint64_t instructionPointer = getRegister(getArchIPStr(codeInformation.mode)).registerValueUn.eightByteVal;
-    const std::string lineNoStr = addressLineNoMap[std::to_string(instructionPointer)];
+    LOG_INFO("Step over requested...");
 
-    if (!lineNoStr.empty()){
-        const int lineNo = std::atoi(lineNoStr.c_str());
-
-        breakpointMutex.lock();
-        breakpointLines.push_back(lineNo + 1);
-        breakpointMutex.unlock();
-        stepCode(0);
-
-        if (stepOverBPLineNo == lineNo){
-            LOG_DEBUG("Removing step over breakpoint line number: " << stepOverBPLineNo);
-            removeBreakpoint(stepOverBPLineNo);
-            stepOverBPLineNo = -1;
+    executeInBackground([]{
+        // Wait until debugging state is fully ready
+        {
+            std::unique_lock<std::mutex> lk(debugReadyMutex);
+            debugReadyCv.wait(lk, []{ return isDebugReady; });
         }
+        LOG_DEBUG("Debug state confirmed ready, proceeding with step over.");
 
-        stepOverBPLineNo = lineNo + 1;
-        LOG_INFO("Step over breakpoint line number: " << stepOverBPLineNo << " done");
-        continueOverBreakpoint = true;
-    }
+        const std::string lineNoStr = addressLineNoMap[std::to_string(icicle_get_pc(icicle))];
+
+        if (!lineNoStr.empty()){
+            const int lineNo = std::atoi(lineNoStr.c_str());
+
+            breakpointMutex.lock();
+            auto bpLineNoAddr = lineNoToAddress(lineNo + 1);
+            icicle_add_breakpoint(icicle, bpLineNoAddr);
+            breakpointLines.push_back(lineNo + 1); // Track the temporary breakpoint
+            breakpointMutex.unlock();
+
+            // Run until the next line (or breakpoint)
+            executeCode(icicle, 0); // Use executeCode which handles breakpoints
+
+            // Update UI with new position
+            if (!executionComplete) {
+                const std::string newLineStr = addressLineNoMap[std::to_string(icicle_get_pc(icicle))];
+                if (!newLineStr.empty()) {
+                    const int newLineNo = std::atoi(newLineStr.c_str());
+                    safeHighlightLine(newLineNo - 1);
+                }
+            }
+
+            // Attempt to remove the temporary breakpoint
+            breakpointMutex.lock();
+            icicle_remove_breakpoint(icicle, bpLineNoAddr);
+            auto it = std::ranges::find(breakpointLines, lineNo + 1);
+            if (it != breakpointLines.end()) {
+                 breakpointLines.erase(it);
+                 LOG_DEBUG("Removed step over breakpoint at line: " << lineNo + 1);
+            }
+            breakpointMutex.unlock();
+
+            // The old logic seems complex and potentially incorrect, replacing with simpler execute
+            stepOverBPLineNo = -1; // Clear any leftover state
+            LOG_INFO("Step over completed.");
+            continueOverBreakpoint = false; // Reset this flag
+        }
+        else {
+            LOG_WARNING("Could not get current line number for step over.");
+        }
+    });
+    
 }
 
 void stepInAction(){
-    LOG_INFO("Stepping in...");
-    if (wasJumpAndStepOver){
-        // workaround for the unicorn engine bug:
+    LOG_INFO("Stepping in requested...");
+
+    executeInBackground([]{
+        // Wait until debugging state is fully ready
+        {
+            std::unique_lock<std::mutex> lk(debugReadyMutex);
+            debugReadyCv.wait(lk, []{ return isDebugReady; });
+        }
+        LOG_DEBUG("Debug state confirmed ready, proceeding with step in.");
+
+        stepIn = true; // Flag likely unused now, but keep for consistency
+        stepCode(1);   // Use the synchronized stepCode function
+        
+        // Update UI after step is complete
+        if (!executionComplete) {
+            const std::string lineNoStr = addressLineNoMap[std::to_string(icicle_get_pc(icicle))];
+            if (!lineNoStr.empty()) {
+                int lineNo = std::atoi(lineNoStr.c_str());
+                safeHighlightLine(lineNo - 1);
+            }
+        }
+        
         stepIn = false;
+        pauseNext = false; // Reset flag
         LOG_INFO("Stepping in done.");
-        wasJumpAndStepOver = false;
-        wasStepOver = false;
-        debugStepOver = true;
-        runActions();
-        stepInBypassed = true;
-        return;
-    }
-    stepIn = true;
-    stepCode(1);
-    stepIn = false;
-    pauseNext = false;
-    LOG_INFO("Stepping in done.");
+    });
+    
 }
 
 bool debugPaused = false;
 void debugPauseAction(){
     LOG_INFO("Pause action requested!");
-    auto instructionPointer = getRegisterValue(getArchIPStr(codeInformation.mode), false);
-    const std::string currentLineNo = addressLineNoMap[std::to_string(instructionPointer.eightByteVal)];
-    const auto lineNumber = std::atoi(currentLineNo.c_str());
-    editor->HighlightDebugCurrentLine(lineNumber - 1);
-    debugPaused = true;
-    saveUCContext(uc, context);
-    uc_emu_stop(uc);
-    LOG_INFO("Code paused successfully!");
+    
+    executeInBackground([]{
+        auto instructionPointer = getRegisterValue(archIPStr);
+        const std::string currentLineNo = addressLineNoMap[std::to_string(instructionPointer.eightByteVal)];
+        const auto lineNumber = std::atoi(currentLineNo.c_str());
+        safeHighlightLine(lineNumber - 1);
+        debugPaused = true;
+        saveICSnapshot(icicle);
+        LOG_INFO("Code paused successfully!");
+    });
 }
 
 void debugStopAction(){
@@ -92,24 +183,15 @@ void debugToggleBreakpoint(){
     int line, _;
     editor->GetCursorPosition(line, _);
 
-    const auto isBreakpointRemoved = removeBreakpoint(line + 1);
+    // this call will return false if the breakpoint was not found
+    const auto isBreakpointRemoved = removeBreakpointFromLineNo(line + 1);
     if (isBreakpointRemoved){
         LOG_DEBUG("Removing the breakpoint at line: " <<  line);
-        // breakpointMutex.lock();
-        // breakpointLines.erase(breakpointIterator);
-        // breakpointMutex.unlock();
         editor->RemoveHighlight(line);
     }
     else{
-        for (auto &pair: labelLineNoMapInternal){
-            if (pair.second == (line+1)){
-                line += 1;
-            }
-        }
-
         LOG_DEBUG("Adding the breakpoint at line: " << line);
-        breakpointLines.push_back(line + 1);
-        editor->HighlightBreakpoints(line);
+        addBreakpointToLine(line);
     }
 }
 
@@ -124,7 +206,7 @@ bool debugAddBreakpoint(const int lineNum){
         return false;
     }
     else{
-        breakpointLines.push_back(lineNum + 1);
+        addBreakpointToLine(lineNum);
         editor->HighlightBreakpoints(lineNum);
         LOG_DEBUG("Breakpoint added successfully!");
     }
@@ -135,7 +217,7 @@ bool debugAddBreakpoint(const int lineNum){
 
 bool debugRemoveBreakpoint(const int lineNum){
     LOG_DEBUG("Removing the breakpoint at " << lineNum);
-    auto breakpointIter = (std::ranges::find(breakpointLines, lineNum + 1));
+    const auto breakpointIter = (std::ranges::find(breakpointLines, lineNum + 1));
 
     if (breakpointIter == breakpointLines.end()){
         LOG_DEBUG("No breakpoint exists at line no. " << lineNum);
@@ -154,47 +236,78 @@ bool debugRemoveBreakpoint(const int lineNum){
 
 void debugRunSelectionAction(){
     LOG_INFO("Running selected code...");
-    std::stringstream selectedAsmText(editor->GetSelectedText());
+    std::string selectedText = editor->GetSelectedText();
 
-    if (!selectedAsmText.str().empty()) {
-        const std::string bytes = getBytes(selectedAsmText);
+    if (!selectedText.empty()) {
+        executeInBackground([selectedText]() {
+            std::stringstream selectedAsmText(selectedText);
+            const std::string bytes = getBytes(selectedAsmText);
 
-        if (!bytes.empty()) {
-            debugRun = true;
-            runTempCode(bytes, countValidInstructions(selectedAsmText));
-            debugRun = false;
-            LOG_INFO("Selection ran successfully!");
-        }
-        else {
-            LOG_ERROR("Unable to run selected code because bytes were not returned.");
-        }
+            if (!bytes.empty()) {
+                debugRun = true;
+                runTempCode(bytes, countValidInstructions(selectedAsmText));
+                debugRun = false;
+                LOG_INFO("Selection ran successfully!");
+            }
+            else {
+                LOG_ERROR("Unable to run selected code because bytes were not returned.");
+            }
+        });
     }
     else {
         LOG_INFO("Nothing was selected to run, skipping.");
     }
 }
 
-void debugContinueAction(const bool skipBP){
-    LOG_DEBUG("Continuing debugging...");
-
-    if (std::ranges::find(breakpointLines, stepOverBPLineNo) != breakpointLines.end()){
-        const auto it = std::ranges::find(breakpointLines, tempBPLineNum);
-        if (it != breakpointLines.end()) {
-            breakpointMutex.lock();
-            breakpointLines.erase(it);
-            breakpointMutex.unlock();
+void debugContinueAction(const bool skipBP) {
+    LOG_DEBUG("Continuing debugging requested...");
+    
+    executeInBackground([skipBP]{
+        // Wait until debugging state is fully ready
+        {
+            std::unique_lock<std::mutex> lk(debugReadyMutex);
+            debugReadyCv.wait(lk, []{ return isDebugReady; });
         }
-        stepOverBPLineNo = -1;
-    }
+        LOG_DEBUG("Debug state confirmed ready, proceeding with continue.");
 
-    skipBreakpoints = skipBP;
-    runningAsContinue = true;
-    eraseTempBP = true;
-    std::thread stepCodeThread(stepCode, 0);
-    stepCodeThread.detach();
+        if (std::ranges::find(breakpointLines, stepOverBPLineNo) != breakpointLines.end()){
+            const auto it = std::ranges::find(breakpointLines, tempBPLineNum);
+            if (it != breakpointLines.end()) {
+                breakpointMutex.lock();
+                breakpointLines.erase(it);
+                breakpointMutex.unlock();
+            }
+            stepOverBPLineNo = -1;
+        }
+
+        skipBreakpoints = skipBP;
+        runningAsContinue = true;
+
+        // Execute in the current thread (we're already in a background thread)
+        stepCode(0);
+        
+        // Update UI after execution
+        if (!executionComplete) {
+            const std::string lineNoStr = addressLineNoMap[std::to_string(icicle_get_pc(icicle))];
+            if (!lineNoStr.empty()) {
+                const int lineNo = std::atoi(lineNoStr.c_str());
+                safeHighlightLine(lineNo - 1);
+            }
+        } else {
+            safeHighlightLine(lastInstructionLineNo - 1);
+        }
+
+        skipBreakpoints = false;
+        runningAsContinue = false;
+        eraseTempBP = false;
+        LOG_DEBUG("Continue action finished.");
+    });
+    
 }
 
 void runActions(){
+    processUIUpdates();
+    
     if (enableDebugMode){
         startDebugging();
         enableDebugMode = false;
@@ -208,11 +321,7 @@ void runActions(){
             debugRestart = false;
         }
         if (debugContinue){
-            debugContinueAction();
-            // debugContinueAction itself creates a new thread, so there is no
-            // need to start itself as a thread
-            // std::thread continueActionThread(debugContinueAction, false);
-            // continueActionThread.detach();
+            debugContinueAction(false);
             debugContinue = false;
         }
         if (debugStepOver){
@@ -220,13 +329,7 @@ void runActions(){
                 debugStepOver = false;
                 return;
             }
-
-            // stepOverAction();
-
-
-            wasStepOver = true;
-            std::thread stepOverActionThread(stepOverAction);
-            stepOverActionThread.detach();
+            stepOverAction();
             debugStepOver = false;
         }
         else if (debugStepIn){
@@ -234,13 +337,7 @@ void runActions(){
                 debugStepIn = false;
                 return;
             }
-
             stepInAction();
-
-//      should executing only one instruction really require a separate thread?
-//      std::thread stepInActionThread(stepInAction);
-//      stepInActionThread.detach();
-
             debugStepIn = false;
         }
         if (debugPause){
@@ -256,12 +353,34 @@ void runActions(){
     if (runUntilHere){
         int _;
         editor->GetCursorPosition(runUntilLine, _);
-        runUntilLine++;
+        LOG_DEBUG("Run until line is " << runUntilLine);
         if (!debugModeEnabled){
             startDebugging();
         }
-        std::thread continueActionThread(debugContinueAction, false);
-        continueActionThread.detach();
+        
+        executeInBackground([]{
+            {
+                std::unique_lock<std::mutex> lk(debugReadyMutex);
+                debugReadyCv.wait(lk, []{ return isDebugReady; });
+            }
+
+            skipEndStep = true;
+            addBreakpointToLine(runUntilLine, true);
+            stepCode(0);
+            skipEndStep = false;
+
+            if (!executionComplete) {
+                const std::string lineNoStr = addressLineNoMap[std::to_string(icicle_get_pc(icicle))];
+                if (!lineNoStr.empty()) {
+                    const int lineNo = std::atoi(lineNoStr.c_str());
+                    safeHighlightLine(lineNo - 1);
+                }
+            }
+            
+            // Remove temporary breakpoint
+            icicle_remove_breakpoint(icicle, lineNoToAddress(runUntilLine));
+        });
+        
         runUntilHere = false;
     }
     if (debugRun){
@@ -269,13 +388,38 @@ void runActions(){
             debugRun = false;
             return;
         }
-
-        skipBreakpoints = true;
-        if ((resetState()) && (fileRunTask(-1))){
-        }
-        else {
+        executeInBackground([]{
+            skipBreakpoints = true;
+            // Initialize debugging environment first
+            if (!debugModeEnabled) {
+                LOG_INFO("Initializing debug environment for run...");
+                // We need to ensure debugging is set up without blocking for input
+                if (!isDebugReady) {
+                    {
+                        std::lock_guard<std::mutex> lk(debugReadyMutex);
+                        isDebugReady = false;
+                    }
+                    if (!fileRunTask(false)) {
+                        LOG_ERROR("Failed to initialize debugging environment");
+                        skipBreakpoints = false;
+                        return;
+                    }
+                    debugModeEnabled = true;
+                }
+            }
+            
+            if ((resetState()) && (fileRunTask(true))){
+                // Execution was successful
+                // Update UI after run
+                if (executionComplete) {
+                    safeHighlightLine(lastInstructionLineNo - 1);
+                }
+            }
+            else {
+                LOG_ERROR("Failed to run code");
+            }
             skipBreakpoints = false;
-        }
+        });
 
         debugRun = false;
     }
@@ -287,8 +431,10 @@ void runActions(){
     }
     if (openFile){
         LOG_INFO("File open dialog requested!");
-        resetState();
-        fileOpenTask(openFileDialog());
+        executeInBackground([](){
+            resetState();
+            fileOpenTask(openFileDialog());
+        });
         openFile = false;
     }
     if (saveFileAs){
@@ -296,38 +442,27 @@ void runActions(){
         fileSaveAsTask(saveAsFileDialog());
         saveFileAs = false;
     }
-    if (saveContextToFile){
-        LOG_INFO("Saving file to context requested!");
-        if (context == nullptr || uc == nullptr){
-            saveContextToFile = false;
-            return;
-        }
-
-        fileSaveUCContextAsJson(saveAsFileDialog());
-                    saveContextToFile = false;
-    }
     if (fileLoadContext){
-        LOG_INFO("Saving file to context requested!");
-        fileLoadUCContextFromJson(openFileDialog());
-        uint64_t ip;
-
-        uc_reg_read(uc, regNameToConstant(getArchIPStr(codeInformation.mode)), &ip);
-        const std::string str =  addressLineNoMap[std::to_string(ip)];
-        if (!str.empty()) {
-            const int lineNumber = std::atoi(str.c_str());
-            editor->HighlightDebugCurrentLine(lineNumber - 1);
-        }
-
+        LOG_INFO("Not implemented!");
+        // executeInBackground([](){
+        //     fileLoadUCContextFromJson(openFileDialog());
+        //     const uint64_t ip = icicle_get_pc(icicle);
+        //     const std::string str = addressLineNoMap[std::to_string(ip)];
+        //     if (!str.empty()) {
+        //         const int lineNumber = std::atoi(str.c_str());
+        //         safeHighlightLine(lineNumber - 1);
+        //     }
+        // });
         fileLoadContext = false;
-    }
-
-    if (changeEmulationSettingsOpt){
-        changeEmulationSettings();
     }
 
     if (toggleBreakpoint){
         debugToggleBreakpoint();
         toggleBreakpoint = false;
+    }
+
+    if (changeEmulationSettingsOpt){
+        changeEmulationSettings();
     }
 
     if (runSelectedCode){

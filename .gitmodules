@@ -8,12 +8,6 @@
 [submodule "vendor/ImGuiColorTextEdit"]
 	path = vendor/ImGuiColorTextEdit
 	url = https://github.com/HACKE-RC/ImGuiColorTextEdit
-[submodule "vendor/unicorn"]
-	path = vendor/unicorn
-	url = https://github.com/unicorn-engine/unicorn
-[submodule "vendor/code"]
-	path = vendor/code
-	url = http://git.code.sf.net/p/tinyfiledialogs/code
 [submodule "vendor/whereami"]
 	path = vendor/whereami
 	url = https://github.com/gpakosz/whereami
@@ -26,3 +20,6 @@
 [submodule "vendor/keystone"]
 	path = vendor/keystone
 	url = https://github.com/keystone-engine/keystone
+[submodule "vendor/icicle-cpp"]
+	path = vendor/icicle-cpp
+	url = https://github.com/HACKE-RC/icicle-cpp

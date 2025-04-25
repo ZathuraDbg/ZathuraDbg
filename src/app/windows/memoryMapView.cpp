@@ -1,30 +1,26 @@
 #include "windows.hpp"
 
-std::vector<memoryMapInfo> getMemoryMapping(uc_engine* uc)
+std::vector<MemRegionInfo> getMemoryMapping(Icicle* ic)
 {
-    uc_mem_region* regionsInformation;
-    uint32_t count;
-    uc_mem_regions(uc, &regionsInformation, &count);
-
-    std::vector<memoryMapInfo> memMapInfo;
+    size_t count;
+    MemRegionInfo* memRegionInfoArray = icicle_mem_list_mapped(icicle, &count);
+    
+    std::vector<MemRegionInfo> memMapInfo;
     memMapInfo.reserve(count);
-    const uc_mem_region* regionInfo = regionsInformation;
 
-    for (int i = 0; i < count; i++)
-    {
-        memMapInfo.push_back({regionInfo->begin, regionInfo->end, regionInfo->perms});
-        regionInfo++;
+    for (size_t i = 0; i < count; i++) {
+        memMapInfo.push_back(memRegionInfoArray[i]);
     }
 
-    uc_free(regionsInformation);
+    icicle_mem_list_mapped_free(memRegionInfoArray, count);
     return memMapInfo;
 }
 
-inline bool updateMemoryPermissions(uc_engine* uc, const uint64_t startAddr, const uint64_t endAddr,
-                                    const uint32_t newPerms)
+inline bool updateMemoryPermissions(Icicle* ic, const uint64_t startAddr, const uint64_t endAddr,
+                                    const MemoryProtection newPerms)
 {
-    auto err = uc_mem_protect(uc, startAddr, (endAddr - startAddr) + 1, newPerms);
-    if (err != UC_ERR_OK)
+    auto err = icicle_mem_protect(icicle, startAddr, endAddr - startAddr, newPerms);
+    if (err != 0)
     {
         return false;
     }
@@ -32,10 +28,10 @@ inline bool updateMemoryPermissions(uc_engine* uc, const uint64_t startAddr, con
     return true;
 }
 
-bool expandMemoryRegion(uc_engine* uc, const uint64_t startAddr, uint64_t oldEndAddr, uint64_t newEndAddr,
-                        const uint64_t oldSize, const uint32_t perms)
+bool expandMemoryRegion(Icicle* ic, const uint64_t startAddr, uint64_t oldEndAddr, uint64_t newEndAddr,
+                        const uint64_t oldSize, const MemoryProtection perms)
 {
-    if (!(perms & UC_PROT_READ && perms & UC_PROT_WRITE))
+    if (!(perms & MemoryProtection::ReadWrite) && !(perms & MemoryProtection::ExecuteReadWrite))
     {
         LOG_ERROR("The memory region expansion process could not be completed because the memory region does not have read and write permissions.");
         return false;
@@ -43,6 +39,7 @@ bool expandMemoryRegion(uc_engine* uc, const uint64_t startAddr, uint64_t oldEnd
 
     if (startAddr > newEndAddr)
     {
+        LOG_ERROR("The memory region expansion process failed because startAddr > newEndAddr");
         return false;
     }
 
@@ -60,75 +57,55 @@ bool expandMemoryRegion(uc_engine* uc, const uint64_t startAddr, uint64_t oldEnd
         LOG_INFO("Rounded up size is " << newSize);
     }
 
-    uc_err ucErr{};
-
+    VmSnapshot* tempMemSnapshot = icicle_vm_snapshot(ic);
     // maybe allocate a page?
-    const auto saved = static_cast<char*>(malloc(oldSize));
+    // const auto saved = static_cast<char*>(malloc(oldSize));
+    // size_t outSize{};
+    // auto oldData = icicle_mem_read(ic, startAddr, oldSize, &outSize);
+    // if (outSize == 0)
+    // {
+    //     LOG_ERROR("Unable to read from the memory region for expansion.");
+    //     icicle_vm_snapshot_free(tempMemSnapshot);
+    //     return false;
+    // }
 
-    ucErr = uc_mem_read(uc, startAddr, saved, oldSize);
-    if (ucErr != UC_ERR_OK && ucErr != UC_ERR_READ_PROT)
-    {
-        LOG_ERROR("Unable to read from the memory region for expansion.");
-        return false;
-    }
-
-    ucErr = uc_mem_unmap(uc, startAddr, oldSize);
-    if (ucErr != UC_ERR_OK)
+    int err = icicle_mem_unmap(icicle, startAddr, oldSize);
+    if (err != 0)
     {
         LOG_ERROR("Unable to unmap the memory region for expansion.");
+        icicle_vm_snapshot_free(tempMemSnapshot);
         return false;
     }
 
-    ucErr = uc_mem_map(uc, startAddr, newSize, perms);
-    if (ucErr != UC_ERR_OK)
-    {
+    err = icicle_mem_map(icicle, startAddr, newSize, perms);
+    if (err != 0){
         LOG_ERROR("Unable to remap the memory region which was unmapped with a bigger size!");
         LOG_NOTICE("Attempting to recover the unmapped memory region...");
-
-        ucErr = uc_mem_map(uc, startAddr, oldSize, perms);
-
-        if (ucErr != UC_ERR_OK)
+        err = icicle_vm_restore(ic, tempMemSnapshot);
+        if (err != 0)
         {
-            LOG_INFO("Mapping error during recovery!");
-            LOG_ERROR("Memory map recovery failed. Memory map in inrecoverable state.");
-            return false;
-        }
-        else
-        {
-            LOG_INFO("Recovery mapping sucessful! Proceeding...");
-            ucErr = uc_mem_write(uc, startAddr, saved, sizeof(saved));
-            // UC_ERR_WRITE_PROT is not likely or is unreachable.
-            if (ucErr != UC_ERR_OK && ucErr != UC_ERR_WRITE_PROT)
-            {
-                LOG_INFO("Memory writing error during recovery!");
-                LOG_ERROR("Memory map recovery failed. Memory map in inrecoverable state.");
-                return false;
-            }
-
-            LOG_INFO("Recovery write sucessful! Proceeding...");
-            LOG_INFO("The memory maps are now in the default state.");
-            return true;
+            LOG_ERROR("Unable to recover the unmapped memory region!");
         }
 
-        return false;
+        LOG_INFO("The memory maps are now in the default state.");
+        icicle_vm_snapshot_free(tempMemSnapshot);
+        return true;
     }
 
-    ucErr = uc_mem_write(uc, startAddr, saved, sizeof(saved));
-    if (ucErr != UC_ERR_OK)
-    {
-        LOG_ERROR("Unable to write to the memory region which was unmapped with a bigger size!");
-        return false;
-    }
+    // we have to touch the avoid fragmentation bug
+    size_t outSize{};
+    icicle_mem_read(icicle, startAddr, newSize, &outSize);
 
-    free(saved);
+    std::cout << "After the remapping" << std::endl;
     return true;
 }
+
 
 static int lastMemInfoSize;
 bool keep = false;
 void memoryMapWindow()
 {
-    auto memInfo = getMemoryMapping(uc);
+    auto memInfo = getMemoryMapping(icicle);
     auto [x, y] = ImGui::GetWindowSize();
     ImGui::SetNextWindowSize({x - 230, (y - 125 + (52 * memInfo.size()))});
 
@@ -154,6 +131,7 @@ void memoryMapWindow()
             ImGui::TableNextRow();
             ImGui::TableSetColumnIndex(0);
 
+            bool noAccess;
             bool read;
             bool write;
             bool execute;
@@ -179,9 +157,45 @@ void memoryMapWindow()
             for (int i = 0; i < memInfo.size(); i++)
             {
                 ImGui::PushID((i + 1) * 91);
-                read = memInfo[i].perms & UC_PROT_READ;
-                write = memInfo[i].perms & UC_PROT_WRITE;
-                execute = memInfo[i].perms & UC_PROT_EXEC;
+                
+                // Convert MemoryProtection enum to individual permission flags
+                switch (memInfo[i].protection) {
+                    case NoAccess:
+                        read = false;
+                        write = false;
+                        execute = false;
+                        break;
+                    case ReadOnly:
+                        read = true;
+                        write = false;
+                        execute = false;
+                        break;
+                    case ReadWrite:
+                        read = true;
+                        write = true;
+                        execute = false;
+                        break;
+                    case ExecuteOnly:
+                        read = false;
+                        write = false;
+                        execute = true;
+                        break;
+                    case ExecuteRead:
+                        read = true;
+                        write = false;
+                        execute = true;
+                        break;
+                    case ExecuteReadWrite:
+                        read = true;
+                        write = true;
+                        execute = true;
+                        break;
+                    default:
+                        read = false;
+                        write = false;
+                        execute = false;
+                        break;
+                }
 
                 ImGui::SetNextItemWidth(-FLT_MIN);
                 ImGui::TableSetColumnIndex(0);
@@ -207,12 +221,12 @@ void memoryMapWindow()
 
                 ImGui::SetCursorPosY(posY);
                 std::stringstream ss;
-                ss << "0x" << std::setfill('0') << std::hex << memInfo[i].start;
+                ss << "0x" << std::setfill('0') << std::hex << memInfo[i].address;
                 ImGui::PushStyleColor(ImGuiCol_TextLink, ImColor(138, 173, 244).Value);
                 if (ImGui::TextLink(ss.str().c_str()))
                 {
                     memoryEditorWindow.OptShowAddWindowButton = false;
-                    newMemEditWindowsInfo memWindowInfo = {memoryEditorWindow, memInfo[i].start, memInfo[i].end - memInfo[i].start + 1};
+                    newMemEditWindowsInfo memWindowInfo = {memoryEditorWindow, memInfo[i].address, memInfo[i].size};
                     newMemEditWindows.push_back(memWindowInfo);
                 }
                 ImGui::PopStyleColor();
@@ -222,12 +236,12 @@ void memoryMapWindow()
                 ImGui::TableSetColumnIndex(2);
                 ImGui::PushID(("third" + std::to_string(i)).c_str());
                 ImGui::SetNextItemWidth(150);
-
-                strncpy(inputValue, std::to_string(memInfo[i].end + 1).c_str(), std::to_string(memInfo[i].end + 1).length());
+                uint64_t endAddr = memInfo[i].size + memInfo[i].address;
+                strncpy(inputValue, std::to_string(endAddr).c_str(), std::to_string(endAddr).length());
                 if (InputHexadecimal("##end_addr", inputValue, ImGuiInputTextFlags_CharsNoBlank | ImGuiInputTextFlags_EnterReturnsTrue))
                 {
-                    newEndAddr = strtol(inputValue, nullptr, 16);
-                    if (newEndAddr != memInfo[i].end || newEndAddr != (memInfo[i].end + 1))
+                    newEndAddr = strtoll(inputValue, nullptr, 16);
+                    if (newEndAddr != endAddr || newEndAddr != (endAddr + 1))
                     {
                         endAddrChanged = true;
                     }
@@ -303,7 +317,7 @@ void memoryMapWindow()
 
                     if (unmap)
                     {
-                        uc_mem_unmap(uc, memInfo[i].start, memInfo[i].end - memInfo[i].start + 1);
+                        icicle_mem_unmap(icicle, memInfo[i].address, memInfo[i].size);
                     }
                 }
 
@@ -315,20 +329,31 @@ void memoryMapWindow()
 
                 if (permsChanged)
                 {
-                    const uint32_t perms = (read ? UC_PROT_READ : UC_PROT_NONE) | (write ? UC_PROT_WRITE : UC_PROT_NONE)
-                        | (execute ? UC_PROT_EXEC : UC_PROT_NONE);
-                    updateMemoryPermissions(uc, memInfo[i].start, memInfo[i].end, perms);
+                    // Convert individual flags back to MemoryProtection enum
+                    MemoryProtection newPerms;
+                    if (read && write && execute) {
+                        newPerms = ExecuteReadWrite;
+                    } else if (read && execute) {
+                        newPerms = ExecuteRead;
+                    } else if (execute) {
+                        newPerms = ExecuteOnly;
+                    } else if (read && write) {
+                        newPerms = ReadWrite;
+                    } else if (read) {
+                        newPerms = ReadOnly;
+                    } else {
+                        newPerms = NoAccess;
+                    }
+                    
+                    updateMemoryPermissions(icicle, memInfo[i].address, memInfo[i].address + memInfo[i].size, newPerms);
                     permsChanged = false;
                 }
 
                 if (endAddrChanged)
                 {
-                    if (expandMemoryRegion(uc, memInfo[i].start, memInfo[i].end,
-                                           strtoll(std::to_string(newEndAddr).c_str(), nullptr, 16),
-                                           (memInfo[i].end - memInfo[i].start) + 1, memInfo[i].perms))
-                    {
-                        memInfo[i].end = newEndAddr;
-                    }
+                    if (expandMemoryRegion(icicle, memInfo[i].address, memInfo[i].size + memInfo[i].address,
+                                           newEndAddr,
+                                           memInfo[i].size, memInfo[i].protection))
                     endAddrChanged = false;
                 }
             }
@@ -380,8 +405,8 @@ void memoryMapWindow()
         auto [address, size] = infoPopup("Map a new region", "Multiple of 4KB");
         if (address != 0 && size != 0)
         {
-            uc_err ucErr = uc_mem_map(uc, address, size, UC_PROT_NONE);
-            if (ucErr != UC_ERR_OK)
+            auto err = icicle_mem_map(icicle, address, size, MemoryProtection::NoAccess);
+            if (err != 0)
             {
                 LOG_INFO("Unable to map the newly requested memory region.");
                 keep = false;

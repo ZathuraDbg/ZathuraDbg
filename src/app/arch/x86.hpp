@@ -6,9 +6,8 @@
 #include <unicorn/unicorn.h>
 #include <vector>
 extern std::vector<std::string> x86DefaultShownRegs;
-extern std::unordered_map<std::string, std::pair<size_t, int>> x86RegInfoMap;
-extern std::vector<std::string> x86ArchInstructions;
+extern std::unordered_map<std::string, size_t> x86RegInfoMap;
 extern std::string x86IPStr(uc_mode mode);
 extern std::pair<std::string, std::string> x86SBPStr(uc_mode mode);
-extern bool x86IsRegisterValid(const std::string& reg, uc_mode mode);
-extern void x86ModeUpdateCallback(uc_mode mode);
+extern bool x86IsRegisterValid(const std::string& reg);
+extern void x86ModeUpdateCallback();
