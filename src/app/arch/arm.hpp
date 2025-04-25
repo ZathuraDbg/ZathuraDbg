@@ -4,6 +4,8 @@
 #include <unordered_map>
 #include <vector>
 #include <utility>
+
+#include "arch.hpp"
 #include "icicle.h"
 
 // ARM register info map
@@ -20,7 +22,7 @@ extern std::pair<std::string, std::string> armSBPStr(int mode);
 extern std::pair<std::string, std::string> aarch64SBPStr(int mode);
 extern bool armIsRegisterValid(const std::string& reg);
 extern bool aarch64IsRegisterValid(const std::string& reg);
-extern void armModeUpdateCallback();
+extern void armModeUpdateCallback(int arch);
 extern void aarch64ModeUpdateCallback();
 
 #endif //ZATHURA_ARM_HPP

@@ -10,7 +10,7 @@ const char* archBPStr{};
 const char* archSPStr{};
 std::pair<std::string, std::string> (*getArchSBPStr)() = nullptr;
 bool (*isRegisterValid)(const std::string&) = nullptr;
-void (*modeUpdateCallback)() = nullptr;
+void (*modeUpdateCallback)(int arch) = nullptr;
 std::vector<std::string> defaultShownRegs{};
 std::vector<std::string> archInstructions;
 
@@ -30,7 +30,7 @@ void onArchChange(){
     tempRegisterValueMap = {};
 
     if (modeUpdateCallback != nullptr){
-        modeUpdateCallback();
+        modeUpdateCallback(codeInformation.archIC);
         // Set default shown registers based on architecture
         switch (codeInformation.archIC) {
             case IC_ARCH_X86_64:
@@ -59,7 +59,6 @@ bool initArch(){
             regInfoMap = x86RegInfoMap;
             defaultShownRegs = x86DefaultShownRegs;
             isRegisterValid = x86IsRegisterValid;
-            modeUpdateCallback = x86ModeUpdateCallback;
             return true;
         case IC_ARCH_AARCH64:
             archIPStr = "PC";
@@ -68,7 +67,7 @@ bool initArch(){
             regInfoMap = aarch64RegInfoMap;
             defaultShownRegs = aarch64DefaultShownRegs;
             isRegisterValid = aarch64IsRegisterValid;
-            modeUpdateCallback = armModeUpdateCallback;
+            // modeUpdateCallback = armModeUpdateCallback;
             return true;
         case IC_ARCH_ARM:
             archIPStr = "PC";
@@ -77,7 +76,7 @@ bool initArch(){
             regInfoMap = armRegInfoMap;
             defaultShownRegs = armDefaultShownRegs;
             isRegisterValid = armIsRegisterValid;
-            modeUpdateCallback = armModeUpdateCallback;
+            // modeUpdateCallback = armModeUpdateCallback;
             return true;
         case IC_ARCH_THUMBV7M:
             archIPStr = "PC";

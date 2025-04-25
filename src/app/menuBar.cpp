@@ -2,12 +2,12 @@
 bool firstTime = true;
 //
 const char* architectureStrings[] = {"Intel x86_64", "AArch32", "AArch64", "RISC-V", "PowerPC"};
-// const cs_arch csArchs[]    = {CS_ARCH_X86, CS_ARCH_ARM, CS_ARCH_RISCV, CS_ARCH_PPC};
 const char* ksSyntaxOptStr[] = {"Intel", "AT&T", "NASM", "GAS"};
 const ks_opt_value ksSyntaxOpts[] = {KS_OPT_SYNTAX_INTEL, KS_OPT_SYNTAX_ATT, KS_OPT_SYNTAX_NASM, KS_OPT_SYNTAX_GAS};
 // ARM architecture modes
 const char* armModeStr[] = {"ARM", "Thumb"};
-const ks_mode armKSModes[] = {KS_MODE_ARM, KS_MODE_THUMB, KS_MODE_LITTLE_ENDIAN};
+const ks_mode armKSModes[] = {KS_MODE_ARM, KS_MODE_THUMB};
+const cs_mode armCSModes[] = {CS_MODE_ARM, CS_MODE_THUMB};
 
 bool debugRestart = false;
 bool memoryMapsUI = false;
@@ -95,21 +95,19 @@ void changeEmulationSettings(){
 
             if (selectedMode == 0) {
                 icArch = IC_ARCH_ARM;
-                ksMode = KS_MODE_ARM;
-                csMode = CS_MODE_ARM;
+                ksMode = armKSModes[selectedMode];
+                csMode = armCSModes[selectedMode];
                 codeInformation.syntax = KS_OPT_SYNTAX_RADIX16;
                 codeInformation.archStr = "arm";
             }
             else if (selectedMode == 1)
             {
                 icArch = IC_ARCH_THUMBV7M;
-                ksMode = KS_MODE_THUMB;
-                csMode = CS_MODE_THUMB;
+                ksMode = armKSModes[selectedMode];
+                csMode = armCSModes[selectedMode];
                 codeInformation.syntax = KS_OPT_SYNTAX_RADIX16;
                 codeInformation.archStr = "thumbv7m";
             }
-
-            // ImGui::Dummy({20, 25});
         }
         else if (selectedArch == arch::ARM64)
         {

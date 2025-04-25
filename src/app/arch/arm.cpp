@@ -1,4 +1,6 @@
 #include "arm.hpp"
+
+#include "arch.hpp"
 #include "../../utils/stringHelper.hpp"
 
 std::vector<std::string> armDefaultShownRegs = {
@@ -359,7 +361,7 @@ bool aarch64IsRegisterValid(const std::string& reg) {
     return false;
 }
 
-void armModeUpdateCallback() {
+void armModeUpdateCallback(int arch) {
     // Callback when ARM mode changes
     // Could update register views or other mode-specific settings
 }

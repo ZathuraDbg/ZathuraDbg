@@ -1,5 +1,6 @@
 #include "x86.hpp"
 
+#include "arch.hpp"
 #include "../../utils/stringHelper.hpp"
 
 std::vector<std::string> x86DefaultShownRegs = {"RIP", "RSP", "RBP", "RAX", "RBX", "RCX", "RDX", "RSI", "RDI", "R8", "R9", "R10", "R11", "R12", "R13", "R14", "R15",
@@ -80,6 +81,6 @@ bool x86IsRegisterValid(const std::string& reg){
     return true;
 }
 
-void x86ModeUpdateCallback(){
+void x86ModeUpdateCallback(icArch arch){
     return;
 }
