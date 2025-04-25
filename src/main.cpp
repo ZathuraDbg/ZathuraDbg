@@ -8,6 +8,7 @@
 #include "app/app.hpp"
 #include "../vendor/whereami/src/whereami.h"
 #include "app/windows/windows.hpp" // Make sure this imports the stack window functions
+#include <map>
 #define GL_SILENCE_DEPRECATION
 #if defined(IMGUI_IMPL_OPENGL_ES2)
 #include <GLES2/gl2.h>

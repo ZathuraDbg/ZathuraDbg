@@ -578,10 +578,6 @@ void stackWriteHook(void* data, uint64_t address, uint8_t size, const uint64_t v
     updateStack = true;
 }
 
-void hookStackWrite(uc_engine *uc, const uint64_t address, const uint32_t size, void *user_data) {
-    updateStack = true;
-}
-
 bool preExecutionSetup(const std::string& codeIn)
 {
     initRegistersToDefinedVals();
@@ -603,7 +599,6 @@ bool preExecutionSetup(const std::string& codeIn)
     }
 
     auto k = icicle_mem_write(icicle, ENTRY_POINT_ADDRESS, codeBuf, CODE_BUF_SIZE - 1);
-    size_t l;
     icicle_set_pc(icicle, ENTRY_POINT_ADDRESS);
 
     // Ensure snapshot is taken before signaling ready
@@ -816,7 +811,7 @@ bool isSilentBreakpoint(const uint64_t& lineNo)
         return false;
     }
 
-    for (int i = 0; i < outSize; i++)
+    for (size_t i = 0; i < outSize; i++)
     {
         if (breakpointList[i] == lineNoToAddress(lineNo))
         {

@@ -6,8 +6,6 @@
 #include <fstream>
 #include <filesystem>
 #include <tinyfiledialogs.h>
-#include "../../../vendor/ImGuiColorTextEdit/TextEditor.h"
-#include "../../../vendor/ImGuiColorTextEdit/TextEditor.h"
 #include "../../utils/fonts.hpp"
 #include "../../../vendor/imgui/imgui.h"
 #include "../../../vendor/imgui/imgui_internal.h"

@@ -19,7 +19,7 @@ static std::string hexlify(const hexStruct& dump) {
     std::string result;
     result.reserve(dump.mLength);
 
-    for (int i = 0; i < dump.mLength; ++i) {
+    for (uint i = 0; i < dump.mLength; ++i) {
         result += static_cast<char>(dump.mData[i]);
     }
 

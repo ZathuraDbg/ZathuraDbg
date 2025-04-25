@@ -227,8 +227,21 @@ void initInsSizeInfoMap(){
             }
             else
             {
-                currentAddr += instructionSizes[count];
+                if (count < instructionSizes.size()) {
+                    currentAddr += instructionSizes[count];
+                } else {
+                    std::cerr << "instructionSizes out-of-bounds: count = " << count
+                              << ", instructionSizes.size() = " << instructionSizes.size()
+                              << ", lineNo = " << lineNo
+                              << ", instruction = " << line << "\n";
+                    std::abort(); // Or handle however you'd like
+                }
             }
+
+            // else
+            // {
+            //     currentAddr += instructionSizes[count];
+            // }
 
             if (valid)
                 valid = false;

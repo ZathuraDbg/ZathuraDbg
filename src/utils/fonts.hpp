@@ -10,7 +10,6 @@
 #include "../../hex/hex.h"
 #include "../../imgui/imgui.h"
 #include "iconfont.h"
-#include "../../ImGuiColorTextEdit/TextEditor.h"
 #include <cstdio>
 
 enum fonts{

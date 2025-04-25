@@ -18,6 +18,7 @@
 #include "icicle.h"
 #include <condition_variable>
 #include "../../actions/actions.hpp"
+#include "../../vendor/ImGuiColorTextEdit/TextEditor.h"
 
 #define IC_CONTEXT_SAVE_FAILED (-94)
 struct registerValueT{

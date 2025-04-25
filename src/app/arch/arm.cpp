@@ -276,24 +276,24 @@ std::unordered_map<std::string, size_t> aarch64RegInfoMap = {
 };
 
 // Basic ARM architecture instructions
-std::string armIPStr(int mode) {
+std::string armIPStr() {
     return "PC"; // For ARM 32-bit, program counter is R15 or PC
 }
 
-std::string aarch64IPStr(int mode) {
+std::string aarch64IPStr() {
     return "PC"; // For AArch64, program counter is PC
 }
 
-std::pair<std::string, std::string> armSBPStr(int mode) {
+std::pair<std::string, std::string> armSBPStr() {
     return {"SP", "R11"}; // Stack pointer is R13 or SP, Base pointer is R11 (FP)
 }
 
-std::pair<std::string, std::string> aarch64SBPStr(int mode) {
+std::pair<std::string, std::string> aarch64SBPStr() {
     return {"SP", "X29"}; // Stack pointer is SP, Base pointer is X29 (FP)
 }
 
 bool armIsRegisterValid(const std::string& reg) {
-    std::string registerName = toLowerCase(reg);
+    const std::string registerName = toLowerCase(reg);
     
     // Simple validation - check if register exists in map
     if (!armRegInfoMap.contains(registerName)) {

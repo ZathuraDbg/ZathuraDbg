@@ -5,7 +5,7 @@ std::string convToDec(const std::string& str){
     std::string outStr;
     bool foundHexStr = false;
 
-    for (int i = 0; i < str.length(); i++){
+    for (size_t i = 0; i < str.length(); i++){
         if (str[i] == '0' && (str[i+1] == 'x' || str[i+1] == 'X' )){
             i++;
             foundHexStr = true;
