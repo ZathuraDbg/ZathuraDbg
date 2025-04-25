@@ -157,9 +157,6 @@ int main(int argc, const char** argv)
     stackEditorTemp = nullptr;
     stackArraysZeroed = false;
 
-    stackEditorData = static_cast<char*>(malloc(STACK_SIZE));
-    stackEditorTemp = static_cast<char*>(malloc(STACK_SIZE));
-    stackArraysZeroed = false;
     glfwShowWindow(window);
 
     if (!getenv("GHIDRA_SRC")) {
