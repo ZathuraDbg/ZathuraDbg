@@ -43,6 +43,8 @@ enum arch{
 extern bool saveContextToFile;
 extern bool fileLoadContext;
 extern bool changeEmulationSettingsOpt;
+extern bool debugStepBack;
+extern bool ttdEnabled;
 extern bool toggleBreakpoint;
 extern bool runSelectedCode;
 extern bool goToDefinition;

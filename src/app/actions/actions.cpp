@@ -7,6 +7,33 @@
 std::mutex uiUpdateMutex;
 bool pendingUIUpdate = false;
 int pendingHighlightLine = -1;
+int times = 1;
+
+void stepBack()
+{
+    if (vmSnapshots.empty())
+    {
+        LOG_INFO("No more snapshots to step back to.");
+        return;
+    }
+
+    VmSnapshot* stateToRestore = vmSnapshots.top();
+    vmSnapshots.pop();
+
+    icicle_vm_restore(icicle, stateToRestore);
+
+    safeHighlightLine(addressToLineNo(icicle_get_pc(icicle)) - 1);
+    updateRegs(false);
+    icicle_vm_snapshot_free(stateToRestore);
+
+    if (snapshot) {
+        icicle_vm_snapshot_free(snapshot);
+        snapshot = nullptr;
+    }
+
+    snapshot = icicle_vm_snapshot(icicle);
+    LOG_DEBUG("Stepped back successfully. Snapshots remaining: " << vmSnapshots.size());
+}
 
 void executeInBackground(std::function<void()> func) {
     std::thread([func]() {
@@ -168,7 +195,12 @@ void debugPauseAction(){
         const auto lineNumber = std::atoi(currentLineNo.c_str());
         safeHighlightLine(lineNumber - 1);
         debugPaused = true;
-        saveICSnapshot(icicle);
+        // Free existing snapshot before creating a new one
+        if (snapshot) {
+            icicle_vm_snapshot_free(snapshot);
+            snapshot = nullptr;
+        }
+        snapshot = saveICSnapshot(icicle); // Assign the saved snapshot
         LOG_INFO("Code paused successfully!");
     });
 }
@@ -480,4 +512,11 @@ void runActions(){
     {
         memoryMapWindow();
     }
+
+    if (debugStepBack)
+    {
+        stepBack();
+        debugStepBack = false;
+    }
+
 }

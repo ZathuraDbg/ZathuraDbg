@@ -94,6 +94,8 @@ extern int stepOverBPLineNo;
 extern uint64_t codeCurrentLen;
 extern Icicle* icicle;
 extern VmSnapshot* snapshot;
+extern std::stack<VmSnapshot*> vmSnapshots;
+extern VmSnapshot* snapshotLast;
 extern int getCurrentLine();
 extern bool removeBreakpointFromLineNo(const uint64_t& lineNo);
 extern bool removeBreakpoint(const uint64_t& address);
@@ -104,6 +106,7 @@ extern std::condition_variable debugReadyCv;
 extern bool isDebugReady;
 extern bool skipEndStep;
 // extern void printBreakpoints();
+extern uint64_t addressToLineNo(const uint64_t& address);
 extern void safeHighlightLine(int lineNo);
 
 #endif

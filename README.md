@@ -44,10 +44,10 @@ Read [COMPILE.md](/COMPILE.md) to compile ZathuraDbg on your machine.
 
 # FAQs
 Q. Can ZathuraDbg debug binaries?    
-A. No, ZathuraDbg relies solely on the assembly code with the limitations of the Unicorn Engine emulator.    
+A. No, ZathuraDbg does not have this feature yet.     
     
 Q. Does ZathuraDbg support syscalls and OS level APIs?    
-A. No, since Unicorn Engine is not a full OS emulator, it can't emulate system calls or OS level APIs and thus severaly limiting it's capabilities.    
+A. Common syscalls are planned to be implemented in the future.    
 
 Q. Which architectures are currently supported in ZathuraDbg?    
-A. Intel x86 in 16, 32 and 64 bit modes.
+A. Intel x86_64 and ARM 32 bit, Thumbv7m and AArch64.

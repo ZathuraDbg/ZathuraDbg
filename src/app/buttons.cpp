@@ -157,6 +157,18 @@ bool setupButtons() {
             ImGui::EndTooltip();
         }
 
+        if (ttdEnabled)
+        {
+            ImGui::SameLine();
+            ImGui::Separator();
+            ImGui::SameLine();
+
+            if (ImGui::Button(ICON_CI_DEBUG_STEP_BACK, ImVec2(20, 20)))
+            {
+                debugStepBack = true;
+            }
+        }
+
         ImGui::SameLine();
         ImGui::Separator();
         ImGui::SameLine();

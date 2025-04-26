@@ -78,7 +78,6 @@ void removeRegisterFromView(const std::string& reg, const int regType){
 
 void updateRegs(bool useTempContext){
     std::stringstream hex;
-    registerValueInfoT val;
     bool useSecondVal = false;
 
     if (!useTempContext) {
@@ -92,7 +91,7 @@ void updateRegs(bool useTempContext){
             continue;
         }
 
-        val = getRegister(toLowerCase(name));
+        registerValueInfoT val = getRegister(toLowerCase(name));
 
         auto const [isRegValid, registerValue] = val;
 

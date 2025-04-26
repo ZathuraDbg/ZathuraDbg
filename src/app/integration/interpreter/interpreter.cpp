@@ -1,6 +1,5 @@
 #include "interpreter.hpp"
 
-#include <sys/stat.h>
 uintptr_t ENTRY_POINT_ADDRESS = 0x10000;
 uintptr_t MEMORY_ALLOCATION_SIZE = 201000;
 uintptr_t DEFAULT_STACK_ADDRESS = 0x301000;
@@ -14,6 +13,8 @@ uint8_t* codeBuf = nullptr;
 
 Icicle* icicle = nullptr;
 VmSnapshot* snapshot = nullptr;
+std::stack<VmSnapshot*> vmSnapshots{};
+VmSnapshot* snapshotLast = nullptr;
 
 uint64_t codeCurrentLen = 0;
 uint64_t lineNo = 1;
@@ -561,17 +562,39 @@ std::string lastLabel{};
 uint64_t lastLineNo = 0;
 
 
-// void instructionHook(void* userData, const uint64_t address)
-// {
-//     // Update UI safely with current line
-//     // const std::string lineNoStr = addressLineNoMap[std::to_string(address)];
-//     // if (!lineNoStr.empty()) {
-//     //     int lineNo = std::atoi(lineNoStr.c_str());
-//     //     if (lineNo > 0) {
-//     //         safeHighlightLine(lineNo - 1);
-//     //     }
-//     // }
-// }
+void instructionHook(void* userData, const uint64_t address)
+{
+    const std::string lineNoStr = addressLineNoMap[std::to_string(address)];
+    if (!lineNoStr.empty()) {
+        const int lineNo = std::atoi(lineNoStr.c_str());
+        if (lineNo > 0) {
+            safeHighlightLine(lineNo - 1);
+        }
+    }
+
+    if (!snapshot)
+    {
+        snapshot = icicle_vm_snapshot(icicle);
+        if (ttdEnabled)
+            vmSnapshots.push(snapshot);
+    }
+    else
+    {
+        if (ttdEnabled)
+        {
+            if (!vmSnapshots.empty())
+            {
+                if (vmSnapshots.top() == snapshot)
+                {
+                    return;
+                }
+            }
+
+            vmSnapshots.push(snapshot);
+            snapshot = icicle_vm_snapshot(icicle);
+        }
+    }
+}
 bool updateStack = false;
 void stackWriteHook(void* data, uint64_t address, uint8_t size, const uint64_t valueWritten)
 {
@@ -694,13 +717,6 @@ bool createStack(Icicle* ic)
     const uint64_t stackBase = STACK_ADDRESS + STACK_SIZE;
     icicle_reg_write(ic, archSPStr, stackBase);
     icicle_reg_write(ic, archBPStr, stackBase);
-    // size_t outSize{};
-
-    // const auto s = icicle_mem_read(ic, STACK_ADDRESS, STACK_SIZE, &outSize);
-    // if (!s)
-    // {
-    //     LOG_ERROR("Failed to read the stack base pointer, quitting!!");
-    // }
 
     stackArraysZeroed = false;
     LOG_INFO("Stack created successfully!");
@@ -751,6 +767,17 @@ bool resetState(){
     {
         ks_close(ks);
         ks = nullptr;
+    }
+
+
+    if (!vmSnapshots.empty())
+    {
+        for (int j = 0; j < vmSnapshots.size(); j++)
+        {
+            icicle_vm_snapshot_free(vmSnapshots.top());
+            vmSnapshots.pop();
+        }
+        vmSnapshots = {};
     }
 
     labels.clear();
@@ -906,6 +933,7 @@ bool checkStatusUpdateState(const size_t& instructionCount, RunStatus status, co
         }
     }
 
+    instructionHook(nullptr, icicle_get_pc(icicle));
     return true;
 }
 
@@ -1031,16 +1059,18 @@ bool stepCode(const size_t instructionCount){
     }
 
     {
-        if (!snapshot)
+        // If snapshot exists, free it before creating a new one
+        if (snapshot) 
         {
             icicle_vm_snapshot_free(snapshot);
             snapshot = nullptr;
-             if (!saveICSnapshot(icicle)){
-                LOG_ERROR("Failed to save snapshot after step.");
-                return false;
-            }
         }
-
+        // Save the new snapshot
+        snapshot = saveICSnapshot(icicle); 
+        if (!snapshot) {
+            LOG_ERROR("Failed to save snapshot after step.");
+            return false;
+        }
 
         ip = icicle_get_pc(icicle);
         if (ip != expectedIP){
@@ -1138,7 +1168,7 @@ bool runCode(const std::string& codeIn, const bool& execCode)
 
         editor->HighlightDebugCurrentLine(lastInstructionLineNo);
         if (runningTempCode){
-            icicle_vm_snapshot(icicle);
+            // icicle_vm_snapshot(icicle);
             updateRegs();
         }
     }
@@ -1148,7 +1178,12 @@ bool runCode(const std::string& codeIn, const bool& execCode)
         codeBuf = nullptr;
     }
     else {
-        saveICSnapshot(icicle);
+        // Free existing snapshot before saving a new one
+        if (snapshot) {
+            icicle_vm_snapshot_free(snapshot);
+            snapshot = nullptr;
+        }
+        snapshot = saveICSnapshot(icicle); // Assign the saved snapshot
 
         line = addressLineNoMap[std::to_string(ENTRY_POINT_ADDRESS)];
         if (line.empty()){
@@ -1178,11 +1213,12 @@ bool runTempCode(const std::string& codeIn, const uint64_t instructionCount){
     runCode(codeIn, instructionCount);
 
     tempIcicle = icicle;
-    constexpr auto size = sizeof(VmSnapshot);
-    tempSnapshot = static_cast<VmSnapshot*>(malloc(size));
-    memcpy(tempSnapshot, snapshot, size);
+    // Comment out flawed temp snapshot logic
+    // constexpr auto size = sizeof(VmSnapshot);
+    // tempSnapshot = static_cast<VmSnapshot*>(malloc(size));
+    // memcpy(tempSnapshot, snapshot, size);
 
     updateRegs(true);
-    free(tempSnapshot);
+    // free(tempSnapshot);
     return true;
 }

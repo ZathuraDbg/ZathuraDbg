@@ -81,6 +81,7 @@ bool isValidInstruction(ks_engine* ksEngine, const char* instruction) {
     size_t count{};
     unsigned char *encode = nullptr;
     ks_err err;
+    bool engineCreatedInternally = false; // Track if we created the engine here
 
     if (ksEngine == nullptr)
     {
@@ -89,16 +90,19 @@ bool isValidInstruction(ks_engine* ksEngine, const char* instruction) {
         if (err != KS_ERR_OK)
         {
             LOG_ERROR("Failed to initialize Keystone engine: " << ks_strerror(err));
-            ksEngine = nullptr;
+            // ksEngine is already null here
             return false;
         }
+        engineCreatedInternally = true; // Mark that we created it
     }
 
     const auto status = ks_asm(ksEngine, instruction, 0, &encode, &size, &count);
+    bool result = false; // Store result before potential close
+
     if (status == 0 && size != 0)
     {
         ks_free(encode);
-        return true;
+        result = true;
     }
     else if (status == -1)
     {
@@ -110,13 +114,20 @@ bool isValidInstruction(ks_engine* ksEngine, const char* instruction) {
         std::string error(ks_strerror(err));
         if (err == KS_ERR_ASM_SYMBOL_MISSING || err == KS_ERR_OK)
         {
-            // ks_close(ksEngine);
+            // ks_close(ksEngine); // Don't close here, close below
             // ksEngine = nullptr;
-            return true;
+            result = true;
         }
     }
-    // ks_close(ksEngine);
-    return false;
+    // ks_close(ksEngine); // Don't close here, close below
+
+    // If we created the engine inside this function, we MUST close it here
+    if (engineCreatedInternally) {
+        ks_close(ksEngine);
+        // ksEngine = nullptr; // Don't nullify the pointer passed by value
+    }
+
+    return result;
 }
 
 // why does the instruction work but all registers have the value of the stack?
@@ -258,8 +269,8 @@ void initInsSizeInfoMap(){
         labelLineNoRange[labelLineNoRange.back().first].second = strtol(std::prev(addressLineNoMap.end())->second.data(), nullptr, 10);
     }
 
-    ks_close(ks);
-    ks = nullptr;
+    // ks_close(ks); // Remove redundant close; caller (getBytes) should handle closing.
+    // ks = nullptr;
     totalInstructions = count;
     LOG_INFO("Updated to instruction size information map.");
     LOG_DEBUG("Total instructions to execute: " << totalInstructions);
@@ -362,6 +373,7 @@ std::string getBytes(const std::string& fileName){
     auto [bytes, size] = assemble(assembly.str(), ksSettings);
 
     if (size == 0 && bytes.empty()) {
+        LOG_ERROR("Assembly failed, skipping instruction size and map initialization.");
         return "";
     }
 
@@ -378,7 +390,7 @@ std::string getBytes(const std::string& fileName){
          ks_close(ks);
          ks = nullptr;
     }
-   return hexlify({bytes.data(), size});
+    return hexlify({bytes.data(), size});
 }
 
 std::string getBytes(const std::stringstream &assembly){

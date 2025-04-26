@@ -20,6 +20,8 @@ bool debugRun = false;
 bool saveContextToFile = false;
 bool fileLoadContext = false;
 bool changeEmulationSettingsOpt = false;
+bool debugStepBack = false;
+bool ttdEnabled = false;
 bool showEmuSettings = false;
 
 void changeEmulationSettings(){
@@ -234,7 +236,8 @@ void appMenuBar()
             ImGui::MenuItem("Step Over", "CTRL+K", &debugStepOver, debugModeEnabled ? true : false);
             ImGui::MenuItem("Continue", debugModeEnabled ? "F5" : nullptr, &debugContinue, debugModeEnabled ? true : false);
             ImGui::MenuItem("Restart debugging", "CTRL+F5", &debugRestart, debugModeEnabled ? true : false);
-            ImGui::MenuItem("Memory maps", "CTRL+F7", &memoryMapsUI, true);
+            ImGui::MenuItem("Memory maps", "CTRL+F7", &memoryMapsUI, debugModeEnabled ? true : false);
+            ImGui::MenuItem("Enable time travel debugging", nullptr, &ttdEnabled, true);
             ImGui::Separator();
             ImGui::EndMenu();
         }

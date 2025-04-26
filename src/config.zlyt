@@ -50,7 +50,7 @@ Collapsed=0
 
 [Window][Memory Mappings]
 Pos=162,219
-Size=661,99
+Size=661,203
 Collapsed=0
 
 [Window][buttons]
@@ -156,6 +156,12 @@ Column 2  Weight=0.7151
 Column 3  Weight=1.9545
 
 [Table][0xDFB22815,4]
+Column 0  Weight=1.0000
+Column 1  Weight=1.0000
+Column 2  Weight=1.0000
+Column 3  Weight=1.0000
+
+[Table][0x1DEC470F,4]
 Column 0  Weight=1.0000
 Column 1  Weight=1.0000
 Column 2  Weight=1.0000

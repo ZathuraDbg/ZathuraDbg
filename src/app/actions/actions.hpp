@@ -7,6 +7,7 @@ extern void startDebugging();
 extern void debugContinueAction(bool skipBP);
 extern bool debugAddBreakpoint(int lineNum);
 extern bool debugRemoveBreakpoint(int lineNum);
+extern int times;
 
 // Add declarations for the UI update functions
 void safeHighlightLine(int lineNo);
