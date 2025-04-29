@@ -69,6 +69,9 @@ void manageShortcuts(){
         if (isCtrlShortcut && (ImGui::IsKeyPressed(ImGuiKey_K))){
             debugStepOver = true;
         }
+        if (ttdEnabled && isCtrlShortcut && (ImGui::IsKeyPressed(ImGuiKey_B))){
+            debugStepBack = true;
+        }
     }
     if (ImGui::IsKeyPressed(ImGuiKey_F9)){
         toggleBreakpoint = true;

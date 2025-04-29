@@ -24,11 +24,9 @@ std::pair<std::string, std::size_t> assemble(const std::string& assemblyString, 
     unsigned char *encode;
 
     if (ks == nullptr){
-        // LOG_INFO("Keystone object doesn't exists, creating...");
         err = ks_open(ksSettings.arch, ksSettings.mode, &ks);
 
         if (err != KS_ERR_OK) {
-            // LOG_ERROR("Failed to initialize Keystone engine: " << ks_strerror(err));
             tinyfd_messageBox("ERROR!","Failed to initialize Keystone engine!", "ok", "error", 0);
             return {"", 0};
         }
@@ -66,10 +64,7 @@ std::pair<std::string, std::size_t> assemble(const std::string& assemblyString, 
     }
 
     std::pair<std::string, std::size_t> assembled = {std::string(reinterpret_cast<const char *>(encode), size), size};
-
     ks_free(encode);
-    // ks_close(ks);
-    // ks = nullptr;
 
     codeFinalLen = size;
     LOG_DEBUG("Assembled: " << size << " bytes");
@@ -81,23 +76,21 @@ bool isValidInstruction(ks_engine* ksEngine, const char* instruction) {
     size_t count{};
     unsigned char *encode = nullptr;
     ks_err err;
-    bool engineCreatedInternally = false; // Track if we created the engine here
+    bool engineCreatedInternally = false;
 
     if (ksEngine == nullptr)
     {
-        // LOG_INFO("Keystone object doesn't exists, creating...");
         err = ks_open(codeInformation.archKS, codeInformation.modeKS, &ksEngine);
         if (err != KS_ERR_OK)
         {
             LOG_ERROR("Failed to initialize Keystone engine: " << ks_strerror(err));
-            // ksEngine is already null here
             return false;
         }
-        engineCreatedInternally = true; // Mark that we created it
+        engineCreatedInternally = true;
     }
 
     const auto status = ks_asm(ksEngine, instruction, 0, &encode, &size, &count);
-    bool result = false; // Store result before potential close
+    bool result = false;
 
     if (status == 0 && size != 0)
     {
@@ -114,17 +107,12 @@ bool isValidInstruction(ks_engine* ksEngine, const char* instruction) {
         std::string error(ks_strerror(err));
         if (err == KS_ERR_ASM_SYMBOL_MISSING || err == KS_ERR_OK)
         {
-            // ks_close(ksEngine); // Don't close here, close below
-            // ksEngine = nullptr;
             result = true;
         }
     }
-    // ks_close(ksEngine); // Don't close here, close below
 
-    // If we created the engine inside this function, we MUST close it here
     if (engineCreatedInternally) {
         ks_close(ksEngine);
-        // ksEngine = nullptr; // Don't nullify the pointer passed by value
     }
 
     return result;
@@ -245,14 +233,10 @@ void initInsSizeInfoMap(){
                               << ", instructionSizes.size() = " << instructionSizes.size()
                               << ", lineNo = " << lineNo
                               << ", instruction = " << line << "\n";
-                    std::abort(); // Or handle however you'd like
+                    std::abort();
                 }
             }
 
-            // else
-            // {
-            //     currentAddr += instructionSizes[count];
-            // }
 
             if (valid)
                 valid = false;
@@ -269,8 +253,6 @@ void initInsSizeInfoMap(){
         labelLineNoRange[labelLineNoRange.back().first].second = strtol(std::prev(addressLineNoMap.end())->second.data(), nullptr, 10);
     }
 
-    // ks_close(ks); // Remove redundant close; caller (getBytes) should handle closing.
-    // ks = nullptr;
     totalInstructions = count;
     LOG_INFO("Updated to instruction size information map.");
     LOG_DEBUG("Total instructions to execute: " << totalInstructions);

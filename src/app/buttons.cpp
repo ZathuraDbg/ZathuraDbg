@@ -167,6 +167,12 @@ bool setupButtons() {
             {
                 debugStepBack = true;
             }
+
+            if (ImGui::IsItemHovered()) {
+                ImGui::BeginTooltip();
+                ImGui::Text("Step Back (CTRL+B)");
+                ImGui::EndTooltip();
+            }
         }
 
         ImGui::SameLine();
