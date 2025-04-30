@@ -464,10 +464,25 @@ void runActions(){
     if (openFile){
         LOG_INFO("File open dialog requested!");
         executeInBackground([](){
-            resetState();
+            resetState(false);
             fileOpenTask(openFileDialog());
         });
         openFile = false;
+    }
+    if (createFile)
+    {
+        LOG_INFO("File create requested!");
+        const auto s = saveAsFileDialog();
+        if (!s.empty())
+        {
+            fopen(s.c_str(), "w");
+            fileOpenTask(s);
+            // resetState(false);
+            // selectedFile = s;
+            // getBytes(selectedFile);
+            // initInsSizeInfoMap();
+        }
+        createFile = false;
     }
     if (saveFileAs){
         LOG_INFO("File save as requested!");

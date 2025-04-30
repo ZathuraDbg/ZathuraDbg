@@ -28,6 +28,9 @@ bool fileOpenTask(const std::string& fileName){
 
         selectedFile = fileName;
         editor->HighlightBreakpoints(-1);
+        resetState(false);
+        getBytes(fileName);
+        initInsSizeInfoMap();
         LOG_INFO("The provided file " << fileName << " opened successfully.");
         return true;
     }

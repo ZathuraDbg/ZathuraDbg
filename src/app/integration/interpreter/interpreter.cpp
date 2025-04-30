@@ -614,7 +614,7 @@ bool preExecutionSetup(const std::string& codeIn)
     memcpy(codeBuf, code, codeIn.length());
 
     // TODO: Add a way to make stack executable
-    auto e = icicle_mem_map(icicle, ENTRY_POINT_ADDRESS, CODE_BUF_SIZE, MemoryProtection::ExecuteReadWrite);
+    const auto e = icicle_mem_map(icicle, ENTRY_POINT_ADDRESS, CODE_BUF_SIZE, MemoryProtection::ExecuteReadWrite);
     if (e == -1)
     {
         LOG_ERROR("Failed to map memory for writing code!");
@@ -723,7 +723,7 @@ bool createStack(Icicle* ic)
     return true;
 }
 
-bool resetState(){
+bool resetState(bool reInit){
     LOG_INFO("Resetting state...");
     criticalSection.lock();
 
@@ -791,9 +791,12 @@ bool resetState(){
     labelLineNoRange = {};
     labelLineNoMapInternal = {};
 
-     if (getBytes(selectedFile).empty()) {
-         criticalSection.unlock();
-        return false;
+    if (reInit)
+    {
+        if (getBytes(selectedFile).empty()) {
+            criticalSection.unlock();
+            return false;
+        }
     }
 
     for (const auto &key: registerValueMap | std::views::keys){

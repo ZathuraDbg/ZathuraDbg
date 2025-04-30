@@ -80,7 +80,7 @@ extern int tempBPLineNum;
 extern uint64_t CODE_BUF_SIZE;
 extern bool stepCode(size_t instructionCount = 1);
 extern std::vector<uint64_t> breakpointLines;
-extern bool resetState();
+extern bool resetState(bool reInit = true);
 extern bool continueOverBreakpoint;
 extern bool stepIn;
 extern bool stepOver;

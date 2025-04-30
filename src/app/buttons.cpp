@@ -1,6 +1,7 @@
 #include "app.hpp"
 bool enableDebugMode = false;
 bool openFile = false;
+bool createFile = false;
 bool saveFile = false;
 bool saveFileAs = false;
 

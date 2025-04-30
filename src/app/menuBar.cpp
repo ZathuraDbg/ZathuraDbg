@@ -178,6 +178,7 @@ void appMenuBar()
         if (ImGui::BeginMenu("File"))
         {
             ImGui::MenuItem("Open", "Ctrl+O", &openFile);
+            ImGui::MenuItem("New File", "Ctrl+N", &createFile);
             ImGui::MenuItem("Save", "Ctrl+S", &saveFile);
             ImGui::MenuItem("Save As", "Ctrl+Shift+S", &saveFileAs);
             // ImGui::MenuItem("Save context to file", "Ctrl+Shift+M", &saveContextToFile);

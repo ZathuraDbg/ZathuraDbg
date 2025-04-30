@@ -49,6 +49,7 @@ extern bool toggleBreakpoint;
 extern bool runSelectedCode;
 extern bool goToDefinition;
 extern bool openFile;
+extern bool createFile;
 extern bool saveFile;
 extern bool saveFileAs;
 extern bool debugRestart;
