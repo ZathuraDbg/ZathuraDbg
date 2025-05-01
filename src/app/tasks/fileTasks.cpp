@@ -54,9 +54,13 @@ void fileSaveTask(const std::string &fileName){
         if (!writeEditorToFile(selectedFile)) {
             LOG_ERROR("Save operation failed on the file: " << fileName << " !");
         }
+
         selectedFile = fileName;
+        fileOpenTask(selectedFile);
     }
 }
+
+
 bool fileRunTask(const bool& execCode){
     if (!selectedFile.empty()){
         LOG_DEBUG("Running code from: " << selectedFile);
@@ -93,5 +97,53 @@ bool fileRunTask(const bool& execCode){
         return false;
     }
 
+    return true;
+}
+
+bool serializeState()
+{
+    if (!icicle)
+    {
+        return false;
+    }
+
+    const char* fileName = tinyfd_saveFileDialog("Select a file to serialize into", NULL, NULL, NULL, NULL);
+    auto ret = icicle_serialize_vm_state(icicle, fileName, true, 3);
+    if (ret == 0)
+    {
+        LOG_INFO("Successfully serialized into file " << fileName);
+    }
+    else
+    {
+        LOG_ERROR("Failed to serialize into file " << fileName);
+        return false;
+    }
+
+    return true;
+}
+
+bool deserializeState()
+{
+    if (!icicle)
+        return false;
+
+    const char* fileName;
+    fileName = tinyfd_openFileDialog("Select file to deserialize", NULL, NULL, NULL, NULL, NULL);
+    if (fileName == NULL)
+    {
+        LOG_INFO("No file selected...");
+        return false;
+    }
+    else
+    {
+        LOG_INFO("Deserializing state...");
+        int f = icicle_deserialize_vm_state(icicle, fileName, true, 3);
+        if (f != 0)
+        {
+            LOG_ERROR("Failed to deserialize into file " << fileName);
+            return false;
+        }
+    }
+    safeHighlightLine(addressToLineNo(icicle_get_pc(icicle)));
     return true;
 }

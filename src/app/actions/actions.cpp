@@ -489,18 +489,16 @@ void runActions(){
         fileSaveAsTask(saveAsFileDialog());
         saveFileAs = false;
     }
-    if (fileLoadContext){
-        LOG_INFO("Not implemented!");
-        // executeInBackground([](){
-        //     fileLoadUCContextFromJson(openFileDialog());
-        //     const uint64_t ip = icicle_get_pc(icicle);
-        //     const std::string str = addressLineNoMap[std::to_string(ip)];
-        //     if (!str.empty()) {
-        //         const int lineNumber = std::atoi(str.c_str());
-        //         safeHighlightLine(lineNumber - 1);
-        //     }
-        // });
-        fileLoadContext = false;
+
+    if (fileSerializeState){
+        serializeState();
+        fileSerializeState = false;
+    }
+
+    if (fileDeserializeState)
+    {
+        deserializeState();
+        fileDeserializeState = false;
     }
 
     if (toggleBreakpoint){

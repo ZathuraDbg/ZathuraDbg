@@ -39,7 +39,7 @@ void manageShortcuts(){
        saveContextToFile = true;
     }
     if (isCtrlShiftShortcut && (ImGui::IsKeyPressed(ImGuiKey_O))){
-        fileLoadContext = true;
+        fileSerializeState = true;
     }
     if (isCtrlOnly && IsKeyPressed(ImGuiKey_GraveAccent)){
         use32BitLanes = !use32BitLanes;

@@ -41,7 +41,8 @@ enum arch{
 };
 
 extern bool saveContextToFile;
-extern bool fileLoadContext;
+extern bool fileSerializeState;
+extern bool fileDeserializeState;
 extern bool changeEmulationSettingsOpt;
 extern bool debugStepBack;
 extern bool ttdEnabled;
