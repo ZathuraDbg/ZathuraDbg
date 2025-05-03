@@ -183,7 +183,7 @@ void appMenuBar()
             ImGui::MenuItem("Save", "Ctrl+S", &saveFile);
             ImGui::MenuItem("Save As", "Ctrl+Shift+S", &saveFileAs);
             ImGui::MenuItem("Save State To File", "Ctrl+Shift+M", &fileSerializeState);
-            ImGui::MenuItem("Load context from file", "Ctrl+Shift+O", &fileDeserializeState);
+            ImGui::MenuItem("Load State From File", "Ctrl+Shift+O", &fileDeserializeState);
             ImGui::Separator();
             ImGui::MenuItem("Exit", "Alt+F4", &quit);
             ImGui::Separator();

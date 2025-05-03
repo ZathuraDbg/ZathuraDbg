@@ -104,46 +104,56 @@ bool serializeState()
 {
     if (!icicle)
     {
+        LOG_INFO("No active state to serialize.");
         return false;
     }
 
     const char* fileName = tinyfd_saveFileDialog("Select a file to serialize into", NULL, NULL, NULL, NULL);
-    auto ret = icicle_serialize_vm_state(icicle, fileName, true, 3);
-    if (ret == 0)
+    if (!fileName)
     {
-        LOG_INFO("Successfully serialized into file " << fileName);
-    }
-    else
-    {
-        LOG_ERROR("Failed to serialize into file " << fileName);
+        LOG_ERROR("No file selected...");
         return false;
     }
 
+    const auto ret = icicle_serialize_vm_state(icicle, fileName, true, 3);
+    if (ret != 0){
+       LOG_ERROR("Failed to serialize into file " << fileName);
+        return false;
+    }
+
+    LOG_INFO("Successfully serialized into file " << fileName);
     return true;
 }
 
 bool deserializeState()
 {
-    if (!icicle)
-        return false;
+    LOG_INFO("Deserializing into file " << selectedFile);
 
-    const char* fileName;
-    fileName = tinyfd_openFileDialog("Select file to deserialize", NULL, NULL, NULL, NULL, NULL);
+    if (!icicle && !debugModeEnabled)
+    {
+        LOG_INFO("Enabling the debug mode...");
+        startDebugging();
+    }
+
+    const char* fileName = tinyfd_openFileDialog("Select file to deserialize", NULL, NULL, NULL, NULL, NULL);
     if (fileName == NULL)
     {
-        LOG_INFO("No file selected...");
+        LOG_INFO("No file selected. Stopping debugging...");
+        debugStop = true;
         return false;
     }
     else
     {
         LOG_INFO("Deserializing state...");
-        int f = icicle_deserialize_vm_state(icicle, fileName, true, 3);
+        const int f = icicle_deserialize_vm_state(icicle, fileName, true, 3);
         if (f != 0)
         {
             LOG_ERROR("Failed to deserialize into file " << fileName);
             return false;
         }
     }
+
+    LOG_INFO("Successfully deserialized from file " << fileName);
     safeHighlightLine(addressToLineNo(icicle_get_pc(icicle)));
     return true;
 }
