@@ -1,7 +1,7 @@
 #include "arch.hpp"
 
 #include <windows.hpp>
-codeInformationT codeInformation{.archIC=IC_ARCH_X86_64, .archKS = KS_ARCH_X86,  .archCS = CS_ARCH_X86, .mode=UC_MODE_64, .modeKS = KS_MODE_64,.modeCS = CS_MODE_64, .syntax = KS_OPT_SYNTAX_NASM, .archStr = "x86_64"};
+codeInformationT codeInformation{.archIC=IC_ARCH_X86_64, .archKS = KS_ARCH_X86,  .archCS = CS_ARCH_X86, .mode=UC_MODE_64, .modeKS = KS_MODE_64,.modeCS = CS_MODE_64, .syntax = KS_OPT_SYNTAX_INTEL, .archStr = "x86_64"};
 // codeInformationT codeInformation{.archIC=IC_ARCH_ARM, .archKS = KS_ARCH_ARM,  .archCS = CS_ARCH_ARM, .modeKS = KS_MODE_LITTLE_ENDIAN,.modeCS = CS_MODE_LITTLE_ENDIAN, .syntax = KS_OPT_SYNTAX_NASM, .archStr = "aarch64"};
 std::unordered_map<std::string, size_t> regInfoMap = {};
 std::string (*getArchIPStr)() = nullptr;

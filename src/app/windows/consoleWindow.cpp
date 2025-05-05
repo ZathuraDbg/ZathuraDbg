@@ -14,8 +14,8 @@ std::string convToDec(const std::string& str){
 
         if (foundHexStr){
             char* endptr = nullptr;
-            auto convVal = strtoul(str.substr(i).c_str(), &endptr, 16);
-            size_t diff = endptr - str.substr(i).c_str() - 1;
+            const auto convVal = strtoul(str.substr(i).c_str(), &endptr, 16);
+            const size_t diff = endptr - str.substr(i).c_str() - 1;
             outStr += std::to_string(convVal);
             i += diff;
             foundHexStr = false;
@@ -28,7 +28,7 @@ std::string convToDec(const std::string& str){
 }
 
 uint64_t doubleToUint64(double d) {
-    double rounded = std::round(d);
+    const double rounded = std::round(d);
 
     if (rounded < 0 || rounded > static_cast<double>(std::numeric_limits<uint64_t>::max())) {
         return 0;
@@ -43,7 +43,7 @@ std::string parseVals(std::string val){
     std::vector<std::string> regNames = {};
     bool foundReg = false;
     bool foundValidReg = false;
-    auto len = val.length();
+    const auto len = val.length();
 
     size_t i = 0;
     val = toUpperCase(val);

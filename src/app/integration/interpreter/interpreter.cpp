@@ -561,6 +561,26 @@ int stepOverBpLine = 0;
 std::string lastLabel{};
 uint64_t lastLineNo = 0;
 
+int handleSyscalls(void* data, uint64_t syscall_nr, const SyscallArgs* args)
+{
+    if (args != nullptr)
+    {
+        if (syscall_nr == 1)
+        {
+            LOG_DEBUG("Write syscall requested!");
+            size_t r;
+            auto s = icicle_mem_read((Icicle*)data, args->arg1, args->arg2, &r);
+            s[args->arg2] = '\0';
+            std::string j((const char*)s);
+            output.emplace_back("stdout >> " + j);
+        }
+        else if (syscall_nr == 60)
+        {
+            LOG_DEBUG("Exit syscall requested!");
+        }
+    }
+    return 0;
+}
 
 void instructionHook(void* userData, const uint64_t address)
 {
@@ -635,6 +655,7 @@ bool preExecutionSetup(const std::string& codeIn)
 
     uint32_t instructionHookID = icicle_add_execution_hook(icicle, instructionHook, nullptr);
     uint32_t stackWriteHookID = icicle_add_mem_write_hook(icicle, stackWriteHook, nullptr, STACK_ADDRESS, STACK_ADDRESS + STACK_SIZE);
+    icicle_add_syscall_hook(icicle, handleSyscalls, icicle);
 
     // Signal that debugging setup is complete and ready for execution
     {

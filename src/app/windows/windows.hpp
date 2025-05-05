@@ -107,4 +107,5 @@ extern std::vector<newMemEditWindowsInfo> newMemEditWindows;
 extern unsigned char* stackEditorData;
 extern unsigned char* stackEditorTemp;
 extern void cleanupStackEditor();
+extern std::vector<std::string> output;
 #endif
