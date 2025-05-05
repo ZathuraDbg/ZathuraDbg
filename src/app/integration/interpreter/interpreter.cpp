@@ -571,7 +571,7 @@ int handleSyscalls(void* data, uint64_t syscall_nr, const SyscallArgs* args)
             size_t r;
             auto s = icicle_mem_read((Icicle*)data, args->arg1, args->arg2, &r);
             s[args->arg2] = '\0';
-            std::string j((const char*)s);
+            std::string j(reinterpret_cast<const char*>(s));
             output.emplace_back("stdout >> " + j);
         }
         else if (syscall_nr == 60)
