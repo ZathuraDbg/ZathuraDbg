@@ -633,7 +633,7 @@ bool preExecutionSetup(const std::string& codeIn)
         }
     }
 
-    // uint32_t instructionHookID = icicle_add_execution_hook(icicle, instructionHook, nullptr);
+    uint32_t instructionHookID = icicle_add_execution_hook(icicle, instructionHook, nullptr);
     uint32_t stackWriteHookID = icicle_add_mem_write_hook(icicle, stackWriteHook, nullptr, STACK_ADDRESS, STACK_ADDRESS + STACK_SIZE);
 
     // Signal that debugging setup is complete and ready for execution
