@@ -154,6 +154,6 @@ bool deserializeState()
     }
 
     LOG_INFO("Successfully deserialized from file " << fileName);
-    safeHighlightLine(addressToLineNo(icicle_get_pc(icicle)));
+    safeHighlightLine(addressLineNoMap[icicle_get_pc(icicle)]);
     return true;
 }

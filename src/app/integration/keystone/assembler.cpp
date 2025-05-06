@@ -9,12 +9,12 @@ std::stringstream assembly;
 std::vector<std::string> labels;
 uint64_t tempTotalIns = 0;
 
-std::map<std::string, std::string> addressLineNoMap{};
+std::unordered_map<uint64_t, uint64_t> addressLineNoMap{};
 std::map<std::string, int> labelLineNoMapInternal{};
-tsl::ordered_map<std::string, std::pair<uint64_t, uint64_t>> labelLineNoRange{};
+
 std::vector<uint16_t> instructionSizes{};
 std::vector<uint64_t> emptyLineNumbers{};
-bool valid = false; // temp solution
+
 
 std::pair<std::string, std::size_t> assemble(const std::string& assemblyString, const keystoneSettings& ksSettings) {
     LOG_INFO("Assembling code...");
@@ -133,97 +133,54 @@ void initInsSizeInfoMap(){
 
     // TODO: Scan for multiline comments and ignore them
     while (std::getline(assembly, instructionStr, '\n')) {
-        if (instructionStr.contains(":")){
-            instructionStr.erase(std::ranges::remove_if(instructionStr, ::isspace).begin(), instructionStr.end());
-            if (instructionStr.ends_with(":")){
-                if (instructionStr.contains(';')){
-                    if (instructionStr.find_first_of(';') > instructionStr.find_last_of(':')){
-                        if (labels.empty()){
-                            foundFirstLabel = true;
-                        }
-                        else if (foundFirstLabel){
-                            lastInstructionLineNo = std::atoi(std::prev(addressLineNoMap.end())->second.data());
-                            foundFirstLabel = false;
-                        }
-                        if (!labelLineNoRange.empty()) {
-                            labelLineNoRange[labelLineNoRange.back().first].second = strtol(std::prev(addressLineNoMap.end())->second.data(), nullptr, 10);
-                        }
 
-                        labelLineNoMapInternal.insert({instructionStr.substr(0, instructionStr.find_first_of(':')), lineNo});
-                        labelLineNoRange.insert({instructionStr.substr(0, instructionStr.find_first_of(':')), {lineNo, 0}});
-                        labels.push_back(instructionStr.substr(0, instructionStr.find_first_of(':')));
-                    }
-                }
-                else{
-                    if (labels.empty()){
-                        foundFirstLabel = true;
-                    }
-                    else if (foundFirstLabel) {
-                        lastInstructionLineNo = std::atoi(std::prev(addressLineNoMap.end())->second.data());
-                        foundFirstLabel = false;
-                    }
 
-                    if (!labelLineNoRange.empty()) {
-                        labelLineNoRange[labelLineNoRange.back().first].second = strtol(std::prev(addressLineNoMap.end())->second.data(), nullptr, 10);
-                    }
+        if (instructionStr.contains(';'))
+            instructionStr = instructionStr.substr(0, instructionStr.find_first_of(';')); // Clearing out the comments
+        
 
-                    labelLineNoMapInternal.insert({instructionStr.substr(0, instructionStr.find_first_of(':')), lineNo});
-                    labelLineNoRange.insert({instructionStr.substr(0, instructionStr.find_first_of(':')), {lineNo, 0}});
-                    labels.push_back(instructionStr.substr(0, instructionStr.find_first_of(':')));
-                    lineNo++;
-                    continue;
-                }
-            }
+        {
+            auto start = std::find_if_not(instructionStr.begin(), instructionStr.end(), ::isspace);
+            auto end = std::find_if_not(instructionStr.rbegin(), instructionStr.rend(), ::isspace).base();
+            std::size_t length = std::distance(start, end);
+            instructionStr = instructionStr.substr(std::distance(instructionStr.begin(), start), length); // Trimmed whitespaces from both left and right
+
         }
-        else if (instructionStr.empty()){
+
+        if (instructionStr.empty()){
             emptyLineNumbers.push_back(lineNo);
             lineNo++;
             continue;
         }
 
-        if (instructionStr.starts_with("\t")){
-            const auto idx = instructionStr.find_first_not_of('\t');
-            if (idx != std::string::npos){
-                instructionStr = instructionStr.substr(idx);
+
+         if (instructionStr.contains(":")){
+            instructionStr.erase(std::ranges::remove_if(instructionStr, ::isspace).begin(), instructionStr.end());
+
+            if (instructionStr.ends_with(":")){
+                std::string labelStr = instructionStr.substr(0, instructionStr.find_first_of(':'));
+                labelLineNoMapInternal.insert({labelStr, lineNo});
+                labels.push_back(labelStr);
+                lineNo++;
+                continue;
+
             }
         }
+
 
         line = instructionStr;
 
-        if (instructionStr.starts_with(" ")){
-            const auto idx = instructionStr.find_first_not_of(' ');
-            if (idx != std::string::npos){
-                instructionStr = instructionStr.substr(idx);
-                line = instructionStr;
-            }
-        }
-
-        if (const auto idx = instructionStr.find_first_of(' '); idx != std::string::npos){
-            instructionStr = instructionStr.substr(0, idx);
-        }
-
-        if (instructionStr.contains(";")){
-            lineNo++;
-            continue;
-        }
 
         instructionStr = toUpperCase(instructionStr);
 
-        if (codeInformation.archIC == IC_ARCH_AARCH64)
-        {
-            if (instructionStr.contains('.'))
-            {
-                valid = true;
-            }
-        }
 
-//       if it's valid instruction
-        if (isValidInstruction(ks, line.c_str()) || valid){
-            addressLineNoMap.insert({std::to_string(currentAddr), std::to_string(lineNo)});
+        if (isValidInstruction(ks, line.c_str()) || (codeInformation.archIC == IC_ARCH_AARCH64 && instructionStr.contains('.'))){
+             if (labels.size() <= 1)
+                lastInstructionLineNo = lineNo;
+
+            addressLineNoMap.insert({currentAddr, lineNo});
             if (codeInformation.archIC == IC_ARCH_AARCH64)
-            {
                 currentAddr += 4; // every instruction in aarch64 is 4 bytes long
-            }
             else
             {
                 if (count < instructionSizes.size()) {
@@ -237,21 +194,14 @@ void initInsSizeInfoMap(){
                 }
             }
 
-
-            if (valid)
-                valid = false;
-
             count++;
         }
-        else {
+        else
             emptyLineNumbers.push_back(lineNo);
-        }
+        
         lineNo++;
     }
 
-    if (!labelLineNoRange.empty() && (!addressLineNoMap.empty())) {
-        labelLineNoRange[labelLineNoRange.back().first].second = strtol(std::prev(addressLineNoMap.end())->second.data(), nullptr, 10);
-    }
 
     totalInstructions = count;
     LOG_INFO("Updated to instruction size information map.");
@@ -264,30 +214,20 @@ uint64_t countValidInstructions(std::stringstream& asmStream){
     uint16_t count = 0;
 
     while (std::getline(asmStream, instructionStr, '\n')) {
-        if (instructionStr.starts_with("\t")){
-            const auto idx = instructionStr.find_first_not_of('\t');
-            if (idx != std::string::npos){
-                instructionStr = instructionStr.substr(idx);
-            }
-        }
-        if (instructionStr.starts_with(" ")){
-            const auto idx = instructionStr.find_first_not_of(' ');
-            if (idx != std::string::npos){
-                instructionStr = instructionStr.substr(idx);
-            }
+
+        if (instructionStr.contains(';'))
+            instructionStr = instructionStr.substr(0, instructionStr.find_first_of(';')); // Clearing out the comments
+        
+        {
+            auto start = std::find_if_not(instructionStr.begin(), instructionStr.end(), ::isspace);
+            auto end = std::find_if_not(instructionStr.rbegin(), instructionStr.rend(), ::isspace).base();
+            std::size_t length = std::distance(start, end);
+            instructionStr = instructionStr.substr(std::distance(instructionStr.begin(), start), length); // Trimmed whitespaces from both left and right
+
         }
 
-        if (instructionStr.starts_with(" ") || instructionStr.starts_with("\t")){
-            instructionStr = instructionStr.substr(1);
-        }
-
-        if (instructionStr.empty()){
+        if (instructionStr.empty())
             continue;
-        }
-
-        if (instructionStr.contains(";")){
-            continue;
-        }
 
         instructionStr = toUpperCase(instructionStr);
         const auto spaceIt = instructionStr.find_first_of(' ');
