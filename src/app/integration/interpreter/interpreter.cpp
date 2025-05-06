@@ -65,12 +65,9 @@ int getCurrentLine(){
         return -1;
     }
 
-    const auto lineNumber= addressLineNoMap[std::to_string(instructionPointer)];
-    if (!lineNumber.empty()){
-        return std::atoi(lineNumber.c_str());
-    }
+    const auto lineNumber = addressLineNoMap[instructionPointer];
 
-    return -1;
+    return (lineNumber ? lineNumber : -1);
 }
 
 bool removeBreakpoint(const uint64_t& address) {
@@ -584,13 +581,11 @@ int handleSyscalls(void* data, uint64_t syscall_nr, const SyscallArgs* args)
 
 void instructionHook(void* userData, const uint64_t address)
 {
-    const std::string lineNoStr = addressLineNoMap[std::to_string(address)];
-    if (!lineNoStr.empty()) {
-        const int lineNo = std::atoi(lineNoStr.c_str());
-        if (lineNo > 0) {
-            safeHighlightLine(lineNo - 1);
-        }
-    }
+    
+    const uint64_t lineNo = addressLineNoMap[address];
+    if (lineNo > 0)
+        safeHighlightLine(lineNo - 1);
+    
 
     if (!snapshot)
     {
@@ -805,11 +800,12 @@ bool resetState(bool reInit){
     emptyLineNumbers.clear();
     addressLineNoMap.clear();
     labelLineNoMapInternal.clear();
-    labelLineNoRange.clear();
+
 
     labels = {};
     emptyLineNumbers = {};
-    labelLineNoRange = {};
+
+    
     labelLineNoMapInternal = {};
 
     if (reInit)
@@ -838,12 +834,15 @@ bool resetState(bool reInit){
 
 uint64_t lineNoToAddress(const uint64_t& lineNo)
 {
+
+    if (lineNo == 0)
+        return ENTRY_POINT_ADDRESS;
+
     for (auto& pair : addressLineNoMap)
     {
-        if (std::atoi(pair.second.c_str()) == lineNo)
-        {
-            return std::stoull(pair.first);
-        }
+        if (pair.second == lineNo)
+            return pair.first;
+        
     }
 
     return 0;
@@ -890,22 +889,20 @@ bool checkStatusUpdateState(const size_t& instructionCount, RunStatus status, co
     const uintptr_t ip = icicle_get_pc(icicle);
     LOG_INFO("Execution completed! with status code: " << status << " address: " << std::hex << ip);
 
-    const std::string lineNoStr = addressLineNoMap[std::to_string(ip)];
-    if (!lineNoStr.empty()) {
-        const int lineNo = std::atoi(lineNoStr.c_str());
-        if (lineNo > 0) {
-            safeHighlightLine(lineNo - 1);
-        }
-    }
+
+    const uint64_t lineNo = addressLineNoMap[ip];
+    if (lineNo > 0)
+        safeHighlightLine(lineNo - 1);
+    
 
     if (status == RunStatus::Breakpoint)
     {
         LOG_DEBUG("Breakpoint reached at address " << icicle_get_pc(icicle));
 
-        const auto lineNo = addressLineNoMap[std::to_string(ip)];
-        if (!lineNo.empty())
+        const uint64_t lineNo = addressLineNoMap[ip];
+        if (lineNo)
         {
-            if (isSilentBreakpoint(strtoll(lineNo.c_str(), nullptr, 10)))
+            if (isSilentBreakpoint(lineNo))
             {
                 auto s = icicle_remove_breakpoint(icicle, ip);
                 if (!skipEndStep)
@@ -969,7 +966,7 @@ bool executeCode(Icicle* icicle, const size_t& instructionCount)
         return false;
     }
 
-    if (executionComplete == true)
+    if (executionComplete)
     {
         LOG_ALERT("Attempt to execute code after the code is completely executed. Ignoring.");
         return true;
@@ -1073,7 +1070,7 @@ bool stepCode(const size_t instructionCount){
 
     // Update state *after* execution
     ip = icicle_get_pc(icicle);
-    editor->HighlightDebugCurrentLine(std::atoll(addressLineNoMap[std::to_string(icicle_get_pc(icicle))].c_str()));
+    editor->HighlightDebugCurrentLine(addressLineNoMap[icicle_get_pc(icicle)]);
     isCodeRunning = false; // Mark as not running *after* execution
 
     if (executionComplete){
@@ -1101,9 +1098,8 @@ bool stepCode(const size_t instructionCount){
             expectedIP = ip;
         }
 
-        const std::string str =  addressLineNoMap[std::to_string(ip)];
-        if (!str.empty() && (!executionComplete)){
-            lineNo = std::atoi(str.c_str());
+        const uint64_t lineNo =  addressLineNoMap[ip];
+        if (lineNo && !executionComplete){
             LOG_DEBUG("Highlight from stepCode : line: " << lineNo);
             editor->HighlightDebugCurrentLine(lineNo - 1);
         }
@@ -1126,10 +1122,6 @@ bool stepCode(const size_t instructionCount){
     return true;
 }
 
-uint64_t addressToLineNo(const uint64_t& address)
-{
-    return strtoll(addressLineNoMap[std::to_string(address)].c_str(), nullptr, 10);
-}
 
 bool addBreakpoint(const uint64_t& address, const bool& silent)
 {
@@ -1171,12 +1163,12 @@ bool runCode(const std::string& codeIn, const bool& execCode)
         return false;
     }
 
-    auto line = addressLineNoMap[std::to_string(ENTRY_POINT_ADDRESS)];
-    if (line.empty()){
-        line = "1";
-    }
 
-    auto val = std::atoi(line.data());
+    auto val = addressLineNoMap[ENTRY_POINT_ADDRESS];
+    if (!val)
+        val = 1;
+    
+
     editor->HighlightDebugCurrentLine(val - 1);
 
     if (execCode || (stepClickedOnce)){
@@ -1208,13 +1200,13 @@ bool runCode(const std::string& codeIn, const bool& execCode)
             snapshot = nullptr;
         }
         snapshot = saveICSnapshot(icicle); // Assign the saved snapshot
+        
 
-        line = addressLineNoMap[std::to_string(ENTRY_POINT_ADDRESS)];
-        if (line.empty()){
-            line = "1";
-        }
+        auto val = addressLineNoMap[ENTRY_POINT_ADDRESS];
+        if (!val)
+            val = 1;
+        
 
-        val = std::atoi(line.data());
         editor->HighlightDebugCurrentLine(val - 1);
         LOG_DEBUG("Highlight from runCode");
         stepClickedOnce = true;

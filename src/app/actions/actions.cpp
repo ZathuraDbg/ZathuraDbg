@@ -22,7 +22,7 @@ void stepBack()
 
     icicle_vm_restore(icicle, stateToRestore);
 
-    safeHighlightLine(addressToLineNo(icicle_get_pc(icicle)) - 1);
+    safeHighlightLine(addressLineNoMap[icicle_get_pc(icicle)] - 1);
     updateRegs(false);
     icicle_vm_snapshot_free(stateToRestore);
 
@@ -110,11 +110,11 @@ void stepOverAction(){
         }
         LOG_DEBUG("Debug state confirmed ready, proceeding with step over.");
 
-        const std::string lineNoStr = addressLineNoMap[std::to_string(icicle_get_pc(icicle))];
+        // It may cause issues if the actual line is 0 and not undefined. (Need to start from 1)
+        const uint64_t lineNo = addressLineNoMap[icicle_get_pc(icicle)];
 
-        if (!lineNoStr.empty()){
-            const int lineNo = std::atoi(lineNoStr.c_str());
-
+        if (lineNo){
+            
             breakpointMutex.lock();
             auto bpLineNoAddr = lineNoToAddress(lineNo + 1);
             icicle_add_breakpoint(icicle, bpLineNoAddr);
@@ -126,11 +126,9 @@ void stepOverAction(){
 
             // Update UI with new position
             if (!executionComplete) {
-                const std::string newLineStr = addressLineNoMap[std::to_string(icicle_get_pc(icicle))];
-                if (!newLineStr.empty()) {
-                    const int newLineNo = std::atoi(newLineStr.c_str());
+                const uint64_t newLineNo = addressLineNoMap[icicle_get_pc(icicle)];
+                if (newLineNo)
                     safeHighlightLine(newLineNo - 1);
-                }
             }
 
             // Attempt to remove the temporary breakpoint
@@ -171,11 +169,9 @@ void stepInAction(){
         
         // Update UI after step is complete
         if (!executionComplete) {
-            const std::string lineNoStr = addressLineNoMap[std::to_string(icicle_get_pc(icicle))];
-            if (!lineNoStr.empty()) {
-                int lineNo = std::atoi(lineNoStr.c_str());
-                safeHighlightLine(lineNo - 1);
-            }
+                const uint64_t newLineNo = addressLineNoMap[icicle_get_pc(icicle)];
+                if (newLineNo)
+                    safeHighlightLine(newLineNo - 1);
         }
         
         stepIn = false;
@@ -191,8 +187,8 @@ void debugPauseAction(){
     
     executeInBackground([]{
         auto instructionPointer = getRegisterValue(archIPStr);
-        const std::string currentLineNo = addressLineNoMap[std::to_string(instructionPointer.eightByteVal)];
-        const auto lineNumber = std::atoi(currentLineNo.c_str());
+        const uint64_t lineNumber = addressLineNoMap[instructionPointer.eightByteVal];
+
         safeHighlightLine(lineNumber - 1);
         debugPaused = true;
         // Free existing snapshot before creating a new one
@@ -320,14 +316,12 @@ void debugContinueAction(const bool skipBP) {
         
         // Update UI after execution
         if (!executionComplete) {
-            const std::string lineNoStr = addressLineNoMap[std::to_string(icicle_get_pc(icicle))];
-            if (!lineNoStr.empty()) {
-                const int lineNo = std::atoi(lineNoStr.c_str());
-                safeHighlightLine(lineNo - 1);
-            }
-        } else {
-            safeHighlightLine(lastInstructionLineNo - 1);
+                const uint64_t newLineNo = addressLineNoMap[icicle_get_pc(icicle)];
+                if (newLineNo)
+                    safeHighlightLine(newLineNo - 1);
         }
+        else
+            safeHighlightLine(lastInstructionLineNo - 1);
 
         skipBreakpoints = false;
         runningAsContinue = false;
@@ -402,11 +396,9 @@ void runActions(){
             skipEndStep = false;
 
             if (!executionComplete) {
-                const std::string lineNoStr = addressLineNoMap[std::to_string(icicle_get_pc(icicle))];
-                if (!lineNoStr.empty()) {
-                    const int lineNo = std::atoi(lineNoStr.c_str());
-                    safeHighlightLine(lineNo - 1);
-                }
+                const uint64_t newLineNo = addressLineNoMap[icicle_get_pc(icicle)];
+                if (newLineNo)
+                    safeHighlightLine(newLineNo - 1);
             }
             
             // Remove temporary breakpoint

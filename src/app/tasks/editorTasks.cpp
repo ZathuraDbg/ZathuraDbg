@@ -92,12 +92,15 @@ std::pair<int, int> parseStrIntoCoordinates(std::string &popupInput) {
 
     if (popupInput.contains('$')) {
         auto s = parseVals(popupInput);
-        if (addressLineNoMap.contains((s))){
-            popupInput = addressLineNoMap[(parseVals(popupInput))];
-        }
-        else{
-            popupInput = '0';
-        }
+
+
+        uint64_t val = atoi(s.c_str());
+        
+        popupInput = '0';
+
+        if (addressLineNoMap[val])
+            popupInput = std::to_string(addressLineNoMap[val]);
+        
     }
 
     int lineNo = -1;

@@ -19,6 +19,8 @@ src/cmake-build-debug
 src/cmake-build-release
 src/.Zathura.zlog
 src/Zathura
+src/CMakeFiles/*
+src/*.cmake
 #ignore pushing the binary ^
 
 *.exe

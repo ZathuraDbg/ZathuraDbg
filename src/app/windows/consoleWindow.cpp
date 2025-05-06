@@ -146,10 +146,9 @@ void splitStringExpressions(std::string stringToSplit,std::vector<std::string>& 
 
 std::string getAddressFromLineNo(int lineNo){
     for (auto &[fst, snd]: addressLineNoMap){
-        if (snd == std::to_string(lineNo)){
-            const auto s (std::strtoul(fst.c_str(), nullptr, 10));
+        if (snd == lineNo){
             std::stringstream result;
-            result << "0x" << std::setfill('0') << std::hex << s;
+            result << "0x" << std::setfill('0') << std::hex << fst;
             return " at " + result.str();
         }
     }
@@ -160,7 +159,9 @@ int parseBreakpointArgs(std::vector<std::string>& arguments, const std::string& 
     const std::regex labelPattern("^[a-zA-Z_][a-zA-Z0-9_]*$");
     int lineNo = 0;
     if (arguments[0].starts_with("0x") || arguments[0].starts_with('$')){
-        lineNo = std::atoi(addressLineNoMap[parseVals(argument)].c_str());
+
+        lineNo = addressLineNoMap[atoi(parseVals(argument).c_str())];
+
         outStr += "address " + std::to_string(lineNo);
     }
     else if (std::regex_match(arguments[0], labelPattern)){
