@@ -1,6 +1,7 @@
 #ifndef ZATHURA_ARCH_HPP
 #define ZATHURA_ARCH_HPP
 #include <unicorn/unicorn.h>
+#include <set>
 #include <string>
 #include "x86.hpp"
 #include "arm.hpp"
@@ -61,7 +62,7 @@ struct codeInformationT{
 };
 
 extern std::unordered_set<std::string> icArchStr;
-extern std::unordered_set<std::string> defaultShownRegs;
+extern std::vector<std::string> defaultShownRegs;
 extern codeInformationT codeInformation;
 extern bool initArch();
 extern std::string (*getArchIPStr)();

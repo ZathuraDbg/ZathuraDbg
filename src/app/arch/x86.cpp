@@ -3,7 +3,7 @@
 #include "arch.hpp"
 #include "../../utils/stringHelper.hpp"
 
-std::unordered_set<std::string> x86DefaultShownRegs = {"RIP", "RSP", "RBP", "RAX", "RBX", "RCX", "RDX", "RSI", "RDI", "R8", "R9", "R10", "R11", "R12", "R13", "R14", "R15",
+std::vector<std::string> x86DefaultShownRegs = {"RIP", "RSP", "RBP", "RAX", "RBX", "RCX", "RDX", "RSI", "RDI", "R8", "R9", "R10", "R11", "R12", "R13", "R14", "R15",
     "CS", "DS", "ES", "FS", "GS", "SS"};
 
 // std::unordered_set<std::string> x86DefaultShownRegs = {"RIP"};

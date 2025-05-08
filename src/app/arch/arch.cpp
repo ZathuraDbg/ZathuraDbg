@@ -11,7 +11,7 @@ const char* archSPStr{};
 std::pair<std::string, std::string> (*getArchSBPStr)() = nullptr;
 bool (*isRegisterValid)(const std::string&) = nullptr;
 void (*modeUpdateCallback)(int arch) = nullptr;
-std::unordered_set<std::string> defaultShownRegs{};
+std::vector<std::string> defaultShownRegs{};
 std::unordered_set<std::string> archInstructions;
 
 std::unordered_set<std::string> icArchStr = {
