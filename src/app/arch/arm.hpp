@@ -4,7 +4,7 @@
 #include <unordered_map>
 #include <vector>
 #include <utility>
-
+#include <unordered_set>
 #include "arch.hpp"
 #include "icicle.h"
 
@@ -12,8 +12,8 @@
 extern std::unordered_map<std::string, size_t> armRegInfoMap;
 extern std::unordered_map<std::string, size_t> aarch64RegInfoMap;
 // Default registers to show in the UI
-extern std::vector<std::string> armDefaultShownRegs;
-extern std::vector<std::string> aarch64DefaultShownRegs;
+extern std::unordered_set<std::string> armDefaultShownRegs;
+extern std::unordered_set<std::string> aarch64DefaultShownRegs;
 
 // Helper functions
 extern std::string armIPStr(int mode);

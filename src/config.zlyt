@@ -4,37 +4,37 @@ Size=1920,1024
 Collapsed=0
 
 [Window][Debug##Default]
-Pos=-51,354
+Pos=-51,339
 Size=891,224
 Collapsed=0
 
 [Window][Code]
 Pos=0,22
-Size=535,1497
+Size=833,1497
 Collapsed=0
 DockId=0x00000001,0
 
 [Window][Register Values]
-Pos=639,22
-Size=611,861
+Pos=857,22
+Size=393,981
 Collapsed=0
 DockId=0x00000007,0
 
 [Window][Console]
-Pos=537,22
-Size=100,962
+Pos=835,22
+Size=20,962
 Collapsed=0
 DockId=0x00000008,0
 
 [Window][Memory Editor]
-Pos=537,986
-Size=100,533
+Pos=835,986
+Size=20,533
 Collapsed=0
 DockId=0x00000004,0
 
 [Window][Stack]
-Pos=639,885
-Size=611,634
+Pos=857,1005
+Size=393,514
 Collapsed=0
 DockId=0x00000005,0
 
@@ -169,13 +169,13 @@ Column 3  Weight=1.0000
 
 [Docking][Data]
 DockSpace       ID=0x08BD597D Window=0x1BBC0F80 Pos=0,22 Size=1250,1497 Split=X
-  DockNode      ID=0x00000001 Parent=0x08BD597D SizeRef=535,1181 Selected=0x440BB4FB
-  DockNode      ID=0x00000006 Parent=0x08BD597D SizeRef=1511,1181 Split=X Selected=0xEA83D666
-    DockNode    ID=0x00000003 Parent=0x00000006 SizeRef=1410,1258 Split=Y Selected=0xEA83D666
+  DockNode      ID=0x00000001 Parent=0x08BD597D SizeRef=833,1181 Selected=0x440BB4FB
+  DockNode      ID=0x00000006 Parent=0x08BD597D SizeRef=1725,1181 Split=X Selected=0xEA83D666
+    DockNode    ID=0x00000003 Parent=0x00000006 SizeRef=1261,1258 Split=Y Selected=0xEA83D666
       DockNode  ID=0x00000008 Parent=0x00000003 SizeRef=1063,723 CentralNode=1 Selected=0xEA83D666
       DockNode  ID=0x00000004 Parent=0x00000003 SizeRef=1063,533 Selected=0x9138AE3F
-    DockNode    ID=0x00000002 Parent=0x00000006 SizeRef=611,1258 Split=Y Selected=0x1BF93D82
-      DockNode  ID=0x00000007 Parent=0x00000002 SizeRef=446,723 Selected=0x1BF93D82
-      DockNode  ID=0x00000005 Parent=0x00000002 SizeRef=446,533 Selected=0x550D5646
+    DockNode    ID=0x00000002 Parent=0x00000006 SizeRef=462,1258 Split=Y Selected=0x1BF93D82
+      DockNode  ID=0x00000007 Parent=0x00000002 SizeRef=446,1034 Selected=0x1BF93D82
+      DockNode  ID=0x00000005 Parent=0x00000002 SizeRef=446,542 Selected=0x550D5646
 DockSpace       ID=0x7C6B3D9B Pos=0,22 Size=994,1181 CentralNode=1
 

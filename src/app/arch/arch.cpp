@@ -11,10 +11,10 @@ const char* archSPStr{};
 std::pair<std::string, std::string> (*getArchSBPStr)() = nullptr;
 bool (*isRegisterValid)(const std::string&) = nullptr;
 void (*modeUpdateCallback)(int arch) = nullptr;
-std::vector<std::string> defaultShownRegs{};
-std::vector<std::string> archInstructions;
+std::unordered_set<std::string> defaultShownRegs{};
+std::unordered_set<std::string> archInstructions;
 
-std::vector<std::string> icArchStr = {
+std::unordered_set<std::string> icArchStr = {
     "aarch64", "arm", "armeb", "armebv7r", "armv4", "armv4t", "armv5tej",
     "armv6m", "armv7s", "armv8r", "i386", "m68k", "mips", "mipsel",
     "mipsisa32r6", "mipsisa32r6el", "msp430", "powerpc", "powerpc64", "powerpc64le",

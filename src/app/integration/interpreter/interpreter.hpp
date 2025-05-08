@@ -29,6 +29,8 @@ struct registerValueT{
         bool is128bit = false;
         bool is256bit = false;
         bool is512bit = false;
+        bool isFloatReg = false;
+        bool isDoubleReg = false;
         union {
             double doubleArray[8];
             float floatArray[16]{};
@@ -104,6 +106,8 @@ extern bool isSilentBreakpoint(const uint64_t& lineNo);
 extern std::mutex debugReadyMutex;
 extern std::condition_variable debugReadyCv;
 extern bool isDebugReady;
+extern const std::unordered_set<std::string> vfpRegs;
+extern std::unordered_set<std::string> dRegs;
 extern bool skipEndStep;
 // extern void printBreakpoints();
 extern uint64_t addressToLineNo(const uint64_t& address);

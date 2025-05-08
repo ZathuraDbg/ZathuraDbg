@@ -45,6 +45,21 @@ std::mutex debugReadyMutex;
 std::condition_variable debugReadyCv;
 bool isDebugReady = false;
 
+const std::unordered_set<std::string> vfpRegs = {
+    "s0", "s1", "s2", "s3", "s4", "s5", "s6", "s7",
+    "s8", "s9", "s10", "s11", "s12", "s13", "s14", "s15",
+    "s16", "s17", "s18", "s19", "s20", "s21", "s22", "s23",
+    "s24", "s25", "s26", "s27", "s28", "s29", "s30", "s31"
+};
+
+
+std::unordered_set<std::string> dRegs = {
+    "d0",  "d1",  "d2",  "d3",  "d4",  "d5",  "d6",  "d7",
+    "d8",  "d9",  "d10", "d11", "d12", "d13", "d14", "d15",
+    "d16", "d17", "d18", "d19", "d20", "d21", "d22", "d23",
+    "d24", "d25", "d26", "d27", "d28", "d29", "d30", "d31"
+};
+
 VmSnapshot* saveICSnapshot(Icicle* icicle){
     if (icicle == nullptr){
         return nullptr;
@@ -160,196 +175,319 @@ double convert128BitToDouble(uint64_t low_bits, const uint64_t high_bits) {
     return result;
 }
 
-registerValueT getRegisterValue(const std::string& regName){
-    const auto size = regInfoMap[regName];
-    std::string lowerRegName = toLowerCase(regName);
-    
+registerValueT read256BitRegister(const std::string& regName)
+{
+    uint8_t arrSize = use32BitLanes ? 8 : 4;
+    registerValueT regValue{};
+    uint8_t ymmValue[32] = {0};
+    size_t outSize;
+
+    const int result = icicle_reg_read_bytes(icicle, regName.c_str(), ymmValue, sizeof(ymmValue), &outSize);
+    if (result != 0 || outSize != sizeof(ymmValue)) {
+        LOG_ERROR("Failed to read register " << regName << ", result=" << result << ", outSize=" << outSize);
+        return {.eightByteVal = 0};
+    }
+
+    if (!use32BitLanes){
+        double valueArray[arrSize] = {0};
+
+        // Convert bytes to doubles
+        for (int i = 0; i < 4; i++) {
+            uint64_t bits;
+            std::memcpy(&bits, &ymmValue[i * 8], 8);
+            // Properly interpret the bits as a double
+            double val;
+            std::memcpy(&val, &bits, sizeof(double));
+            valueArray[i] = val;
+        }
+
+        regValue = {.doubleVal = 0.0f};
+        regValue.info.is256bit = true;
+
+        for (int i = 0; i < 4; i++){
+            regValue.info.arrays.doubleArray[i] = valueArray[i];
+        }
+
+        for (double i : valueArray){
+            if (i != 0){
+                regValue.doubleVal = 1.0f;
+                break;
+            }
+        }
+    }
+    else{
+        float valueArray[arrSize];
+
+        // Convert bytes to floats (8 floats in a 256-bit register)
+        for (int i = 0; i < 8; i++) {
+            uint32_t bits;
+            std::memcpy(&bits, &ymmValue[i * 4], 4);
+            valueArray[i] = *reinterpret_cast<float*>(&bits);
+        }
+
+        regValue = {.doubleVal = (valueArray[0])};
+        regValue.info.is256bit = true;
+
+        for (int i = 0; i < 8; i++){
+            regValue.info.arrays.floatArray[i] = valueArray[i];
+        }
+
+        for (float i : regValue.info.arrays.floatArray){
+            if (i != 0){
+                regValue.doubleVal = regValue.floatVal = 1.0f;
+                break;
+            }
+        }
+    }
+
+    return regValue;
+}
+
+registerValueT read128BitRegisterValue(const std::string& regName)
+{
+    uint8_t regValArray[16] = {0};
+    size_t outSize;
+    const int result = icicle_reg_read_bytes(icicle, regName.c_str(), regValArray, sizeof(regValArray), &outSize);
+
+    if (result != 0 || outSize != sizeof(regValArray)) {
+        LOG_ERROR("Failed to read register " << regName << ", result=" << result << ", outSize=" << outSize);
+        return {.eightByteVal = 0};
+    }
+
+    uint64_t upperHalf, lowerHalf;
+    std::memcpy(&lowerHalf, regValArray, 8);
+    std::memcpy(&upperHalf, regValArray + 8, 8);
+
+    registerValueT regValue = {.doubleVal = 0.0f};
+    regValue.info.is128bit = true;
+
+    if (use32BitLanes){
+        regValue.info.arrays.floatArray[0] = convert64BitToTwoFloats(lowerHalf).first;
+        regValue.info.arrays.floatArray[1] = convert64BitToTwoFloats(lowerHalf).second;
+        regValue.info.arrays.floatArray[2] = convert64BitToTwoFloats(upperHalf).first;
+        regValue.info.arrays.floatArray[3] = convert64BitToTwoFloats(upperHalf).second;
+        for (int i = 4; i < 8; i++){
+            regValue.info.arrays.floatArray[i] = 0;
+        }
+
+        for (int i = 0; i < 4; i++){
+            if (regValue.info.arrays.floatArray[i] != 0){
+                regValue.doubleVal = regValue.floatVal = 1.0f;
+                break;
+            }
+        }
+    }
+    else {
+        double val1, val2;
+        std::memcpy(&val1, &lowerHalf, sizeof(double));
+        std::memcpy(&val2, &upperHalf, sizeof(double));
+
+        regValue.info.arrays.doubleArray[0] = val2; // Upper half
+        regValue.info.arrays.doubleArray[1] = val1; // Lower half
+        regValue.info.arrays.doubleArray[2] = 0;
+        regValue.info.arrays.doubleArray[3] = 0;
+
+        if (val1 != 0.0 || val2 != 0.0) {
+            regValue.doubleVal = 1.0;
+        }
+    }
+
+    return regValue;
+}
+
+registerValueT x86GetRegisterValue(const size_t size, const std::string& regName)
+{
     if (size <= 64) {
         uint64_t valTemp64;
-        icicle_reg_read(icicle, lowerRegName.c_str(), &valTemp64);
+        icicle_reg_read(icicle, regName.c_str(), &valTemp64);
         return {.eightByteVal = valTemp64};
     }
     if (size == 128){
-        uint8_t xmmValue[16] = {0};
-        size_t outSize;
-        int result = icicle_reg_read_bytes(icicle, lowerRegName.c_str(), xmmValue, sizeof(xmmValue), &outSize);
-        
-        if (result != 0 || outSize != sizeof(xmmValue)) {
-            LOG_ERROR("Failed to read register " << regName << ", result=" << result << ", outSize=" << outSize);
-            return {.eightByteVal = 0};
-        }
-
-        uint64_t upperHalf, lowerHalf;
-        std::memcpy(&lowerHalf, xmmValue, 8);
-        std::memcpy(&upperHalf, xmmValue + 8, 8);
-
-        registerValueT regValue = {.doubleVal = 0.0f};
-        regValue.info.is128bit = true;
-        
-        if (use32BitLanes){
-            regValue.info.arrays.floatArray[0] = convert64BitToTwoFloats(lowerHalf).first;
-            regValue.info.arrays.floatArray[1] = convert64BitToTwoFloats(lowerHalf).second;
-            regValue.info.arrays.floatArray[2] = convert64BitToTwoFloats(upperHalf).first;
-            regValue.info.arrays.floatArray[3] = convert64BitToTwoFloats(upperHalf).second;
-            for (int i = 4; i < 8; i++){
-                regValue.info.arrays.floatArray[i] = 0;
-            }
-
-            for (int i = 0; i < 4; i++){
-                if (regValue.info.arrays.floatArray[i] != 0){
-                    regValue.doubleVal = regValue.floatVal = 1.0f;
-                    break;
-                }
-            }
-        }
-        else {
-            double val1, val2;
-            std::memcpy(&val1, &lowerHalf, sizeof(double));
-            std::memcpy(&val2, &upperHalf, sizeof(double));
-            
-            regValue.info.arrays.doubleArray[0] = val2; // Upper half
-            regValue.info.arrays.doubleArray[1] = val1; // Lower half
-            regValue.info.arrays.doubleArray[2] = 0;
-            regValue.info.arrays.doubleArray[3] = 0;
-            
-            if (val1 != 0.0 || val2 != 0.0) {
-                regValue.doubleVal = 1.0;
-            }
-        }
-        return regValue;
+        return read128BitRegisterValue(regName);
     }
     else if (size == 256){
-        uint8_t arrSize = use32BitLanes ? 8 : 4;
-        registerValueT regValue{};
-        uint8_t ymmValue[32] = {0};
-        size_t outSize;
-        
-        int result = icicle_reg_read_bytes(icicle, lowerRegName.c_str(), ymmValue, sizeof(ymmValue), &outSize);
-        if (result != 0 || outSize != sizeof(ymmValue)) {
-            LOG_ERROR("Failed to read register " << regName << ", result=" << result << ", outSize=" << outSize);
-            return {.eightByteVal = 0};
+        return read256BitRegister(regName);
+    }
+    else if (size == 512) {
+        LOG_WARNING("The underlying emulation engine does not currently support 512-bit registers!");
+        // uint8_t arrSize = use32BitLanes ? 16 : 8;
+        // registerValueT regValue{};
+        // uint8_t zmmValue[64] = {0};
+        // size_t outSize;
+        //
+        // int result = icicle_reg_read_bytes(icicle, lowerRegName.c_str(), zmmValue, sizeof(zmmValue), &outSize);
+        // if (result != 0 || outSize != sizeof(zmmValue)) {
+        //     LOG_ERROR("Failed to read register " << regName << ", result=" << result << ", outSize=" << outSize);
+        //     return {.eightByteVal = 0};
+        // }
+        //
+        // if (!use32BitLanes){
+        //     double valueArray[arrSize]{};
+        //
+        //     // Convert bytes to doubles
+        //     for (int i = 0; i < 8; i++) {
+        //         uint64_t bits;
+        //         std::memcpy(&bits, &zmmValue[i * 8], 8);
+        //         // Properly interpret the bits as a double
+        //         double val;
+        //         std::memcpy(&val, &bits, sizeof(double));
+        //         valueArray[i] = val;
+        //     }
+        //
+        //     regValue = {.doubleVal = 0.0f};
+        //
+        //     for (int i = 0; i < 8; i++){
+        //         regValue.info.arrays.doubleArray[i] = valueArray[i];
+        //     }
+        //
+        //     for (double i : valueArray){
+        //         if (i != 0){
+        //             regValue.doubleVal = 1.0f;
+        //             break;
+        //         }
+        //     }
+        //     regValue.info.is512bit = true;
+        //     return regValue;
+        // }
+        // else{
+        //     float valueArray[arrSize]{};
+        //
+        //     // Convert bytes to floats (16 floats in a 512-bit register)
+        //     for (int i = 0; i < 16; i++) {
+        //         uint32_t bits;
+        //         std::memcpy(&bits, &zmmValue[i * 4], 4);
+        //         valueArray[i] = *reinterpret_cast<float*>(&bits);
+        //     }
+        //
+        //     regValue = {.doubleVal = (valueArray[0])};
+        //
+        //     for (int i = 0; i < 16; i++){
+        //         regValue.info.arrays.floatArray[i] = valueArray[i];
+        //     }
+        //
+        //     for (float i : regValue.info.arrays.floatArray){
+        //         if (i != 0){
+        //             regValue.doubleVal = regValue.floatVal = 1.0f;
+        //             break;
+        //         }
+        //     }
+        //
+        //     regValue.info.is512bit = true;
+        //     return regValue;
+        // }
+    }
+    return {.eightByteVal = 00};
+}
+
+registerValueT armGetRegisterValue(const size_t size, const std::string& regName)
+{
+    registerValueT regValue{
+        .eightByteVal = 0,
+        .floatVal = 0,
+        .doubleVal = 0,
+        .info = {
+            .is128bit = false,
+            .is256bit = false,
+            .is512bit = false,
+            .isFloatReg = false,
+            .isDoubleReg = false,
+            .arrays = {
+                .doubleArray = {}
+            }
         }
+    };
 
-        if (!use32BitLanes){
-            double valueArray[arrSize] = {0};
-            
-            // Convert bytes to doubles
-            for (int i = 0; i < 4; i++) {
-                uint64_t bits;
-                std::memcpy(&bits, &ymmValue[i * 8], 8);
-                // Properly interpret the bits as a double
-                double val;
-                std::memcpy(&val, &bits, sizeof(double));
-                valueArray[i] = val;
-            }
-            
-            regValue = {.doubleVal = 0.0f};
-            regValue.info.is256bit = true;
-
-            for (int i = 0; i < 4; i++){
-                regValue.info.arrays.doubleArray[i] = valueArray[i];
+    if (size == 32)
+    {
+        if (vfpRegs.contains(regName))
+        {
+            uint8_t vfpRegVal[4];
+            size_t outSize;
+            const int res = icicle_reg_read_bytes(icicle, regName.c_str(), vfpRegVal, 4, &outSize);
+            if (res != 0 || outSize != 4)
+            {
+                LOG_ERROR("Failed to read vfp register " << regName << "!");
+                return {.eightByteVal = 0};
             }
 
-            for (double i : valueArray){
-                if (i != 0){
-                    regValue.doubleVal = 1.0f;
-                    break;
-                }
-            }
+            regValue.info.isFloatReg = true;
+            std::memcpy(&regValue.floatVal, vfpRegVal, 4);
         }
-        else{
-            float valueArray[arrSize];
-            
-            // Convert bytes to floats (8 floats in a 256-bit register)
-            for (int i = 0; i < 8; i++) {
-                uint32_t bits;
-                std::memcpy(&bits, &ymmValue[i * 4], 4);
-                valueArray[i] = *reinterpret_cast<float*>(&bits);
-            }
-            
-            regValue = {.doubleVal = (valueArray[0])};
-            regValue.info.is256bit = true;
-
-            for (int i = 0; i < 8; i++){
-                regValue.info.arrays.floatArray[i] = valueArray[i];
+        else
+        {
+            uint64_t val;
+            const int res = icicle_reg_read(icicle, regName.c_str(), &val);
+            if (res != 0)
+            {
+                LOG_ERROR("Failed to read register " << regName << "!");
+                return {.eightByteVal = 0};
             }
 
-            for (float i : regValue.info.arrays.floatArray){
-                if (i != 0){
-                    regValue.doubleVal = regValue.floatVal = 1.0f;
-                    break;
-                }
-            }
+            regValue.eightByteVal = val;
         }
 
         return regValue;
     }
-    else if (size == 512) {
-        uint8_t arrSize = use32BitLanes ? 16 : 8;
-        registerValueT regValue{};
-        uint8_t zmmValue[64] = {0};
-        size_t outSize;
-        
-        int result = icicle_reg_read_bytes(icicle, lowerRegName.c_str(), zmmValue, sizeof(zmmValue), &outSize);
-        if (result != 0 || outSize != sizeof(zmmValue)) {
-            LOG_ERROR("Failed to read register " << regName << ", result=" << result << ", outSize=" << outSize);
-            return {.eightByteVal = 0};
+    else if (size == 64)
+    {
+        const std::unordered_set<std::string> dRegs = {
+            "d0",  "d1",  "d2",  "d3",  "d4",  "d5",  "d6",  "d7",
+            "d8",  "d9",  "d10", "d11", "d12", "d13", "d14", "d15",
+            "d16", "d17", "d18", "d19", "d20", "d21", "d22", "d23",
+            "d24", "d25", "d26", "d27", "d28", "d29", "d30", "d31"
+        };
+
+        if (dRegs.contains(regName))
+        {
+            uint8_t dRegVal[8];
+            size_t outSize;
+            const int res = icicle_reg_read_bytes(icicle, regName.c_str(), dRegVal, 8, &outSize);
+            if (res != 0 || outSize != 8)
+            {
+                LOG_ERROR("Failed to read register " << regName << "!");
+                return {.eightByteVal = 0};
+            }
+
+            regValue.info.isDoubleReg = true;
+            std::memcpy(&regValue.floatVal, dRegVal, 8);
+        }
+        else
+        {
+            uint64_t val;
+            const int res = icicle_reg_read(icicle, regName.c_str(), &val);
+            if (res != 0)
+            {
+                LOG_ERROR("Failed to read register " << regName << "!");
+            }
+
+            regValue.eightByteVal = val;
         }
 
-        if (!use32BitLanes){
-            double valueArray[arrSize]{};
-            
-            // Convert bytes to doubles
-            for (int i = 0; i < 8; i++) {
-                uint64_t bits;
-                std::memcpy(&bits, &zmmValue[i * 8], 8);
-                // Properly interpret the bits as a double
-                double val;
-                std::memcpy(&val, &bits, sizeof(double));
-                valueArray[i] = val;
-            }
-            
-            regValue = {.doubleVal = 0.0f};
+        return regValue;
+    }
+    else if (size == 128)
+    {
+        return read128BitRegisterValue(regName);
+    }
+    else if (size == 256)
+    {
+        return read256BitRegister(regName);
+    }
 
-            for (int i = 0; i < 8; i++){
-                regValue.info.arrays.doubleArray[i] = valueArray[i];
-            }
+    return {.eightByteVal = 00};
+}
 
-            for (double i : valueArray){
-                if (i != 0){
-                    regValue.doubleVal = 1.0f;
-                    break;
-                }
-            }
-            regValue.info.is512bit = true;
-            return regValue;
-        }
-        else{
-            float valueArray[arrSize]{};
-            
-            // Convert bytes to floats (16 floats in a 512-bit register)
-            for (int i = 0; i < 16; i++) {
-                uint32_t bits;
-                std::memcpy(&bits, &zmmValue[i * 4], 4);
-                valueArray[i] = *reinterpret_cast<float*>(&bits);
-            }
-            
-            regValue = {.doubleVal = (valueArray[0])};
+registerValueT getRegisterValue(const std::string& regName){
+    const auto size = regInfoMap[regName];
+    const std::string lowerRegName = toLowerCase(regName);
 
-            for (int i = 0; i < 16; i++){
-                regValue.info.arrays.floatArray[i] = valueArray[i];
-            }
-
-            for (float i : regValue.info.arrays.floatArray){
-                if (i != 0){
-                    regValue.doubleVal = regValue.floatVal = 1.0f;
-                    break;
-                }
-            }
-
-            regValue.info.is512bit = true;
-            return regValue;
-        }
+    if (codeInformation.archIC == IC_ARCH_X86_64 || codeInformation.archIC == IC_ARCH_I386)
+    {
+        return x86GetRegisterValue(size, lowerRegName);
+    }
+    else if (codeInformation.archIC == IC_ARCH_ARM || codeInformation.archIC == IC_ARCH_AARCH64)
+    {
+        return armGetRegisterValue(size, lowerRegName);
     }
 
     return {.eightByteVal = 00};
@@ -360,130 +498,232 @@ bool initRegistersToDefinedVals(){
     LOG_INFO("Initialising registers to defined values...");
 
     for(auto&[name, value]: tempRegisterValueMap){
-        uint64_t intVal = hexStrToInt(value);
+        const uint64_t intVal = hexStrToInt(value);
         icicle_reg_write(icicle, toLowerCase(name).c_str(), intVal);
     }
     return true;
 }
 
+bool write256BitRegisterValue(const std::string& regName, const registerValueT& value)
+{
+    uint8_t ymmValue[32] = {0};
+
+    if (use32BitLanes) {
+        // Handle 32-bit lanes (8 float values)
+        for (int i = 0; i < 8; i++) {
+            uint32_t bits;
+            float fval = value.info.arrays.floatArray[i];
+            std::memcpy(&bits, &fval, sizeof(float));
+
+            // Write to the appropriate position in the byte array
+            std::memcpy(ymmValue + (i * 4), &bits, 4);
+        }
+    } else {
+        // Handle 64-bit lanes (4 double values)
+        // For 256-bit registers, we need to maintain the same ordering as in getRegisterValue
+        for (int i = 0; i < 4; i++) {
+            uint64_t bits;
+            double dval = value.info.arrays.doubleArray[i];
+            std::memcpy(&bits, &dval, sizeof(double));
+
+            // Write to the appropriate position in the byte array
+            std::memcpy(ymmValue + (i * 8), &bits, 8);
+        }
+    }
+
+    // Write the bytes to the register using icicle_reg_write_bytes
+    const int result = icicle_reg_write_bytes(icicle, regName.c_str(), ymmValue, sizeof(ymmValue));
+    if (result != 0) {
+        LOG_ERROR("Failed to write to YMM register " << regName << ", result=" << result);
+        return false;
+    }
+    return true;
+}
+
+bool write128BitRegisterValue(const std::string& regName, const registerValueT& value)
+{
+    uint8_t xmmValue[16] = {0};
+
+    if (use32BitLanes) {
+        // Handle 32-bit lanes (4 float values)
+        for (int i = 0; i < 4; i++) {
+            uint32_t bits;
+            float fval = value.info.arrays.floatArray[i];
+            std::memcpy(&bits, &fval, sizeof(float));
+
+            // Write to the appropriate position in the byte array
+            std::memcpy(xmmValue + (i * 4), &bits, 4);
+        }
+    } else {
+        // Handle 64-bit lanes (2 double values)
+        // Note: In getRegisterValue, we store index 0 = upper half, index 1 = lower half
+        // So we need to reverse the order when writing bytes
+
+        // Write lower half (index 1) to first 8 bytes
+        uint64_t bits_lower;
+        const double dValLower = value.info.arrays.doubleArray[1]; // Lower half is index 1
+        std::memcpy(&bits_lower, &dValLower, sizeof(double));
+        std::memcpy(xmmValue, &bits_lower, 8);
+
+        // Write upper half (index 0) to second 8 bytes
+        uint64_t bits_upper;
+        const double dValUpper = value.info.arrays.doubleArray[0]; // Upper half is index 0
+        std::memcpy(&bits_upper, &dValUpper, sizeof(double));
+        std::memcpy(xmmValue + 8, &bits_upper, 8);
+    }
+
+    // Write the bytes to the register using icicle_reg_write_bytes
+    const int result = icicle_reg_write_bytes(icicle, regName.c_str(), xmmValue, sizeof(xmmValue));
+    if (result != 0) {
+        LOG_ERROR("Failed to write to XMM register " << regName << ", result=" << result);
+        return false;
+    }
+
+    return true;
+}
+
+bool x86SetRegisterValue(const std::string& regName, const registerValueT& value)
+{
+    const auto size = regInfoMap[regName];
+
+    if (size <= 64) {
+        return icicle_reg_write(icicle, regName.c_str(), value.eightByteVal) == 0;
+    }
+    if (size == 128) {
+        return write128BitRegisterValue(regName, value);
+    }
+    else if (size == 256) {
+        return write256BitRegisterValue(regName, value);
+    }
+    else if (size == 512) {
+        LOG_ERROR("Not implemented!");
+        return false;
+        // // uint8_t zmmValue[64] = {0};
+        // //
+        // // if (use32BitLanes) {
+        // //     // Handle 32-bit lanes (16 float values)
+        // //     for (int i = 0; i < 16; i++) {
+        // //         uint32_t bits;
+        // //         float fval = value.info.arrays.floatArray[i];
+        // //         std::memcpy(&bits, &fval, sizeof(float));
+        // //
+        // //         // Write to the appropriate position in the byte array
+        // //         std::memcpy(zmmValue + (i * 4), &bits, 4);
+        // //     }
+        // // } else {
+        // //     // Handle 64-bit lanes (8 double values)
+        // //     for (int i = 0; i < 8; i++) {
+        // //         uint64_t bits;
+        // //         double dval = value.info.arrays.doubleArray[i];
+        // //         std::memcpy(&bits, &dval, sizeof(double));
+        // //
+        // //         // Write to the appropriate position in the byte array
+        // //         std::memcpy(zmmValue + (i * 8), &bits, 8);
+        // //     }
+        // // }
+        // //
+        // // // Write the bytes to the register using icicle_reg_write_bytes
+        // // int result = icicle_reg_write_bytes(icicle, lowerRegName.c_str(), zmmValue, sizeof(zmmValue));
+        // // if (result != 0) {
+        // //     LOG_ERROR("Failed to write to ZMM register " << regName << ", result=" << result);
+        // //     return false;
+        // // }
+        // return true;
+    }
+
+    return false;
+}
+
+bool armSetRegisterValue(const std::string& regName, const registerValueT& value)
+{
+    const auto size = regInfoMap[regName];
+    if (size == 32)
+    {
+        if (vfpRegs.contains(regName))
+        {
+            uint8_t vfpRegVal[4];
+            std::memcpy(vfpRegVal, &value.floatVal, 4);
+            const int res = icicle_reg_write_bytes(icicle, regName.c_str(), vfpRegVal, 4);
+            if (res != 0)
+            {
+                LOG_ERROR("Failed to read vfp register " << regName << "!");
+                return false;
+            }
+        }
+        else
+        {
+            const int res = icicle_reg_write(icicle, regName.c_str(), value.eightByteVal);
+            if (res != 0)
+            {
+                LOG_ERROR("Failed to read register " << regName << "!");
+                return false;
+            }
+        }
+
+        return true;
+    }
+    else if (size == 64)
+    {
+
+
+        uint8_t vfpRegVal[8];
+        std::memcpy(vfpRegVal, &value.floatVal, 8);
+        if (dRegs.contains(regName))
+        {
+            uint8_t dRegVal[8];
+            size_t outSize;
+            const int res = icicle_reg_write_bytes(icicle, regName.c_str(), vfpRegVal, 8);
+            if (res != 0)
+            {
+                LOG_ERROR("Failed to read register " << regName << "!");
+                return false;
+            }
+
+            return true;
+        }
+        else
+        {
+            uint64_t val;
+            std::memcpy(&val, &value.eightByteVal, 8);
+            const int res = icicle_reg_write(icicle, regName.c_str(), val);
+            if (res != 0)
+            {
+                LOG_ERROR("Failed to read register " << regName << "!");
+                return false;
+            }
+
+            return true;
+        }
+    }
+    if (size == 128) {
+        return write128BitRegisterValue(regName, value);
+    }
+    else if (size == 256) {
+        return write256BitRegisterValue(regName, value);
+    }
+    else if (size == 512)
+    {
+        LOG_ERROR("Not implemented!");
+        return false;
+    }
+
+    return false;
+}
+
 // Function to set register values, handling registers of all sizes
 bool setRegisterValue(const std::string& regName, const registerValueT& value) {
     const auto size = regInfoMap[regName];
-    std::string lowerRegName = toLowerCase(regName);
-    
-    // For registers <= 64 bits, use the standard write function
-    if (size <= 64) {
-        return icicle_reg_write(icicle, lowerRegName.c_str(), value.eightByteVal) == 0;
+    const std::string lowerRegName = toLowerCase(regName);
+
+    if (codeInformation.archIC == IC_ARCH_X86_64 || codeInformation.archIC == IC_ARCH_I386)
+    {
+        return x86SetRegisterValue(lowerRegName, value);
     }
-    
-    // For larger registers (XMM, YMM, ZMM), we need to construct a byte array
-    if (size == 128) {
-        uint8_t xmmValue[16] = {0};
-        
-        if (use32BitLanes) {
-            // Handle 32-bit lanes (4 float values)
-            for (int i = 0; i < 4; i++) {
-                uint32_t bits;
-                float fval = value.info.arrays.floatArray[i];
-                std::memcpy(&bits, &fval, sizeof(float));
-                
-                // Write to the appropriate position in the byte array
-                std::memcpy(xmmValue + (i * 4), &bits, 4);
-            }
-        } else {
-            // Handle 64-bit lanes (2 double values)
-            // Note: In getRegisterValue, we store index 0 = upper half, index 1 = lower half
-            // So we need to reverse the order when writing bytes
-            
-            // Write lower half (index 1) to first 8 bytes
-            uint64_t bits_lower;
-            double dval_lower = value.info.arrays.doubleArray[1]; // Lower half is index 1
-            std::memcpy(&bits_lower, &dval_lower, sizeof(double));
-            std::memcpy(xmmValue, &bits_lower, 8);
-            
-            // Write upper half (index 0) to second 8 bytes
-            uint64_t bits_upper;
-            double dval_upper = value.info.arrays.doubleArray[0]; // Upper half is index 0
-            std::memcpy(&bits_upper, &dval_upper, sizeof(double));
-            std::memcpy(xmmValue + 8, &bits_upper, 8);
-        }
-        
-        // Write the bytes to the register using icicle_reg_write_bytes
-        const int result = icicle_reg_write_bytes(icicle, lowerRegName.c_str(), xmmValue, sizeof(xmmValue));
-        if (result != 0) {
-            LOG_ERROR("Failed to write to XMM register " << regName << ", result=" << result);
-            return false;
-        }
-        return true;
+    else if (codeInformation.archIC == IC_ARCH_ARM || codeInformation.archIC == IC_ARCH_AARCH64)
+    {
+        return armSetRegisterValue(lowerRegName, value);
     }
-    else if (size == 256) {
-        uint8_t ymmValue[32] = {0};
-        
-        if (use32BitLanes) {
-            // Handle 32-bit lanes (8 float values)
-            for (int i = 0; i < 8; i++) {
-                uint32_t bits;
-                float fval = value.info.arrays.floatArray[i];
-                std::memcpy(&bits, &fval, sizeof(float));
-                
-                // Write to the appropriate position in the byte array
-                std::memcpy(ymmValue + (i * 4), &bits, 4);
-            }
-        } else {
-            // Handle 64-bit lanes (4 double values)
-            // For 256-bit registers, we need to maintain the same ordering as in getRegisterValue
-            for (int i = 0; i < 4; i++) {
-                uint64_t bits;
-                double dval = value.info.arrays.doubleArray[i];
-                std::memcpy(&bits, &dval, sizeof(double));
-                
-                // Write to the appropriate position in the byte array
-                std::memcpy(ymmValue + (i * 8), &bits, 8);
-            }
-        }
-        
-        // Write the bytes to the register using icicle_reg_write_bytes
-        const int result = icicle_reg_write_bytes(icicle, lowerRegName.c_str(), ymmValue, sizeof(ymmValue));
-        if (result != 0) {
-            LOG_ERROR("Failed to write to YMM register " << regName << ", result=" << result);
-            return false;
-        }
-        return true;
-    }
-    else if (size == 512) {
-        uint8_t zmmValue[64] = {0};
-        
-        if (use32BitLanes) {
-            // Handle 32-bit lanes (16 float values)
-            for (int i = 0; i < 16; i++) {
-                uint32_t bits;
-                float fval = value.info.arrays.floatArray[i];
-                std::memcpy(&bits, &fval, sizeof(float));
-                
-                // Write to the appropriate position in the byte array
-                std::memcpy(zmmValue + (i * 4), &bits, 4);
-            }
-        } else {
-            // Handle 64-bit lanes (8 double values)
-            for (int i = 0; i < 8; i++) {
-                uint64_t bits;
-                double dval = value.info.arrays.doubleArray[i];
-                std::memcpy(&bits, &dval, sizeof(double));
-                
-                // Write to the appropriate position in the byte array
-                std::memcpy(zmmValue + (i * 8), &bits, 8);
-            }
-        }
-        
-        // Write the bytes to the register using icicle_reg_write_bytes
-        int result = icicle_reg_write_bytes(icicle, lowerRegName.c_str(), zmmValue, sizeof(zmmValue));
-        if (result != 0) {
-            LOG_ERROR("Failed to write to ZMM register " << regName << ", result=" << result);
-            return false;
-        }
-        return true;
-    }
-    
+
     return false;
 }
 
@@ -509,7 +749,7 @@ registerValueInfoT getRegister(const std::string& name){
 Icicle* initIC()
 {
     if (!isDebugReady) {
-        LOG_ERROR("Debug is not ready");
+        LOG_ERROR("Debug mode is not ready");
     }
 
     const auto vm = icicle_new(codeInformation.archStr, false, true, false, false, false, false, false, false);
@@ -610,6 +850,7 @@ void instructionHook(void* userData, const uint64_t address)
         }
     }
 }
+
 bool updateStack = false;
 void stackWriteHook(void* data, uint64_t address, uint8_t size, const uint64_t valueWritten)
 {
@@ -1229,12 +1470,6 @@ bool runTempCode(const std::string& codeIn, const uint64_t instructionCount){
     runCode(codeIn, instructionCount);
 
     tempIcicle = icicle;
-    // Comment out flawed temp snapshot logic
-    // constexpr auto size = sizeof(VmSnapshot);
-    // tempSnapshot = static_cast<VmSnapshot*>(malloc(size));
-    // memcpy(tempSnapshot, snapshot, size);
-
     updateRegs(true);
-    // free(tempSnapshot);
     return true;
 }

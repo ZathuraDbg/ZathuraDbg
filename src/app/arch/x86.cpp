@@ -3,9 +3,10 @@
 #include "arch.hpp"
 #include "../../utils/stringHelper.hpp"
 
-std::vector<std::string> x86DefaultShownRegs = {"RIP", "RSP", "RBP", "RAX", "RBX", "RCX", "RDX", "RSI", "RDI", "R8", "R9", "R10", "R11", "R12", "R13", "R14", "R15",
+std::unordered_set<std::string> x86DefaultShownRegs = {"RIP", "RSP", "RBP", "RAX", "RBX", "RCX", "RDX", "RSI", "RDI", "R8", "R9", "R10", "R11", "R12", "R13", "R14", "R15",
     "CS", "DS", "ES", "FS", "GS", "SS"};
 
+// std::unordered_set<std::string> x86DefaultShownRegs = {"RIP"};
 std::unordered_map<std::string, size_t> x86RegInfoMap = {
     {"invalid", {0}},
     {"ah", {8}}, {"al", {8}}, {"ax", {16}},

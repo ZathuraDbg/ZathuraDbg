@@ -1,13 +1,17 @@
 #include "arm.hpp"
-
 #include "arch.hpp"
 #include "../../utils/stringHelper.hpp"
 
-std::vector<std::string> armDefaultShownRegs = {
-    "PC", "SP", "LR", "R0", "R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8", "R9", "R10", "R11", "R12", "CPSR"
+
+// std::unordered_set<std::string> armDefaultShownRegs = {
+//     "PC", "SP", "LR", "R0", "R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8", "R9", "R10", "R11", "R12", "CPSR"
+// };
+
+std::unordered_set<std::string> armDefaultShownRegs = {
+    // "PC"
 };
 
-std::vector<std::string> aarch64DefaultShownRegs = {
+std::unordered_set<std::string> aarch64DefaultShownRegs = {
     "PC", "SP", "LR", "X0", "X1", "X2", "X3", "X4", "X5", "X6", "X7", "X8", "X9", "X10", "X11", "X12", 
     "X13", "X14", "X15", "X16", "X17", "X18", "X19", "X20", "X21", "X22", "X23", "X24", "X25", "X26", 
     "X27", "X28", "X29", "X30", "NZCV"
@@ -298,10 +302,17 @@ bool armIsRegisterValid(const std::string& reg) {
     const std::string registerName = toLowerCase(reg);
     
     // Simple validation - check if register exists in map
-    if (!armRegInfoMap.contains(registerName)) {
-        return false;
+    if (armRegInfoMap.contains(registerName)) {
+        return true;
     }
-    
+
+    if (registerName[0] == 's') {
+        if (registerName.length() > 1) {
+            int regNum = std::atoi(registerName.c_str() + 1);
+            return regNum >= 0 && regNum <= 15;
+        }
+    }
+
     // General registers R0-R15
     if (registerName[0] == 'r') {
         if (registerName.length() > 1) {
@@ -323,8 +334,8 @@ bool aarch64IsRegisterValid(const std::string& reg) {
     const std::string registerName = toLowerCase(reg);
     
     // Simple validation - check if register exists in map
-    if (!aarch64RegInfoMap.contains(registerName)) {
-        return false;
+    if (aarch64RegInfoMap.contains(registerName)) {
+        return true;
     }
     
     // X registers (X0-X30)
