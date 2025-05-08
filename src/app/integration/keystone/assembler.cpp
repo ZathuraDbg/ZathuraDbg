@@ -118,7 +118,6 @@ bool isValidInstruction(ks_engine* ksEngine, const char* instruction) {
     return result;
 }
 
-// why does the instruction work but all registers have the value of the stack?
 uint64_t lastInstructionLineNo = 0;
 void initInsSizeInfoMap(){
     LOG_INFO("Updating instruction sizes info map...");
@@ -140,9 +139,9 @@ void initInsSizeInfoMap(){
         
 
         {
-            auto start = std::find_if_not(instructionStr.begin(), instructionStr.end(), ::isspace);
-            auto end = std::find_if_not(instructionStr.rbegin(), instructionStr.rend(), ::isspace).base();
-            std::size_t length = std::distance(start, end);
+            const auto start = std::ranges::find_if_not(instructionStr, ::isspace);
+            const auto end = std::find_if_not(instructionStr.rbegin(), instructionStr.rend(), ::isspace).base();
+            const std::size_t length = std::distance(start, end);
             instructionStr = instructionStr.substr(std::distance(instructionStr.begin(), start), length); // Trimmed whitespaces from both left and right
 
         }
@@ -287,7 +286,9 @@ std::string getBytes(const std::string& fileName){
         tinyfd_messageBox("File read error!", "Asm file can't be read!", "ok", "error", 0);
         return "";
     }
-
+    assembly.clear();
+    assembly.str("");
+    assembly = {};
     assembly << asmFile.rdbuf();
     asmFile.close();
 

@@ -182,7 +182,7 @@ registerValueT read256BitRegister(const std::string& regName)
     uint8_t ymmValue[32] = {0};
     size_t outSize;
 
-    const int result = icicle_reg_read_bytes(icicle, regName.c_str(), ymmValue, sizeof(ymmValue), &outSize);
+    const int result = icicle_reg_read_bytes(icicle, toLowerCase(regName).c_str(), ymmValue, sizeof(ymmValue), &outSize);
     if (result != 0 || outSize != sizeof(ymmValue)) {
         LOG_ERROR("Failed to read register " << regName << ", result=" << result << ", outSize=" << outSize);
         return {.eightByteVal = 0};
@@ -247,7 +247,7 @@ registerValueT read128BitRegisterValue(const std::string& regName)
 {
     uint8_t regValArray[16] = {0};
     size_t outSize;
-    const int result = icicle_reg_read_bytes(icicle, regName.c_str(), regValArray, sizeof(regValArray), &outSize);
+    const int result = icicle_reg_read_bytes(icicle, toLowerCase(regName).c_str(), regValArray, sizeof(regValArray), &outSize);
 
     if (result != 0 || outSize != sizeof(regValArray)) {
         LOG_ERROR("Failed to read register " << regName << ", result=" << result << ", outSize=" << outSize);
@@ -299,7 +299,7 @@ registerValueT x86GetRegisterValue(const size_t size, const std::string& regName
 {
     if (size <= 64) {
         uint64_t valTemp64;
-        icicle_reg_read(icicle, regName.c_str(), &valTemp64);
+        icicle_reg_read(icicle, toLowerCase(regName).c_str(), &valTemp64);
         return {.eightByteVal = valTemp64};
     }
     if (size == 128){
@@ -403,7 +403,7 @@ registerValueT armGetRegisterValue(const size_t size, const std::string& regName
         {
             uint8_t vfpRegVal[4];
             size_t outSize;
-            const int res = icicle_reg_read_bytes(icicle, regName.c_str(), vfpRegVal, 4, &outSize);
+            const int res = icicle_reg_read_bytes(icicle, toLowerCase(regName).c_str(), vfpRegVal, 4, &outSize);
             if (res != 0 || outSize != 4)
             {
                 LOG_ERROR("Failed to read vfp register " << regName << "!");
@@ -416,7 +416,7 @@ registerValueT armGetRegisterValue(const size_t size, const std::string& regName
         else
         {
             uint64_t val;
-            const int res = icicle_reg_read(icicle, regName.c_str(), &val);
+            const int res = icicle_reg_read(icicle, toLowerCase(regName).c_str(), &val);
             if (res != 0)
             {
                 LOG_ERROR("Failed to read register " << regName << "!");
@@ -441,7 +441,7 @@ registerValueT armGetRegisterValue(const size_t size, const std::string& regName
         {
             uint8_t dRegVal[8];
             size_t outSize;
-            const int res = icicle_reg_read_bytes(icicle, regName.c_str(), dRegVal, 8, &outSize);
+            const int res = icicle_reg_read_bytes(icicle, toLowerCase(regName).c_str(), dRegVal, 8, &outSize);
             if (res != 0 || outSize != 8)
             {
                 LOG_ERROR("Failed to read register " << regName << "!");
@@ -454,7 +454,7 @@ registerValueT armGetRegisterValue(const size_t size, const std::string& regName
         else
         {
             uint64_t val;
-            const int res = icicle_reg_read(icicle, regName.c_str(), &val);
+            const int res = icicle_reg_read(icicle, toLowerCase(regName).c_str(), &val);
             if (res != 0)
             {
                 LOG_ERROR("Failed to read register " << regName << "!");
@@ -532,7 +532,7 @@ bool write256BitRegisterValue(const std::string& regName, const registerValueT& 
     }
 
     // Write the bytes to the register using icicle_reg_write_bytes
-    const int result = icicle_reg_write_bytes(icicle, regName.c_str(), ymmValue, sizeof(ymmValue));
+    const int result = icicle_reg_write_bytes(icicle, toLowerCase(regName).c_str(), ymmValue, sizeof(ymmValue));
     if (result != 0) {
         LOG_ERROR("Failed to write to YMM register " << regName << ", result=" << result);
         return false;
@@ -573,7 +573,7 @@ bool write128BitRegisterValue(const std::string& regName, const registerValueT& 
     }
 
     // Write the bytes to the register using icicle_reg_write_bytes
-    const int result = icicle_reg_write_bytes(icicle, regName.c_str(), xmmValue, sizeof(xmmValue));
+    const int result = icicle_reg_write_bytes(icicle, toLowerCase(regName).c_str(), xmmValue, sizeof(xmmValue));
     if (result != 0) {
         LOG_ERROR("Failed to write to XMM register " << regName << ", result=" << result);
         return false;
@@ -587,7 +587,7 @@ bool x86SetRegisterValue(const std::string& regName, const registerValueT& value
     const auto size = regInfoMap[regName];
 
     if (size <= 64) {
-        return icicle_reg_write(icicle, regName.c_str(), value.eightByteVal) == 0;
+        return icicle_reg_write(icicle, toLowerCase(regName).c_str(), value.eightByteVal) == 0;
     }
     if (size == 128) {
         return write128BitRegisterValue(regName, value);
@@ -643,7 +643,7 @@ bool armSetRegisterValue(const std::string& regName, const registerValueT& value
         {
             uint8_t vfpRegVal[4];
             std::memcpy(vfpRegVal, &value.floatVal, 4);
-            const int res = icicle_reg_write_bytes(icicle, regName.c_str(), vfpRegVal, 4);
+            const int res = icicle_reg_write_bytes(icicle, toLowerCase(regName).c_str(), vfpRegVal, 4);
             if (res != 0)
             {
                 LOG_ERROR("Failed to read vfp register " << regName << "!");
@@ -652,7 +652,7 @@ bool armSetRegisterValue(const std::string& regName, const registerValueT& value
         }
         else
         {
-            const int res = icicle_reg_write(icicle, regName.c_str(), value.eightByteVal);
+            const int res = icicle_reg_write(icicle, toLowerCase(regName).c_str(), value.eightByteVal);
             if (res != 0)
             {
                 LOG_ERROR("Failed to read register " << regName << "!");
@@ -672,7 +672,7 @@ bool armSetRegisterValue(const std::string& regName, const registerValueT& value
         {
             uint8_t dRegVal[8];
             size_t outSize;
-            const int res = icicle_reg_write_bytes(icicle, regName.c_str(), vfpRegVal, 8);
+            const int res = icicle_reg_write_bytes(icicle, toLowerCase(regName).c_str(), vfpRegVal, 8);
             if (res != 0)
             {
                 LOG_ERROR("Failed to read register " << regName << "!");
@@ -685,7 +685,7 @@ bool armSetRegisterValue(const std::string& regName, const registerValueT& value
         {
             uint64_t val;
             std::memcpy(&val, &value.eightByteVal, 8);
-            const int res = icicle_reg_write(icicle, regName.c_str(), val);
+            const int res = icicle_reg_write(icicle, toLowerCase(regName).c_str(), val);
             if (res != 0)
             {
                 LOG_ERROR("Failed to read register " << regName << "!");
