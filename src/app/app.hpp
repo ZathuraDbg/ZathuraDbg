@@ -20,6 +20,7 @@
 #include "dialogs/dialogHeader.hpp"
 #include "../utils/layoutmanager.h"
 #include "../../vendor/imgui/imgui_internal.h"
+#include "../../vendor/ImGuiColorTextEdit/TextEditor.h"
 #include "../../vendor/imgui/backends/imgui_impl_glfw.h"
 #include "../../vendor/imgui/backends/imgui_impl_opengl3.h"
 #include "../../vendor/imgui/misc/single_file/imgui_single_file.h"
@@ -45,5 +46,5 @@ extern bool lineNumbersShown;
 extern float frameRate;
 extern std::string executablePath;
 extern bool isRunning;
-
+extern TextEditor::LanguageDefinitionId currentDefinitionId;
 #endif //ZATHURA_UI_APP_HPP

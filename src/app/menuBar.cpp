@@ -84,6 +84,7 @@ void changeEmulationSettings(){
             ucMode = UC_MODE_64;
             codeInformation.syntax = KS_OPT_SYNTAX_NASM;
             codeInformation.archStr = "x86_64";
+            currentDefinitionId = TextEditor::LanguageDefinitionId::Asm;
         }
         else if (selectedArch == arch::ARM)
         {
@@ -111,6 +112,8 @@ void changeEmulationSettings(){
                 codeInformation.syntax = KS_OPT_SYNTAX_RADIX16;
                 codeInformation.archStr = "thumbv7m";
             }
+
+            currentDefinitionId = TextEditor::LanguageDefinitionId::AsmArm;
         }
         else if (selectedArch == arch::ARM64)
         {
@@ -122,6 +125,7 @@ void changeEmulationSettings(){
             // codeInformation.syntax = KS_OPT_SYNTAX_RADIX16;
             codeInformation.archStr = "aarch64";
             ImGui::Dummy({20, 25});
+            currentDefinitionId = TextEditor::LanguageDefinitionId::AsmArm;
         }
         else {
             tinyfd_messageBox("Unsupported Architecture!", "Only x86 and ARM Architectures are supported with ZathuraDbg at this point."

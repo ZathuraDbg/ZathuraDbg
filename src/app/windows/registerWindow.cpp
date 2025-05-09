@@ -615,7 +615,6 @@ void addRegisterToView(std::string reg, const registerValueInfoT& registerInfo) 
             }
 
             if ((!registerValueMap.contains(reg)) && !isRegPresent) {
-                // path reached once
                 LOG_INFO("Register " << reg << " not found in registerValueMap. Adding...");
                 addRegisterToView((reg), regInfo);
             }

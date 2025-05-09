@@ -8,6 +8,7 @@ bool runSelectedCode = false;
 bool goToDefinition = false;
 std::string executablePath;
 #include "codeContextMenu.hpp"
+TextEditor::LanguageDefinitionId currentDefinitionId = TextEditor::LanguageDefinitionId::Asm;
 
 void setupEditor() {
     LOG_INFO("Setting up the editor...");
@@ -15,7 +16,7 @@ void setupEditor() {
 
 
     editor = new TextEditor();
-    editor->SetLanguageDefinition(TextEditor::LanguageDefinitionId::Asm);
+    editor->SetLanguageDefinition(currentDefinitionId);
     editor->SetPalette(TextEditor::PaletteId::Catppuccin);
     editor->SetShowWhitespacesEnabled(false);
     editor->SetReadOnlyEnabled(false);
@@ -108,6 +109,7 @@ void mainWindow() {
     }
 
     ImGui::PushFont(io.Fonts->Fonts[JetBrainsMono24]);
+    editor->SetLanguageDefinition(currentDefinitionId);
     editor->Render("Editor");
     ImGui::PopFont();
     contextMenu();
