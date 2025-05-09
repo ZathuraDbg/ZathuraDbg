@@ -2,5 +2,16 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/vendor/ImGuiColorTextEdit" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/vendor/ImGuiColorTextEdit/vendor/regex" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/vendor/capstone" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/vendor/icicle-cpp" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/vendor/icicle-cpp/ghidra" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/vendor/icicle-cpp/ghidra/Ghidra/Processors/xtensa" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/vendor/imgui" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/vendor/keystone" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/vendor/ordered-map" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/vendor/tinyfdialogue" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/vendor/whereami" vcs="Git" />
   </component>
 </project>
