@@ -260,9 +260,15 @@ struct MemoryEditor
         Open = true;
         if (ImGui::Begin(title, &Open, ImGuiWindowFlags_NoScrollbar))
         {
+            // Create a context menu ID unique to this window
+            char contextMenuName[256];
+            ImSnprintf(contextMenuName, sizeof(contextMenuName), "%s_context", title);
+            
+            // Right-click anywhere in window will open the context menu
             if (ImGui::IsWindowHovered(ImGuiHoveredFlags_RootAndChildWindows) && ImGui::IsMouseReleased(ImGuiMouseButton_Right))
-                ImGui::OpenPopup("context");
-            DrawContents(mem_data, mem_size, base_display_addr);
+                ImGui::OpenPopup(contextMenuName);
+            
+            DrawContents(mem_data, mem_size, base_display_addr, contextMenuName);
             if (ContentsWidthChanged)
             {
                 CalcSizes(s, mem_size, base_display_addr);
@@ -294,7 +300,7 @@ struct MemoryEditor
     }
 
     // Memory Editor contents only
-    void DrawContents(void* mem_data_void, size_t mem_size, size_t base_display_addr = 0x0000) {
+    void DrawContents(void* mem_data_void, size_t mem_size, size_t base_display_addr = 0x0000, const char* contextMenuName = "context") {
         if (Cols < 1)
             Cols = 1;
 
@@ -603,7 +609,7 @@ struct MemoryEditor
         if (OptShowOptions)
         {
             ImGui::Separator();
-            DrawOptionsLine(s, mem_data, mem_size, base_display_addr);
+            DrawOptionsLine(s, mem_data, mem_size, base_display_addr, contextMenuName);
         }
 
         if (lock_show_data_preview)
@@ -617,7 +623,9 @@ struct MemoryEditor
             ImGui::SameLine();
             ImGui::SetCursorPosX(ImGui::GetWindowSize().x - 30);
             if (ImGui::Button("+")){
-                KeepNewWindowInfoFn = true;
+                if (NewWindowInfoFn != nullptr) {
+                    KeepNewWindowInfoFn = true;
+                }
             }
         }
 
@@ -682,7 +690,6 @@ struct MemoryEditor
         if (ImGui::IsKeyDown(ImGuiKey_LeftCtrl) && ImGui::IsKeyDown(ImGuiKey_LeftShift) && ImGui::IsKeyDown(ImGuiKey_E)){
             KeepSetBaseAddrWindow = true;
         }
-
     }
 
     std::string GetDataToCopy(std::string bytes, bool asArray) {
@@ -852,14 +859,18 @@ struct MemoryEditor
         return false;
     }
 
-    void DrawOptionsLine(const Sizes& s, void* mem_data, size_t mem_size, size_t base_display_addr)
+    void DrawOptionsLine(const Sizes& s, void* mem_data, size_t mem_size, size_t base_display_addr, const char* contextMenuName = "context")
     {
         IM_UNUSED(mem_data);
         ImGuiStyle& style = ImGui::GetStyle();
-
         ImGui::GetStyle().Colors[ImGuiCol_HeaderHovered] = ImColor(0x18, 0x19, 0x26);
-        if (ImGui::BeginPopup("context"))
+ 
+        // Use the context menu name passed from DrawContents
+        if (ImGui::BeginPopup(contextMenuName))
         {
+            // Add a unique ID scope for all menu items based on the memory address
+            ImGui::PushID((void*)(uintptr_t)base_display_addr);
+            
             ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[4]);
             if (ImGui::MenuItem("Undo", "CTRL + Z", false)){
                 UndoRedo(false);
@@ -923,10 +934,18 @@ struct MemoryEditor
                 KeepGoToPopup = true;
             }
             ImGui::PopFont();
+            
+            // Pop the ID scope for menu items
+            ImGui::PopID();
+            
             ImGui::EndPopup();
         }
 
         ImGui::SameLine();
+        
+        // Add a unique ID scope for option buttons
+        ImGui::PushID((void*)(uintptr_t)(base_display_addr + 1)); // Using a different value than the context menu
+        
         if (!ShowRequiredButton){
             if (ImGui::Button("^^")){
                 OptShowDataPreview = !OptShowDataPreview;
@@ -950,6 +969,9 @@ struct MemoryEditor
             }
             ImGui::SameLine();
        }
+       
+       // Pop ID for option buttons
+       ImGui::PopID();
 
         if (GotoAddr != (size_t)-1)
         {
@@ -963,12 +985,13 @@ struct MemoryEditor
             }
             GotoAddr = (size_t)-1;
         }
-
-
     }
 
     void DrawPreviewLine(const Sizes& s, void* mem_data_void, size_t mem_size, size_t base_display_addr)
     {
+        // Add a unique ID scope for all preview line widgets
+        ImGui::PushID((void*)(uintptr_t)(base_display_addr + 2)); // Using a different value than other ID scopes
+        
         IM_UNUSED(base_display_addr);
         ImU8* mem_data = (ImU8*)mem_data_void;
         ImGuiStyle& style = ImGui::GetStyle();
@@ -1000,6 +1023,9 @@ struct MemoryEditor
             DrawPreviewData(DataPreviewAddr, mem_data, mem_size, PreviewDataType, DataFormat_Bin, buf, (size_t)IM_ARRAYSIZE(buf));
         buf[IM_ARRAYSIZE(buf) - 1] = 0;
         ImGui::Text("Bin"); ImGui::SameLine(x); ImGui::TextUnformatted(has_value ? buf : "N/A");
+        
+        // Pop the ID scope
+        ImGui::PopID();
     }
 
     // Utilities for Data Preview

@@ -242,7 +242,6 @@ void MemoryEditor::GoToPopup(){
     char inputText[200] = "";
     static bool setFocus = true;
     const auto io = ImGui::GetIO();
-    ImGui::PushFont(io.Fonts->Fonts[SatoshiBold18]);
 
     ImGui::OpenPopup("Gotopopup");
     auto text = "Go to address";
@@ -263,6 +262,8 @@ void MemoryEditor::GoToPopup(){
     ImGui::SetNextWindowSize(popupSize, ImGuiCond_Appearing);
     if (ImGui::BeginPopup("Gotopopup", ImGuiWindowFlags_AlwaysAutoResize))
     {
+        ImGui::PushFont(io.Fonts->Fonts[SatoshiBold18]);
+
         windowSize = ImGui::GetWindowSize();
 
         ImGui::SetCursorPosX((windowSize.x - windowTextPos.x) * 0.5f);
@@ -312,33 +313,31 @@ void MemoryEditor::GoToPopup(){
 
         if (ImGui::Button("CANCEL"))
         {
-
             KeepGoToPopup = false;
             setFocus = true;
             ImGui::CloseCurrentPopup();
         }
 
+        ImGui::PopFont();
         ImGui::EndPopup();
     }
-
-        ImGui::PopFont();
 }
-
 bool createNewWindow(){
     auto [address, size] = infoPopup("New Memory Editor Window");
     if (address && size){
+        MemoryEditor memEdit;
+
         memoryEditorWindow.HighlightColor = ImColor(59, 60, 79);
 
-       /*
-        * When the OptShowAddWindowButton is set and the user clicks on the "+" icon
-        * it causes an unidentified bug which leads to the program getting stuck
-        * if the newly created memory editor window is not docked.
-        * The easy fix for this is to find a way to dock the newly created windows automatically
-        * as tabs next to the previous memory editor window.
-       */
+        /*
+         * When the OptShowAddWindowButton is set and the user clicks on the "+" icon
+         * it causes an unidentified bug which leads to the program getting stuck
+         * if the newly created memory editor window is not docked.
+         * The easy fix for this is to find a way to dock the newly created windows automatically
+         * as tabs next to the previous memory editor window.
+        */
 
         memoryEditorWindow.OptShowAddWindowButton = false;
-        memoryEditorWindow.NewWindowInfoFn = createNewWindow;
         newMemEditWindowsInfo memWindowInfo = {memoryEditorWindow, address, size};
         newMemEditWindows.push_back(memWindowInfo);
 
@@ -380,7 +379,9 @@ std::variant<bool, std::pair<void*, size_t>> setBaseAddr2(uintptr_t baseAddr, ui
 
 
 bool fillMemoryRange(){
+    LOG_DEBUG("fillMemoryRange called");
     auto [address, size, character] = fillMemoryWithBytePopup();
+    LOG_DEBUG("fillMemoryRange - received address: " << address << ", size: " << size << ", character: " << (int)character);
     if (address && size && character){
         return true;
     }
@@ -394,25 +395,24 @@ bool fillMemoryRange(){
 unsigned char zeroArr[0x1000];
 bool dataZerod = false;
 void hexEditorWindow(){
+    static int frameCount = 0;
+
     const auto io = ImGui::GetIO();
     ImGui::PushFont(io.Fonts->Fonts[3]);
-    
-    // Initialize zero array if needed
+
     static bool zeroArrInitialized = false;
     if (!zeroArrInitialized) {
         memset(zeroArr, 0, sizeof(zeroArr));
         zeroArrInitialized = true;
     }
-    
-    // Don't return early if icicle is null, just use zeroed memory instead
+
     size_t outSize = 0;
     unsigned char* data = nullptr;
-    
+
     if (icicle && isDebugReady) {
         data = icicle_mem_read(icicle, ENTRY_POINT_ADDRESS, CODE_BUF_SIZE, &outSize);
     }
-    
-    // Fallback to zeroed memory if read fails or icicle is null
+
     if (data == NULL) {
         data = zeroArr;
         dataZerod = true;
@@ -427,22 +427,6 @@ void hexEditorWindow(){
     memoryEditorWindow.SetBaseAddress2 = setBaseAddr2;
     memoryEditorWindow.FillMemoryRange = fillMemoryWithBytePopup;
     memoryEditorWindow.DrawWindow("Memory Editor", (void*)data, 0x3000, MEMORY_EDITOR_BASE);
-
-    if (!newMemEditWindows.empty()) {
-        int i = 0;
-        for (auto& [memEditor, address, size]: newMemEditWindows){
-            unsigned char* newMemData = nullptr;
-            if (icicle && isDebugReady) {
-                newMemData = icicle_mem_read(icicle, address, size, &outSize);
-            }
-            
-            if (newMemData == NULL) {
-                memEditor.DrawWindow(("Memory Editor " + std::to_string(++i)).c_str(), (void*)zeroArr, size > 0x1000 ? 0x1000 : size, address);
-            } else {
-                memEditor.DrawWindow(("Memory Editor " + std::to_string(++i)).c_str(), (void*)newMemData, size, address);
-            }
-        }
-    }
 
     if (data && !dataZerod)
     {
