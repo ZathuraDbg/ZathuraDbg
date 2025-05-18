@@ -2,12 +2,112 @@
 #include <condition_variable>
 #include <functional>
 #include "actions.hpp"
+
+#include "imgui_impl_opengl3_loader.h"
 #include "../integration/interpreter/interpreter.hpp"
 
 std::mutex uiUpdateMutex;
 bool pendingUIUpdate = false;
 int pendingHighlightLine = -1;
 int times = 1;
+
+void openBrowser(const std::string& url) {
+#ifdef _WIN32
+    std::string command = "start " + url;
+#elif __APPLE__
+    std::string command = "open " + url;
+#else
+    std::string command = "xdg-open " + url;
+#endif
+    system(command.c_str());
+}
+
+std::string currentVersion{};
+std::string getLatestVersion()
+{
+    // httplib::SSLClient cli("raw.githubusercontent.com");
+    // if (auto res = cli.Get("/ZathuraDbg/ZathuraDbg/refs/heads/master/VERSION")) {
+    //     std::erase(res->body, '\n');
+    //     return res->body;
+    // } else {
+    //     return "";
+    // }
+    return "0.5.0-beta";
+}
+
+void updateWindow()
+{
+    if (currentVersion.empty())
+    {
+        currentVersion = getLatestVersion();
+        if (currentVersion.empty())
+        {
+            // show error
+        }
+    }
+
+    const bool latest = (currentVersion == VERSION) ? true : false;
+    ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[SatoshiBold24]);
+    ImGui::PushStyleVar(ImGuiStyleVar_PopupBorderSize, 5.0f);
+    auto windowTextPos = ImGui::CalcTextSize("Update Zathura");
+
+    // {width, height}
+    constexpr auto popupSize = ImVec2(270, 150);
+    ImGui::SetNextWindowSize(popupSize);
+    ImGui::PushStyleColor(ImGuiCol_PopupBg, ImColor(0x1e, 0x20, 0x2f).Value);
+    ImVec2 windowSize = ImGui::GetIO().DisplaySize;
+    ImVec2 popupPos = ImVec2((windowSize.x - popupSize.x) * 0.5f, (windowSize.y - popupSize.y) * 0.5f);
+
+    ImGui::OpenPopup("Update");
+    if (ImGui::BeginPopup("Update"))
+    {
+        const ImVec2 windowSize = ImGui::GetWindowSize();
+        ImGui::SetCursorPosX((windowSize.x - windowTextPos.x) * 0.7f);
+        ImGui::Text("%s", "Update");
+        ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal, 3);
+        ImGui::Dummy(ImVec2(0.0f, 10.0f));
+        ImGui::NewLine();
+        ImGui::SameLine(0, 10);
+
+        if (!latest)
+        {
+            ImGui::Text("You're on the latest version %s: ", VERSION);
+            // ImGui::SameLine(0, 4);
+            // ImGui::SetNextItemWidth(150);
+            // ImGui::Text("You're on the latest version: %s", VERSION);
+        }
+        else
+        {
+            ImGui::Text("Hooray! An update is available");
+            ImGui::SameLine(0, 4);
+            // ImGui::SetNextItemWidth(150);
+            ImGui::Dummy(ImVec2(0.0f, 10.0f));
+            ImGui::Dummy({0, 4});
+            ImGui::SameLine(0, 8);
+            ImGui::Text("Available version: %s", currentVersion.c_str());
+            ImGui::Dummy({0, 4});
+            ImGui::SameLine(0, 8);
+            ImGui::Dummy(ImVec2(0.0f, 6.0f));
+            ImGui::Dummy(ImVec2(0.0f, 0.0f));
+            ImGui::SameLine(8, 8);
+            if (ImGui::Button("Download"))
+            {
+                openBrowser("https://github.com/ZathuraDbg/ZathuraDbg/releases/latest");
+            }
+        }
+        ImGui::SameLine(0, 100);
+        if (ImGui::Button("Close"))
+        {
+            LOG_INFO("Closing...");
+            showUpdateWindow = false;
+        }
+        ImGui::EndPopup();
+    }
+
+    ImGui::PopStyleColor();
+    ImGui::PopStyleVar();
+    ImGui::PopFont();
+}
 
 void stepBack()
 {
@@ -522,6 +622,13 @@ void runActions(){
     {
         stepBack();
         debugStepBack = false;
+    }
+
+    if (showUpdateWindow)
+    {
+        updateWindow();
+        //
+        // showUpdateWindow = false;
     }
 
 }

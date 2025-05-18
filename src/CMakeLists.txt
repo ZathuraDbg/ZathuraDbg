@@ -122,6 +122,7 @@ include_directories(
         ${CMAKE_SOURCE_DIR}/../vendor/capstone/include
         ${CMAKE_SOURCE_DIR}/../vendor/whereami/src
         ${CMAKE_SOURCE_DIR}/../vendor/icicle-cpp
+        ${VENDOR_DIR}/http
 )
 
 set(OpenGL_GL_PREFERENCE GLVND)
@@ -149,7 +150,7 @@ if (UNIX AND NOT APPLE)
     add_compile_options(-Og)
 #    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -g")
 #    set(CMAKE_LINKER_FLAGS "${CMAKE_LINKER_FLAGS} -fsanitize=address")
-    set(LIBS ${GLFW_LDFLAGS} -lGL -ldl -lstdc++ -lkeystone -lcapstone -L/usr/lib -L/usr/local/lib -licicle)
+    set(LIBS ${GLFW_LDFLAGS} -lGL -ldl -lstdc++ -lkeystone -lcapstone -L/usr/lib -L/usr/local/lib -licicle -lssl -lcrypto)
 elseif (APPLE)
     message("Mac OS X")
     find_library(GLFW_LIB glfw3)

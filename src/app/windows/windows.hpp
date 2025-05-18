@@ -46,6 +46,7 @@ extern bool fileDeserializeState;
 extern bool changeEmulationSettingsOpt;
 extern bool debugStepBack;
 extern bool ttdEnabled;
+extern bool showUpdateWindow;
 extern bool toggleBreakpoint;
 extern bool runSelectedCode;
 extern bool goToDefinition;

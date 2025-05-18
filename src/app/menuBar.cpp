@@ -23,6 +23,7 @@ bool fileDeserializeState = false;
 bool changeEmulationSettingsOpt = false;
 bool debugStepBack = false;
 bool ttdEnabled = false;
+bool showUpdateWindow = false;
 bool showEmuSettings = false;
 
 void changeEmulationSettings(){
@@ -229,6 +230,7 @@ void appMenuBar()
             }
             ImGui::Separator();
             ImGui::MenuItem("Change emulation settings", "CTRL+.", &changeEmulationSettingsOpt);
+            ImGui::MenuItem("Check for updates", nullptr, &showUpdateWindow, true);
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu("Debug")){

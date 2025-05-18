@@ -30,7 +30,10 @@
 #include "../../vendor/json/json.hpp"
 #include <capstone/capstone.h>
 #include "actions/actions.hpp"
+#define CPPHTTPLIB_OPENSSL_SUPPORT
+#include <http.hpp>
 using json = nlohmann::json;
+constexpr std::string VERSION = "0.5.0-beta";
 #define CONFIG_NAME "config"
 
 std::string parseVals(std::string val);
