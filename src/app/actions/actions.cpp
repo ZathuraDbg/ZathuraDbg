@@ -25,14 +25,13 @@ void openBrowser(const std::string& url) {
 std::string currentVersion{};
 std::string getLatestVersion()
 {
-    // httplib::SSLClient cli("raw.githubusercontent.com");
-    // if (auto res = cli.Get("/ZathuraDbg/ZathuraDbg/refs/heads/master/VERSION")) {
-    //     std::erase(res->body, '\n');
-    //     return res->body;
-    // } else {
-    //     return "";
-    // }
-    return "0.5.0-beta";
+    httplib::SSLClient cli("raw.githubusercontent.com");
+    if (auto res = cli.Get("/ZathuraDbg/ZathuraDbg/refs/heads/master/VERSION")) {
+        std::erase(res->body, '\n');
+        return res->body;
+    } else {
+        return "";
+    }
 }
 
 void updateWindow()
@@ -42,14 +41,17 @@ void updateWindow()
         currentVersion = getLatestVersion();
         if (currentVersion.empty())
         {
-            // show error
+            if (tinyfd_messageBox("Error", "Failed to check for updates! Your internet may not be working", "ok", "error", 0))
+            {
+                return;
+            }
         }
     }
 
     const bool latest = (currentVersion == VERSION) ? true : false;
     ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[SatoshiBold24]);
     ImGui::PushStyleVar(ImGuiStyleVar_PopupBorderSize, 5.0f);
-    auto windowTextPos = ImGui::CalcTextSize("Update Zathura");
+    const auto windowTextPos = ImGui::CalcTextSize("Update Zathura");
 
     // {width, height}
     constexpr auto popupSize = ImVec2(270, 150);
@@ -69,12 +71,9 @@ void updateWindow()
         ImGui::NewLine();
         ImGui::SameLine(0, 10);
 
-        if (!latest)
+        if (latest)
         {
-            ImGui::Text("You're on the latest version %s: ", VERSION);
-            // ImGui::SameLine(0, 4);
-            // ImGui::SetNextItemWidth(150);
-            // ImGui::Text("You're on the latest version: %s", VERSION);
+            ImGui::TextWrapped("Fantastic! You're on the latest version: %s", VERSION.c_str());
         }
         else
         {
@@ -94,8 +93,12 @@ void updateWindow()
             {
                 openBrowser("https://github.com/ZathuraDbg/ZathuraDbg/releases/latest");
             }
-        }
+
         ImGui::SameLine(0, 100);
+        }
+        ImGui::Dummy({40, 10});
+        ImGui::Dummy({40, 0});
+        ImGui::SameLine(0, 150);
         if (ImGui::Button("Close"))
         {
             LOG_INFO("Closing...");
@@ -135,7 +138,7 @@ void stepBack()
     LOG_DEBUG("Stepped back successfully. Snapshots remaining: " << vmSnapshots.size());
 }
 
-void executeInBackground(std::function<void()> func) {
+void executeInBackground(const std::function<void()>& func) {
     std::thread([func]() {
         func();
     }).detach();
@@ -627,8 +630,6 @@ void runActions(){
     if (showUpdateWindow)
     {
         updateWindow();
-        //
-        // showUpdateWindow = false;
     }
 
 }

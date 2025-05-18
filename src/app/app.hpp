@@ -50,4 +50,6 @@ extern float frameRate;
 extern std::string executablePath;
 extern bool isRunning;
 extern TextEditor::LanguageDefinitionId currentDefinitionId;
+extern std::string currentVersion;
+extern std::string getLatestVersion();
 #endif //ZATHURA_UI_APP_HPP

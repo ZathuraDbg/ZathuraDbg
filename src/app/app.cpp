@@ -86,10 +86,20 @@ void pushFont(){
     ImGui::PushFont(io.Fonts->Fonts[SatoshiBold18]);
 }
 
+std::mutex updateMutex{};
 void mainWindow() {
     const ImGuiIO &io = ImGui::GetIO();
     bool keepWindow = true;
 
+    if (currentVersion.empty())
+    {
+        executeInBackground([]
+        {
+            updateMutex.lock();
+            currentVersion = getLatestVersion();
+            updateMutex.unlock();
+        });
+    }
     setupAppStyle();
     ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport());
 

@@ -12,6 +12,6 @@ extern int times;
 // Add declarations for the UI update functions
 void safeHighlightLine(int lineNo);
 void processUIUpdates();
-void executeInBackground(std::function<void()> func);
+void executeInBackground(const std::function<void()>& func);
 
 #endif //ZATHURA_ACTIONS_HPP

@@ -20,6 +20,6 @@
 [submodule "vendor/keystone"]
 	path = vendor/keystone
 	url = https://github.com/keystone-engine/keystone
-[submodule "vendor/icicle-cpp"]
-	path = vendor/icicle-cpp
-	url = https://github.com/HACKE-RC/icicle-cpp
+# [submodule "vendor/icicle-cpp"]
+#	path = vendor/icicle-cpp
+#	url = https://github.com/HACKE-RC/icicle-cpp
