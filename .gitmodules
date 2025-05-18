@@ -1,25 +1,9 @@
-[submodule "imgui"]
-  path = vendor/imgui
-  branch = docking
-	url = https://github.com/ocornut/imgui
-[submodule "vendor/ordered-map"]
-	path = vendor/ordered-map
-	url = https://github.com/Tessil/ordered-map
-[submodule "vendor/ImGuiColorTextEdit"]
-	path = vendor/ImGuiColorTextEdit
-	url = https://github.com/HACKE-RC/ImGuiColorTextEdit
 [submodule "vendor/whereami"]
 	path = vendor/whereami
 	url = https://github.com/gpakosz/whereami
 [submodule "vendor/tinyfdialogue"]
 	path = vendor/tinyfdialogue
 	url = https://github.com/ZathuraDbg/tinyfdialogue
-[submodule "vendor/capstone"]
-	path = vendor/capstone
-	url = https://github.com/capstone-engine/capstone
-[submodule "vendor/keystone"]
-	path = vendor/keystone
-	url = https://github.com/keystone-engine/keystone
-# [submodule "vendor/icicle-cpp"]
-#	path = vendor/icicle-cpp
-#	url = https://github.com/HACKE-RC/icicle-cpp
+[submodule "vendor/icicle-cpp"]
+  path = vendor/icicle-cpp
+  url = https://github.com/HACKE-RC/icicle-cpp
