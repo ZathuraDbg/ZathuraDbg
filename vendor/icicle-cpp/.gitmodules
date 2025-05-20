@@ -1,0 +1,3 @@
+[submodule "ghidra"]
+	path = ghidra
+	url = https://github.com/icicle-emu/ghidra
