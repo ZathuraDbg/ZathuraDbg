@@ -33,7 +33,7 @@
 #define CPPHTTPLIB_OPENSSL_SUPPORT
 #include <http.hpp>
 using json = nlohmann::json;
-constexpr std::string VERSION = "0.5.0-beta";
+constexpr std::string VERSION = "1.0";
 #define CONFIG_NAME "config"
 
 std::string parseVals(std::string val);

@@ -74,6 +74,9 @@ void updateWindow()
         if (latest)
         {
             ImGui::TextWrapped("Fantastic! You're on the latest version: %s", VERSION.c_str());
+            ImGui::Dummy({40, 10});
+            ImGui::Dummy({40, 0});
+            ImGui::SameLine(0, 150);
         }
         else
         {
@@ -96,9 +99,8 @@ void updateWindow()
 
         ImGui::SameLine(0, 100);
         }
-        ImGui::Dummy({40, 10});
-        ImGui::Dummy({40, 0});
-        ImGui::SameLine(0, 150);
+
+
         if (ImGui::Button("Close"))
         {
             LOG_INFO("Closing...");
