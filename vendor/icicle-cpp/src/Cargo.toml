@@ -1,0 +1,33 @@
+[package]
+name = "icicle"
+version = "0.1.0"
+edition = "2018"
+
+[lib]
+name = "icicle"
+path = "lib.rs"
+crate-type = ["staticlib"]
+
+[profile.dev]
+opt-level = 0
+debug = true
+split-debuginfo = "unpacked"
+lto = false
+
+[dependencies]
+icicle-vm = { git = "https://github.com/icicle-emu/icicle-emu" }
+icicle-cpu = { git = "https://github.com/icicle-emu/icicle-emu" }
+sleigh-runtime = { git = "https://github.com/icicle-emu/icicle-emu" }
+sleigh-compile = { path = "./sleigh/sleigh-compile" }
+indexmap = "1.9.1"
+target-lexicon = "0.12"
+tracing-subscriber = "0.3"
+tracing = "0.1"
+object = { version = "0.36.2", default-features = false, features = ["write", "read_core", "elf"] }
+gimli = { version = "0.31.0", features = ["endian-reader"] }
+serde = { version = "1.0.197", features = ["derive"] }
+bincode = "1.3.3"
+zstd = "0.13.0"
+bytemuck = "1"
+pcode = { git = "https://github.com/icicle-emu/icicle-emu" }
+ahash = "0.8.11"

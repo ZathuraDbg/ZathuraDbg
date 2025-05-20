@@ -1,0 +1,10 @@
+/build
+/ipch
+
+*.suo
+*.sdf
+*.opensdf
+*.user
+*.sln.docstates
+*.opendb
+*.db
