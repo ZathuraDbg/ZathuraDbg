@@ -14,7 +14,7 @@ struct hexStruct
     const unsigned char* mData;
     const unsigned long long mLength;
 };
-
+typedef unsigned int uint;
 static std::string hexlify(const hexStruct& dump) {
     std::string result;
     result.reserve(dump.mLength);

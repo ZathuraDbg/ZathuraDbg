@@ -10,8 +10,11 @@
 //  [X] Platform: Gamepad support.
 //  [X] Platform: Mouse cursor shape and visibility (ImGuiBackendFlags_HasMouseCursors). Disable with 'io.ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange'.
 //  [X] Platform: IME support.
+//  [x] Platform: Multi-viewport / platform windows.
 // Missing features or Issues:
 //  [ ] Missing ImGuiMouseCursor_Wait and ImGuiMouseCursor_Progress cursors.
+//  [ ] Multi-viewport: Window size not correctly reported when enabling io.ConfigViewportsNoDecoration
+//  [ ] Multi-viewport: ParentViewportID not honored, and so io.ConfigViewportsNoDefaultParent has no effect (minor).
 
 // You can use unmodified imgui_impl_* files in your project. See examples/ folder for examples of using this.
 // Prefer including the entire imgui/ repository into your project (either as a copy or as a submodule), and only build the backends you need.
@@ -31,6 +34,8 @@
 
 // CHANGELOG
 // (minor and older changes stripped away, please see git history for details)
+//  2025-XX-XX: Added support for multiple windows via the ImGuiPlatformIO interface.
+//  2025-05-15: [Docking] Add Platform_GetWindowFramebufferScale() handler, to allow varying Retina display density on multiple monitors.
 //  2025-03-21: Fill gamepad inputs and set ImGuiBackendFlags_HasGamepad regardless of ImGuiConfigFlags_NavEnableGamepad being set.
 //  2025-01-20: Removed notification observer when shutting down. (#8331)
 //  2024-08-22: moved some OS/backend related function pointers from ImGuiIO to ImGuiPlatformIO:
@@ -100,6 +105,9 @@ static void                     ImGui_ImplOSX_DestroyBackendData()  { IM_DELETE(
 static inline CFTimeInterval    GetMachAbsoluteTimeInSeconds()      { return (CFTimeInterval)(double)(clock_gettime_nsec_np(CLOCK_UPTIME_RAW) / 1e9); }
 
 // Forward Declarations
+static void ImGui_ImplOSX_InitMultiViewportSupport();
+static void ImGui_ImplOSX_ShutdownMultiViewportSupport();
+static void ImGui_ImplOSX_UpdateMonitors();
 static void ImGui_ImplOSX_AddTrackingArea(NSView* _Nonnull view);
 static bool ImGui_ImplOSX_HandleEvent(NSEvent* event, NSView* view);
 
@@ -146,9 +154,25 @@ static bool ImGui_ImplOSX_HandleEvent(NSEvent* event, NSView* view);
     NSWindow* window = view.window;
     if (!window)
         return;
-    NSRect contentRect = [window contentRectForFrameRect:window.frame];
-    NSRect rect = NSMakeRect(_posX, contentRect.size.height - _posY, 0, 0);
-    _imeRect = [window convertRectToScreen:rect];
+
+    ImGuiIO& io = ImGui::GetIO();
+    if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+    {
+        NSRect frame = window.frame;
+        NSRect contentRect = window.contentLayoutRect;
+        if (window.styleMask & NSWindowStyleMaskFullSizeContentView) // No title bar windows should be considered.
+            contentRect = frame;
+
+        NSRect firstScreenFrame = NSScreen.screens[0].frame;
+        _imeRect = NSMakeRect(_posX, _posY, 0, 0);
+        _imeRect.origin.y = firstScreenFrame.size.height - _imeRect.size.height - _imeRect.origin.y; // Opposite of ConvertNSRect()
+    }
+    else
+    {
+        NSRect contentRect = [window contentRectForFrameRect:window.frame];
+        NSRect rect = NSMakeRect(_posX, contentRect.size.height - _posY, 0, 0);
+        _imeRect = [window convertRectToScreen:rect];
+    }
 }
 
 - (void)viewDidMoveToWindow
@@ -243,6 +267,7 @@ static bool ImGui_ImplOSX_HandleEvent(NSEvent* event, NSView* view);
 
 - (void)onApplicationBecomeActive:(NSNotification*)aNotification;
 - (void)onApplicationBecomeInactive:(NSNotification*)aNotification;
+- (void)displaysDidChange:(NSNotification*)aNotification;
 
 @end
 
@@ -258,6 +283,11 @@ static bool ImGui_ImplOSX_HandleEvent(NSEvent* event, NSView* view);
 {
     ImGuiIO& io = ImGui::GetIO();
     io.AddFocusEvent(false);
+}
+
+- (void)displaysDidChange:(NSNotification*)aNotification
+{
+    ImGui_ImplOSX_UpdateMonitors();
 }
 
 @end
@@ -414,11 +444,15 @@ bool ImGui_ImplOSX_Init(NSView* view)
     io.BackendPlatformName = "imgui_impl_osx";
     io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;           // We can honor GetMouseCursor() values (optional)
     //io.BackendFlags |= ImGuiBackendFlags_HasSetMousePos;          // We can honor io.WantSetMousePos requests (optional, rarely used)
+    io.BackendFlags |= ImGuiBackendFlags_PlatformHasViewports;      // We can create multi-viewports on the Platform side (optional)
+    //io.BackendFlags |= ImGuiBackendFlags_HasMouseHoveredViewport; // We can call io.AddMouseViewportEvent() with correct data (optional)
 
     bd->Observer = [ImGuiObserver new];
     bd->Window = view.window ?: NSApp.orderedWindows.firstObject;
     ImGuiViewport* main_viewport = ImGui::GetMainViewport();
     main_viewport->PlatformHandle = main_viewport->PlatformHandleRaw = (__bridge_retained void*)bd->Window;
+    ImGui_ImplOSX_UpdateMonitors();
+    ImGui_ImplOSX_InitMultiViewportSupport();
 
     // Load cursors. Some of them are undocumented.
     bd->MouseCursorHidden = false;
@@ -509,12 +543,12 @@ void ImGui_ImplOSX_Shutdown()
         bd->Monitor = nullptr;
     }
 
+    ImGui_ImplOSX_ShutdownMultiViewportSupport();
     ImGui_ImplOSX_DestroyBackendData();
-
     ImGuiIO& io = ImGui::GetIO();
     io.BackendPlatformName = nullptr;
     io.BackendPlatformUserData = nullptr;
-    io.BackendFlags &= ~(ImGuiBackendFlags_HasMouseCursors | ImGuiBackendFlags_HasGamepad);
+    io.BackendFlags &= ~(ImGuiBackendFlags_HasMouseCursors | ImGuiBackendFlags_HasGamepad | ImGuiBackendFlags_PlatformHasViewports);
 }
 
 static void ImGui_ImplOSX_UpdateMouseCursor()
@@ -623,9 +657,9 @@ void ImGui_ImplOSX_NewFrame(NSView* view)
     // Setup display size
     if (view)
     {
-        const float dpi = (float)[view.window backingScaleFactor];
+        const float fb_scale = (float)[view.window backingScaleFactor];
         io.DisplaySize = ImVec2((float)view.bounds.size.width, (float)view.bounds.size.height);
-        io.DisplayFramebufferScale = ImVec2(dpi, dpi);
+        io.DisplayFramebufferScale = ImVec2(fb_scale, fb_scale);
     }
 
     // Setup time step
@@ -689,14 +723,23 @@ static bool ImGui_ImplOSX_HandleEvent(NSEvent* event, NSView* view)
 
     if (event.type == NSEventTypeMouseMoved || event.type == NSEventTypeLeftMouseDragged || event.type == NSEventTypeRightMouseDragged || event.type == NSEventTypeOtherMouseDragged)
     {
-        NSPoint mousePoint = event.locationInWindow;
-        if (event.window == nil)
-            mousePoint = [[view window] convertPointFromScreen:mousePoint];
-        mousePoint = [view convertPoint:mousePoint fromView:nil];
-        if ([view isFlipped])
-            mousePoint = NSMakePoint(mousePoint.x, mousePoint.y);
+        NSPoint mousePoint;
+        if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+        {
+            mousePoint = NSEvent.mouseLocation;
+            mousePoint.y = CGDisplayPixelsHigh(kCGDirectMainDisplay) - mousePoint.y; // Normalize y coordinate to top-left of main display.
+        }
         else
-            mousePoint = NSMakePoint(mousePoint.x, view.bounds.size.height - mousePoint.y);
+        {
+            mousePoint = event.locationInWindow;
+            if (event.window == nil)
+                mousePoint = [[view window] convertPointFromScreen:mousePoint];
+            mousePoint = [view convertPoint:mousePoint fromView:nil]; // Convert to local coordinates of view
+            if ([view isFlipped])
+                mousePoint = NSMakePoint(mousePoint.x, mousePoint.y);
+            else
+                mousePoint = NSMakePoint(mousePoint.x, view.bounds.size.height - mousePoint.y);
+        }
         io.AddMouseSourceEvent(GetMouseSource(event));
         io.AddMousePosEvent((float)mousePoint.x, (float)mousePoint.y);
         return io.WantCaptureMouse;
@@ -820,6 +863,303 @@ static void ImGui_ImplOSX_AddTrackingArea(NSView* _Nonnull view)
         ImGui_ImplOSX_HandleEvent(event, view);
         return event;
     }];
+}
+
+//--------------------------------------------------------------------------------------------------------
+// MULTI-VIEWPORT / PLATFORM INTERFACE SUPPORT
+// This is an _advanced_ and _optional_ feature, allowing the back-end to create and handle multiple viewports simultaneously.
+// If you are new to dear imgui or creating a new binding for dear imgui, it is recommended that you completely ignore this section first..
+//--------------------------------------------------------------------------------------------------------
+
+struct ImGui_ImplOSX_ViewportData
+{
+    NSWindow*        Window;
+    bool             WindowOwned;
+
+    ImGui_ImplOSX_ViewportData()  { WindowOwned = false; }
+    ~ImGui_ImplOSX_ViewportData() { IM_ASSERT(Window == nil); }
+};
+
+@interface ImGui_ImplOSX_Window: NSWindow
+@end
+
+@implementation ImGui_ImplOSX_Window
+
+- (BOOL)canBecomeKeyWindow
+{
+    return YES;
+}
+
+@end
+
+static void ConvertNSRect(NSRect* r)
+{
+    NSRect firstScreenFrame = NSScreen.screens[0].frame;
+    IM_ASSERT(firstScreenFrame.origin.x == 0 && firstScreenFrame.origin.y == 0);
+    r->origin.y = firstScreenFrame.size.height - r->origin.y - r->size.height;
+}
+
+static void ImGui_ImplOSX_CreateWindow(ImGuiViewport* viewport)
+{
+    ImGui_ImplOSX_Data* bd = ImGui_ImplOSX_GetBackendData();
+    ImGui_ImplOSX_ViewportData* vd = IM_NEW(ImGui_ImplOSX_ViewportData)();
+    viewport->PlatformUserData = vd;
+
+    NSScreen* screen = bd->Window.screen;
+    NSRect rect = NSMakeRect(viewport->Pos.x, viewport->Pos.y, viewport->Size.x, viewport->Size.y);
+    ConvertNSRect(&rect);
+
+    NSWindowStyleMask styleMask = 0;
+    if (viewport->Flags & ImGuiViewportFlags_NoDecoration)
+        styleMask |= NSWindowStyleMaskBorderless;
+    else
+        styleMask |= NSWindowStyleMaskTitled | NSWindowStyleMaskResizable | NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable;
+
+    NSWindow* window = [[ImGui_ImplOSX_Window alloc] initWithContentRect:rect
+                                                               styleMask:styleMask
+                                                                 backing:NSBackingStoreBuffered
+                                                                   defer:YES
+                                                                  screen:screen];
+    if (viewport->Flags & ImGuiViewportFlags_TopMost)
+        [window setLevel:NSFloatingWindowLevel];
+
+    window.title = @"Untitled";
+    window.opaque = YES;
+
+    KeyEventResponder* view = [[KeyEventResponder alloc] initWithFrame:rect];
+    if (floor(NSAppKitVersionNumber) > NSAppKitVersionNumber10_6 && ceil(NSAppKitVersionNumber) < NSAppKitVersionNumber10_15)
+        [view setWantsBestResolutionOpenGLSurface:YES];
+
+    window.contentView = view;
+
+    vd->Window = window;
+    vd->WindowOwned = true;
+    viewport->PlatformRequestResize = false;
+    viewport->PlatformHandle = viewport->PlatformHandleRaw = (__bridge_retained void*)window;
+}
+
+static void ImGui_ImplOSX_DestroyWindow(ImGuiViewport* viewport)
+{
+    NSWindow* window = (__bridge_transfer NSWindow*)viewport->PlatformHandleRaw;
+    window = nil;
+
+    if (ImGui_ImplOSX_ViewportData* vd = (ImGui_ImplOSX_ViewportData*)viewport->PlatformUserData)
+    {
+        NSWindow* window = vd->Window;
+        if (window != nil && vd->WindowOwned)
+        {
+            window.contentView = nil;
+            window.contentViewController = nil;
+            [window orderOut:nil];
+        }
+        vd->Window = nil;
+        IM_DELETE(vd);
+    }
+    viewport->PlatformUserData = viewport->PlatformHandle = viewport->PlatformHandleRaw = nullptr;
+}
+
+static void ImGui_ImplOSX_ShowWindow(ImGuiViewport* viewport)
+{
+    ImGui_ImplOSX_ViewportData* vd = (ImGui_ImplOSX_ViewportData*)viewport->PlatformUserData;
+    IM_ASSERT(vd->Window != 0);
+
+    if (viewport->Flags & ImGuiViewportFlags_NoFocusOnAppearing)
+        [vd->Window orderFront:nil];
+    else
+        [vd->Window makeKeyAndOrderFront:nil];
+
+    [vd->Window setIsVisible:YES];
+}
+
+static ImVec2 ImGui_ImplOSX_GetWindowPos(ImGuiViewport* viewport)
+{
+    ImGui_ImplOSX_ViewportData* vd = (ImGui_ImplOSX_ViewportData*)viewport->PlatformUserData;
+    IM_ASSERT(vd->Window != 0);
+
+    NSWindow* window = vd->Window;
+    NSRect frame = window.frame;
+    NSRect contentRect = window.contentLayoutRect;
+    if (window.styleMask & NSWindowStyleMaskFullSizeContentView) // No title bar windows should be considered.
+        contentRect = frame;
+
+    NSRect firstScreenFrame = NSScreen.screens[0].frame;
+    return ImVec2(frame.origin.x, firstScreenFrame.size.height - frame.origin.y - contentRect.size.height);
+}
+
+static void ImGui_ImplOSX_SetWindowPos(ImGuiViewport* viewport, ImVec2 pos)
+{
+    ImGui_ImplOSX_ViewportData* vd = (ImGui_ImplOSX_ViewportData*)viewport->PlatformUserData;
+    IM_ASSERT(vd->Window != 0);
+
+    NSWindow* window = vd->Window;
+    NSSize size = window.frame.size;
+
+    NSRect r = NSMakeRect(pos.x, pos.y, size.width, size.height);
+    ConvertNSRect(&r);
+    [window setFrameOrigin:r.origin];
+}
+
+static ImVec2 ImGui_ImplOSX_GetWindowSize(ImGuiViewport* viewport)
+{
+    ImGui_ImplOSX_ViewportData* vd = (ImGui_ImplOSX_ViewportData*)viewport->PlatformUserData;
+    IM_ASSERT(vd->Window != 0);
+
+    NSWindow* window = vd->Window;
+    NSSize size = window.contentLayoutRect.size;
+    return ImVec2(size.width, size.height);
+}
+
+static void ImGui_ImplOSX_SetWindowSize(ImGuiViewport* viewport, ImVec2 size)
+{
+    ImGui_ImplOSX_ViewportData* vd = (ImGui_ImplOSX_ViewportData*)viewport->PlatformUserData;
+    IM_ASSERT(vd->Window != 0);
+
+    NSWindow* window = vd->Window;
+    NSRect rect = window.frame;
+    rect.origin.y -= (size.y - rect.size.height);
+    rect.size.width = size.x;
+    rect.size.height = size.y;
+    [window setFrame:rect display:YES];
+}
+
+static ImVec2 ImGui_ImplOSX_GetWindowFramebufferScale(ImGuiViewport* viewport)
+{
+    ImGui_ImplOSX_ViewportData* vd = (ImGui_ImplOSX_ViewportData*)viewport->PlatformUserData;
+    NSWindow* window = vd->Window;
+    const float fb_scale = (float)[window backingScaleFactor];
+    return ImVec2(fb_scale, fb_scale);
+}
+
+static void ImGui_ImplOSX_SetWindowFocus(ImGuiViewport* viewport)
+{
+    ImGui_ImplOSX_Data* bd = ImGui_ImplOSX_GetBackendData();
+    ImGui_ImplOSX_ViewportData* vd = (ImGui_ImplOSX_ViewportData*)viewport->PlatformUserData;
+    IM_ASSERT(vd->Window != 0);
+    [vd->Window makeKeyAndOrderFront:bd->Window];
+}
+
+static bool ImGui_ImplOSX_GetWindowFocus(ImGuiViewport* viewport)
+{
+    ImGui_ImplOSX_ViewportData* vd = (ImGui_ImplOSX_ViewportData*)viewport->PlatformUserData;
+    IM_ASSERT(vd->Window != 0);
+
+    return vd->Window.isKeyWindow;
+}
+
+static bool ImGui_ImplOSX_GetWindowMinimized(ImGuiViewport* viewport)
+{
+    ImGui_ImplOSX_ViewportData* vd = (ImGui_ImplOSX_ViewportData*)viewport->PlatformUserData;
+    IM_ASSERT(vd->Window != 0);
+
+    return vd->Window.isMiniaturized;
+}
+
+static void ImGui_ImplOSX_SetWindowTitle(ImGuiViewport* viewport, const char* title)
+{
+    ImGui_ImplOSX_ViewportData* vd = (ImGui_ImplOSX_ViewportData*)viewport->PlatformUserData;
+    IM_ASSERT(vd->Window != 0);
+
+    vd->Window.title = [NSString stringWithUTF8String:title];
+}
+
+static void ImGui_ImplOSX_SetWindowAlpha(ImGuiViewport* viewport, float alpha)
+{
+    ImGui_ImplOSX_ViewportData* vd = (ImGui_ImplOSX_ViewportData*)viewport->PlatformUserData;
+    IM_ASSERT(vd->Window != 0);
+    IM_ASSERT(alpha >= 0.0f && alpha <= 1.0f);
+
+    vd->Window.alphaValue = alpha;
+}
+
+static float ImGui_ImplOSX_GetWindowDpiScale(ImGuiViewport* viewport)
+{
+    ImGui_ImplOSX_ViewportData* vd = (ImGui_ImplOSX_ViewportData*)viewport->PlatformUserData;
+    IM_ASSERT(vd->Window != 0);
+
+    return vd->Window.backingScaleFactor;
+}
+
+static void ImGui_ImplOSX_UpdateMonitors()
+{
+    ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
+    platform_io.Monitors.resize(0);
+
+    NSRect firstScreenFrame = NSScreen.screens[0].frame;
+    IM_ASSERT(firstScreenFrame.origin.x == 0 && firstScreenFrame.origin.y == 0);
+
+    for (NSScreen* screen in NSScreen.screens)
+    {
+        NSRect frame = screen.frame;
+        NSRect visibleFrame = screen.visibleFrame;
+        ConvertNSRect(&frame);
+        ConvertNSRect(&visibleFrame);
+
+        ImGuiPlatformMonitor imgui_monitor;
+        imgui_monitor.MainPos = ImVec2(frame.origin.x, frame.origin.y);
+        imgui_monitor.MainSize = ImVec2(frame.size.width, frame.size.height);
+        imgui_monitor.WorkPos = ImVec2(visibleFrame.origin.x, visibleFrame.origin.y);
+        imgui_monitor.WorkSize = ImVec2(visibleFrame.size.width, visibleFrame.size.height);
+        imgui_monitor.DpiScale = screen.backingScaleFactor;
+        imgui_monitor.PlatformHandle = (__bridge_retained void*)screen;
+
+        platform_io.Monitors.push_back(imgui_monitor);
+    }
+}
+
+static void ImGui_ImplOSX_InitMultiViewportSupport()
+{
+    ImGui_ImplOSX_Data* bd = ImGui_ImplOSX_GetBackendData();
+
+    // Register platform interface (will be coupled with a renderer interface)
+    ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
+    platform_io.Platform_CreateWindow = ImGui_ImplOSX_CreateWindow;
+    platform_io.Platform_DestroyWindow = ImGui_ImplOSX_DestroyWindow;
+    platform_io.Platform_ShowWindow = ImGui_ImplOSX_ShowWindow;
+    platform_io.Platform_SetWindowPos = ImGui_ImplOSX_SetWindowPos;
+    platform_io.Platform_GetWindowPos = ImGui_ImplOSX_GetWindowPos;
+    platform_io.Platform_SetWindowSize = ImGui_ImplOSX_SetWindowSize;
+    platform_io.Platform_GetWindowSize = ImGui_ImplOSX_GetWindowSize;
+    platform_io.Platform_GetWindowFramebufferScale = ImGui_ImplOSX_GetWindowFramebufferScale;
+    platform_io.Platform_SetWindowFocus = ImGui_ImplOSX_SetWindowFocus;
+    platform_io.Platform_GetWindowFocus = ImGui_ImplOSX_GetWindowFocus;
+    platform_io.Platform_GetWindowMinimized = ImGui_ImplOSX_GetWindowMinimized;
+    platform_io.Platform_SetWindowTitle = ImGui_ImplOSX_SetWindowTitle;
+    platform_io.Platform_SetWindowAlpha = ImGui_ImplOSX_SetWindowAlpha;
+    platform_io.Platform_GetWindowDpiScale = ImGui_ImplOSX_GetWindowDpiScale; // FIXME-DPI
+
+    // Register main window handle (which is owned by the main application, not by us)
+    ImGuiViewport* main_viewport = ImGui::GetMainViewport();
+    ImGui_ImplOSX_ViewportData* vd = IM_NEW(ImGui_ImplOSX_ViewportData)();
+    vd->Window = bd->Window;
+    vd->WindowOwned = false;
+    main_viewport->PlatformUserData = vd;
+    main_viewport->PlatformHandle = (__bridge void*)bd->Window;
+
+    [NSNotificationCenter.defaultCenter addObserver:bd->Observer
+                                           selector:@selector(displaysDidChange:)
+                                               name:NSApplicationDidChangeScreenParametersNotification
+                                             object:nil];
+}
+
+static void ImGui_ImplOSX_ShutdownMultiViewportSupport()
+{
+    ImGui_ImplOSX_Data* bd = ImGui_ImplOSX_GetBackendData();
+    [NSNotificationCenter.defaultCenter removeObserver:bd->Observer
+                                                  name:NSApplicationDidChangeScreenParametersNotification
+                                                object:nil];
+    bd->Observer = nullptr;
+    bd->Window = nullptr;
+    if (bd->Monitor != nullptr)
+    {
+        [NSEvent removeMonitor:bd->Monitor];
+        bd->Monitor = nullptr;
+    }
+
+    ImGuiViewport* main_viewport = ImGui::GetMainViewport();
+    ImGui_ImplOSX_ViewportData* vd = (ImGui_ImplOSX_ViewportData*)main_viewport->PlatformUserData;
+    IM_DELETE(vd);
+    main_viewport->PlatformUserData = nullptr;
+    ImGui::DestroyPlatformWindows();
 }
 
 //-----------------------------------------------------------------------------
