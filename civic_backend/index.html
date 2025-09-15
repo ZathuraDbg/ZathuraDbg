@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Civic Issue Reporting System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        
+        .tabs {
+            display: flex;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 1rem;
+            background: #f8f9fa;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .tab.active {
+            background: #667eea;
+            color: white;
+        }
+        
+        .tab-content {
+            display: none;
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #555;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e9ecef;
+            border-radius: 5px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        .btn {
+            background: #667eea;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        
+        .btn:hover {
+            background: #5a6fd8;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        
+        .location-info {
+            background: #e3f2fd;
+            padding: 1rem;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+        }
+        
+        .issue-card {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border-left: 4px solid #667eea;
+        }
+        
+        .issue-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .issue-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .status-todo { background: #fff3cd; color: #856404; }
+        .status-construction { background: #d4edda; color: #155724; }
+        .status-solved { background: #d1ecf1; color: #0c5460; }
+        
+        .priority-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 3px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .priority-p0 { background: #f8d7da; color: #721c24; }
+        .priority-p1 { background: #ffeaa7; color: #856404; }
+        .priority-p2 { background: #b3d9ff; color: #004085; }
+        .priority-p3 { background: #d4edda; color: #155724; }
+        .priority-p4 { background: #e2e3e5; color: #495057; }
+        
+        .filters {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .filters-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+        
+        .auth-container {
+            max-width: 400px;
+            margin: 2rem auto;
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 0.75rem;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+        }
+        
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 0.75rem;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏛️ Civic Issue Reporting System</h1>
+            <p>Report and track civic issues in your community</p>
+        </div>
+        
+        <!-- Authentication Section -->
+        <div id="auth-section">
+            <div class="auth-container">
+                <div class="tabs">
+                    <button class="tab active" onclick="showAuthTab('login')">Login</button>
+                    <button class="tab" onclick="showAuthTab('register')">Register</button>
+                </div>
+                
+                <div id="login-tab" class="tab-content active">
+                    <h2>Login</h2>
+                    <form id="login-form">
+                        <div class="form-group">
+                            <label for="login-email">Email:</label>
+                            <input type="email" id="login-email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="login-password">Password:</label>
+                            <input type="password" id="login-password" required>
+                        </div>
+                        <button type="submit" class="btn">Login</button>
+                    </form>
+                </div>
+                
+                <div id="register-tab" class="tab-content">
+                    <h2>Register</h2>
+                    <form id="register-form">
+                        <div class="form-group">
+                            <label for="register-username">Username:</label>
+                            <input type="text" id="register-username" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="register-email">Email:</label>
+                            <input type="email" id="register-email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="register-password">Password:</label>
+                            <input type="password" id="register-password" required>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="register-admin" style="width: auto; margin-right: 0.5rem;">
+                                Register as Admin
+                            </label>
+                        </div>
+                        <button type="submit" class="btn">Register</button>
+                    </form>
+                </div>
+                
+                <div id="auth-message"></div>
+            </div>
+        </div>
+        
+        <!-- Main Application -->
+        <div id="main-app" class="hidden">
+            <div class="tabs">
+                <button class="tab active" onclick="showTab('report')">Report Issue</button>
+                <button class="tab" onclick="showTab('view')">View Issues</button>
+                <button class="tab" id="admin-tab" onclick="showTab('admin')">Admin Panel</button>
+            </div>
+            
+            <!-- Report Issue Tab -->
+            <div id="report-tab" class="tab-content active">
+                <h2>Report a Civic Issue</h2>
+                <form id="issue-form">
+                    <div class="form-group">
+                        <label for="issue-title">Issue Title:</label>
+                        <input type="text" id="issue-title" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="issue-category">Category:</label>
+                        <select id="issue-category" required>
+                            <option value="">Select a category</option>
+                            <option value="Road Damage">Road Damage</option>
+                            <option value="Garbage/Litter">Garbage/Litter</option>
+                            <option value="Broken Streetlight">Broken Streetlight</option>
+                            <option value="Graffiti">Graffiti</option>
+                            <option value="Damaged Signage">Damaged Signage</option>
+                            <option value="Blocked Drainage">Blocked Drainage</option>
+                            <option value="Illegal Parking">Illegal Parking</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="issue-description">Description:</label>
+                        <textarea id="issue-description" required placeholder="Describe the issue in detail..."></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="issue-image">Upload Image:</label>
+                        <input type="file" id="issue-image" accept="image/*" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="issue-address">Address (Optional):</label>
+                        <input type="text" id="issue-address" placeholder="Enter address or use location below">
+                    </div>
+                    
+                    <div class="form-group">
+                        <button type="button" class="btn btn-secondary" onclick="getCurrentLocation()">Get Current Location</button>
+                        <div id="location-info" class="location-info hidden">
+                            <p><strong>Location:</strong> <span id="location-coords"></span></p>
+                        </div>
+                    </div>
+                    
+                    <input type="hidden" id="issue-latitude">
+                    <input type="hidden" id="issue-longitude">
+                    
+                    <button type="submit" class="btn">Submit Issue</button>
+                </form>
+                
+                <div id="ai-report" class="hidden">
+                    <h3>AI Generated Report:</h3>
+                    <div id="ai-report-content"></div>
+                </div>
+            </div>
+            
+            <!-- View Issues Tab -->
+            <div id="view-tab" class="tab-content">
+                <h2>View Issues</h2>
+                
+                <div class="filters">
+                    <div class="filters-row">
+                        <div class="form-group">
+                            <label for="filter-category">Filter by Category:</label>
+                            <select id="filter-category">
+                                <option value="">All Categories</option>
+                                <option value="Road Damage">Road Damage</option>
+                                <option value="Garbage/Litter">Garbage/Litter</option>
+                                <option value="Broken Streetlight">Broken Streetlight</option>
+                                <option value="Graffiti">Graffiti</option>
+                                <option value="Damaged Signage">Damaged Signage</option>
+                                <option value="Blocked Drainage">Blocked Drainage</option>
+                                <option value="Illegal Parking">Illegal Parking</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="filter-status">Filter by Status:</label>
+                            <select id="filter-status">
+                                <option value="">All Statuses</option>
+                                <option value="TODO">TODO</option>
+                                <option value="Under Construction">Under Construction</option>
+                                <option value="Solved">Solved</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="filter-priority">Filter by Priority:</label>
+                            <select id="filter-priority">
+                                <option value="">All Priorities</option>
+                                <option value="P0">P0 - Critical</option>
+                                <option value="P1">P1 - High</option>
+                                <option value="P2">P2 - Medium</option>
+                                <option value="P3">P3 - Low</option>
+                                <option value="P4">P4 - Lowest</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>&nbsp;</label>
+                            <button class="btn" onclick="loadIssues()">Apply Filters</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="issues-container">
+                    <!-- Issues will be loaded here -->
+                </div>
+            </div>
+            
+            <!-- Admin Panel Tab -->
+            <div id="admin-tab-content" class="tab-content">
+                <h2>Admin Panel</h2>
+                <p>Administrative functions for managing issues and users.</p>
+                
+                <div id="admin-issues">
+                    <!-- Admin issue management will be loaded here -->
+                </div>
+            </div>
+            
+            <div style="text-align: center; margin-top: 2rem;">
+                <button class="btn btn-secondary" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        let currentUser = null;
+        let authToken = null;
+        
+        // Authentication functions
+        function showAuthTab(tab) {
+            document.querySelectorAll('#auth-section .tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('#auth-section .tab-content').forEach(t => t.classList.remove('active'));
+            
+            document.querySelector(`#auth-section .tab:nth-child(${tab === 'login' ? '1' : '2'})`).classList.add('active');
+            document.getElementById(`${tab}-tab`).classList.add('active');
+        }
+        
+        function showTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(`${tab}-tab${tab === 'admin' ? '-content' : ''}`).classList.add('active');
+            
+            if (tab === 'view') {
+                loadIssues();
+            }
+        }
+        
+        function showMessage(message, type = 'error') {
+            const messageDiv = document.getElementById('auth-message');
+            messageDiv.innerHTML = `<div class="${type}">${message}</div>`;
+        }
+        
+        // Login
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData();
+            formData.append('email', document.getElementById('login-email').value);
+            formData.append('password', document.getElementById('login-password').value);
+            
+            try {
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    authToken = data.access_token;
+                    currentUser = data.user;
+                    localStorage.setItem('authToken', authToken);
+                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                    
+                    showMainApp();
+                } else {
+                    showMessage(data.detail || 'Login failed');
+                }
+            } catch (error) {
+                showMessage('Network error: ' + error.message);
+            }
+        });
+        
+        // Register
+        document.getElementById('register-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const userData = {
+                username: document.getElementById('register-username').value,
+                email: document.getElementById('register-email').value,
+                password: document.getElementById('register-password').value,
+                is_admin: document.getElementById('register-admin').checked
+            };
+            
+            try {
+                const response = await fetch(`${API_BASE}/auth/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(userData)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showMessage('Registration successful! Please login.', 'success');
+                    showAuthTab('login');
+                } else {
+                    showMessage(data.detail || 'Registration failed');
+                }
+            } catch (error) {
+                showMessage('Network error: ' + error.message);
+            }
+        });
+        
+        function showMainApp() {
+            document.getElementById('auth-section').classList.add('hidden');
+            document.getElementById('main-app').classList.remove('hidden');
+            
+            // Hide admin tab if not admin
+            if (!currentUser.is_admin) {
+                document.getElementById('admin-tab').style.display = 'none';
+            }
+        }
+        
+        function logout() {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('currentUser');
+            authToken = null;
+            currentUser = null;
+            
+            document.getElementById('auth-section').classList.remove('hidden');
+            document.getElementById('main-app').classList.add('hidden');
+        }
+        
+        // Location functions
+        function getCurrentLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+                        
+                        document.getElementById('issue-latitude').value = lat;
+                        document.getElementById('issue-longitude').value = lng;
+                        
+                        document.getElementById('location-coords').textContent = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+                        document.getElementById('location-info').classList.remove('hidden');
+                    },
+                    (error) => {
+                        alert('Error getting location: ' + error.message);
+                    }
+                );
+            } else {
+                alert('Geolocation is not supported by this browser.');
+            }
+        }
+        
+        // Issue submission
+        document.getElementById('issue-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData();
+            formData.append('title', document.getElementById('issue-title').value);
+            formData.append('description', document.getElementById('issue-description').value);
+            formData.append('category', document.getElementById('issue-category').value);
+            formData.append('latitude', document.getElementById('issue-latitude').value);
+            formData.append('longitude', document.getElementById('issue-longitude').value);
+            formData.append('address', document.getElementById('issue-address').value);
+            formData.append('image', document.getElementById('issue-image').files[0]);
+            
+            try {
+                const response = await fetch(`${API_BASE}/issues/`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Show AI report
+                    document.getElementById('ai-report-content').innerHTML = data.ai_generated_report;
+                    document.getElementById('ai-report').classList.remove('hidden');
+                    
+                    alert('Issue submitted successfully!');
+                    document.getElementById('issue-form').reset();
+                    document.getElementById('location-info').classList.add('hidden');
+                    document.getElementById('ai-report').classList.add('hidden');
+                } else {
+                    alert('Error submitting issue: ' + (data.detail || 'Unknown error'));
+                }
+            } catch (error) {
+                alert('Network error: ' + error.message);
+            }
+        });
+        
+        // Load issues
+        async function loadIssues() {
+            const params = new URLSearchParams();
+            
+            const category = document.getElementById('filter-category').value;
+            const status = document.getElementById('filter-status').value;
+            const priority = document.getElementById('filter-priority').value;
+            
+            if (category) params.append('category', category);
+            if (status) params.append('status', status);
+            if (priority) params.append('priority', priority);
+            
+            try {
+                const response = await fetch(`${API_BASE}/issues/?${params}`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+                
+                const issues = await response.json();
+                
+                if (response.ok) {
+                    displayIssues(issues);
+                } else {
+                    alert('Error loading issues: ' + (issues.detail || 'Unknown error'));
+                }
+            } catch (error) {
+                alert('Network error: ' + error.message);
+            }
+        }
+        
+        function displayIssues(issues) {
+            const container = document.getElementById('issues-container');
+            
+            if (issues.length === 0) {
+                container.innerHTML = '<p>No issues found matching the current filters.</p>';
+                return;
+            }
+            
+            container.innerHTML = issues.map(issue => `
+                <div class="issue-card">
+                    <div class="issue-header">
+                        <div class="issue-title">${issue.title}</div>
+                        <div>
+                            <span class="status-badge status-${issue.status.toLowerCase().replace(' ', '-')}">${issue.status}</span>
+                            <span class="priority-badge priority-${issue.priority.toLowerCase()}">${issue.priority}</span>
+                        </div>
+                    </div>
+                    <p><strong>Category:</strong> ${issue.category}</p>
+                    <p><strong>Description:</strong> ${issue.description}</p>
+                    <p><strong>Location:</strong> ${issue.latitude.toFixed(6)}, ${issue.longitude.toFixed(6)}</p>
+                    ${issue.address ? `<p><strong>Address:</strong> ${issue.address}</p>` : ''}
+                    ${issue.ai_generated_report ? `<p><strong>AI Analysis:</strong> ${issue.ai_generated_report}</p>` : ''}
+                    <p><strong>Reported:</strong> ${new Date(issue.created_at).toLocaleDateString()}</p>
+                    ${issue.assigned_to_id ? `<p><strong>Assigned to:</strong> User ID ${issue.assigned_to_id}</p>` : ''}
+                </div>
+            `).join('');
+        }
+        
+        // Check for stored auth token on page load
+        window.addEventListener('load', () => {
+            const storedToken = localStorage.getItem('authToken');
+            const storedUser = localStorage.getItem('currentUser');
+            
+            if (storedToken && storedUser) {
+                authToken = storedToken;
+                currentUser = JSON.parse(storedUser);
+                showMainApp();
+            }
+        });
+    </script>
+</body>
+</html>

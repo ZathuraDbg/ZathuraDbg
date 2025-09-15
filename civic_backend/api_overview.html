@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>API Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .endpoint { background: #f5f5f5; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .method { color: white; padding: 5px 10px; border-radius: 3px; font-weight: bold; }
+        .get { background: #61affe; }
+        .post { background: #49cc90; }
+        .put { background: #fca130; }
+        code { background: #f9f9f9; padding: 2px 5px; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏛️ Civic Issue Reporting System API</h1>
+        <p>A FastAPI-based crowdsourced platform for reporting and resolving civic issues</p>
+        
+        <div class="endpoint">
+            <span class="method post">POST</span> 
+            <code>/auth/register</code> - Register new user
+        </div>
+        
+        <div class="endpoint">
+            <span class="method post">POST</span> 
+            <code>/auth/login</code> - User login
+        </div>
+        
+        <div class="endpoint">
+            <span class="method post">POST</span> 
+            <code>/issues/</code> - Create new issue with image upload
+        </div>
+        
+        <div class="endpoint">
+            <span class="method get">GET</span> 
+            <code>/issues/</code> - Get issues with filtering (category, status, priority, location)
+        </div>
+        
+        <div class="endpoint">
+            <span class="method put">PUT</span> 
+            <code>/issues/{issue_id}</code> - Update issue
+        </div>
+        
+        <div class="endpoint">
+            <span class="method post">POST</span> 
+            <code>/admin/assign/{issue_id}</code> - Assign issue to user (admin only)
+        </div>
+        
+        <div class="endpoint">
+            <span class="method get">GET</span> 
+            <code>/categories/</code> - Get available categories
+        </div>
+        
+        <div class="endpoint">
+            <span class="method get">GET</span> 
+            <code>/priorities/</code> - Get priority levels
+        </div>
+        
+        <div class="endpoint">
+            <span class="method get">GET</span> 
+            <code>/statuses/</code> - Get status options
+        </div>
+        
+        <h2>🚀 Features Implemented</h2>
+        <ul>
+            <li>✅ User authentication with JWT tokens</li>
+            <li>✅ Image upload and processing</li>
+            <li>✅ AI-powered report generation (mock implementation)</li>
+            <li>✅ Location-based issue reporting</li>
+            <li>✅ Issue categorization (Road Damage, Garbage, Streetlights, etc.)</li>
+            <li>✅ Status tracking (TODO/Under Construction/Solved)</li>
+            <li>✅ Priority system (P0-P4)</li>
+            <li>✅ Admin assignment functionality</li>
+            <li>✅ Advanced filtering and sorting</li>
+            <li>✅ SQLite database with proper relationships</li>
+            <li>✅ Responsive web frontend</li>
+            <li>✅ RESTful API design</li>
+        </ul>
+        
+        <h2>🎯 Categories</h2>
+        <p>Road Damage • Garbage/Litter • Broken Streetlight • Graffiti • Damaged Signage • Blocked Drainage • Illegal Parking • Other</p>
+        
+        <h2>🔧 Technology Stack</h2>
+        <p><strong>Backend:</strong> FastAPI, SQLAlchemy, SQLite, Pydantic, JWT Authentication</p>
+        <p><strong>Frontend:</strong> HTML5, CSS3, JavaScript, responsive design</p>
+        <p><strong>AI Integration:</strong> Mock processor with OpenAI Vision API structure</p>
+        
+    </div>
+</body>
+</html>
