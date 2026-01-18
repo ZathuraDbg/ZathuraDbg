@@ -1,5 +1,47 @@
 #include "interpreter.hpp"
 
+// Forward declarations for BreakpointManager callback functions
+static uint64_t lineNoToAddressCallback(uint64_t lineNo);
+static uint64_t addressToLineNoCallback(uint64_t address);
+
+// Initialize BreakpointManager callbacks early
+static void initBreakpointManagerCallbacks() {
+    auto& bpMgr = getBreakpointManager();
+    bpMgr.setLineToAddressFunc(lineNoToAddressCallback);
+    bpMgr.setAddressToLineFunc(addressToLineNoCallback);
+    bpMgr.setHighlightCallback([](uint64_t lineNo) {
+        if (editor) {
+            editor->HighlightBreakpoints(lineNo);
+        }
+    });
+    bpMgr.setRemoveHighlightCallback([](uint64_t lineNo) {
+        if (editor) {
+            editor->RemoveHighlight(lineNo);
+        }
+    });
+}
+
+// Callback implementation for lineNoToAddress
+static uint64_t lineNoToAddressCallback(uint64_t lineNo) {
+    if (lineNo == 0)
+        return ENTRY_POINT_ADDRESS;
+
+    for (auto& pair : addressLineNoMap) {
+        if (pair.second == lineNo)
+            return pair.first;
+    }
+    return 0;
+}
+
+// Callback implementation for addressToLineNo
+static uint64_t addressToLineNoCallback(uint64_t address) {
+    auto it = addressLineNoMap.find(address);
+    if (it != addressLineNoMap.end()) {
+        return it->second;
+    }
+    return 0;
+}
+
 uintptr_t ENTRY_POINT_ADDRESS = 0x10000;
 uintptr_t MEMORY_ALLOCATION_SIZE = 201000;
 uintptr_t DEFAULT_STACK_ADDRESS = 0x301000;
@@ -33,13 +75,17 @@ bool stepOver = false;
 bool stepContinue = false;
 bool executionComplete = false;
 bool use32BitLanes = false;
+// These variables are kept for backward compatibility
+// The BreakpointManager also tracks similar state internally
 bool stoppedAtBreakpoint = false;
 bool nextLineHasBreakpoint = false;
 bool addBreakpointBack = false;
 bool skipEndStep = false;
 bool isEndBreakpointSet = false;
 
-std::vector<uint64_t> breakpointLines = {};
+// breakpointLines is now managed by BreakpointManager
+// This reference provides backward compatibility
+std::vector<uint64_t>& breakpointLines = getBreakpointManager().getBreakpointLinesRef();
 
 std::mutex debugReadyMutex;
 std::condition_variable debugReadyCv;
@@ -116,45 +162,18 @@ bool removeBreakpoint(const uint64_t& address) {
 // }
 
 bool removeBreakpointFromLineNo(const uint64_t& lineNo) {
-    breakpointMutex.lock();
-    bool success = false;
+    auto& bpMgr = getBreakpointManager();
 
-    if (isSilentBreakpoint(lineNo))
-    {
-        // We don't need to remove silent breakpoints
+    // Check if this is a silent breakpoint
+    if (bpMgr.isSilentBreakpoint(lineNo)) {
+        // We don't need to remove silent breakpoints via this function
         LOG_ALERT("Attempt to remove a silent breakpoint. Ignoring.");
         return true;
     }
 
-    if (breakpointLines.empty()) {
-        breakpointMutex.unlock();
-        return success;
-    }
-
-    const auto it = std::ranges::find(breakpointLines, lineNo);
-    size_t size;
-    const uint64_t* bpList = icicle_breakpoint_list(icicle, &size);
-
-    if (bpList)
-    {
-        for (size_t i = 0; i < size; ++i) {
-            if (bpList[i] == lineNoToAddress(lineNo)) {
-                if  (it != breakpointLines.end()) {
-                    icicle_remove_breakpoint(icicle, lineNoToAddress(lineNo));
-                    breakpointLines.erase(it);
-                    success = true;
-                    LOG_DEBUG("Removed a breakpoint at lineNo " << lineNo);
-                    editor->RemoveHighlight(lineNo);
-                }
-                break;
-            }
-        }
-    }
-
-
-    breakpointMutex.unlock();
-
-    return success;
+    // Use BreakpointManager to remove the user breakpoint
+    // It handles thread safety, VM interaction, and UI updates
+    return bpMgr.removeUserBreakpoint(lineNo);
 }
 
 std::pair<float, float> convert64BitToTwoFloats(const uint64_t bits) {
@@ -762,15 +781,13 @@ Icicle* initIC()
     LOG_INFO("Initiation complete...");
     initArch();
 
+    // Initialize BreakpointManager with the new VM instance and callbacks
+    auto& bpMgr = getBreakpointManager();
+    initBreakpointManagerCallbacks();
+    bpMgr.setIcicle(vm);
 
-    if (!breakpointLines.empty())
-    {
-        for (auto& line : breakpointLines)
-        {
-            // addBreakpointToLine(line);
-            icicle_add_breakpoint(vm, lineNoToAddress(line));
-        }
-    }
+    // Reapply any existing breakpoints to the new VM
+    bpMgr.reapplyBreakpointsToVM();
 
     icicle = vm;
     return vm;
@@ -1020,6 +1037,10 @@ bool resetState(bool reInit){
         icicle = nullptr;
     }
 
+    // Reset BreakpointManager state (preserves user breakpoints)
+    getBreakpointManager().reset();
+    getBreakpointManager().setIcicle(nullptr);
+
     if (ks != nullptr)
     {
         ks_close(ks);
@@ -1075,53 +1096,18 @@ bool resetState(bool reInit){
 
 uint64_t lineNoToAddress(const uint64_t& lineNo)
 {
+    return lineNoToAddressCallback(lineNo);
+}
 
-    if (lineNo == 0)
-        return ENTRY_POINT_ADDRESS;
-
-    for (auto& pair : addressLineNoMap)
-    {
-        if (pair.second == lineNo)
-            return pair.first;
-        
-    }
-
-    return 0;
+uint64_t addressToLineNo(const uint64_t& address)
+{
+    return addressToLineNoCallback(address);
 }
 
 bool isSilentBreakpoint(const uint64_t& lineNo)
 {
-    if (icicle == nullptr)
-    {
-        return false;
-    }
-
-    size_t outSize{};
-    uint64_t* breakpointList = icicle_breakpoint_list(icicle, &outSize);
-    if (breakpointList == nullptr)
-    {
-        return false;
-    }
-
-    for (size_t i = 0; i < outSize; i++)
-    {
-        if (breakpointList[i] == lineNoToAddress(lineNo))
-        {
-            if (std::ranges::find(breakpointLines, lineNo) == breakpointLines.end())
-            {
-                icicle_breakpoint_list_free(breakpointList, outSize);
-                // a silent breakpoint is a breakpoint which was internally added by
-                // our code and not by the user
-                return true;
-            }
-
-            icicle_breakpoint_list_free(breakpointList, outSize);
-            return false;
-        }
-    }
-
-    icicle_breakpoint_list_free(breakpointList, outSize);
-    return false;
+    // Delegate to BreakpointManager which encapsulates the logic
+    return getBreakpointManager().isSilentBreakpoint(lineNo);
 }
 
 bool isCodeExecutedAlready = false;
@@ -1381,20 +1367,17 @@ bool addBreakpoint(const uint64_t& address, const bool& silent)
 
 bool addBreakpointToLine(const uint64_t& lineNo, const bool& silent)
 {
-    const bool skipCheck = icicle == nullptr;
+    auto& bpMgr = getBreakpointManager();
 
-    if (!addBreakpoint(lineNoToAddress(lineNo + 1), silent) && !skipCheck)
-    {
-        return false;
+    if (silent) {
+        // Silent breakpoints are not tracked in user breakpoint list
+        // lineNo is 0-based here, add 1 for internal use
+        return bpMgr.addSilentBreakpoint(lineNo + 1);
+    } else {
+        // User breakpoints are tracked and highlighted
+        // lineNo is 0-based, addUserBreakpoint expects 1-based
+        return bpMgr.addUserBreakpoint(lineNo + 1);
     }
-
-    if (!silent)
-    {
-        breakpointLines.push_back(lineNo + 1);
-        editor->HighlightBreakpoints(lineNo);
-    }
-
-    return true;
 }
 
 bool runCode(const std::string& codeIn, const bool& execCode)
