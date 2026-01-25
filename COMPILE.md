@@ -1,7 +1,7 @@
 This document is a guide for how to compile ZathuraDbg. ZathuraDbg is currently only compatible with Linux on x86_64 with experimental support for Windows. Support for other operating systems will be coming soon.
 
 # Prerequisites
-ZathuraDbg is dependent on the following frameworks, in order to compile ZathuraDbg install these formeworks:
+ZathuraDbg is dependent on the following frameworks, in order to compile ZathuraDbg install these frameworks:
 - [Unicorn Engine](https://github.com/unicorn-engine/unicorn/blob/master/docs/COMPILE.md)
 - [Keystone Engine](https://github.com/keystone-engine/keystone/blob/master/docs/COMPILE.md)
 - [Capstone Engine](https://github.com/capstone-engine/capstone/blob/next/BUILDING.md)
