@@ -32,6 +32,7 @@ extern std::map<std::string, int> labelLineNoMapInternal;
 extern std::vector<uint16_t> instructionSizes;
 extern std::stringstream assembly;
 extern void initInsSizeInfoMap();
+extern bool updateInstructionSizes(const std::string& compiledAsm);
 extern std::vector<std::string> labels;
 extern bool isFirstLineLabel;
 extern std::pair<std::string, std::size_t> assemble(const std::string& assemblyString, const keystoneSettings& ksSettings);

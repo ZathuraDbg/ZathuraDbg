@@ -30,7 +30,7 @@ bool fileOpenTask(const std::string& fileName){
         editor->HighlightBreakpoints(-1);
         resetState(false);
         getBytes(fileName);
-        initInsSizeInfoMap();
+        // Note: initInsSizeInfoMap() is already called by getBytes()
         LOG_INFO("The provided file " << fileName << " opened successfully.");
         return true;
     }

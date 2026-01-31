@@ -1,6 +1,7 @@
 #include "assembler.hpp"
 #include "../interpreter/interpreter.hpp"
 #include <capstone/capstone.h>
+#include <algorithm>
 
 ks_engine *ks = nullptr;
 uint64_t codeFinalLen = 0;
@@ -121,6 +122,12 @@ bool isValidInstruction(ks_engine* ksEngine, const char* instruction) {
 uint64_t lastInstructionLineNo = 0;
 void initInsSizeInfoMap(){
     LOG_INFO("Updating instruction sizes info map...");
+    
+    if (instructionSizes.empty() && codeInformation.archIC != IC_ARCH_AARCH64) {
+        LOG_ERROR("instructionSizes is empty! Cannot initialize instruction size info map.");
+        return;
+    }
+    
     std::string instructionStr;
 
     uint64_t lineNo = 1;
@@ -243,37 +250,60 @@ uint64_t countValidInstructions(std::stringstream& asmStream){
     return count;
 }
 
-void updateInstructionSizes(const std::string& compiledAsm){
+bool updateInstructionSizes(const std::string& compiledAsm){
     LOG_INFO("Updating instruction sizes...");
+    instructionSizes.clear();  // Clear previous sizes
+    
     if (codeInformation.archIC == IC_ARCH_AARCH64)
     {
         for (int i = 0; i < totalInstructions; i++)
         {
             instructionSizes.push_back(4);
         }
-        return;
+        return true;
     }
 
     csh handle;
     cs_insn *instruction;
 
-    if (cs_open(codeInformation.archCS, codeInformation.modeCS, &handle) != CS_ERR_OK)
-        return;
+    LOG_INFO("Capstone arch: " << codeInformation.archCS << ", mode: " << codeInformation.modeCS);
+    LOG_INFO("Compiled assembly size: " << compiledAsm.length() << " bytes");
+    LOG_INFO("First 20 bytes: ");
+    for (size_t i = 0; i < std::min(compiledAsm.length(), (size_t)20); i++) {
+        LOG_INFO("  Byte[" << i << "]: 0x" << std::hex << (unsigned char)compiledAsm[i] << std::dec);
+    }
+    
+    if (cs_open(codeInformation.archCS, codeInformation.modeCS, &handle) != CS_ERR_OK) {
+        LOG_ERROR("Failed to open capstone handle!");
+        return false;
+    }
 
+    LOG_INFO("Capstone handle opened successfully");
+    
     const size_t count = cs_disasm(handle, reinterpret_cast<const uint8_t *>(compiledAsm.c_str()), compiledAsm.length(),
                                    ENTRY_POINT_ADDRESS, 0, &instruction);
+    LOG_INFO("Capstone disassembled " << count << " instructions");
+    
     if (count > 0) {
         for (size_t j = 0; j < count; j++) {
             instructionSizes.push_back(instruction[j].size);
+            LOG_INFO("  Instruction[" << j << "]: " << instruction[j].mnemonic << " - " << (int)instruction[j].size << " bytes");
         }
 
         cs_free(instruction, count);
+        cs_close(&handle);
+        LOG_INFO("Successfully updated instruction sizes. Total: " << instructionSizes.size());
+        return true;
     } else {
-        LOG_ERROR("Failed to get instruction sizes with capstone. Exiting...");
+        LOG_ERROR("FAILED: Capstone returned 0 instructions!");
+        LOG_ERROR("  - Architecture: " << codeInformation.archCS);
+        LOG_ERROR("  - Mode: " << codeInformation.modeCS);
+        LOG_ERROR("  - Entry point: 0x" << std::hex << ENTRY_POINT_ADDRESS);
+        LOG_ERROR("  - Data size: " << std::dec << compiledAsm.length());
         tinyfd_messageBox("Unable to run the given code!\n",  "Please check the logs and create an issue on GitHub if the issue persists", "ok", "error", 0);
+        cs_close(&handle);
+        return false;
     }
-
-    cs_close(&handle);
 }
 
 std::string getBytes(const std::string& fileName){
@@ -293,16 +323,27 @@ std::string getBytes(const std::string& fileName){
     asmFile.close();
 
     const keystoneSettings ksSettings = {.arch = codeInformation.archKS, .mode = codeInformation.modeKS, .optionType = KS_OPT_SYNTAX, .optionValue=codeInformation.syntax};
-    auto [bytes, size] = assemble(assembly.str(), ksSettings);
+    
+    std::string asmStr = assembly.str();
+    LOG_DEBUG("Assembly string length: " << asmStr.length());
+    LOG_DEBUG("First 100 chars: [" << asmStr.substr(0, 100) << "]");
+    
+    auto [bytes, size] = assemble(asmStr, ksSettings);
 
     if (size == 0 && bytes.empty()) {
         LOG_ERROR("Assembly failed, skipping instruction size and map initialization.");
         return "";
     }
+    
+    LOG_DEBUG("Assembled bytes length: " << bytes.length());
+    LOG_DEBUG("Assembled size: " << size);
 
     if (codeInformation.archIC != IC_ARCH_AARCH64)
     {
-        updateInstructionSizes(bytes);
+        if (!updateInstructionSizes(bytes)) {
+            LOG_ERROR("Failed to update instruction sizes, aborting.");
+            return "";
+        }
     }
 
     initInsSizeInfoMap();

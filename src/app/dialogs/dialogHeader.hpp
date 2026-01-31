@@ -1,6 +1,7 @@
 #ifndef ZATHURA_UI_DIALOGHEADER_HPP
 #define ZATHURA_UI_DIALOGHEADER_HPP
 #define LOG_MODULE_NAME "Zathura"
+#define LOG_TO_FILE ".Zathura.zlog"
 
 #include <iostream>
 #include <fstream>

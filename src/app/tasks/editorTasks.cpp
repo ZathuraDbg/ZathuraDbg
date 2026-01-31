@@ -43,7 +43,7 @@ bool readFileIntoEditor(const std::string &filePath) {
 int labelCompletionCallback(ImGuiInputTextCallbackData *data) {
     if (labels.empty()) {
         getBytes(selectedFile);
-        initInsSizeInfoMap();
+        // Note: initInsSizeInfoMap() is already called by getBytes()
     }
 
     if (data->EventFlag == ImGuiInputTextFlags_CallbackCompletion) {
@@ -87,7 +87,7 @@ std::pair<int, int> parseStrIntoCoordinates(std::string &popupInput) {
     LOG_DEBUG("Parsing " << popupInput << "as coordinates...");
     if (labelLineNoMapInternal.empty()) {
         getBytes(selectedFile);
-        initInsSizeInfoMap();
+        // Note: initInsSizeInfoMap() is already called by getBytes()
     }
 
     if (popupInput.contains('$')) {

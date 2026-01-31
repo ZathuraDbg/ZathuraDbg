@@ -120,7 +120,7 @@ void changeEmulationSettings(){
         {
             icArch = IC_ARCH_AARCH64;
             ksArch = KS_ARCH_ARM64;
-            csArch = CS_ARCH_AARCH64;
+            csArch = CS_ARCH_ARM64;
             ksMode = KS_MODE_LITTLE_ENDIAN;
             csMode = CS_MODE_LITTLE_ENDIAN;
             // codeInformation.syntax = KS_OPT_SYNTAX_RADIX16;

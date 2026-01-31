@@ -108,6 +108,7 @@ set(SOURCES
 
 # Include directories
 include_directories(
+        /usr/include
         ${CMAKE_SOURCE_DIR}/../vendor/imgui
         ${CMAKE_SOURCE_DIR}/../vendor/imgui/backends
         ${CMAKE_SOURCE_DIR}/../vendor/ImGuiColorTextEdit/vendor/regex/include
@@ -117,9 +118,8 @@ include_directories(
         ${CMAKE_SOURCE_DIR}/app/tasks
         ${CMAKE_SOURCE_DIR}/app/arch
         ${CMAKE_SOURCE_DIR}/app/windows
-        ${CMAKE_SOURCE_DIR}/../vendor/unicorn/include
+        ${CMAKE_SOURCE_DIR}/../vendor/local/usr/local/include
         ${CMAKE_SOURCE_DIR}/../vendor/keystone/include
-        ${CMAKE_SOURCE_DIR}/../vendor/capstone/include
         ${CMAKE_SOURCE_DIR}/../vendor/whereami/src
         ${CMAKE_SOURCE_DIR}/../vendor/icicle-cpp
         ${VENDOR_DIR}/http
@@ -127,7 +127,7 @@ include_directories(
 
 set(OpenGL_GL_PREFERENCE GLVND)
 # Compiler options
-#add_compile_options(-g -Wformat -DLOG_TO_FILE=\".Zathura.zlog\")
+add_compile_options(-g -Wformat -DLOG_TO_FILE=\".Zathura.zlog\")
 # Define the output directory for the binary
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
 
@@ -143,14 +143,14 @@ if (UNIX AND NOT APPLE)
     include_directories(${OPENGL_INCLUDE_DIR})
     link_libraries(${OPENGL_LIBRARIES} glfw)
     link_libraries(${GLFW_LIBRARIES})
-    link_directories(/usr/lib /usr/local/lib)
+    link_directories(/usr/lib /usr/local/lib ${CMAKE_SOURCE_DIR}/../vendor/local/usr/local/lib)
     add_compile_options(${GLFW_CFLAGS})
     add_compile_options(-pthread -std=c++23)
 #    add_compile_options(-O3)
     add_compile_options(-Og)
 #    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -g")
 #    set(CMAKE_LINKER_FLAGS "${CMAKE_LINKER_FLAGS} -fsanitize=address")
-    set(LIBS ${GLFW_LDFLAGS} -lGL -ldl -lstdc++ -lkeystone -lcapstone -L/usr/lib -L/usr/local/lib -licicle -lssl -lcrypto)
+    set(LIBS ${GLFW_LDFLAGS} -lGL -ldl -lstdc++ -lkeystone -lcapstone -lunicorn -L/usr/lib -L/usr/local/lib -L${CMAKE_SOURCE_DIR}/../vendor/local/usr/local/lib -licicle -lssl -lcrypto)
 elseif (APPLE)
     message("Mac OS X")
     find_library(GLFW_LIB glfw3)

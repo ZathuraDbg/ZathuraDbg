@@ -2,6 +2,7 @@
 #define ZATHURA_UI_APP_HPP
 #define IMGUI_DEFINE_MATH_OPERATORS
 #define LOG_MODULE_NAME "Zathura"
+#define LOG_TO_FILE ".Zathura.zlog"
 #include <cstdio>
 #include <string>
 #include <fstream>

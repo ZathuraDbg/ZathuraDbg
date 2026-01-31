@@ -1,8 +1,0 @@
-recursive-include src *
-recursive-include prebuilt *
-include BUILDING.md
-graft capstone/lib
-graft capstone/include
-global-include *.dll
-global-include *.dylib
-global-include *.so.*
