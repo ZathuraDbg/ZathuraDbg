@@ -32,7 +32,7 @@ Download and run the installer from the [releases](https://github.com/ZathuraDbg
 Read [COMPILE.md](/COMPILE.md) to compile ZathuraDbg on your machine.
 
 # Contributing
-- To implement a new architecture to work with ZathuraDbg, read [ARCHITECTURE.md](https://github.com/ZathuraDbg/ARCHITECTURE.md)
+- To implement a new architecture to work with ZathuraDbg, read [ARCHITECTURE.md](https://github.com/ZathuraDbg/ZathuraDbg/blob/master/ARCHITECTURE.md)
 - For making general contributions read [CONTRIBUTING.md](CONTRIBUTING.md)
 - If you have any questions you can always contact us or open an issue.
 
