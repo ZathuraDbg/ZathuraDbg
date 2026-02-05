@@ -316,55 +316,54 @@ void debugToggleBreakpoint(){
     int line, _;
     editor->GetCursorPosition(line, _);
 
-    // this call will return false if the breakpoint was not found
-    const auto isBreakpointRemoved = removeBreakpointFromLineNo(line + 1);
-    if (isBreakpointRemoved){
-        LOG_DEBUG("Removing the breakpoint at line: " <<  line);
-        editor->RemoveHighlight(line);
-    }
-    else{
-        LOG_DEBUG("Adding the breakpoint at line: " << line);
-        addBreakpointToLine(line);
+    // Use BreakpointManager for toggling - it handles all the logic including UI updates
+    auto& bpMgr = getBreakpointManager();
+    bool wasAdded = bpMgr.toggleBreakpoint(line);
+
+    if (wasAdded) {
+        LOG_DEBUG("Added breakpoint at line: " << line);
+    } else {
+        LOG_DEBUG("Removed breakpoint at line: " << line);
     }
 }
 
 bool debugAddBreakpoint(const int lineNum){
     LOG_DEBUG("Adding breakpoint on the line " << lineNum);
-    breakpointMutex.lock();
 
-    const auto breakpointLineNo = (std::ranges::find(breakpointLines, lineNum + 1));
-    if (breakpointLineNo != breakpointLines.end()){
+    // Use BreakpointManager - it handles thread safety, VM interaction, and UI updates
+    auto& bpMgr = getBreakpointManager();
+
+    // Note: lineNum from caller is 0-based, addUserBreakpoint expects 1-based
+    if (bpMgr.hasUserBreakpoint(lineNum + 1)) {
         LOG_DEBUG("Breakpoint already exists, skipping...");
-        breakpointMutex.unlock();
         return false;
     }
-    else{
-        addBreakpointToLine(lineNum);
-        editor->HighlightBreakpoints(lineNum);
+
+    // addUserBreakpoint expects 1-based line numbers
+    bool success = bpMgr.addUserBreakpoint(lineNum + 1);
+    if (success) {
         LOG_DEBUG("Breakpoint added successfully!");
     }
-
-    breakpointMutex.unlock();
-    return true;
+    return success;
 }
 
 bool debugRemoveBreakpoint(const int lineNum){
     LOG_DEBUG("Removing the breakpoint at " << lineNum);
-    const auto breakpointIter = (std::ranges::find(breakpointLines, lineNum + 1));
 
-    if (breakpointIter == breakpointLines.end()){
+    // Use BreakpointManager - it handles thread safety, VM interaction, and UI updates
+    auto& bpMgr = getBreakpointManager();
+
+    // Note: lineNum from caller is 0-based, removeUserBreakpoint expects 1-based
+    if (!bpMgr.hasUserBreakpoint(lineNum + 1)) {
         LOG_DEBUG("No breakpoint exists at line no. " << lineNum);
         return false;
     }
-    else{
-        breakpointMutex.lock();
-        breakpointLines.erase(breakpointIter);
-        breakpointMutex.unlock();
-        editor->RemoveHighlight(lineNum);
+
+    bool success = bpMgr.removeUserBreakpoint(lineNum + 1);
+    if (success) {
         LOG_DEBUG("Removed breakpoint at line no. " << lineNum);
     }
-
-    return true;
+    return success;
 }
 
 void debugRunSelectionAction(){

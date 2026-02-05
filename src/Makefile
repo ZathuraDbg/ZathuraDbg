@@ -41,6 +41,8 @@ SOURCES += $(INTEGRATION)/interpreter/interpreter.cpp
 #SOURCES += $(INTEGRATION)/utils/hex/hex.hpp
 SOURCES += $(INTEGRATION)/keystone/assembler.hpp
 SOURCES += $(INTEGRATION)/keystone/assembler.cpp
+SOURCES += $(INTEGRATION)/breakpoint/BreakpointManager.hpp
+SOURCES += $(INTEGRATION)/breakpoint/BreakpointManager.cpp
 SOURCES += $(TINYFD_DIR)/tinyfiledialogs.h
 SOURCES += $(APP)/arch/x86.hpp
 SOURCES += $(APP)/arch/x86.cpp
@@ -120,6 +122,9 @@ endif
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 %.o:$(INTEGRATION)/keystone/%.cpp
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
+
+%.o:$(INTEGRATION)/breakpoint/%.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 %.o:$(TINYFD_DIR)/%.c

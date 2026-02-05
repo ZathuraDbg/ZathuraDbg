@@ -61,6 +61,7 @@ set(SRC_ARCH
 set(SRC_INTEGRATION
         ${APP_DIR}/integration/interpreter/interpreter.cpp
         ${APP_DIR}/integration/keystone/assembler.cpp
+        ${APP_DIR}/integration/breakpoint/BreakpointManager.cpp
 )
 
 set(SRC_UTILS
