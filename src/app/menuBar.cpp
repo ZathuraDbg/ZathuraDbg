@@ -1,6 +1,5 @@
 #include "app.hpp"
 bool firstTime = true;
-//
 const char* architectureStrings[] = {"Intel x86_64", "AArch32", "AArch64", "RISC-V", "PowerPC"};
 const char* ksSyntaxOptStr[] = {"Intel", "AT&T", "NASM", "GAS"};
 const ks_opt_value ksSyntaxOpts[] = {KS_OPT_SYNTAX_INTEL, KS_OPT_SYNTAX_ATT, KS_OPT_SYNTAX_NASM, KS_OPT_SYNTAX_GAS};
@@ -123,7 +122,6 @@ void changeEmulationSettings(){
             csArch = CS_ARCH_ARM64;
             ksMode = KS_MODE_LITTLE_ENDIAN;
             csMode = CS_MODE_LITTLE_ENDIAN;
-            // codeInformation.syntax = KS_OPT_SYNTAX_RADIX16;
             codeInformation.archStr = "aarch64";
             ImGui::Dummy({20, 25});
             currentDefinitionId = TextEditor::LanguageDefinitionId::AsmArm;

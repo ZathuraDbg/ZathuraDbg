@@ -86,6 +86,7 @@ bool initArch(){
             defaultShownRegs = armDefaultShownRegs;
             isRegisterValid = armIsRegisterValid;
             modeUpdateCallback = armModeUpdateCallback;
+            return true;
         default: ;
     }
 

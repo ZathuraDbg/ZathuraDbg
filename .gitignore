@@ -11,17 +11,35 @@ src/!.vscode/*.code-snippets
 # Built Visual Studio Code Extensions
 *.vsix
 
-.idea/
-src/*.o
 src/.gdb_history
-src/build
-src/cmake-build-debug
-src/cmake-build-release
-src/.Zathura.zlog
-src/Zathura
-src/CMakeFiles/*
-src/*.cmake
-#ignore pushing the binary ^
 
 *.exe
 *.dll
+
+# Runtime artifacts
+src/.Zathura.zlog
+src/config.zlyt
+src/imgui.ini
+
+# Build outputs
+src/Zathura
+src/build/
+src/cmake-build-debug/
+src/cmake-build-release/
+src/*.o
+src/CMakeFiles/
+src/*.cmake
+
+# IDE files (already partially covered but .idea is tracked)
+.idea/
+
+# Vendor prebuilt binaries
+vendor/**/*.dll
+vendor/**/*.dylib
+vendor/**/*.so
+vendor/**/*.o
+
+# Prebuilt binaries shipped with source tree
+src/app/dialogs/tinyfiledialogs/**/*.dll
+src/app/dialogs/tinyfiledialogs/**/*.dylib
+src/app/dialogs/tinyfiledialogs/**/*.so

@@ -1,6 +1,11 @@
 #include <thread>
 #include <condition_variable>
 #include <functional>
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <unistd.h>
+#endif
 #include "actions.hpp"
 
 #include "imgui_impl_opengl3_loader.h"
@@ -13,13 +18,20 @@ int times = 1;
 
 void openBrowser(const std::string& url) {
 #ifdef _WIN32
-    std::string command = "start " + url;
+    ShellExecuteA(nullptr, "open", url.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
 #elif __APPLE__
-    std::string command = "open " + url;
+    pid_t pid = fork();
+    if (pid == 0) {
+        execlp("open", "open", url.c_str(), nullptr);
+        _exit(1);
+    }
 #else
-    std::string command = "xdg-open " + url;
+    pid_t pid = fork();
+    if (pid == 0) {
+        execlp("xdg-open", "xdg-open", url.c_str(), nullptr);
+        _exit(1);
+    }
 #endif
-    system(command.c_str());
 }
 
 std::string currentVersion{};
