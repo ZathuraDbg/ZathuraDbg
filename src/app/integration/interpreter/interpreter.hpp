@@ -1,6 +1,48 @@
 #ifndef ZATHURA_INTERPRETER_HPP
 #define ZATHURA_INTERPRETER_HPP
 
+/*
+ * Execution state machine
+ *
+ * Coordinates between the UI thread and background execution threads:
+ *
+ * States and synchronization:
+ * - isDebugReady + debugReadyMutex + debugReadyCv:
+ *   Signals that preExecutionSetup() has completed and the VM is ready to
+ *   execute. Set to false before setup begins, set to true after setup
+ *   completes. Step/continue actions wait on debugReadyCv before proceeding.
+ *
+ * - isCodeRunning:
+ *   True while a step/continue/run operation is in progress on a background
+ *   thread. Prevents re-entrant execution requests from the UI.
+ *
+ * - executionComplete:
+ *   Set to true when the final instruction has been reached (end breakpoint
+ *   hit). Once true, further executeCode() calls are no-ops.
+ *
+ * - criticalSection:
+ *   Protects resetState() to prevent races between state reset and active
+ *   execution.
+ *
+ * Typical flow:
+ *   1. UI sets enableDebugMode flag
+ *   2. runActions() calls startDebugging() on a background thread
+ *   3. Background thread calls fileRunTask() -> preExecutionSetup() ->
+ *      signals isDebugReady
+ *   4. UI can now request step/continue/run actions
+ *   5. Each action waits on debugReadyCv, calls executeCode(), updates UI
+ *      via safeHighlightLine()
+ *   6. processUIUpdates() on the main thread applies pending highlight
+ *      changes
+ *
+ * Thread safety:
+ * - All execution functions (stepCode, executeCode, runCode) run on
+ *   background threads spawned by executeInBackground(). UI updates are
+ *   deferred via safeHighlightLine().
+ * - Breakpoint operations use breakpointMutex.
+ * - VM state changes during execution use execMutex.
+ */
+
 #include <cstring>
 #include <cstdlib>
 #include <iostream>
@@ -15,6 +57,7 @@
 #include "../../../utils/stringHelper.hpp"
 #include <mutex>
 #include <array>
+#include <vector>
 #include "icicle.h"
 #include <condition_variable>
 #include "../../actions/actions.hpp"
@@ -61,6 +104,7 @@ extern bool runTempCode(const std::string& codeIn, uint64_t instructionCount);
 extern bool debugModeEnabled;
 registerValueInfoT getRegister(const std::string& name);
 extern bool setRegisterValue(const std::string& regName, const registerValueT& value);
+extern bool initRegistersToDefinedVals();
 extern bool runCode(const std::string& codeIn, const bool& execCode);
 extern uint64_t lineNoToAddress(const uint64_t& lineNo);
 // bool addBreakpoint(const uint64_t& address, const bool& silent);
@@ -94,6 +138,7 @@ extern VmSnapshot* tempSnapshot;
 extern uint64_t expectedIP;
 extern int stepOverBPLineNo;
 extern uint64_t codeCurrentLen;
+extern uint64_t lineNo;
 extern Icicle* icicle;
 extern VmSnapshot* snapshot;
 extern std::stack<VmSnapshot*> vmSnapshots;
@@ -102,6 +147,11 @@ extern int getCurrentLine();
 extern bool removeBreakpointFromLineNo(const uint64_t& lineNo);
 extern bool removeBreakpoint(const uint64_t& address);
 extern bool eraseTempBP;
+extern bool addBreakpointBack;
+extern bool isEndBreakpointSet;
+extern bool runningTempCode;
+extern std::vector<uint8_t> codeBuf;
+extern std::mutex criticalSection;
 extern bool isSilentBreakpoint(const uint64_t& lineNo);
 extern std::mutex debugReadyMutex;
 extern std::condition_variable debugReadyCv;

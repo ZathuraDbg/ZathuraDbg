@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 project(Zathura)
 
 set(CMAKE_CXX_STANDARD 23)
+set(OPTIMIZATION_LEVEL "Og" CACHE STRING "Optimization level (Og, O0, O1, O2, O3)")
 
 set(PROJECT_ROOT ${CMAKE_SOURCE_DIR})
 set(VENDOR_DIR ${PROJECT_ROOT}/../vendor)
@@ -59,8 +60,12 @@ set(SRC_ARCH
 )
 
 set(SRC_INTEGRATION
-        ${APP_DIR}/integration/interpreter/interpreter.cpp
-        ${APP_DIR}/integration/keystone/assembler.cpp
+    ${APP_DIR}/integration/interpreter/interpreter.cpp
+    ${APP_DIR}/integration/interpreter/registers.cpp
+    ${APP_DIR}/integration/interpreter/vm.cpp
+    ${APP_DIR}/integration/interpreter/execution.cpp
+    ${APP_DIR}/integration/interpreter/breakpoints.cpp
+    ${APP_DIR}/integration/keystone/assembler.cpp
 )
 
 set(SRC_UTILS
@@ -106,28 +111,8 @@ set(SOURCES
         ${SRC_VENDOR_MISC}
 )
 
-# Include directories
-include_directories(
-        /usr/include
-        ${CMAKE_SOURCE_DIR}/../vendor/imgui
-        ${CMAKE_SOURCE_DIR}/../vendor/imgui/backends
-        ${CMAKE_SOURCE_DIR}/../vendor/ImGuiColorTextEdit/vendor/regex/include
-        ${CMAKE_SOURCE_DIR}/../vendor/ordered-map/include
-        ${CMAKE_SOURCE_DIR}/../vendor/tinyfdialogue
-        ${CMAKE_SOURCE_DIR}/app/dialogs
-        ${CMAKE_SOURCE_DIR}/app/tasks
-        ${CMAKE_SOURCE_DIR}/app/arch
-        ${CMAKE_SOURCE_DIR}/app/windows
-        ${CMAKE_SOURCE_DIR}/../vendor/local/usr/local/include
-        ${CMAKE_SOURCE_DIR}/../vendor/keystone/include
-        ${CMAKE_SOURCE_DIR}/../vendor/whereami/src
-        ${CMAKE_SOURCE_DIR}/../vendor/icicle-cpp
-        ${VENDOR_DIR}/http
-)
-
 set(OpenGL_GL_PREFERENCE GLVND)
-# Compiler options
-add_compile_options(-g -Wformat -DLOG_TO_FILE=\".Zathura.zlog\")
+
 # Define the output directory for the binary
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
 
@@ -138,39 +123,59 @@ if (UNIX AND NOT APPLE)
     pkg_check_modules(GLFW REQUIRED glfw3)
     find_package(OpenGL REQUIRED)
     find_package(glfw3 REQUIRED)
+    find_package(Threads REQUIRED)
 
-   
-    include_directories(${OPENGL_INCLUDE_DIR})
-    link_libraries(${OPENGL_LIBRARIES} glfw)
-    link_libraries(${GLFW_LIBRARIES})
     link_directories(/usr/lib /usr/local/lib ${CMAKE_SOURCE_DIR}/../vendor/local/usr/local/lib)
-    add_compile_options(${GLFW_CFLAGS})
-    add_compile_options(-pthread -std=c++23)
-#    add_compile_options(-O3)
-    add_compile_options(-Og)
-#    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -g")
-#    set(CMAKE_LINKER_FLAGS "${CMAKE_LINKER_FLAGS} -fsanitize=address")
     set(LIBS ${GLFW_LDFLAGS} -lGL -ldl -lstdc++ -lkeystone -lcapstone -lunicorn -L/usr/lib -L/usr/local/lib -L${CMAKE_SOURCE_DIR}/../vendor/local/usr/local/lib -licicle -lssl -lcrypto)
 elseif (APPLE)
     message("Mac OS X")
     find_library(GLFW_LIB glfw3)
-    link_libraries(${GLFW_LIB})
-    add_compile_options(-I/usr/local/include -I/opt/local/include -I/opt/homebrew/include)
-    set(LIBS -framework OpenGL -framework Cocoa -framework IOKit -framework CoreVideo -L/usr/local/lib -L/opt/local/lib -L/opt/homebrew/lib)
+    set(LIBS ${GLFW_LIB} -framework OpenGL -framework Cocoa -framework IOKit -framework CoreVideo -L/usr/local/lib -L/opt/local/lib -L/opt/homebrew/lib)
 elseif (WIN32)
     message("MinGW")
     find_package(PkgConfig REQUIRED)
     pkg_check_modules(GLFW REQUIRED glfw3)
-    link_libraries(${GLFW_LIBRARIES})
-    add_compile_options(${GLFW_CFLAGS} -O3)
     set(LIBS -lglfw3 -lgdi32 -lopengl32 -limm32 -lstdc++ -lkeystone -lcapstone -lm -licicle -lws2_32 -lntdll -luserenv -lbcrypt -lssl -lcrypto -lcrypt32)
 endif()
 
 # Define the executable
 add_executable(${PROJECT_NAME} ${SOURCES})
 
+# Target include directories (replaces global include_directories)
+target_include_directories(${PROJECT_NAME} PRIVATE
+    ${CMAKE_SOURCE_DIR}/../vendor/imgui
+    ${CMAKE_SOURCE_DIR}/../vendor/imgui/backends
+    ${CMAKE_SOURCE_DIR}/../vendor/ImGuiColorTextEdit/vendor/regex/include
+    ${CMAKE_SOURCE_DIR}/../vendor/ordered-map/include
+    ${CMAKE_SOURCE_DIR}/../vendor/tinyfdialogue
+    ${CMAKE_SOURCE_DIR}/app/dialogs
+    ${CMAKE_SOURCE_DIR}/app/tasks
+    ${CMAKE_SOURCE_DIR}/app/arch
+    ${CMAKE_SOURCE_DIR}/app/windows
+    ${CMAKE_SOURCE_DIR}/../vendor/local/usr/local/include
+    ${CMAKE_SOURCE_DIR}/../vendor/keystone/include
+    ${CMAKE_SOURCE_DIR}/../vendor/whereami/src
+    ${CMAKE_SOURCE_DIR}/../vendor/icicle-cpp
+    ${VENDOR_DIR}/http
+)
+
+# Target compile options (replaces global add_compile_options)
+target_compile_options(${PROJECT_NAME} PRIVATE -g -Wformat -DLOG_TO_FILE=\".Zathura.zlog\")
+
+# Platform-specific target settings
+if (UNIX AND NOT APPLE)
+    target_include_directories(${PROJECT_NAME} PRIVATE ${OPENGL_INCLUDE_DIR})
+    target_compile_options(${PROJECT_NAME} PRIVATE ${GLFW_CFLAGS})
+    target_compile_options(${PROJECT_NAME} PRIVATE -${OPTIMIZATION_LEVEL})
+    target_link_libraries(${PROJECT_NAME} PRIVATE Threads::Threads)
+elseif (APPLE)
+    target_include_directories(${PROJECT_NAME} PRIVATE /usr/local/include /opt/local/include /opt/homebrew/include)
+elseif (WIN32)
+    target_compile_options(${PROJECT_NAME} PRIVATE ${GLFW_CFLAGS} -O3)
+endif()
+
 # Link libraries
-target_link_libraries(${PROJECT_NAME} ${LIBS})
+target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBS})
 
 # Custom targets
 add_custom_target(run
