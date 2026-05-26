@@ -220,8 +220,13 @@ bool setupButtons() {
         ImGui::Text("Restart Debugging (CTRL+F5)");
         ImGui::EndTooltip();
     }
-    ImGui::SameLine();
-    ImGui::Separator();
+    const char* targetLabel = remote_gdb::useRemoteDebugging() ? "Server" : "Emulation";
+    ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[3]);
+    const auto labelSize = ImGui::CalcTextSize(targetLabel);
+    const float availWidth = ImGui::GetWindowContentRegionMax().x;
+    ImGui::SameLine(availWidth - labelSize.x);
+    ImGui::TextUnformatted(targetLabel);
+    ImGui::PopFont();
     ImGui::PopFont();
     return true;
 }
