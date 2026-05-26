@@ -941,7 +941,11 @@ std::optional<std::vector<uint8_t>> GdbRemoteClient::readRegisterSlice(const std
 }
 
 std::optional<std::vector<uint8_t>> GdbRemoteClient::registerBytes(const std::string& regName) {
-    return readRegisterSlice(regName);
+    auto result = readRegisterSlice(regName);
+    if (!result.has_value()) {
+        consoleWriteThreadSafe("remote >> register read " + regName + " failed\n");
+    }
+    return result;
 }
 
 bool GdbRemoteClient::writeRegisterSlice(const std::string& regName, const std::vector<uint8_t>& bytes) {
@@ -957,14 +961,34 @@ bool GdbRemoteClient::writeRegisterSlice(const std::string& regName, const std::
     std::ostringstream command;
     command << "P" << std::hex << desc.regnum << "=" << encodeHex(bytes);
     std::string response;
-    if (!transact(command.str(), response) || response != "OK") {
+    if (transact(command.str(), response) && response == "OK") {
+        if (!registerBlob_.empty() && desc.offset + bytes.size() <= registerBlob_.size()) {
+            std::copy(bytes.begin(), bytes.end(),
+                      registerBlob_.begin() + static_cast<std::ptrdiff_t>(desc.offset));
+        }
+        return true;
+    }
+
+    if (registerBlob_.empty() && !refreshRegisters()) {
+        consoleWriteThreadSafe("remote >> G fallback: cannot refresh registers for write to " + regName + "\n");
         return false;
     }
 
-    if (!registerBlob_.empty() && desc.offset + bytes.size() <= registerBlob_.size()) {
-        std::copy(bytes.begin(), bytes.end(),
-                  registerBlob_.begin() + static_cast<std::ptrdiff_t>(desc.offset));
+    if (desc.offset + bytes.size() > registerBlob_.size()) {
+        consoleWriteThreadSafe("remote >> G fallback: register " + regName + " out of blob bounds\n");
+        return false;
     }
+
+    std::copy(bytes.begin(), bytes.end(),
+              registerBlob_.begin() + static_cast<std::ptrdiff_t>(desc.offset));
+
+    std::ostringstream gCmd;
+    gCmd << "G" << encodeHex(registerBlob_);
+    if (!transact(gCmd.str(), response) || response != "OK") {
+        consoleWriteThreadSafe("remote >> G fallback write failed: " + response + "\n");
+        return false;
+    }
+
     return true;
 }
 

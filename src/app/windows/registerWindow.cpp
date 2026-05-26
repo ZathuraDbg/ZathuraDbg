@@ -81,7 +81,7 @@ void updateRegs(bool useTempContext){
     bool useSecondVal = false;
 
     if (!useTempContext) {
-        if (snapshot == nullptr) {
+        if (snapshot == nullptr && !remote_gdb::useRemoteDebugging()) {
             saveICSnapshot(icicle);
         }
     }
@@ -674,13 +674,14 @@ void parseRegisterValueInput(const std::string& regName, const char *regValueFir
     if ((strlen(regValueFirst) != 0)) {
         const uint64_t temp = hexStrToInt(regValueFirst);
 
-        if (strncmp(regValueFirst, "0x", 2) != 0 && !isBigReg) {
-            registerValueMap[regName] = "0x";
-            registerValueMap[regName].append(regValueFirst);
-
-        } else {
-            registerValueMap[regName] = regValueFirst;
-        }
+        auto updateDisplay = [&]() {
+            if (strncmp(regValueFirst, "0x", 2) != 0 && !isBigReg) {
+                registerValueMap[regName] = "0x";
+                registerValueMap[regName].append(regValueFirst);
+            } else {
+                registerValueMap[regName] = regValueFirst;
+            }
+        };
 
         if (codeHasRun)
         {
@@ -718,11 +719,10 @@ void parseRegisterValueInput(const std::string& regName, const char *regValueFir
                                 regValue.info.arrays.doubleArray[laneIndex] = val;
                                 
                                 // Write back the register
-                                const bool success = setRegisterValue(realRegName, regValue);
-                                if (!success) {
-                                    LOG_ERROR("Failed to write value to register " << realRegName << " lane " << laneIndex);
+                                if (setRegisterValue(realRegName, regValue)) {
+                                    updateDisplay();
+                                    if (!remote_gdb::useRemoteDebugging()) saveICSnapshot(icicle);
                                 }
-                                saveICSnapshot(icicle);
                             } else {
                                 LOG_ERROR("Lane index out of bounds: " << laneIndex << " (max: " << maxLanes-1 << ")");
                             }
@@ -748,11 +748,10 @@ void parseRegisterValueInput(const std::string& regName, const char *regValueFir
                                 regValue.info.arrays.floatArray[laneIndex] = val;
                                 
                                 // Write back the register
-                                bool success = setRegisterValue(realRegName, regValue);
-                                if (!success) {
-                                    LOG_ERROR("Failed to write value to register " << realRegName << " lane " << laneIndex);
+                                if (setRegisterValue(realRegName, regValue)) {
+                                    updateDisplay();
+                                    if (!remote_gdb::useRemoteDebugging()) saveICSnapshot(icicle);
                                 }
-                                saveICSnapshot(icicle);
                             } else {
                                 LOG_ERROR("Lane index out of bounds: " << laneIndex << " (max: " << maxLanes-1 << ")");
                             }
@@ -775,15 +774,14 @@ void parseRegisterValueInput(const std::string& regName, const char *regValueFir
                     val.eightByteVal = temp;
                 }
                 // int res = icicle_reg_write_bytes(icicle, regName.c_str(), (uint8_t*)&temp, sizeof(temp));
-                const bool res = setRegisterValue(regName, val);
-                if (!res)
-                {
-                    LOG_ALERT("fuck");
+                if (setRegisterValue(regName, val)) {
+                    updateDisplay();
+                    if (!remote_gdb::useRemoteDebugging()) saveICSnapshot(icicle);
                 }
-                saveICSnapshot(icicle);
             }
         }
         else{
+            updateDisplay();
             if (regName == archIPStr){
                 ENTRY_POINT_ADDRESS = strtoul(regValueFirst, nullptr, 16);
             }
