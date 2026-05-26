@@ -220,6 +220,7 @@ public:
     std::optional<std::vector<uint8_t>> registerBytes(const std::string& regName);
     bool writeRegister(const std::string& regName, const std::vector<uint8_t>& bytes);
     std::optional<std::vector<uint8_t>> readMemory(uint64_t address, size_t size);
+    std::optional<std::vector<uint8_t>> readMemoryWithFallback(uint64_t address, size_t preferredSize);
     bool writeMemory(uint64_t address, const std::vector<uint8_t>& bytes);
     bool insertBreakpoint(uint64_t address);
     bool removeBreakpoint(uint64_t address);
@@ -459,6 +460,7 @@ void GdbRemoteClient::disconnect() {
     memoryRegions_.clear();
     activeBreakpoints_.clear();
     lastStopReason_.clear();
+    cachedRegValues_.clear();
 #ifdef _WIN32
     WSACleanup();
 #endif
@@ -864,30 +866,33 @@ bool GdbRemoteClient::resume(const bool singleStep) {
         ? (singleStep ? "vCont;s" : "vCont;c")
         : (singleStep ? "s" : "c");
 
-    if (transact(command, response)) {
-        if (response.starts_with('E')) {
-            consoleWriteThreadSafe("remote >> resume error: " + response + "\n");
-            return false;
-        }
-        if (response.starts_with('W') || response.starts_with('X')) {
-            consoleWriteThreadSafe("remote >> target exited with: " + response + "\n");
-            lastStopReason_ = response;
-            return false;
-        }
+    if (!transact(command, response)) {
+        consoleWriteThreadSafe(connected()
+            ? "remote >> " + command + " failed (no response)\n"
+            : "remote >> target disconnected\n");
+        return false;
+    }
+
+    if (response.starts_with('E')) {
+        consoleWriteThreadSafe("remote >> resume error: " + response + "\n");
+        return false;
+    }
+
+    if (response.starts_with('W') || response.starts_with('X')) {
+        consoleWriteThreadSafe("remote >> target exited with: " + response + "\n");
         lastStopReason_ = response;
-        parseStopRegisters(response);
-        if (refreshRegisters()) return true;
+        return false;
+    }
+
+    lastStopReason_ = response;
+    parseStopRegisters(response);
+
+    if (!refreshRegisters()) {
         consoleWriteThreadSafe("remote >> register refresh after resume failed\n");
         return false;
     }
 
-    if (!connected()) {
-        consoleWriteThreadSafe("remote >> target disconnected\n");
-        return false;
-    }
-
-    consoleWriteThreadSafe("remote >> " + command + " failed (no response)\n");
-    return false;
+    return true;
 }
 
 bool GdbRemoteClient::interrupt() {
@@ -995,14 +1000,10 @@ std::optional<std::vector<uint8_t>> GdbRemoteClient::readRegisterSlice(const std
         return it->second;
     }
 
-    if (!registerBlob_.empty() && desc.offset + size <= registerBlob_.size()) {
-        return std::vector<uint8_t>(registerBlob_.begin() + static_cast<std::ptrdiff_t>(desc.offset),
-                                    registerBlob_.begin() + static_cast<std::ptrdiff_t>(desc.offset + size));
-    }
-
     if (registerBlob_.empty() && !refreshRegisters()) {
         return std::nullopt;
     }
+
     if (desc.offset + size <= registerBlob_.size()) {
         return std::vector<uint8_t>(registerBlob_.begin() + static_cast<std::ptrdiff_t>(desc.offset),
                                     registerBlob_.begin() + static_cast<std::ptrdiff_t>(desc.offset + size));
@@ -1079,6 +1080,24 @@ std::optional<std::vector<uint8_t>> GdbRemoteClient::readMemory(const uint64_t a
         return std::nullopt;
     }
     return decodeHexBytes(response);
+}
+
+std::optional<std::vector<uint8_t>> GdbRemoteClient::readMemoryWithFallback(
+    const uint64_t address, const size_t preferredSize)
+{
+    static constexpr size_t fallbackSizes[] = {0x4000, 0x2000, 0x1000, 0x800, 0x200, 0x100};
+
+    if (auto result = readMemory(address, preferredSize); result.has_value()) {
+        return result;
+    }
+
+    for (const auto trySize : fallbackSizes) {
+        if (trySize >= preferredSize) continue;
+        if (auto result = readMemory(address, trySize); result.has_value()) {
+            return result;
+        }
+    }
+    return std::nullopt;
 }
 
 bool GdbRemoteClient::writeMemory(const uint64_t address, const std::vector<uint8_t>& bytes) {
@@ -1400,6 +1419,11 @@ bool remoteWriteRegister(const std::string& regName, const std::vector<uint8_t>&
 std::optional<std::vector<uint8_t>> remoteReadMemory(const uint64_t address, const size_t size) {
     std::lock_guard lock(clientMutex);
     return client.readMemory(address, size);
+}
+
+std::optional<std::vector<uint8_t>> remoteReadMemoryWithFallback(const uint64_t address, const size_t preferredSize) {
+    std::lock_guard lock(clientMutex);
+    return client.readMemoryWithFallback(address, preferredSize);
 }
 
 bool remoteWriteMemory(const uint64_t address, const std::vector<uint8_t>& bytes) {

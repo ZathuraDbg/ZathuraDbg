@@ -62,6 +62,7 @@ std::optional<std::vector<uint8_t>> remoteReadRegister(const std::string& regNam
 bool remoteWriteRegister(const std::string& regName, const std::vector<uint8_t>& bytes);
 
 std::optional<std::vector<uint8_t>> remoteReadMemory(uint64_t address, size_t size);
+std::optional<std::vector<uint8_t>> remoteReadMemoryWithFallback(uint64_t address, size_t preferredSize);
 bool remoteWriteMemory(uint64_t address, const std::vector<uint8_t>& bytes);
 
 bool remoteAddBreakpoint(uint64_t address);

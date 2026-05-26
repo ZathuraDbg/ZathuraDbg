@@ -281,6 +281,15 @@ static void syncRemoteCodeView() {
     }
 }
 
+static void initRemoteAddresses() {
+    if (const auto pc = remote_gdb::remoteProgramCounter(); pc.has_value()) {
+        MEMORY_EDITOR_BASE = *pc & ~static_cast<uint64_t>(0xfff);
+    }
+    if (const auto sp = remote_gdb::remoteStackPointer(); sp.has_value()) {
+        STACK_ADDRESS = *sp;
+    }
+}
+
 static void syncRemoteUiState(const bool refreshTarget, const bool resetCodeMemoryBase) {
     if (refreshTarget && !remote_gdb::remoteRefreshState()) {
         consoleWriteThreadSafe("remote >> failed to refresh target state\n");
@@ -326,12 +335,7 @@ void startOrRefreshRemoteDebugSession() {
                 return;
             }
 
-            if (const auto pc = remote_gdb::remoteProgramCounter(); pc.has_value()) {
-                MEMORY_EDITOR_BASE = *pc & ~static_cast<uint64_t>(0xfff);
-            }
-            if (const auto sp = remote_gdb::remoteStackPointer(); sp.has_value()) {
-                STACK_ADDRESS = *sp;
-            }
+            initRemoteAddresses();
 
             {
                 std::lock_guard<std::mutex> lk(debugReadyMutex);
@@ -428,12 +432,7 @@ void startDebugging(){
                 return;
             }
 
-            if (const auto pc = remote_gdb::remoteProgramCounter(); pc.has_value()) {
-                MEMORY_EDITOR_BASE = *pc & ~static_cast<uint64_t>(0xfff);
-            }
-            if (const auto sp = remote_gdb::remoteStackPointer(); sp.has_value()) {
-                STACK_ADDRESS = *sp;
-            }
+            initRemoteAddresses();
 
             {
                 std::lock_guard<std::mutex> lk(debugReadyMutex);
