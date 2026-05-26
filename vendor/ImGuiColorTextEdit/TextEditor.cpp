@@ -397,6 +397,16 @@ std::vector<std::string> TextEditor::GetTextLines() const
     return result;
 }
 
+void TextEditor::SetCustomLineNumberLabels(const std::map<int, std::string>& aLabels)
+{
+    mCustomLineNumberLabels = aLabels;
+}
+
+void TextEditor::ClearCustomLineNumberLabels()
+{
+    mCustomLineNumberLabels.clear();
+}
+
 bool TextEditor::Render(const char* aTitle, bool aParentIsFocused, const ImVec2& aSize, bool aBorder)
 {
     if (mCursorPositionChanged)
@@ -2413,11 +2423,21 @@ void TextEditor::Render(bool aParentIsFocused)
 
     // Deduce mTextStart by evaluating mLines size (global lineMax) plus two spaces as text width
     mTextStart = mLeftMargin;
-    static char lineNumberBuffer[16];
+    static char lineNumberBuffer[64];
     if (mShowLineNumbers)
     {
-        snprintf(lineNumberBuffer, 16, " %d ", mLines.size());
-        mTextStart += ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.0f, lineNumberBuffer, nullptr, nullptr).x;
+        if (!mCustomLineNumberLabels.empty()) {
+            float maxLabelWidth = 0.0f;
+            for (const auto& [lineNo, label] : mCustomLineNumberLabels) {
+                snprintf(lineNumberBuffer, sizeof(lineNumberBuffer), " %s ", label.c_str());
+                float labelWidth = ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.0f, lineNumberBuffer, nullptr, nullptr).x;
+                if (labelWidth > maxLabelWidth) maxLabelWidth = labelWidth;
+            }
+            mTextStart += (maxLabelWidth > 0.0f ? maxLabelWidth : fontWidth * 20.0f);
+        } else {
+            snprintf(lineNumberBuffer, sizeof(lineNumberBuffer), " %d ", (int)mLines.size());
+            mTextStart += ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.0f, lineNumberBuffer, nullptr, nullptr).x;
+        }
     }
 
     ImVec2 cursorScreenPos = ImGui::GetCursorScreenPos();
@@ -2482,7 +2502,11 @@ void TextEditor::Render(bool aParentIsFocused)
             // Draw line number (right aligned)
             if (mShowLineNumbers)
             {
-                snprintf(lineNumberBuffer, 16, "%d  ", lineNo + 1);
+                if (auto it = mCustomLineNumberLabels.find(lineNo); it != mCustomLineNumberLabels.end()) {
+                    snprintf(lineNumberBuffer, sizeof(lineNumberBuffer), "%s  ", it->second.c_str());
+                } else {
+                    snprintf(lineNumberBuffer, sizeof(lineNumberBuffer), "%d  ", lineNo + 1);
+                }
                 float lineNoWidth = ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.0f, lineNumberBuffer, nullptr, nullptr).x;
                 drawList->AddText(ImVec2(lineStartScreenPos.x + mTextStart - lineNoWidth, lineStartScreenPos.y), mPalette[(int)PaletteIndex::LineNumber], lineNumberBuffer);
             }
