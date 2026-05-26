@@ -171,8 +171,10 @@ int main(int argc, const char** argv)
         ImGui_ImplGlfw_NewFrame();
 
         static float prevFontScale = 1.0f;
+        static ImGuiStyle baseStyle = ImGui::GetStyle();
         if (gFontScale != prevFontScale) {
-            ImGui::GetStyle().ScaleAllSizes(gFontScale / prevFontScale);
+            ImGui::GetStyle() = baseStyle;
+            ImGui::GetStyle().ScaleAllSizes(gFontScale);
             prevFontScale = gFontScale;
         }
         io.FontGlobalScale = gFontScale;

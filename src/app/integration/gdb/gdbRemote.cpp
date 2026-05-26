@@ -249,6 +249,7 @@ public:
         registerBlob_.clear();
         lastStopReason_.clear();
         memoryRegions_.clear();
+        cachedRegValues_.clear();
     }
 
 private:
@@ -266,6 +267,7 @@ private:
     std::optional<std::vector<uint8_t>> readRegisterSlice(const std::string& regName);
     bool writeRegisterSlice(const std::string& regName, const std::vector<uint8_t>& bytes);
     bool queryStopReason();
+    void parseStopRegisters(const std::string& response);
     std::optional<DecodedInstruction> decodeCurrentInstruction();
     static bool isCallInstruction(const cs_insn& instruction);
     [[nodiscard]] bool hasTrackedBreakpoint(uint64_t address) const;
@@ -287,6 +289,7 @@ private:
     std::vector<RemoteMemoryRegion> memoryRegions_;
     std::unordered_set<uint64_t> activeBreakpoints_;
     std::string lastStopReason_;
+    std::unordered_map<unsigned int, std::vector<uint8_t>> cachedRegValues_;
 };
 
 GdbRemoteClient client;
@@ -570,10 +573,14 @@ bool GdbRemoteClient::transact(const std::string& payload, std::string& response
 
 bool GdbRemoteClient::initialHandshake() {
     std::string response;
-    if (!transact("qSupported:multiprocess+;swbreak+;hwbreak+;qXfer:features:read+;qXfer:memory-map:read+", response)) {
+
+    consoleWriteThreadSafe("remote >> starting handshake\n");
+
+    if (!transact("qSupported", response)) {
         consoleWriteThreadSafe("remote >> qSupported failed\n");
         return false;
     }
+    consoleWriteThreadSafe("remote >> qSupported ok\n");
 
     supportedFeatures_.clear();
     std::stringstream stream(response);
@@ -597,10 +604,12 @@ bool GdbRemoteClient::initialHandshake() {
 
     if (transact("QStartNoAckMode", response) && response == "OK") {
         noAckMode_ = true;
+        consoleWriteThreadSafe("remote >> no-ack mode enabled\n");
     }
 
     if (transact("vCont?", response)) {
         supportsVCont_ = response.contains("vCont");
+        consoleWriteThreadSafe("remote >> vCont support: " + std::string(supportsVCont_ ? "yes" : "no") + "\n");
     }
 
     if (registers_.empty()) {
@@ -616,9 +625,11 @@ bool GdbRemoteClient::initialHandshake() {
     }
 
     if (supportsMemoryMap_) {
+        consoleWriteThreadSafe("remote >> loading memory map\n");
         loadMemoryMap();
     }
 
+    consoleWriteThreadSafe("remote >> handshake complete\n");
     return true;
 }
 
@@ -808,6 +819,29 @@ bool GdbRemoteClient::refreshRegisters() {
     return true;
 }
 
+void GdbRemoteClient::parseStopRegisters(const std::string& response) {
+    cachedRegValues_.clear();
+    if (response.starts_with('T') || response.starts_with('S')) {
+        size_t pos = 1;
+        while (pos < response.size()) {
+            auto colon = response.find(':', pos);
+            if (colon == std::string::npos) break;
+            auto semi = response.find(';', colon);
+            if (semi == std::string::npos) semi = response.size();
+            unsigned int regnum = 0;
+            auto parse = std::from_chars(response.data() + pos, response.data() + colon, regnum, 16);
+            if (parse.ec == std::errc{}) {
+                std::string valHex(response.data() + colon + 1, semi - colon - 1);
+                auto valBytes = decodeHexBytes(valHex);
+                if (valBytes.has_value()) {
+                    cachedRegValues_[regnum] = *valBytes;
+                }
+            }
+            pos = semi + 1;
+        }
+    }
+}
+
 bool GdbRemoteClient::queryStopReason() {
     std::string response;
     if (!transact("?", response)) {
@@ -815,6 +849,7 @@ bool GdbRemoteClient::queryStopReason() {
         return false;
     }
     lastStopReason_ = response;
+    parseStopRegisters(response);
     return true;
 }
 
@@ -824,14 +859,35 @@ bool GdbRemoteClient::refreshState() {
 
 bool GdbRemoteClient::resume(const bool singleStep) {
     std::string response;
+
     const std::string command = supportsVCont_
         ? (singleStep ? "vCont;s" : "vCont;c")
         : (singleStep ? "s" : "c");
-    if (!transact(command, response)) {
+
+    if (transact(command, response)) {
+        if (response.starts_with('E')) {
+            consoleWriteThreadSafe("remote >> resume error: " + response + "\n");
+            return false;
+        }
+        if (response.starts_with('W') || response.starts_with('X')) {
+            consoleWriteThreadSafe("remote >> target exited with: " + response + "\n");
+            lastStopReason_ = response;
+            return false;
+        }
+        lastStopReason_ = response;
+        parseStopRegisters(response);
+        if (refreshRegisters()) return true;
+        consoleWriteThreadSafe("remote >> register refresh after resume failed\n");
         return false;
     }
-    lastStopReason_ = response;
-    return refreshRegisters();
+
+    if (!connected()) {
+        consoleWriteThreadSafe("remote >> target disconnected\n");
+        return false;
+    }
+
+    consoleWriteThreadSafe("remote >> " + command + " failed (no response)\n");
+    return false;
 }
 
 bool GdbRemoteClient::interrupt() {
@@ -853,6 +909,7 @@ bool GdbRemoteClient::interrupt() {
 std::optional<DecodedInstruction> GdbRemoteClient::decodeCurrentInstruction() {
     const auto pc = programCounter();
     if (!pc.has_value()) {
+        consoleWriteThreadSafe("remote >> decode failed: no program counter\n");
         return std::nullopt;
     }
 
@@ -869,6 +926,9 @@ std::optional<DecodedInstruction> GdbRemoteClient::decodeCurrentInstruction() {
 
     const auto bytes = readMemory(*pc, byteCount);
     if (!bytes.has_value() || bytes->empty()) {
+        std::ostringstream os;
+        os << "remote >> decode failed: cannot read memory at 0x" << std::hex << *pc << "\n";
+        consoleWriteThreadSafe(os.str());
         return std::nullopt;
     }
 
@@ -927,17 +987,27 @@ std::optional<std::vector<uint8_t>> GdbRemoteClient::readRegisterSlice(const std
     if (!ensureRegisterDescriptor(regName)) {
         return std::nullopt;
     }
-    if (registerBlob_.empty() && !refreshRegisters()) {
-        return std::nullopt;
-    }
 
     const auto& desc = registers_[registerIndexByName_[toLowerCase(regName)]];
     const auto size = desc.bitsize / 8;
-    if (desc.offset + size > registerBlob_.size()) {
+
+    if (auto it = cachedRegValues_.find(desc.regnum); it != cachedRegValues_.end() && it->second.size() == size) {
+        return it->second;
+    }
+
+    if (!registerBlob_.empty() && desc.offset + size <= registerBlob_.size()) {
+        return std::vector<uint8_t>(registerBlob_.begin() + static_cast<std::ptrdiff_t>(desc.offset),
+                                    registerBlob_.begin() + static_cast<std::ptrdiff_t>(desc.offset + size));
+    }
+
+    if (registerBlob_.empty() && !refreshRegisters()) {
         return std::nullopt;
     }
-    return std::vector<uint8_t>(registerBlob_.begin() + static_cast<std::ptrdiff_t>(desc.offset),
-                                registerBlob_.begin() + static_cast<std::ptrdiff_t>(desc.offset + size));
+    if (desc.offset + size <= registerBlob_.size()) {
+        return std::vector<uint8_t>(registerBlob_.begin() + static_cast<std::ptrdiff_t>(desc.offset),
+                                    registerBlob_.begin() + static_cast<std::ptrdiff_t>(desc.offset + size));
+    }
+    return std::nullopt;
 }
 
 std::optional<std::vector<uint8_t>> GdbRemoteClient::registerBytes(const std::string& regName) {
@@ -1000,7 +1070,12 @@ std::optional<std::vector<uint8_t>> GdbRemoteClient::readMemory(const uint64_t a
     std::ostringstream command;
     command << "m" << std::hex << address << "," << size;
     std::string response;
-    if (!transact(command.str(), response) || response == "E01" || response.starts_with('E')) {
+    if (!transact(command.str(), response)) {
+        consoleWriteThreadSafe("remote >> m packet no response\n");
+        return std::nullopt;
+    }
+    if (response.starts_with('E')) {
+        consoleWriteThreadSafe("remote >> m packet error: " + response + "\n");
         return std::nullopt;
     }
     return decodeHexBytes(response);

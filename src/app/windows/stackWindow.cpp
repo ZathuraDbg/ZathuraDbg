@@ -32,9 +32,15 @@ void stackWriteFunc(ImU8* data, const size_t offset, const ImU8 delta) {
 
     const uint64_t address = STACK_ADDRESS + STACK_SIZE - offset - 1;
     LOG_INFO("Stack write at 0x" << std::hex << address << ": " << static_cast<int>(delta));
-    
-    const auto err = icicle_mem_write(icicle, address, &delta, 1);
-    if (err == -1) {
+
+    bool writeOk = false;
+    if (remote_gdb::useRemoteDebugging()) {
+        writeOk = remote_gdb::remoteWriteMemory(address, {delta});
+    } else {
+        writeOk = icicle_mem_write(icicle, address, &delta, 1) != -1;
+    }
+
+    if (!writeOk) {
         LOG_ERROR("Failed to write to memory. Address: 0x" << std::hex << address);
         tinyfd_messageBox("ERROR!", "Failed to write to the memory address!!", "ok", "error", 0);
         return;
@@ -93,7 +99,7 @@ void stackEditorWindow() {
     //     }
     // }
 
-    if (icicle && isDebugReady)
+    if (!remote_gdb::useRemoteDebugging() && icicle && isDebugReady)
     {
         static bool stack_mapped_once = false;
         if (!stack_mapped_once) {
@@ -125,17 +131,69 @@ void stackEditorWindow() {
     
     size_t outSize = 0;
     unsigned char* memData = NULL;
+    static size_t remoteStackReadable = 0;
+    static uintptr_t lastStackAddr = 0;
+    static bool remoteStackProbeFailed = false;
+
+    if (lastStackAddr != STACK_ADDRESS) {
+        remoteStackReadable = 0;
+        lastStackAddr = STACK_ADDRESS;
+        remoteStackProbeFailed = false;
+    }
 
     if (isDebugReady)
     {
-        memData = icicle_mem_read(icicle, STACK_ADDRESS, STACK_SIZE, &outSize);
+        if (remote_gdb::useRemoteDebugging()) {
+            if (!remoteStackProbeFailed) {
+                if (remoteStackReadable > 0) {
+                    const auto remoteBytes = remote_gdb::remoteReadMemory(STACK_ADDRESS, remoteStackReadable);
+                    if (remoteBytes.has_value()) {
+                        outSize = remoteBytes->size();
+                        memData = static_cast<unsigned char*>(malloc(outSize));
+                        if (memData) {
+                            memcpy(memData, remoteBytes->data(), outSize);
+                        }
+                    } else {
+                        remoteStackReadable = 0;
+                    }
+                }
+
+                if (!memData && remoteStackReadable == 0) {
+                    static constexpr size_t fallbackSizes[] = {0x4000, 0x2000, 0x1000, 0x800, 0x200, 0x100};
+                    for (const auto trySize : fallbackSizes) {
+                        const auto remoteBytes = remote_gdb::remoteReadMemory(STACK_ADDRESS, trySize);
+                        if (remoteBytes.has_value()) {
+                            outSize = remoteBytes->size();
+                            remoteStackReadable = trySize;
+                            memData = static_cast<unsigned char*>(malloc(outSize));
+                            if (memData) {
+                                memcpy(memData, remoteBytes->data(), outSize);
+                            }
+                            break;
+                        }
+                    }
+                    if (!memData) {
+                        remoteStackProbeFailed = true;
+                    }
+                }
+            }
+        } else {
+            memData = icicle_mem_read(icicle, STACK_ADDRESS, STACK_SIZE, &outSize);
+        }
     }
-    
+
+    const size_t displaySize = outSize > 0 ? outSize : STACK_SIZE;
+
     if (!memData) {
         memset(stackBuffer.get(), 0, STACK_SIZE);
     } else {
-        copyBigEndian(stackBuffer.get(), memData, STACK_SIZE);
-        icicle_free_buffer(memData, outSize);
+        memset(stackBuffer.get(), 0, STACK_SIZE);
+        copyBigEndian(stackBuffer.get(), memData, outSize);
+        if (remote_gdb::useRemoteDebugging()) {
+            free(memData);
+        } else {
+            icicle_free_buffer(memData, outSize);
+        }
     }
 
     stackEditor.HighlightColor = ImColor(59, 60, 79);
@@ -145,13 +203,24 @@ void stackEditorWindow() {
     stackEditor.StackFashionAddrSubtraction = true;
     stackEditor.WriteFn = &stackWriteFunc;
 
-    stackEditor.DrawWindow("Stack", reinterpret_cast<void*>(stackBuffer.get()), STACK_SIZE, STACK_ADDRESS + STACK_SIZE);
+    stackEditor.DrawWindow("Stack", reinterpret_cast<void*>(stackBuffer.get()), displaySize, STACK_ADDRESS + displaySize);
 
     if (!newMemEditWindows.empty()) {
         int i = 0;
         for (auto& [memEditor, address, size]: newMemEditWindows){
             size_t newMemSize = 0;
-            unsigned char* newMemData = icicle_mem_read(icicle, address, size, &newMemSize);
+            unsigned char* newMemData = nullptr;
+            if (remote_gdb::useRemoteDebugging()) {
+                if (const auto remoteBytes = remote_gdb::remoteReadMemory(address, size); remoteBytes.has_value()) {
+                    newMemSize = remoteBytes->size();
+                    newMemData = static_cast<unsigned char*>(malloc(newMemSize));
+                    if (newMemData) {
+                        memcpy(newMemData, remoteBytes->data(), newMemSize);
+                    }
+                }
+            } else {
+                newMemData = icicle_mem_read(icicle, address, size, &newMemSize);
+            }
             if (newMemData == NULL)
             {
                 memEditor.DrawWindow(("Memory Editor " + std::to_string(++i)).c_str(), (void*)zeroArr, 0x1000, address);
@@ -159,7 +228,11 @@ void stackEditorWindow() {
             else
             {
                 memEditor.DrawWindow(("Memory Editor " + std::to_string(++i)).c_str(), (void*)newMemData, size, address);
-                icicle_free_buffer(newMemData, newMemSize);
+                if (remote_gdb::useRemoteDebugging()) {
+                    free(newMemData);
+                } else {
+                    icicle_free_buffer(newMemData, newMemSize);
+                }
             }
         }
     }

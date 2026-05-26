@@ -299,7 +299,7 @@ static void syncRemoteUiState(const bool refreshTarget, const bool resetCodeMemo
     }
 
     if (const auto sp = remote_gdb::remoteStackPointer(); sp.has_value()) {
-        STACK_ADDRESS = (*sp > STACK_SIZE) ? (*sp - STACK_SIZE) : 0;
+        STACK_ADDRESS = *sp;
     }
 }
 
@@ -324,6 +324,13 @@ void startOrRefreshRemoteDebugSession() {
                 }
                 debugReadyCv.notify_all();
                 return;
+            }
+
+            if (const auto pc = remote_gdb::remoteProgramCounter(); pc.has_value()) {
+                MEMORY_EDITOR_BASE = *pc & ~static_cast<uint64_t>(0xfff);
+            }
+            if (const auto sp = remote_gdb::remoteStackPointer(); sp.has_value()) {
+                STACK_ADDRESS = *sp;
             }
 
             {
@@ -419,6 +426,13 @@ void startDebugging(){
                 }
                 debugReadyCv.notify_all();
                 return;
+            }
+
+            if (const auto pc = remote_gdb::remoteProgramCounter(); pc.has_value()) {
+                MEMORY_EDITOR_BASE = *pc & ~static_cast<uint64_t>(0xfff);
+            }
+            if (const auto sp = remote_gdb::remoteStackPointer(); sp.has_value()) {
+                STACK_ADDRESS = *sp;
             }
 
             {
