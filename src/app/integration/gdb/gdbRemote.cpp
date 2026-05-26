@@ -1164,6 +1164,12 @@ std::optional<RemoteDisassemblyView> GdbRemoteClient::buildDisassemblyView(
         }
 
         view.lineAddressLabels[static_cast<int>(i)] = symName(instructions[i].address);
+        {
+            int64_t off = static_cast<int64_t>(instructions[i].address - baseAddress);
+            std::ostringstream os;
+            os << (off >= 0 ? "+0x" : "-0x") << std::hex << (off >= 0 ? off : -off);
+            view.lineOffsetLabels[static_cast<int>(i)] = os.str();
+        }
 
         if (auto target = extractBranchTarget(instructions[i]); target.has_value()) {
             labelTargets.insert(*target);

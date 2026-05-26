@@ -271,7 +271,7 @@ static void syncRemoteCodeView() {
     remoteDisassemblyBaseAddress = view->startAddress;
 
     showRemoteDisassemblyInEditor(view->text, static_cast<int>(view->currentLine > 0 ? view->currentLine - 1 : 0),
-                                  view->lineAddressLabels);
+                                  view->lineOffsetLabels, view->lineAddressLabels);
     rebuildRemoteBreakpointHighlights();
 
     if (view->currentLine > 0) {

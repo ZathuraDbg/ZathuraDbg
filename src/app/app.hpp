@@ -50,6 +50,9 @@ extern  std::string getDataToCopy(const std::stringstream &selectedAsmText, cons
 void showRemoteDisassemblyInEditor(const std::string& text, int currentLine);
 void showRemoteDisassemblyInEditor(const std::string& text, int currentLine,
                                    const std::map<int, std::string>& lineAddressLabels);
+void showRemoteDisassemblyInEditor(const std::string& text, int currentLine,
+                                   const std::map<int, std::string>& lineOffsetLabels,
+                                   const std::map<int, std::string>& lineAddressLabels);
 void restoreLocalEditorAfterRemoteSession();
 bool editorShowingRemoteDisassembly();
 extern bool lineNumbersShown;

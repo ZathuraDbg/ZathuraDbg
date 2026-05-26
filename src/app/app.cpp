@@ -78,6 +78,15 @@ void showRemoteDisassemblyInEditor(const std::string& text, const int currentLin
     }
 }
 
+void showRemoteDisassemblyInEditor(const std::string& text, const int currentLine,
+                                   const std::map<int, std::string>& lineOffsetLabels,
+                                   const std::map<int, std::string>& lineAddressLabels) {
+    showRemoteDisassemblyInEditor(text, currentLine);
+    if (editor != nullptr) {
+        editor->SetCustomLineNumberLabels(lineOffsetLabels, lineAddressLabels);
+    }
+}
+
 void restoreLocalEditorAfterRemoteSession() {
     if (editor == nullptr || !remoteEditorViewActive) {
         return;

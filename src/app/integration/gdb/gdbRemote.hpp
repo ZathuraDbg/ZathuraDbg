@@ -37,6 +37,7 @@ struct RemoteDisassemblyView {
     std::string text;
     std::unordered_map<uint64_t, uint64_t> addressLineMap;
     std::map<int, std::string> lineAddressLabels;
+    std::map<int, std::string> lineOffsetLabels;
     std::map<std::string, int> labelMap;
 };
 

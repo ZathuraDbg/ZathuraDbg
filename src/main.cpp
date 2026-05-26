@@ -6,6 +6,7 @@
 #include <cstdio>
 #include "../vendor/ImGuiColorTextEdit/TextEditor.h"
 #include "app/app.hpp"
+#include "app/shortcuts.hpp"
 #include "../vendor/whereami/src/whereami.h"
 #include "app/windows/windows.hpp" // Make sure this imports the stack window functions
 #include <map>
@@ -168,6 +169,14 @@ int main(int argc, const char** argv)
         glfwPollEvents();
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
+
+        static float prevFontScale = 1.0f;
+        if (gFontScale != prevFontScale) {
+            ImGui::GetStyle().ScaleAllSizes(gFontScale / prevFontScale);
+            prevFontScale = gFontScale;
+        }
+        io.FontGlobalScale = gFontScale;
+
         ImGui::NewFrame();
 
         io.ConfigDockingWithShift = true;

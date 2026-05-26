@@ -400,11 +400,24 @@ std::vector<std::string> TextEditor::GetTextLines() const
 void TextEditor::SetCustomLineNumberLabels(const std::map<int, std::string>& aLabels)
 {
     mCustomLineNumberLabels = aLabels;
+    mCustomLineNumberLabelsShort.clear();
+    mFullAddressLines.clear();
+}
+
+void TextEditor::SetCustomLineNumberLabels(const std::map<int, std::string>& aShort,
+                                           const std::map<int, std::string>& aFull)
+{
+    mCustomLineNumberLabelsShort = aShort;
+    mCustomLineNumberLabelsFull = aFull;
+    mCustomLineNumberLabels = aShort;
+    mFullAddressLines.clear();
 }
 
 void TextEditor::ClearCustomLineNumberLabels()
 {
     mCustomLineNumberLabels.clear();
+    mCustomLineNumberLabelsShort.clear();
+    mFullAddressLines.clear();
 }
 
 bool TextEditor::Render(const char* aTitle, bool aParentIsFocused, const ImVec2& aSize, bool aBorder)
@@ -2351,6 +2364,18 @@ void TextEditor::HandleMouseInputs()
                 Coordinates cursorCoords = ScreenPosToCoordinates(ImGui::GetMousePos(), !mOverwrite, &isOverLineNumber);
                 if (isOverLineNumber)
                 {
+                    if (!mCustomLineNumberLabelsShort.empty()) {
+                        auto& active = mCustomLineNumberLabels;
+                        if (mFullAddressLines.contains(cursorCoords.mLine)) {
+                            mFullAddressLines.erase(cursorCoords.mLine);
+                            if (auto it = mCustomLineNumberLabelsShort.find(cursorCoords.mLine); it != mCustomLineNumberLabelsShort.end())
+                                active[cursorCoords.mLine] = it->second;
+                        } else {
+                            mFullAddressLines.insert(cursorCoords.mLine);
+                            if (auto it = mCustomLineNumberLabelsFull.find(cursorCoords.mLine); it != mCustomLineNumberLabelsFull.end())
+                                active[cursorCoords.mLine] = it->second;
+                        }
+                    }
                     Coordinates targetCursorPos = cursorCoords.mLine < mLines.size() - 1 ?
                                                   Coordinates{ cursorCoords.mLine + 1, 0 } :
                                                   Coordinates{ cursorCoords.mLine, GetLineMaxColumn(cursorCoords.mLine) };
@@ -2426,7 +2451,7 @@ void TextEditor::Render(bool aParentIsFocused)
     static char lineNumberBuffer[64];
     if (mShowLineNumbers)
     {
-        if (!mCustomLineNumberLabels.empty()) {
+        if (!mCustomLineNumberLabels.empty() || !mCustomLineNumberLabelsShort.empty()) {
             float maxLabelWidth = 0.0f;
             for (const auto& [lineNo, label] : mCustomLineNumberLabels) {
                 snprintf(lineNumberBuffer, sizeof(lineNumberBuffer), " %s ", label.c_str());
