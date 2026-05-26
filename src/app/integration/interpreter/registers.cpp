@@ -18,6 +18,161 @@ double convert128BitToDouble(uint64_t low_bits, const uint64_t high_bits) {
     return result;
 }
 
+static uint64_t readLittleEndianInteger(const std::vector<uint8_t>& bytes) {
+    uint64_t value = 0;
+    const auto limit = std::min(bytes.size(), sizeof(uint64_t));
+    for (size_t i = 0; i < limit; ++i) {
+        value |= static_cast<uint64_t>(bytes[i]) << (i * 8);
+    }
+    return value;
+}
+
+static registerValueT decodeRemoteRegisterValue(const std::string& regName,
+                                                const std::vector<uint8_t>& bytes) {
+    const auto size = regInfoMap[regName];
+    const auto lowerRegName = toLowerCase(regName);
+    const bool isX86 = (codeInformation.archIC == IC_ARCH_X86_64 || codeInformation.archIC == IC_ARCH_I386);
+
+    registerValueT regValue{};
+
+    if (size == 128 && bytes.size() >= 16) {
+        uint64_t lowerHalf = 0;
+        uint64_t upperHalf = 0;
+        std::memcpy(&lowerHalf, bytes.data(), 8);
+        std::memcpy(&upperHalf, bytes.data() + 8, 8);
+        regValue.info.is128bit = true;
+
+        if (use32BitLanes) {
+            regValue.info.arrays.floatArray[0] = convert64BitToTwoFloats(lowerHalf).first;
+            regValue.info.arrays.floatArray[1] = convert64BitToTwoFloats(lowerHalf).second;
+            regValue.info.arrays.floatArray[2] = convert64BitToTwoFloats(upperHalf).first;
+            regValue.info.arrays.floatArray[3] = convert64BitToTwoFloats(upperHalf).second;
+            for (int i = 0; i < 4; ++i) {
+                if (regValue.info.arrays.floatArray[i] != 0.0f) {
+                    regValue.floatVal = 1.0f;
+                    regValue.doubleVal = 1.0;
+                    break;
+                }
+            }
+        } else {
+            double val1 = 0.0;
+            double val2 = 0.0;
+            std::memcpy(&val1, &lowerHalf, sizeof(double));
+            std::memcpy(&val2, &upperHalf, sizeof(double));
+            regValue.info.arrays.doubleArray[0] = val2;
+            regValue.info.arrays.doubleArray[1] = val1;
+            if (val1 != 0.0 || val2 != 0.0) {
+                regValue.doubleVal = 1.0;
+            }
+        }
+        return regValue;
+    }
+
+    if (size == 256 && bytes.size() >= 32) {
+        regValue.info.is256bit = true;
+        if (use32BitLanes) {
+            for (int i = 0; i < 8; ++i) {
+                uint32_t bits = 0;
+                std::memcpy(&bits, bytes.data() + (i * 4), 4);
+                std::memcpy(&regValue.info.arrays.floatArray[i], &bits, sizeof(float));
+                if (regValue.info.arrays.floatArray[i] != 0.0f) {
+                    regValue.floatVal = 1.0f;
+                    regValue.doubleVal = 1.0;
+                }
+            }
+        } else {
+            for (int i = 0; i < 4; ++i) {
+                std::memcpy(&regValue.info.arrays.doubleArray[i], bytes.data() + (i * 8), 8);
+                if (regValue.info.arrays.doubleArray[i] != 0.0) {
+                    regValue.doubleVal = 1.0;
+                }
+            }
+        }
+        return regValue;
+    }
+
+    if (size == 512) {
+        regValue.info.is512bit = true;
+        return regValue;
+    }
+
+    if (!isX86 && size == 32 && vfpRegs.contains(lowerRegName) && bytes.size() >= 4) {
+        regValue.info.isFloatReg = true;
+        std::memcpy(&regValue.floatVal, bytes.data(), 4);
+        return regValue;
+    }
+
+    if (!isX86 && size == 64 && dRegs.contains(lowerRegName) && bytes.size() >= 8) {
+        regValue.info.isDoubleReg = true;
+        double doubleValue = 0.0;
+        std::memcpy(&doubleValue, bytes.data(), 8);
+        regValue.doubleVal = doubleValue;
+        regValue.floatVal = static_cast<float>(doubleValue);
+        return regValue;
+    }
+
+    regValue.eightByteVal = readLittleEndianInteger(bytes);
+    return regValue;
+}
+
+static std::vector<uint8_t> encodeRemoteRegisterValue(const std::string& regName,
+                                                      const registerValueT& value) {
+    const auto size = regInfoMap[regName];
+    const auto lowerRegName = toLowerCase(regName);
+    const bool isX86 = (codeInformation.archIC == IC_ARCH_X86_64 || codeInformation.archIC == IC_ARCH_I386);
+
+    if (size == 128) {
+        std::vector<uint8_t> bytes(16, 0);
+        if (use32BitLanes) {
+            for (int i = 0; i < 4; ++i) {
+                uint32_t bits = 0;
+                std::memcpy(&bits, &value.info.arrays.floatArray[i], sizeof(float));
+                std::memcpy(bytes.data() + (i * 4), &bits, 4);
+            }
+        } else {
+            double lower = value.info.arrays.doubleArray[1];
+            double upper = value.info.arrays.doubleArray[0];
+            std::memcpy(bytes.data(), &lower, 8);
+            std::memcpy(bytes.data() + 8, &upper, 8);
+        }
+        return bytes;
+    }
+
+    if (size == 256) {
+        std::vector<uint8_t> bytes(32, 0);
+        if (use32BitLanes) {
+            for (int i = 0; i < 8; ++i) {
+                uint32_t bits = 0;
+                std::memcpy(&bits, &value.info.arrays.floatArray[i], sizeof(float));
+                std::memcpy(bytes.data() + (i * 4), &bits, 4);
+            }
+        } else {
+            for (int i = 0; i < 4; ++i) {
+                std::memcpy(bytes.data() + (i * 8), &value.info.arrays.doubleArray[i], 8);
+            }
+        }
+        return bytes;
+    }
+
+    if (!isX86 && size == 32 && vfpRegs.contains(lowerRegName)) {
+        std::vector<uint8_t> bytes(4, 0);
+        std::memcpy(bytes.data(), &value.floatVal, 4);
+        return bytes;
+    }
+
+    if (!isX86 && size == 64 && dRegs.contains(lowerRegName)) {
+        std::vector<uint8_t> bytes(8, 0);
+        std::memcpy(bytes.data(), &value.doubleVal, 8);
+        return bytes;
+    }
+
+    std::vector<uint8_t> bytes(size / 8, 0);
+    for (size_t i = 0; i < bytes.size(); ++i) {
+        bytes[i] = static_cast<uint8_t>((value.eightByteVal >> (i * 8)) & 0xff);
+    }
+    return bytes;
+}
+
 registerValueT read256BitRegister(const std::string& regName)
 {
     uint8_t arrSize = use32BitLanes ? 8 : 4;
@@ -142,6 +297,15 @@ registerValueT getRegisterValue(const std::string& regName) {
     const auto size = regInfoMap[regName];
     const std::string lowerRegName = toLowerCase(regName);
     const bool isX86 = (codeInformation.archIC == IC_ARCH_X86_64 || codeInformation.archIC == IC_ARCH_I386);
+
+    if (remote_gdb::useRemoteDebugging()) {
+        const auto remoteBytes = remote_gdb::remoteReadRegister(lowerRegName);
+        if (!remoteBytes.has_value()) {
+            LOG_ERROR("Failed to read remote register " << regName);
+            return {.eightByteVal = 0};
+        }
+        return decodeRemoteRegisterValue(lowerRegName, *remoteBytes);
+    }
 
     // 128-bit and 256-bit: same for all archs
     if (size == 128) return read128BitRegisterValue(lowerRegName);
@@ -288,6 +452,10 @@ bool setRegisterValue(const std::string& regName, const registerValueT& value) {
     const auto size = regInfoMap[regName];
     const std::string lowerRegName = toLowerCase(regName);
     const bool isX86 = (codeInformation.archIC == IC_ARCH_X86_64 || codeInformation.archIC == IC_ARCH_I386);
+
+    if (remote_gdb::useRemoteDebugging()) {
+        return remote_gdb::remoteWriteRegister(lowerRegName, encodeRemoteRegisterValue(lowerRegName, value));
+    }
 
     // 128-bit and 256-bit: same for all archs
     if (size == 128) return write128BitRegisterValue(regName, value);

@@ -22,23 +22,6 @@ static void* copyBigEndian(void* dst, const void* src, size_t size)
     return dst;
 }
 
-std::optional<std::vector<uint8_t>> readDebugMemory(const uint64_t address, const size_t size)
-{
-    if (remote_gdb::useRemoteDebugging()) {
-        return remote_gdb::remoteReadMemory(address, size);
-    }
-
-    if (!icicle) return std::nullopt;
-
-    size_t outSize = 0;
-    unsigned char* raw = icicle_mem_read(icicle, address, size, &outSize);
-    if (!raw) return std::nullopt;
-
-    std::vector<uint8_t> result(raw, raw + outSize);
-    icicle_free_buffer(raw, outSize);
-    return result;
-}
-
 void stackWriteFunc(ImU8* data, const size_t offset, const ImU8 delta) {
     {
         std::lock_guard<std::mutex> lk(debugReadyMutex);
@@ -47,12 +30,7 @@ void stackWriteFunc(ImU8* data, const size_t offset, const ImU8 delta) {
     const uint64_t address = STACK_ADDRESS + STACK_SIZE - offset - 1;
     LOG_INFO("Stack write at 0x" << std::hex << address << ": " << static_cast<int>(delta));
 
-    bool writeOk = false;
-    if (remote_gdb::useRemoteDebugging()) {
-        writeOk = remote_gdb::remoteWriteMemory(address, {delta});
-    } else {
-        writeOk = icicle_mem_write(icicle, address, &delta, 1) != -1;
-    }
+    const bool writeOk = writeDebugMemory(address, delta);
 
     if (!writeOk) {
         LOG_ERROR("Failed to write to memory. Address: 0x" << std::hex << address);

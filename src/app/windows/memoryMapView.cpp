@@ -2,6 +2,27 @@
 
 std::vector<MemRegionInfo> getMemoryMapping(Icicle* ic)
 {
+    if (remote_gdb::useRemoteDebugging()) {
+        std::vector<MemRegionInfo> memMapInfo;
+        for (const auto& region : remote_gdb::remoteMemoryRegions()) {
+            MemoryProtection protection = NoAccess;
+            if (region.read && region.write && region.execute) {
+                protection = ExecuteReadWrite;
+            } else if (region.read && region.write) {
+                protection = ReadWrite;
+            } else if (region.read && region.execute) {
+                protection = ExecuteRead;
+            } else if (region.execute) {
+                protection = ExecuteOnly;
+            } else if (region.read) {
+                protection = ReadOnly;
+            }
+
+            memMapInfo.push_back({region.start, region.end - region.start, protection});
+        }
+        return memMapInfo;
+    }
+
     size_t count;
     MemRegionInfo* memRegionInfoArray = icicle_mem_list_mapped(icicle, &count);
     
@@ -105,6 +126,13 @@ static int lastMemInfoSize;
 bool keep = false;
 void memoryMapWindow()
 {
+    if (remote_gdb::useRemoteDebugging() && !remote_gdb::remoteTargetSupportsMemoryMap()) {
+        ImGui::Begin("Memory Mappings");
+        ImGui::TextWrapped("The connected remote target does not expose qXfer:memory-map:read.");
+        ImGui::End();
+        return;
+    }
+
     auto memInfo = getMemoryMapping(icicle);
     auto [x, y] = ImGui::GetWindowSize();
     ImGui::SetNextWindowSize({x - 230, (y - 125 + (52 * memInfo.size()))});

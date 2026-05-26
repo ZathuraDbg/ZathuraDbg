@@ -107,7 +107,7 @@ extern bool setRegisterValue(const std::string& regName, const registerValueT& v
 extern bool initRegistersToDefinedVals();
 extern bool runCode(const std::string& codeIn, const bool& execCode);
 extern uint64_t lineNoToAddress(const uint64_t& lineNo);
-// bool addBreakpoint(const uint64_t& address, const bool& silent);
+extern bool addBreakpoint(const uint64_t& address, const bool& silent);
 extern bool stoppedAtBreakpoint;
 extern bool nextLineHasBreakpoint;
 extern bool executeCode(Icicle* icicle, const size_t& instructionCount);
@@ -126,6 +126,7 @@ extern int tempBPLineNum;
 extern uint64_t CODE_BUF_SIZE;
 extern bool stepCode(size_t instructionCount = 1);
 extern std::vector<uint64_t> breakpointLines;
+extern std::vector<uint64_t> breakpointAddresses;
 extern bool resetState(bool reInit = true);
 extern bool continueOverBreakpoint;
 extern bool stepIn;

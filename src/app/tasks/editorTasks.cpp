@@ -6,6 +6,14 @@ TextEditor *editor = nullptr;
 
 bool writeEditorToFile(const std::string &filePath) {
     LOG_DEBUG("Writing to file " << filePath);
+
+    if (editorShowingRemoteDisassembly()) {
+        tinyfd_messageBox("Remote View Active",
+                          "The main editor is currently showing remote target disassembly.\nStop the remote session before saving local files.",
+                          "ok", "warning", 0);
+        return false;
+    }
+
     std::ofstream fileToWrite(filePath, std::ios::out | std::ios::trunc);
 
     if (fileToWrite.good()) {
@@ -41,6 +49,10 @@ bool readFileIntoEditor(const std::string &filePath) {
 }
 
 int labelCompletionCallback(ImGuiInputTextCallbackData *data) {
+    if (editorShowingRemoteDisassembly()) {
+        return 0;
+    }
+
     if (labels.empty()) {
         getBytes(selectedFile);
         // Note: initInsSizeInfoMap() is already called by getBytes()
@@ -76,7 +88,7 @@ int labelCompletionCallback(ImGuiInputTextCallbackData *data) {
 }
 
 void createLabelLineMapCallback(std::map<std::string, int> &labelVector) {
-    if (labelLineNoMapInternal.empty()) {
+    if (!editorShowingRemoteDisassembly() && labelLineNoMapInternal.empty()) {
         getBytes(selectedFile);
     }
 
@@ -85,7 +97,7 @@ void createLabelLineMapCallback(std::map<std::string, int> &labelVector) {
 
 std::pair<int, int> parseStrIntoCoordinates(std::string &popupInput) {
     LOG_DEBUG("Parsing " << popupInput << "as coordinates...");
-    if (labelLineNoMapInternal.empty()) {
+    if (!editorShowingRemoteDisassembly() && labelLineNoMapInternal.empty()) {
         getBytes(selectedFile);
         // Note: initInsSizeInfoMap() is already called by getBytes()
     }

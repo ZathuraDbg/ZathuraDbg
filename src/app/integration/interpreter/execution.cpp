@@ -29,7 +29,7 @@ int handleSyscalls(void* data, uint64_t syscall_nr, const SyscallArgs* args)
             auto s = icicle_mem_read((Icicle*)data, args->arg1, args->arg2, &r);
             s[args->arg2] = '\0';
             std::string j(reinterpret_cast<const char*>(s));
-            output.emplace_back("stdout >> " + j);
+            consoleWriteThreadSafe("stdout >> " + j + "\n");
         }
         else if (syscall_nr == 60)
         {
@@ -408,8 +408,6 @@ bool runCode(const std::string& codeIn, const bool& execCode)
             updateRegs();
         }
     }
-
-    codeBuf.clear();
     else {
         // Free existing snapshot before saving a new one
         if (snapshot) {
@@ -429,6 +427,7 @@ bool runCode(const std::string& codeIn, const bool& execCode)
         stepClickedOnce = true;
     }
 
+    codeBuf.clear();
     updateRegs();
     LOG_INFO("Ran code successfully!");
     codeHasRun = true;

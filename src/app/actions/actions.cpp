@@ -290,6 +290,35 @@ static void initRemoteAddresses() {
     }
 }
 
+static bool connectAndInitRemote() {
+    {
+        std::lock_guard<std::mutex> lk(debugReadyMutex);
+        isDebugReady = false;
+    }
+
+    if (!remote_gdb::connectRemoteDebugSession()) {
+        {
+            std::lock_guard<std::mutex> lk(debugReadyMutex);
+            isDebugReady = true;
+        }
+        debugReadyCv.notify_all();
+        return false;
+    }
+
+    initRemoteAddresses();
+
+    {
+        std::lock_guard<std::mutex> lk(debugReadyMutex);
+        isDebugReady = true;
+    }
+    debugReadyCv.notify_all();
+    debugModeEnabled = true;
+    remoteMemoryViewFollowsPc = true;
+    remoteDisassemblyBaseAddress.reset();
+    requestRemoteUiSync(false, true);
+    return true;
+}
+
 static void syncRemoteUiState(const bool refreshTarget, const bool resetCodeMemoryBase) {
     if (refreshTarget && !remote_gdb::remoteRefreshState()) {
         consoleWriteThreadSafe("remote >> failed to refresh target state\n");
@@ -320,32 +349,10 @@ void startOrRefreshRemoteDebugSession() {
         }
 
         if (!remote_gdb::remoteDebugConnected()) {
-            {
-                std::lock_guard<std::mutex> lk(debugReadyMutex);
-                isDebugReady = false;
-            }
-
-            if (!remote_gdb::connectRemoteDebugSession()) {
+            if (!connectAndInitRemote()) {
                 consoleWriteThreadSafe("remote >> failed to connect\n");
-                {
-                    std::lock_guard<std::mutex> lk(debugReadyMutex);
-                    isDebugReady = true;
-                }
-                debugReadyCv.notify_all();
                 return;
             }
-
-            initRemoteAddresses();
-
-            {
-                std::lock_guard<std::mutex> lk(debugReadyMutex);
-                isDebugReady = true;
-            }
-            debugReadyCv.notify_all();
-            debugModeEnabled = true;
-            remoteMemoryViewFollowsPc = true;
-            remoteDisassemblyBaseAddress.reset();
-            requestRemoteUiSync(false, true);
             consoleWriteThreadSafe("remote >> connected\n");
             return;
         }
@@ -413,36 +420,12 @@ bool debugRemoveBreakpointAddress(const uint64_t address) {
 void startDebugging(){
     LOG_INFO("Starting debugging...");
 
-    // Reset isDebugReady flag before starting setup
-    {
-        std::lock_guard<std::mutex> lk(debugReadyMutex);
-        isDebugReady = false;
-    }
-
-    // Execute setup in a background thread to prevent UI freezing
     executeInBackground([]{
         if (remote_gdb::useRemoteDebugging()) {
-            if (!remote_gdb::connectRemoteDebugSession()) {
+            if (!connectAndInitRemote()) {
                 LOG_ERROR("Unable to start remote debugging.");
-                {
-                    std::lock_guard<std::mutex> lk(debugReadyMutex);
-                    isDebugReady = true;
-                }
-                debugReadyCv.notify_all();
                 return;
             }
-
-            initRemoteAddresses();
-
-            {
-                std::lock_guard<std::mutex> lk(debugReadyMutex);
-                isDebugReady = true;
-            }
-            debugReadyCv.notify_all();
-            debugModeEnabled = true;
-            remoteMemoryViewFollowsPc = true;
-            remoteDisassemblyBaseAddress.reset();
-            requestRemoteUiSync(false, true);
             LOG_INFO("Remote debugging connected successfully.");
             return;
         }
@@ -900,22 +883,10 @@ void runActions(){
         executeInBackground([]{
             if (remote_gdb::useRemoteDebugging()) {
                 if (!debugModeEnabled) {
-                    {
-                        std::lock_guard<std::mutex> lk(debugReadyMutex);
-                        isDebugReady = false;
-                    }
-                    if (!remote_gdb::connectRemoteDebugSession()) {
+                    if (!connectAndInitRemote()) {
                         consoleWriteThreadSafe("remote >> failed to connect for run\n");
                         return;
                     }
-                    {
-                        std::lock_guard<std::mutex> lk(debugReadyMutex);
-                        isDebugReady = true;
-                    }
-                    debugReadyCv.notify_all();
-                    debugModeEnabled = true;
-                    remoteMemoryViewFollowsPc = true;
-                    remoteDisassemblyBaseAddress.reset();
                 }
 
                 if (remote_gdb::remoteContinue()) {

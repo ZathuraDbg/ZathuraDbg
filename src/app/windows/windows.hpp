@@ -7,6 +7,7 @@
 #include <mutex>
 #include "../integration/interpreter/interpreter.hpp"
 #include "../integration/gdb/gdbRemote.hpp"
+#include "../integration/debugBackend.hpp"
 #include "../../../vendor/imgui/misc/cpp/imgui_stdlib.h"
 #include "../arch/arch.hpp"
 #include <regex>
@@ -110,7 +111,6 @@ extern std::vector<newMemEditWindowsInfo> newMemEditWindows;
 extern unsigned char* stackEditorData;
 extern unsigned char* stackEditorTemp;
 extern void cleanupStackEditor();
-std::optional<std::vector<uint8_t>> readDebugMemory(uint64_t address, size_t size);
 extern std::string consoleOutput;
 extern std::mutex  consoleOutputMutex;
 extern void consoleWriteThreadSafe(const std::string& text);

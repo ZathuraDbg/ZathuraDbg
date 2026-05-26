@@ -60,6 +60,7 @@ set(SRC_ARCH
 )
 
 set(SRC_INTEGRATION
+    ${APP_DIR}/integration/debugBackend.cpp
     ${APP_DIR}/integration/interpreter/interpreter.cpp
     ${APP_DIR}/integration/interpreter/registers.cpp
     ${APP_DIR}/integration/interpreter/vm.cpp

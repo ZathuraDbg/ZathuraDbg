@@ -13,12 +13,7 @@ void hexWriteFunc(ImU8* data, const size_t off, const ImU8 d){
     }
 
     const auto targetAddress = MEMORY_EDITOR_BASE + off;
-    bool writeOk = false;
-    if (remote_gdb::useRemoteDebugging()) {
-        writeOk = remote_gdb::remoteWriteMemory(targetAddress, {d});
-    } else {
-        writeOk = icicle_mem_write(icicle, targetAddress, &d, 1) != -1;
-    }
+    const bool writeOk = writeDebugMemory(targetAddress, d);
 
     if (!writeOk){
         LOG_ERROR("Failed to write to memory. Address: " << MEMORY_EDITOR_BASE + off);

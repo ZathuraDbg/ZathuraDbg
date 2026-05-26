@@ -40,6 +40,7 @@ bool skipEndStep = false;
 bool isEndBreakpointSet = false;
 
 std::vector<uint64_t> breakpointLines = {};
+std::vector<uint64_t> breakpointAddresses = {};
 
 std::mutex debugReadyMutex;
 std::condition_variable debugReadyCv;
