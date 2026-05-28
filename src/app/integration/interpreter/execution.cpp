@@ -25,10 +25,16 @@ int handleSyscalls(void* data, uint64_t syscall_nr, const SyscallArgs* args)
         if (syscall_nr == 1)
         {
             LOG_DEBUG("Write syscall requested!");
-            size_t r;
-            auto s = icicle_mem_read((Icicle*)data, args->arg1, args->arg2, &r);
-            s[args->arg2] = '\0';
-            std::string j(reinterpret_cast<const char*>(s));
+            size_t outSize = 0;
+            auto s = icicle_mem_read(static_cast<Icicle*>(data), args->arg1, args->arg2, &outSize);
+            if (!s)
+            {
+                LOG_ERROR("Failed to read syscall write buffer.");
+                return 0;
+            }
+
+            std::string j(reinterpret_cast<const char*>(s), outSize);
+            icicle_free_buffer(s, outSize);
             consoleWriteThreadSafe("stdout >> " + j + "\n");
         }
         else if (syscall_nr == 60)
@@ -46,28 +52,30 @@ void instructionHook(void* userData, const uint64_t address)
     if (lineNo > 0)
         safeHighlightLine(lineNo - 1);
 
+    if (ttdEnabled)
+    {
+        if (!snapshot)
+        {
+            snapshot = icicle_vm_snapshot(icicle);
+            return;
+        }
+
+        if (vmSnapshots.empty() || vmSnapshots.top() != snapshot)
+        {
+            vmSnapshots.push(snapshot);
+        }
+
+        snapshot = icicle_vm_snapshot(icicle);
+        if (!snapshot)
+        {
+            LOG_ERROR("Failed to save VM snapshot for time-travel debugging.");
+        }
+        return;
+    }
 
     if (!snapshot)
     {
         snapshot = icicle_vm_snapshot(icicle);
-        if (ttdEnabled)
-            vmSnapshots.push(snapshot);
-    }
-    else
-    {
-        if (ttdEnabled)
-        {
-            if (!vmSnapshots.empty())
-            {
-                if (vmSnapshots.top() == snapshot)
-                {
-                    return;
-                }
-            }
-
-            vmSnapshots.push(snapshot);
-            snapshot = icicle_vm_snapshot(icicle);
-        }
     }
 }
 
@@ -76,27 +84,40 @@ void stackWriteHook(void* data, uint64_t address, uint8_t size, const uint64_t v
     updateStack = true;
 }
 
+static bool executeCodeCore(Icicle* icicle, const size_t& instructionCount);
+
 bool preExecutionSetup(const std::string& codeIn)
 {
     initRegistersToDefinedVals();
-    if (codeBuf.empty()){
-        codeBuf.resize(CODE_BUF_SIZE);
-        std::fill(codeBuf.begin(), codeBuf.end(), 0);
+    const auto codeBufferSize = static_cast<size_t>(CODE_BUF_SIZE);
+    if (codeIn.size() > codeBufferSize)
+    {
+        LOG_ERROR("Assembled code is larger than the executable buffer.");
+        return false;
+    }
+
+    if (codeBuf.size() != codeBufferSize){
+        codeBuf.resize(codeBufferSize);
         LOG_DEBUG("Code buffer allocated!");
     }
 
-    const auto *code = (uint8_t *)(codeIn.c_str());
-    std::memcpy(codeBuf.data(), code, codeIn.length());
+    std::fill(codeBuf.begin(), codeBuf.end(), 0);
+    std::memcpy(codeBuf.data(), codeIn.data(), codeIn.size());
 
     // TODO: Add a way to make stack executable
     const auto e = icicle_mem_map(icicle, ENTRY_POINT_ADDRESS, CODE_BUF_SIZE, MemoryProtection::ExecuteReadWrite);
-    if (e == -1)
+    if (e != 0)
     {
         LOG_ERROR("Failed to map memory for writing code!");
         return false;
     }
 
-    auto k = icicle_mem_write(icicle, ENTRY_POINT_ADDRESS, codeBuf.data(), CODE_BUF_SIZE - 1);
+    auto k = icicle_mem_write(icicle, ENTRY_POINT_ADDRESS, codeBuf.data(), codeBufferSize);
+    if (k != 0)
+    {
+        LOG_ERROR("Failed to write code into executable memory.");
+        return false;
+    }
     icicle_set_pc(icicle, ENTRY_POINT_ADDRESS);
 
     // Ensure snapshot is taken before signaling ready
@@ -181,7 +202,7 @@ bool checkStatusUpdateState(const size_t& instructionCount, RunStatus status, co
                 // This doesn't have to be done for continues though
                 if (instructionCount == 1)
                 {
-                    executeCode(icicle, 1);
+                    executeCodeCore(icicle, 1);
                 }
             }
         }
@@ -214,7 +235,7 @@ bool checkStatusUpdateState(const size_t& instructionCount, RunStatus status, co
     return true;
 }
 
-bool executeCode(Icicle* icicle, const size_t& instructionCount)
+static bool executeCodeCore(Icicle* icicle, const size_t& instructionCount)
 {
     if (icicle == nullptr)
     {
@@ -296,6 +317,12 @@ bool executeCode(Icicle* icicle, const size_t& instructionCount)
     return checkStatusUpdateState(instructionCount, status, currentInstrAddr);
 }
 
+bool executeCode(Icicle* icicle, const size_t& instructionCount)
+{
+    std::lock_guard<std::mutex> execLock(execMutex);
+    return executeCodeCore(icicle, instructionCount);
+}
+
 bool stepCode(const size_t instructionCount){
     LOG_DEBUG("Stepping into code requested...");
 
@@ -304,6 +331,8 @@ bool stepCode(const size_t instructionCount){
         debugReadyCv.wait(lk, []{ return isDebugReady; });
     }
     LOG_DEBUG("Debug state confirmed ready, proceeding with step.");
+
+    std::lock_guard<std::mutex> execLock(execMutex);
 
     if (isCodeRunning || executionComplete){
         LOG_DEBUG("Step request ignored: Code already running or execution complete.");
@@ -319,15 +348,15 @@ bool stepCode(const size_t instructionCount){
     size_t siz{};
     RunStatus status{};
 
-    executeCode(icicle, instructionCount); // This contains the core execution
+    executeCodeCore(icicle, instructionCount); // This contains the core execution
 
     // Update state *after* execution
     ip = icicle_get_pc(icicle);
-    editor->HighlightDebugCurrentLine(addressLineNoMap[icicle_get_pc(icicle)]);
+    safeHighlightLine(addressLineNoMap[icicle_get_pc(icicle)]);
     isCodeRunning = false; // Mark as not running *after* execution
 
     if (executionComplete){
-        editor->HighlightDebugCurrentLine(lastInstructionLineNo-1);
+        safeHighlightLine(lastInstructionLineNo-1);
         LOG_DEBUG("Execution complete after step.");
         return true;
     }
@@ -354,7 +383,7 @@ bool stepCode(const size_t instructionCount){
         const uint64_t lineNo =  addressLineNoMap[ip];
         if (lineNo && !executionComplete){
             LOG_DEBUG("Highlight from stepCode : line: " << lineNo);
-            editor->HighlightDebugCurrentLine(lineNo - 1);
+            safeHighlightLine(lineNo - 1);
         }
         else{
              LOG_DEBUG("No line number found for current IP or execution complete.");
@@ -379,6 +408,8 @@ bool stepCode(const size_t instructionCount){
 bool runCode(const std::string& codeIn, const bool& execCode)
 {
     LOG_INFO("Running code...");
+    std::lock_guard<std::mutex> execLock(execMutex);
+
     if (!preExecutionSetup(codeIn)) {
         return false;
     }
@@ -388,8 +419,7 @@ bool runCode(const std::string& codeIn, const bool& execCode)
     if (!val)
         val = 1;
 
-
-    editor->HighlightDebugCurrentLine(val - 1);
+    safeHighlightLine(val - 1);
 
     if (execCode || (stepClickedOnce)){
         if (addBreakpointToLine(lastInstructionLineNo, true))
@@ -397,12 +427,12 @@ bool runCode(const std::string& codeIn, const bool& execCode)
             isEndBreakpointSet = true;
         }
 
-        if (!executeCode(icicle, 0))
+        if (!executeCodeCore(icicle, 0))
         {
             LOG_ERROR("Failed to run code.");
         }
 
-        editor->HighlightDebugCurrentLine(lastInstructionLineNo);
+        safeHighlightLine(lastInstructionLineNo);
         if (runningTempCode){
             // icicle_vm_snapshot(icicle);
             updateRegs();
@@ -421,8 +451,7 @@ bool runCode(const std::string& codeIn, const bool& execCode)
         if (!val)
             val = 1;
 
-
-        editor->HighlightDebugCurrentLine(val - 1);
+        safeHighlightLine(val - 1);
         LOG_DEBUG("Highlight from runCode");
         stepClickedOnce = true;
     }

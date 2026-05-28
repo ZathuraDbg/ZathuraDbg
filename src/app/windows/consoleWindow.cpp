@@ -791,12 +791,13 @@ void consoleWindow() {
         commandTextHeight + style.FramePadding.y * 2.0f,
         ImGui::GetFrameHeight(),
         ImGui::GetTextLineHeightWithSpacing() * 4.0f + style.FramePadding.y * 2.0f);
-    const float footerHeightToReserve = style.ItemSpacing.y + commandInputHeight;
+    const float separatorHeight = style.ItemSpacing.y + 1.0f;
+    const float footerHeightToReserve = separatorHeight + commandInputHeight;
 
-    // --- Output region (selectable, copyable) ---
+    // --- Output region ---
 
     ImGui::BeginChild("ScrollingRegion", ImVec2(0, -footerHeightToReserve),
-                      ImGuiChildFlags_None, ImGuiWindowFlags_None);
+                      ImGuiChildFlags_FrameStyle, ImGuiWindowFlags_None);
 
     if (firstRender) {
         registerCommands();
@@ -825,20 +826,16 @@ void consoleWindow() {
         bufferDirty = false;
     }
 
-    const float availWidth = ImGui::GetContentRegionAvail().x;
-    const float outputWrapWidth = std::max(1.0f, availWidth - style.FramePadding.x * 2.0f - style.ScrollbarSize);
-    const float outputTextHeight = ImGui::GetFont()->CalcTextSizeA(
-        ImGui::GetFontSize(), outputWrapWidth, outputWrapWidth, displayBuffer, nullptr).y;
-    const float textHeight = std::max(ImGui::GetTextLineHeight(), outputTextHeight) +
-                             style.FramePadding.y * 2.0f;
+    ImGui::PushTextWrapPos(ImGui::GetCursorPos().x + ImGui::GetContentRegionAvail().x);
+    ImGui::TextUnformatted(displayBuffer);
+    ImGui::PopTextWrapPos();
 
-    ImGui::PushStyleColor(ImGuiCol_FrameBg, ImColor(24, 25, 38, 255).Value);
-    ImGui::InputTextMultiline("##ConsoleOutput", displayBuffer, sizeof(displayBuffer),
-                              ImVec2(availWidth, textHeight),
-                              ImGuiInputTextFlags_ReadOnly |
-                                  ImGuiInputTextFlags_NoHorizontalScroll |
-                                  ImGuiInputTextFlags_WordWrap);
-    ImGui::PopStyleColor();
+    if (ImGui::BeginPopupContextWindow("ConsoleOutputContextMenu", ImGuiPopupFlags_MouseButtonRight)) {
+        if (ImGui::MenuItem("Copy Output")) {
+            ImGui::SetClipboardText(displayBuffer);
+        }
+        ImGui::EndPopup();
+    }
 
     // Auto-scroll logic
     if (autoScroll) {
@@ -856,9 +853,6 @@ void consoleWindow() {
     ImGui::Separator();
 
     // --- Command input region ---
-    ImGui::BeginChild("FixedInputRegion", ImVec2(0, footerHeightToReserve),
-                      ImGuiChildFlags_None, ImGuiWindowFlags_NoScrollbar);
-
     ImGui::PushItemWidth(-1);
     if (ImGui::InputTextMultiline("##Command", input, IM_ARRAYSIZE(input),
                                   ImVec2(0, commandInputHeight),
@@ -893,7 +887,6 @@ void consoleWindow() {
     }
 
     ImGui::PopItemWidth();
-    ImGui::EndChild();
     ImGui::PopFont();
     ImGui::End();
 }

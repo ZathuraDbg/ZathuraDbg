@@ -1,4 +1,5 @@
 #include "gdbRemote.hpp"
+#include "gdbPacket.hpp"
 
 #include <algorithm>
 #include <array>
@@ -42,6 +43,9 @@ namespace {
 
 RemoteLogSink g_logSink;
 RemoteArchHook g_archHook;
+constexpr size_t kMaxPacketPayloadSize = 16 * 1024 * 1024;
+constexpr size_t kMaxSkippedPacketBytes = 4096;
+constexpr size_t kMaxChecksumFailures = 3;
 
 void log(const std::string& text) {
     if (g_logSink) g_logSink(text);
@@ -62,93 +66,6 @@ struct DecodedInstruction {
     bool isCall = false;
     std::string mnemonic;
 };
-
-std::string formatHexByte(uint8_t byte) {
-    constexpr char digits[] = "0123456789abcdef";
-    std::string out(2, '0');
-    out[0] = digits[(byte >> 4) & 0xf];
-    out[1] = digits[byte & 0xf];
-    return out;
-}
-
-std::string encodeHex(std::string_view input) {
-    std::string out;
-    out.reserve(input.size() * 2);
-    for (const auto ch : input) {
-        out += formatHexByte(static_cast<uint8_t>(ch));
-    }
-    return out;
-}
-
-std::string encodeHex(const std::vector<uint8_t>& input) {
-    std::string out;
-    out.reserve(input.size() * 2);
-    for (const auto byte : input) {
-        out += formatHexByte(byte);
-    }
-    return out;
-}
-
-std::optional<std::vector<uint8_t>> decodeHexBytes(std::string_view input) {
-    std::string expanded;
-    expanded.reserve(input.size());
-    for (size_t i = 0; i < input.size(); ++i) {
-        const auto ch = input[i];
-        if (ch == '*' && !expanded.empty() && (i + 1) < input.size()) {
-            const int repeatCount = static_cast<unsigned char>(input[++i]) - 29;
-            if (repeatCount < 3 || repeatCount > 97) {
-                return std::nullopt;
-            }
-            expanded.append(static_cast<size_t>(repeatCount), expanded.back());
-            continue;
-        }
-        expanded.push_back(ch);
-    }
-    input = expanded;
-
-    if ((input.size() % 2) != 0) {
-        return std::nullopt;
-    }
-
-    std::vector<uint8_t> out;
-    out.reserve(input.size() / 2);
-    for (size_t i = 0; i < input.size(); i += 2) {
-        const auto hi = input.substr(i, 2);
-        unsigned int value = 0;
-        auto result = std::from_chars(hi.data(), hi.data() + hi.size(), value, 16);
-        if (result.ec != std::errc{}) {
-            return std::nullopt;
-        }
-        out.push_back(static_cast<uint8_t>(value));
-    }
-
-    return out;
-}
-
-bool isHexString(std::string_view input) {
-    for (const auto ch : input) {
-        if (!std::isxdigit(static_cast<unsigned char>(ch))) {
-            return false;
-        }
-    }
-    return true;
-}
-
-std::string decodeHexText(std::string_view input) {
-    const auto bytes = decodeHexBytes(input);
-    if (!bytes.has_value()) {
-        return {};
-    }
-    return {bytes->begin(), bytes->end()};
-}
-
-uint8_t packetChecksum(std::string_view payload) {
-    uint8_t checksum = 0;
-    for (const auto ch : payload) {
-        checksum = static_cast<uint8_t>(checksum + static_cast<uint8_t>(ch));
-    }
-    return checksum;
-}
 
 void closeSocket(socket_handle_t handle) {
     if (handle == invalid_socket_handle) {
@@ -526,17 +443,21 @@ bool GdbRemoteClient::readPacket(std::string& payload) {
         return false;
     }
 
-    while (true) {
+    size_t skippedBytes = 0;
+    size_t checksumFailures = 0;
+    while (skippedBytes < kMaxSkippedPacketBytes && checksumFailures < kMaxChecksumFailures) {
         char ch = '\0';
         if (!recvByte(socket_, ch)) {
             return false;
         }
 
         if (ch == '+' || ch == '-') {
+            ++skippedBytes;
             continue;
         }
 
         if (ch != '$') {
+            ++skippedBytes;
             if (static_cast<unsigned char>(ch) == 0x03) {
                 continue;
             }
@@ -552,6 +473,10 @@ bool GdbRemoteClient::readPacket(std::string& payload) {
                 break;
             }
             packet.push_back(ch);
+            if (packet.size() > kMaxPacketPayloadSize) {
+                log("remote >> packet payload exceeded size limit\n");
+                return false;
+            }
         }
 
         std::array<char, 2> checksumChars{};
@@ -562,6 +487,7 @@ bool GdbRemoteClient::readPacket(std::string& payload) {
         unsigned int expected = 0;
         auto parse = std::from_chars(checksumChars.data(), checksumChars.data() + checksumChars.size(), expected, 16);
         if (parse.ec != std::errc{} || static_cast<uint8_t>(expected) != packetChecksum(packet)) {
+            ++checksumFailures;
             if (!noAckMode_) {
                 sendAll(socket_, "-");
             }
@@ -571,6 +497,8 @@ bool GdbRemoteClient::readPacket(std::string& payload) {
         if (!noAckMode_) {
             sendAll(socket_, "+");
         }
+        checksumFailures = 0;
+        skippedBytes = 0;
 
         if (!packet.empty() && packet[0] == 'O' &&
             ((packet.size() - 1) % 2 == 0) &&
@@ -582,6 +510,9 @@ bool GdbRemoteClient::readPacket(std::string& payload) {
         payload = std::move(packet);
         return true;
     }
+
+    log("remote >> packet read aborted after repeated invalid data\n");
+    return false;
 }
 
 void GdbRemoteClient::teardownSocket() {

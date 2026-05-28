@@ -1,4 +1,21 @@
 #include "interpreter.hpp"
+#include <optional>
+
+static std::optional<size_t> registerBitSize(const std::string& regName)
+{
+    if (const auto it = regInfoMap.find(regName); it != regInfoMap.end())
+    {
+        return it->second;
+    }
+
+    const auto lowerRegName = toLowerCase(regName);
+    if (const auto it = regInfoMap.find(lowerRegName); it != regInfoMap.end())
+    {
+        return it->second;
+    }
+
+    return std::nullopt;
+}
 
 std::pair<float, float> convert64BitToTwoFloats(const uint64_t bits) {
     float lower_float, upper_float;
@@ -29,7 +46,14 @@ static uint64_t readLittleEndianInteger(const std::vector<uint8_t>& bytes) {
 
 static registerValueT decodeRemoteRegisterValue(const std::string& regName,
                                                 const std::vector<uint8_t>& bytes) {
-    const auto size = regInfoMap[regName];
+    const auto sizeOpt = registerBitSize(regName);
+    if (!sizeOpt.has_value())
+    {
+        LOG_ERROR("Unknown register " << regName);
+        return {.eightByteVal = 0};
+    }
+
+    const auto size = *sizeOpt;
     const auto lowerRegName = toLowerCase(regName);
     const bool isX86 = (codeInformation.archIC == IC_ARCH_X86_64 || codeInformation.archIC == IC_ARCH_I386);
 
@@ -117,7 +141,14 @@ static registerValueT decodeRemoteRegisterValue(const std::string& regName,
 
 static std::vector<uint8_t> encodeRemoteRegisterValue(const std::string& regName,
                                                       const registerValueT& value) {
-    const auto size = regInfoMap[regName];
+    const auto sizeOpt = registerBitSize(regName);
+    if (!sizeOpt.has_value())
+    {
+        LOG_ERROR("Unknown register " << regName);
+        return {};
+    }
+
+    const auto size = *sizeOpt;
     const auto lowerRegName = toLowerCase(regName);
     const bool isX86 = (codeInformation.archIC == IC_ARCH_X86_64 || codeInformation.archIC == IC_ARCH_I386);
 
@@ -294,7 +325,14 @@ registerValueT read128BitRegisterValue(const std::string& regName)
 }
 
 registerValueT getRegisterValue(const std::string& regName) {
-    const auto size = regInfoMap[regName];
+    const auto sizeOpt = registerBitSize(regName);
+    if (!sizeOpt.has_value())
+    {
+        LOG_ERROR("Unknown register " << regName);
+        return {.eightByteVal = 0};
+    }
+
+    const auto size = *sizeOpt;
     const std::string lowerRegName = toLowerCase(regName);
     const bool isX86 = (codeInformation.archIC == IC_ARCH_X86_64 || codeInformation.archIC == IC_ARCH_I386);
 
@@ -449,7 +487,14 @@ bool write128BitRegisterValue(const std::string& regName, const registerValueT& 
 }
 
 bool setRegisterValue(const std::string& regName, const registerValueT& value) {
-    const auto size = regInfoMap[regName];
+    const auto sizeOpt = registerBitSize(regName);
+    if (!sizeOpt.has_value())
+    {
+        LOG_ERROR("Unknown register " << regName);
+        return false;
+    }
+
+    const auto size = *sizeOpt;
     const std::string lowerRegName = toLowerCase(regName);
     const bool isX86 = (codeInformation.archIC == IC_ARCH_X86_64 || codeInformation.archIC == IC_ARCH_I386);
 
@@ -524,6 +569,11 @@ registerValueInfoT getRegister(const std::string& name){
     if (!codeHasRun){
         constexpr registerValueInfoT ret = {false, 0x00};
         return ret;
+    }
+
+    if (!registerBitSize(regName).has_value())
+    {
+        return res;
     }
 
     const auto value = getRegisterValue(regName);

@@ -1,11 +1,10 @@
 #include "interpreter.hpp"
 
 bool removeBreakpoint(const uint64_t& address) {
-    breakpointMutex.lock();
+    std::lock_guard<std::mutex> lock(breakpointMutex);
 
     bool success = false;
     if (breakpointLines.empty()) {
-        breakpointMutex.unlock();
         return success;
     }
 
@@ -16,12 +15,11 @@ bool removeBreakpoint(const uint64_t& address) {
         success = true;
     }
 
-    breakpointMutex.unlock();
     return success;
 }
 
 bool removeBreakpointFromLineNo(const uint64_t& lineNo) {
-    breakpointMutex.lock();
+    std::lock_guard<std::mutex> lock(breakpointMutex);
     bool success = false;
 
     if (isSilentBreakpoint(lineNo))
@@ -32,13 +30,12 @@ bool removeBreakpointFromLineNo(const uint64_t& lineNo) {
     }
 
     if (breakpointLines.empty()) {
-        breakpointMutex.unlock();
         return success;
     }
 
     const auto it = std::ranges::find(breakpointLines, lineNo);
     size_t size;
-    const uint64_t* bpList = icicle_breakpoint_list(icicle, &size);
+    uint64_t* bpList = icicle_breakpoint_list(icicle, &size);
 
     if (bpList)
     {
@@ -54,10 +51,8 @@ bool removeBreakpointFromLineNo(const uint64_t& lineNo) {
                 break;
             }
         }
+        icicle_breakpoint_list_free(bpList, size);
     }
-
-
-    breakpointMutex.unlock();
 
     return success;
 }

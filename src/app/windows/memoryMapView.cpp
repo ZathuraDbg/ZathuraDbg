@@ -1,57 +1,13 @@
 #include "windows.hpp"
 
-std::vector<MemRegionInfo> getMemoryMapping(Icicle* ic)
+bool expandMemoryRegion(Icicle* ic, const uint64_t startAddr, uint64_t oldEndAddr, uint64_t newEndAddr,
+                        const uint64_t oldSize, const MemoryProtection perms)
 {
-    if (remote_gdb::useRemoteDebugging()) {
-        std::vector<MemRegionInfo> memMapInfo;
-        for (const auto& region : remote_gdb::remoteMemoryRegions()) {
-            MemoryProtection protection = NoAccess;
-            if (region.read && region.write && region.execute) {
-                protection = ExecuteReadWrite;
-            } else if (region.read && region.write) {
-                protection = ReadWrite;
-            } else if (region.read && region.execute) {
-                protection = ExecuteRead;
-            } else if (region.execute) {
-                protection = ExecuteOnly;
-            } else if (region.read) {
-                protection = ReadOnly;
-            }
-
-            memMapInfo.push_back({region.start, region.end - region.start, protection});
-        }
-        return memMapInfo;
-    }
-
-    size_t count;
-    MemRegionInfo* memRegionInfoArray = icicle_mem_list_mapped(icicle, &count);
-    
-    std::vector<MemRegionInfo> memMapInfo;
-    memMapInfo.reserve(count);
-
-    for (size_t i = 0; i < count; i++) {
-        memMapInfo.push_back(memRegionInfoArray[i]);
-    }
-
-    icicle_mem_list_mapped_free(memRegionInfoArray, count);
-    return memMapInfo;
-}
-
-inline bool updateMemoryPermissions(Icicle* ic, const uint64_t startAddr, const uint64_t endAddr,
-                                    const MemoryProtection newPerms)
-{
-    auto err = icicle_mem_protect(icicle, startAddr, endAddr - startAddr, newPerms);
-    if (err != 0)
+    if (!ic)
     {
         return false;
     }
 
-    return true;
-}
-
-bool expandMemoryRegion(Icicle* ic, const uint64_t startAddr, uint64_t oldEndAddr, uint64_t newEndAddr,
-                        const uint64_t oldSize, const MemoryProtection perms)
-{
     if (!(perms & MemoryProtection::ReadWrite) && !(perms & MemoryProtection::ExecuteReadWrite))
     {
         LOG_ERROR("The memory region expansion process could not be completed because the memory region does not have read and write permissions.");
@@ -79,6 +35,11 @@ bool expandMemoryRegion(Icicle* ic, const uint64_t startAddr, uint64_t oldEndAdd
     }
 
     VmSnapshot* tempMemSnapshot = icicle_vm_snapshot(ic);
+    if (!tempMemSnapshot)
+    {
+        LOG_ERROR("Unable to snapshot memory before expansion.");
+        return false;
+    }
     // maybe allocate a page?
     // const auto saved = static_cast<char*>(malloc(oldSize));
     // size_t outSize{};
@@ -90,7 +51,7 @@ bool expandMemoryRegion(Icicle* ic, const uint64_t startAddr, uint64_t oldEndAdd
     //     return false;
     // }
 
-    int err = icicle_mem_unmap(icicle, startAddr, oldSize);
+    int err = icicle_mem_unmap(ic, startAddr, oldSize);
     if (err != 0)
     {
         LOG_ERROR("Unable to unmap the memory region for expansion.");
@@ -98,7 +59,7 @@ bool expandMemoryRegion(Icicle* ic, const uint64_t startAddr, uint64_t oldEndAdd
         return false;
     }
 
-    err = icicle_mem_map(icicle, startAddr, newSize, perms);
+    err = icicle_mem_map(ic, startAddr, newSize, perms);
     if (err != 0){
         LOG_ERROR("Unable to remap the memory region which was unmapped with a bigger size!");
         LOG_NOTICE("Attempting to recover the unmapped memory region...");
@@ -110,14 +71,18 @@ bool expandMemoryRegion(Icicle* ic, const uint64_t startAddr, uint64_t oldEndAdd
 
         LOG_INFO("The memory maps are now in the default state.");
         icicle_vm_snapshot_free(tempMemSnapshot);
-        return true;
+        return false;
     }
 
     // we have to touch the avoid fragmentation bug
     size_t outSize{};
-    icicle_mem_read(icicle, startAddr, newSize, &outSize);
+    auto* touchedMemory = icicle_mem_read(ic, startAddr, newSize, &outSize);
+    if (touchedMemory)
+    {
+        icicle_free_buffer(touchedMemory, outSize);
+    }
 
-    std::cout << "After the remapping" << std::endl;
+    icicle_vm_snapshot_free(tempMemSnapshot);
     return true;
 }
 
@@ -133,7 +98,8 @@ void memoryMapWindow()
         return;
     }
 
-    auto memInfo = getMemoryMapping(icicle);
+    const bool allowMemoryMapEdits = !remote_gdb::useRemoteDebugging();
+    auto memInfo = debugMemoryRegions();
     auto [x, y] = ImGui::GetWindowSize();
     ImGui::SetNextWindowSize({x - 230, (y - 125 + (52 * memInfo.size()))});
 
@@ -142,6 +108,9 @@ void memoryMapWindow()
         bool tableSizeInc = false;
         bool tableUpdated = false;
         bool mapped = true;
+        if (!allowMemoryMapEdits) {
+            ImGui::TextWrapped("Remote memory maps are read-only in this view.");
+        }
         ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[JetBrainsMono20]);
         if (ImGui::BeginTable("memoryMapTable", 4,
                               ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_Resizable))
@@ -265,7 +234,11 @@ void memoryMapWindow()
                 ImGui::PushID(("third" + std::to_string(i)).c_str());
                 ImGui::SetNextItemWidth(150);
                 uint64_t endAddr = memInfo[i].size + memInfo[i].address;
-                strncpy(inputValue, std::to_string(endAddr).c_str(), std::to_string(endAddr).length());
+                const std::string endAddrText = std::to_string(endAddr);
+                std::snprintf(inputValue, 80, "%s", endAddrText.c_str());
+                if (!allowMemoryMapEdits) {
+                    ImGui::BeginDisabled();
+                }
                 if (InputHexadecimal("##end_addr", inputValue, ImGuiInputTextFlags_CharsNoBlank | ImGuiInputTextFlags_EnterReturnsTrue))
                 {
                     newEndAddr = strtoll(inputValue, nullptr, 16);
@@ -273,6 +246,9 @@ void memoryMapWindow()
                     {
                         endAddrChanged = true;
                     }
+                }
+                if (!allowMemoryMapEdits) {
+                    ImGui::EndDisabled();
                 }
 
                 ImGui::PopID();
@@ -282,6 +258,9 @@ void memoryMapWindow()
 
                 posX = ImGui::GetCursorPosX() + 2;
 
+                if (!allowMemoryMapEdits) {
+                    ImGui::BeginDisabled();
+                }
                 ImGui::SetCursorPosX(posX);
                 ImGui::Selectable("Read: ");
                 ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[6]);
@@ -345,8 +324,11 @@ void memoryMapWindow()
 
                     if (unmap)
                     {
-                        icicle_mem_unmap(icicle, memInfo[i].address, memInfo[i].size);
+                        unmapDebugMemory(memInfo[i].address, memInfo[i].size);
                     }
+                }
+                if (!allowMemoryMapEdits) {
+                    ImGui::EndDisabled();
                 }
 
                 ImGui::PopFont ();
@@ -355,7 +337,7 @@ void memoryMapWindow()
                 ImGui::PopStyleColor();
                 ImGui::PopID();
 
-                if (permsChanged)
+                if (allowMemoryMapEdits && permsChanged)
                 {
                     // Convert individual flags back to MemoryProtection enum
                     MemoryProtection newPerms;
@@ -373,11 +355,11 @@ void memoryMapWindow()
                         newPerms = NoAccess;
                     }
                     
-                    updateMemoryPermissions(icicle, memInfo[i].address, memInfo[i].address + memInfo[i].size, newPerms);
+                    protectDebugMemory(memInfo[i].address, memInfo[i].size, newPerms);
                     permsChanged = false;
                 }
 
-                if (endAddrChanged)
+                if (allowMemoryMapEdits && endAddrChanged)
                 {
                     if (expandMemoryRegion(icicle, memInfo[i].address, memInfo[i].size + memInfo[i].address,
                                            newEndAddr,
@@ -405,9 +387,15 @@ void memoryMapWindow()
         }
 
         ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[RubikRegular16]);
+        if (!allowMemoryMapEdits) {
+            ImGui::BeginDisabled();
+        }
         if (ImGui::Button("ADD"))
         {
             keep = true;
+        }
+        if (!allowMemoryMapEdits) {
+            ImGui::EndDisabled();
         }
 
 
@@ -428,13 +416,12 @@ void memoryMapWindow()
         ImGui::PopFont();
     }
 
-    if (keep)
+    if (keep && allowMemoryMapEdits)
     {
         auto [address, size] = infoPopup("Map a new region", "Multiple of 4KB");
         if (address != 0 && size != 0)
         {
-            auto err = icicle_mem_map(icicle, address, size, MemoryProtection::NoAccess);
-            if (err != 0)
+            if (!mapDebugMemory(address, size, MemoryProtection::NoAccess))
             {
                 LOG_INFO("Unable to map the newly requested memory region.");
                 keep = false;

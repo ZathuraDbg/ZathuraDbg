@@ -1,6 +1,7 @@
 #include "editorTasks.hpp"
 #include "../integration/keystone/assembler.hpp"
 #include "../app.hpp"
+#include <cctype>
 
 TextEditor *editor = nullptr;
 
@@ -191,12 +192,23 @@ std::pair<int, int> parseStrIntoCoordinates(std::string &popupInput) {
 
 std::vector<uint8_t> hexToBytes(const std::string &hex) {
     std::vector<uint8_t> bytes;
-    for (size_t i = 0; i < hex.length(); i += 4) {
-        if (hex[i] == '\\' && hex[i + 1] == 'x') {
-            std::string byteString = hex.substr(i + 2, 2);
-            auto byte = static_cast<uint8_t>(strtol(byteString.c_str(), nullptr, 16));
-            bytes.push_back(byte);
+    for (size_t i = 0; i + 3 < hex.length();) {
+        if (hex[i] != '\\' || hex[i + 1] != 'x') {
+            ++i;
+            continue;
         }
+
+        const auto high = static_cast<unsigned char>(hex[i + 2]);
+        const auto low = static_cast<unsigned char>(hex[i + 3]);
+        if (!std::isxdigit(high) || !std::isxdigit(low)) {
+            i += 2;
+            continue;
+        }
+
+        std::string byteString = hex.substr(i + 2, 2);
+        auto byte = static_cast<uint8_t>(strtol(byteString.c_str(), nullptr, 16));
+        bytes.push_back(byte);
+        i += 4;
     }
     return bytes;
 }
@@ -212,6 +224,11 @@ void pasteCallback(const std::string clipboardText) {
         }
 
         const std::vector<uint8_t> bytes = hexToBytes(clipboardText);
+        if (bytes.empty()) {
+            cs_close(&handle);
+            return;
+        }
+
         const size_t count = cs_disasm(handle, bytes.data(), bytes.size(), ENTRY_POINT_ADDRESS, 0, &instruction);
 
         if (count == 0) {

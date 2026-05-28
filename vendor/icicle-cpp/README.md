@@ -1,74 +1,85 @@
 # Icicle
+
 [Icicle](https://github.com/icicle-emu/icicle-emu) is an experimental fuzzing-specific, multi-architecture emulation framework.
 
 ## C/C++ Bindings
-This project aims to provide C/C++ bindings for the icicle emulator. I'd also like to write full on documentation on this soon.
 
-## Usage
-Using these bindings is as simple as compiling the static library using cargo and then including it in your project using your compiler or make, cmake, etc.
-If you just want the library and the header file, you can download it from the [releases page](https://github.com/HACKE-RC/icicle-cpp/tags)
+This project provides C/C++ FFI bindings to the icicle emulator as a static Rust library with a single-header C API (`icicle.h`).
 
-### Compilation
-Getting the static library is as simple as
+## Building
+
 ```sh
-git clone https://github.com/HACKE-RC/icicle-cpp
-cd icicle-cpp
-cd src
-cargo build     # you can use cargo build --release if you want the release build
+git clone --recurse-submodules https://github.com/HACKE-RC/icicle-cpp
+cd icicle-cpp/src
+cargo build --release
 ```
 
-The static library will now be built in `icicle-cpp/src/target/<build_type>/libicicle.a`. Here, <build_type> will be `debug` if you do not use the `--release` flag with cargo
-and `release` if you do.
+The static library will be at `src/target/release/libicicle.a`. For a full build-and-test cycle:
 
-# Comprehensive Icicle Hook Testing
-
-This project provides a robust test for the Icicle emulator's hook functionality. The test demonstrates all three types of hooks:
-1. Execution hooks - triggered when a block of code executes
-2. Syscall hooks - triggered when the program makes a system call
-3. Violation hooks - triggered when a memory access violation occurs
-
-## Test Program Details
-
-The test program:
-
-1. Creates an x86_64 virtual machine
-2. Maps various memory regions with different permissions
-3. Loads a comprehensive test program that:
-   - Executes various x86_64 instructions
-   - Performs memory reads/writes
-   - Attempts to write to read-only memory (triggers violation hook)
-   - Makes a syscall (triggers syscall hook)
-4. Registers all three types of hooks with detailed callbacks
-5. Runs the emulation with hooks enabled
-6. Tests hook removal by removing the syscall hook and verifying it no longer triggers
-
-## Expected Output
-
-The test program provides detailed output about:
-- Hook registration
-- Hook triggering with full context (addresses, permissions, etc.)
-- Statistics on how many times each hook was triggered
-- Verification that hook removal works
-
-## Building and Running
-
-To build and run the test:
-
-```bash
-# Compile the test program
-make -f hook_test_Makefile
-
-# Run the test
-./hook_test
+```sh
+./build_and_test.sh
 ```
 
-## Hook Implementations
+## Implementation
 
-The Rust implementation includes:
+The wrapper is a Rust `staticlib` crate exposing `#[no_mangle] pub extern "C"` functions for every operation in `icicle.h`.
 
-1. `icicle_add_violation_hook`: Adds a memory violation hook
-2. `icicle_add_syscall_hook`: Adds a syscall interception hook
-3. `icicle_add_execution_hook`: Adds a basic block execution hook
-4. `icicle_remove_hook`: Removes a previously registered hook
+**Module layout** (`src/`):
 
-Each hook has detailed callback functions that report what's happening during emulation.
+| File | Purpose |
+|------|---------|
+| `types.rs` | FFI callback type aliases, `#[repr(C)]` structs (`SyscallArgs`, `CpuSnapshot`, `MemRegionInfo`), enums (`MemoryProtection`, `RunStatus`, `CoverageMode`), and permission mapping helpers |
+| `vm.rs` | `Icicle` struct (wrapping `icicle_vm::Vm`), all core VM methods (`new`, `run`, `mem_map`, `reg_read`, etc.), `reg_find`, and `vm_exit_to_run_status` |
+| `lib.rs` | ~60 `#[no_mangle]` FFI entry points — hooks, snapshots, coverage instrumentation, debug instrumentation, serialization, breakpoints, and memory region listing |
+
+**Key design decisions**:
+
+- **Hook lifecycle**: Violation (ID 1) and syscall (ID 2) hooks are singletons stored in `Option` fields on the `Icicle` struct. Execution hooks and memory hooks use `HashMap<u32, Box<dyn ...>>` tracking maps with a monotonically incrementing ID counter (starting at 1 or 3 respectively, leaving 0 as the failure sentinel). Hook removal from the core VM is a known limitation — the upstream API does not expose `remove_hook`, so dropping the tracked closure makes the hook a no-op but does not de-register it from the VM.
+
+- **Exception handling in `run()`**: The `run()` method loops on `VmExit::UnhandledException`, dispatching to the violation or syscall callback if registered. The violation path handles the common x86-64 "write to NULL" pattern by advancing PC past the faulting instruction. The syscall path reads x86-64 calling-convention registers (RAX, RDI, RSI, RDX, R10, R8, R9) and advances PC by 2 bytes (the length of `syscall` on x86-64). Non-x86 architectures are guarded and propagate the exception unhandled.
+
+- **Serialization**: `SerializableVmState` captures register state as a raw byte image of the `Regs` struct (via `bincode`), plus shadow stack entries, exception state, icount, and optionally all mapped memory regions. `zstd` compression is supported. The CPU-only path skips the memory scan entirely.
+
+- **Coverage**: Four modes (Blocks, Edges, BlockCounts, EdgeCounts) are implemented as `FnMut` closures holding a raw `*mut Vec<u8>` into `Icicle.coverage_map`. Mode switches resize the map in-place to avoid invalidating the pointer held by still-registered hooks.
+
+- **Snapshot/restore**: `CpuSnapshot` and `VmSnapshot` are `#[repr(C)]` structs with opaque heap-allocated fields. Save allocates, restore copies back into the live CPU/VM, and free drops each allocation.
+
+## CMake integration
+
+Add icicle-cpp as a subdirectory or `ExternalProject` and link against it:
+
+```cmake
+# Option A: add_subdirectory — a CMakeLists.txt is provided in the repo root
+add_subdirectory(vendor/icicle-cpp)
+target_link_libraries(your_target PRIVATE icicle)
+
+# Option B: ExternalProject (cross-platform, cross-compile friendly)
+include(ExternalProject)
+
+set(ICICLE_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/icicle-cpp")
+
+ExternalProject_Add(icicle-cpp
+    GIT_REPOSITORY  https://github.com/HACKE-RC/icicle-cpp
+    GIT_TAG         master
+    PREFIX          "${ICICLE_PREFIX}"
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND   cargo build --release --manifest-path src/Cargo.toml
+    BUILD_IN_SOURCE 1
+    INSTALL_COMMAND ""
+    BUILD_BYPRODUCTS "${ICICLE_PREFIX}/src/icicle-cpp/src/target/release/${CMAKE_STATIC_LIBRARY_PREFIX}icicle${CMAKE_STATIC_LIBRARY_SUFFIX}"
+)
+
+add_library(icicle STATIC IMPORTED)
+set_target_properties(icicle PROPERTIES
+    IMPORTED_LOCATION "${ICICLE_PREFIX}/src/icicle-cpp/src/target/release/${CMAKE_STATIC_LIBRARY_PREFIX}icicle${CMAKE_STATIC_LIBRARY_SUFFIX}"
+    INTERFACE_INCLUDE_DIRECTORIES "${ICICLE_PREFIX}/src/icicle-cpp"
+)
+add_dependencies(icicle icicle-cpp)
+
+target_link_libraries(your_target PRIVATE icicle)
+```
+
+On Windows (MSVC), also link system libraries:
+```cmake
+target_link_libraries(your_target PRIVATE ws2_32.lib Userenv.lib ntdll.lib Bcrypt.lib)
+```

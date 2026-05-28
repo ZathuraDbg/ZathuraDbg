@@ -195,7 +195,10 @@ void mainWindow() {
     ImGui::Begin("Register Values", &keepWindow, ImGuiWindowFlags_NoCollapse);
     registerWindow();
 
-    ImGui::Begin("Console", &keepWindow, ImGuiWindowFlags_NoCollapse);
+    ImGui::Begin("Console", &keepWindow,
+                 ImGuiWindowFlags_NoCollapse |
+                     ImGuiWindowFlags_NoScrollbar |
+                     ImGuiWindowFlags_NoScrollWithMouse);
     consoleWindow();
 
     ImGui::End();
