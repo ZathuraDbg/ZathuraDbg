@@ -26,13 +26,6 @@ enum contextMenuOption {
     NORMAL_ACTION
 };
 
-typedef struct
-{
-    uint64_t start;
-    uint64_t end;
-    MemoryProtection perms;
-} memoryMapInfo;
-
 enum arch{
     x86 = 0,
     ARM,
@@ -65,7 +58,6 @@ extern bool debugRun;
 extern bool enableDebugMode;
 extern bool memoryMapsUI;
 
-extern const uc_mode x86UCModes[];
 extern const char* x86ModeStr[];
 extern const char* armModeStr[];
 extern const cs_arch csArchs[];
@@ -106,9 +98,6 @@ extern bool updateRegistersOnLaneChange();
 extern void memoryMapWindow();
 extern std::pair<size_t, size_t> infoPopup(const std::string& title = "", const std::string& sizeHint = "");
 extern std::vector<newMemEditWindowsInfo> newMemEditWindows;
-extern unsigned char* stackEditorData;
-extern unsigned char* stackEditorTemp;
-extern void cleanupStackEditor();
 extern std::string consoleOutput;
 extern std::mutex  consoleOutputMutex;
 extern void consoleWriteThreadSafe(const std::string& text);

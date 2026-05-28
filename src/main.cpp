@@ -216,8 +216,6 @@ int main(int argc, const char** argv)
     stackEditor.WriteFn = &stackWriteFunc;
     stackEditor.OptShowAscii = false;
     stackEditor.Cols = 8;
-    stackEditorData = nullptr;
-    stackEditorTemp = nullptr;
     stackArraysZeroed = false;
 
     glfwShowWindow(window);
@@ -277,18 +275,6 @@ int main(int argc, const char** argv)
         runActions();
     }
 
-    // Cleanup memory
-
-    // Free legacy pointers if somehow allocated
-    if (stackEditorData) {
-        free(stackEditorData);
-        stackEditorData = nullptr;
-    }
-    if (stackEditorTemp) {
-        free(stackEditorTemp);
-        stackEditorTemp = nullptr;
-    }
-    
     if (icicle != nullptr)
     {
         icicle_free(icicle);

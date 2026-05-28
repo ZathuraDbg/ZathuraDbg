@@ -68,8 +68,6 @@ bool handleStackError() {
 }
 
 static std::unique_ptr<unsigned char[], decltype(&free)> stackBuffer(nullptr, free);
-unsigned char* stackEditorData;
-unsigned char* stackEditorTemp;
 
 void stackEditorWindow() {
     const auto io = ImGui::GetIO();
