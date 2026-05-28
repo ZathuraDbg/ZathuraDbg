@@ -1,5 +1,7 @@
-## OSX artifacts
+## Misc artifacts
 .DS_Store
+.claude
+.vscode
 
 ## Dear ImGui artifacts
 imgui.ini
@@ -12,6 +14,7 @@ imgui*.ini
 examples/*/Debug/*
 examples/*/Release/*
 examples/*/x64/*
+examples/*.tmp
 
 ## Visual Studio artifacts
 .vs
@@ -29,8 +32,9 @@ ipch
 ## Getting files created in JSON/Schemas/Catalog/ from a VS2022 update
 JSON/
 
-## Commonly used CMake directories
+## Commonly used CMake directories & CMake CPM cache
 build*/
+.cache
 
 ## Xcode & macOS artifacts
 project.xcworkspace
@@ -45,13 +49,13 @@ examples/example_glfw_opengl3/web/*
 examples/example_glfw_wgpu/web/*
 examples/example_glfw_wgpu/external/*
 examples/example_sdl2_opengl3/web/*
+examples/example_sdl2_wgpu/web/*
+examples/example_sdl3_opengl3/web/*
+examples/example_sdl3_wgpu/web/*
 
 ## JetBrains IDE artifacts
 .idea
 cmake-build-*
-
-## VS code artifacts
-.vscode
 
 ## Unix executables from our example Makefiles
 examples/example_apple_metal/example_apple_metal
@@ -67,6 +71,7 @@ examples/example_sdl2_opengl2/example_sdl2_opengl2
 examples/example_sdl2_opengl3/example_sdl2_opengl3
 examples/example_sdl2_sdlrenderer2/example_sdl2_sdlrenderer2
 examples/example_sdl2_vulkan/example_sdl2_vulkan
+examples/example_sdl3_metal/example_sdl3_metal
 examples/example_sdl3_opengl3/example_sdl3_opengl3
 examples/example_sdl3_sdlgpu3/example_sdl3_sdlgpu3
 examples/example_sdl3_sdlrenderer3/example_sdl3_sdlrenderer3

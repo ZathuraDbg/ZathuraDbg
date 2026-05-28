@@ -1,4 +1,5 @@
 #include "windows.hpp"
+#include <algorithm>
 #include <functional>
 #include <unordered_map>
 #include <mutex>
@@ -705,31 +706,40 @@ static void executeCommand(const std::string& input) {
 }
 
 // ============================================================
-// History callback for input text
+// History callback for the wrapped command input.
 // ============================================================
-static int historyCallback(ImGuiInputTextCallbackData* data) {
-    if (data->EventFlag == ImGuiInputTextFlags_CallbackHistory) {
-        const int prevHistoryPos = historyPos;
-        if (data->EventKey == ImGuiKey_UpArrow) {
-            if (historyPos == -1) {
-                historyPos = static_cast<int>(commandHistory.size()) - 1;
-            } else if (historyPos > 0) {
-                historyPos--;
-            }
-        } else if (data->EventKey == ImGuiKey_DownArrow) {
-            if (historyPos != -1 && historyPos < static_cast<int>(commandHistory.size()) - 1) {
-                historyPos++;
-            } else {
-                historyPos = -1;
-            }
-        }
+static int commandInputCallback(ImGuiInputTextCallbackData* data) {
+    if (data->EventFlag != ImGuiInputTextFlags_CallbackAlways || commandHistory.empty()) {
+        return 0;
+    }
 
-        if (prevHistoryPos != historyPos) {
-            const char* text = (historyPos >= 0) ? commandHistory[historyPos].c_str() : "";
-            data->DeleteChars(0, data->BufTextLen);
-            data->InsertChars(0, text);
+    const ImGuiIO& io = ImGui::GetIO();
+    if (io.KeyCtrl || io.KeyShift || io.KeyAlt) {
+        return 0;
+    }
+
+    const int prevHistoryPos = historyPos;
+    if (ImGui::IsKeyPressed(ImGuiKey_UpArrow)) {
+        if (historyPos == -1) {
+            historyPos = static_cast<int>(commandHistory.size()) - 1;
+        } else if (historyPos > 0) {
+            historyPos--;
+        }
+    } else if (ImGui::IsKeyPressed(ImGuiKey_DownArrow)) {
+        if (historyPos != -1 && historyPos < static_cast<int>(commandHistory.size()) - 1) {
+            historyPos++;
+        } else {
+            historyPos = -1;
         }
     }
+
+    if (prevHistoryPos != historyPos) {
+        const char* text = (historyPos >= 0) ? commandHistory[historyPos].c_str() : "";
+        data->DeleteChars(0, data->BufTextLen);
+        data->InsertChars(0, text);
+        data->CursorPos = data->SelectionStart = data->SelectionEnd = data->BufTextLen;
+    }
+
     return 0;
 }
 
@@ -739,13 +749,25 @@ static int historyCallback(ImGuiInputTextCallbackData* data) {
 void consoleWindow() {
     ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[JetBrainsMono20]);
 
-    const float footerHeightToReserve =
-        ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
+    static char input[500]{};
+    static bool reclaimFocus = false;
+
+    const ImGuiStyle& style = ImGui::GetStyle();
+    const float commandRegionWidth = ImGui::GetContentRegionAvail().x;
+    const float commandWrapWidth =
+        std::max(1.0f, commandRegionWidth - style.FramePadding.x * 2.0f - style.ScrollbarSize);
+    const float commandTextHeight =
+        ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), commandWrapWidth, commandWrapWidth, input, nullptr).y;
+    const float commandInputHeight = std::clamp(
+        commandTextHeight + style.FramePadding.y * 2.0f,
+        ImGui::GetFrameHeight(),
+        ImGui::GetTextLineHeightWithSpacing() * 4.0f + style.FramePadding.y * 2.0f);
+    const float footerHeightToReserve = style.ItemSpacing.y + commandInputHeight;
 
     // --- Output region (selectable, copyable) ---
 
     ImGui::BeginChild("ScrollingRegion", ImVec2(0, -footerHeightToReserve),
-                      ImGuiChildFlags_None, ImGuiWindowFlags_HorizontalScrollbar);
+                      ImGuiChildFlags_None, ImGuiWindowFlags_None);
 
     if (firstRender) {
         registerCommands();
@@ -775,19 +797,18 @@ void consoleWindow() {
     }
 
     const float availWidth = ImGui::GetContentRegionAvail().x;
-
-    // Estimate line count for height
-    int lineCount = 1;
-    for (const char* p = displayBuffer; *p; p++) {
-        if (*p == '\n') lineCount++;
-    }
-    const float textHeight = lineCount * ImGui::GetTextLineHeightWithSpacing() +
-                             ImGui::GetStyle().FramePadding.y * 2;
+    const float outputWrapWidth = std::max(1.0f, availWidth - style.FramePadding.x * 2.0f - style.ScrollbarSize);
+    const float outputTextHeight = ImGui::GetFont()->CalcTextSizeA(
+        ImGui::GetFontSize(), outputWrapWidth, outputWrapWidth, displayBuffer, nullptr).y;
+    const float textHeight = std::max(ImGui::GetTextLineHeight(), outputTextHeight) +
+                             style.FramePadding.y * 2.0f;
 
     ImGui::PushStyleColor(ImGuiCol_FrameBg, ImColor(24, 25, 38, 255).Value);
     ImGui::InputTextMultiline("##ConsoleOutput", displayBuffer, sizeof(displayBuffer),
                               ImVec2(availWidth, textHeight),
-                              ImGuiInputTextFlags_ReadOnly);
+                              ImGuiInputTextFlags_ReadOnly |
+                                  ImGuiInputTextFlags_NoHorizontalScroll |
+                                  ImGuiInputTextFlags_WordWrap);
     ImGui::PopStyleColor();
 
     // Auto-scroll logic
@@ -809,14 +830,15 @@ void consoleWindow() {
     ImGui::BeginChild("FixedInputRegion", ImVec2(0, footerHeightToReserve),
                       ImGuiChildFlags_None, ImGuiWindowFlags_NoScrollbar);
 
-    static char  input[500]{};
-    static bool  reclaimFocus = false;
-
     ImGui::PushItemWidth(-1);
-    if (ImGui::InputText("##Command", input, IM_ARRAYSIZE(input),
-                         ImGuiInputTextFlags_EnterReturnsTrue |
-                             ImGuiInputTextFlags_CallbackHistory,
-                         historyCallback)) {
+    if (ImGui::InputTextMultiline("##Command", input, IM_ARRAYSIZE(input),
+                                  ImVec2(0, commandInputHeight),
+                                  ImGuiInputTextFlags_EnterReturnsTrue |
+                                      ImGuiInputTextFlags_CtrlEnterForNewLine |
+                                      ImGuiInputTextFlags_NoHorizontalScroll |
+                                      ImGuiInputTextFlags_CallbackAlways |
+                                      ImGuiInputTextFlags_WordWrap,
+                                  commandInputCallback)) {
         std::string cmd(input);
         if (!cmd.empty()) {
             // Add to history (avoid consecutive duplicates)
