@@ -87,7 +87,7 @@ ElfSymbols loadElfSymbols(const std::string& path) {
         }
 
         auto* ehdr = reinterpret_cast<Elf64_Ehdr*>(data);
-        if (ehdr->e_shentsize < sizeof(Elf64_Shdr) ||
+        if (ehdr->e_shentsize != sizeof(Elf64_Shdr) ||
             ehdr->e_shstrndx == SHN_UNDEF ||
             ehdr->e_shstrndx >= ehdr->e_shnum ||
             !rangeInFile(ehdr->e_shoff, static_cast<uint64_t>(ehdr->e_shnum) * ehdr->e_shentsize, fileSize)) {
@@ -113,7 +113,7 @@ ElfSymbols loadElfSymbols(const std::string& path) {
         }
 
         auto* ehdr32 = reinterpret_cast<Elf32_Ehdr*>(data);
-        if (ehdr32->e_shentsize < sizeof(Elf32_Shdr) ||
+        if (ehdr32->e_shentsize != sizeof(Elf32_Shdr) ||
             ehdr32->e_shstrndx == SHN_UNDEF ||
             ehdr32->e_shstrndx >= ehdr32->e_shnum ||
             !rangeInFile(ehdr32->e_shoff, static_cast<uint64_t>(ehdr32->e_shnum) * ehdr32->e_shentsize, fileSize)) {

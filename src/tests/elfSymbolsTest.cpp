@@ -49,6 +49,22 @@ std::vector<uint8_t> malformedElf64WithOutOfRangeSections()
     return bytes;
 }
 
+std::vector<uint8_t> malformedElf64WithUnexpectedSectionEntrySize()
+{
+    std::vector<uint8_t> bytes(sizeof(Elf64_Ehdr) + sizeof(Elf64_Shdr) + 8, 0);
+    auto* header = reinterpret_cast<Elf64_Ehdr*>(bytes.data());
+    header->e_ident[EI_MAG0] = ELFMAG0;
+    header->e_ident[EI_MAG1] = ELFMAG1;
+    header->e_ident[EI_MAG2] = ELFMAG2;
+    header->e_ident[EI_MAG3] = ELFMAG3;
+    header->e_ident[EI_CLASS] = ELFCLASS64;
+    header->e_shoff = sizeof(Elf64_Ehdr);
+    header->e_shentsize = sizeof(Elf64_Shdr) + 8;
+    header->e_shnum = 1;
+    header->e_shstrndx = 0;
+    return bytes;
+}
+
 }
 
 int main()
@@ -57,5 +73,7 @@ int main()
     ok &= expectNoSymbols("zathura-empty-elf-fixture", {});
     ok &= expectNoSymbols("zathura-short-elf-fixture", {ELFMAG0, ELFMAG1, ELFMAG2});
     ok &= expectNoSymbols("zathura-malformed-elf64-fixture", malformedElf64WithOutOfRangeSections());
+    ok &= expectNoSymbols("zathura-oversized-shentsize-elf64-fixture",
+                          malformedElf64WithUnexpectedSectionEntrySize());
     return ok ? 0 : 1;
 }
