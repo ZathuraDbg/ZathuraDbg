@@ -70,6 +70,23 @@ pacman -S mingw-w64-x86_64-capstone
 
 ## Building the project
 
+**Important:** Do not use `make -j$(nproc)` on machines with many CPU cores and limited RAM. Each C++ file in this project pulls in heavy headers (ImGui, Unicorn, Capstone, etc.) and can use 1–2 GiB per compiler process. The build system caps parallel jobs from available memory automatically.
+
+Recommended build (memory-safe, uses Ninja when available):
+
+```sh
+cd src
+./build.sh
+```
+
+Or with CMake presets:
+
+```sh
+cd src
+cmake --preset default
+cmake --build --preset default
+```
+
 ### For Linux
 - Clone it with the submodules
 ```
@@ -80,8 +97,8 @@ git clone --recurse-submodules https://github.com/ZathuraDbg/ZathuraDbg
 cd src
 mkdir build
 cd build
-cmake .. 
-make -j`nproc`
+cmake -G Ninja ..
+cmake --build .
 ```
 - Incase you get errors about missing features or dlls, compile as the above
 ```sh
@@ -89,10 +106,21 @@ cd ..   # you should be in the src/ directory
 rm -rf build
 mkdir build
 cd build
-CC=gcc-14 CXX=g++-14 cmake .. 
-CC=gcc-14 CXX=g++-14 make
+CC=gcc-14 CXX=g++-14 cmake -G Ninja ..
+CC=gcc-14 CXX=g++-14 cmake --build .
 ```
 - ZathuraDbg binary will now be in the `src/` folder.
+
+Build tuning (optional):
+
+| CMake option | Default | Purpose |
+|---|---|---|
+| `OPTIMIZATION_LEVEL` | `O0` | Debug compile speed (`O0` is faster than `Og`) |
+| `ZATHURA_MB_PER_JOB` | `1200` | MiB assumed per parallel compile job |
+| `ZATHURA_MAX_BUILD_JOBS` | `0` (auto) | Hard cap on parallel jobs |
+| `ZATHURA_LIMIT_BUILD_PARALLELISM` | `ON` | Derive job count from `/proc/meminfo` |
+
+Install [ccache](https://ccache.dev/) for much faster rebuilds after the first compile (`pacman -S ccache` / `apt install ccache`).
 
 ### For Windows
 - Open MSYS2 MINGW64
@@ -104,8 +132,8 @@ CC=gcc-14 CXX=g++-14 make
 cd src
 mkdir build
 cd build
-cmake ..
-ninja -j`nproc`
+cmake -G Ninja ..
+cmake --build .
 ```
 
 - ZathuraDbg binary will now be in the `src/` folder.
@@ -151,8 +179,8 @@ If capstone returns 0 instructions when disassembling valid x86 code, the archit
 ```sh
 cd src/build
 rm -rf CMakeFiles CMakeCache.txt cmake_install.cmake Makefile
-cmake ..
-make -j$(nproc)
+cmake -G Ninja ..
+cmake --build .
 ```
 
 ### 4. Logging

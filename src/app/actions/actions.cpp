@@ -8,6 +8,9 @@
 #endif
 #include "actions.hpp"
 
+#define CPPHTTPLIB_OPENSSL_SUPPORT
+#include <http.hpp>
+
 #include "imgui_impl_opengl3_loader.h"
 #include "../integration/interpreter/interpreter.hpp"
 

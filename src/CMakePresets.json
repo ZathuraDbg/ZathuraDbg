@@ -1,0 +1,35 @@
+{
+  "version": 6,
+  "configurePresets": [
+    {
+      "name": "default",
+      "displayName": "Debug (Ninja, memory-safe parallelism)",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "OPTIMIZATION_LEVEL": "O0"
+      }
+    },
+    {
+      "name": "release",
+      "displayName": "Release (Ninja)",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "OPTIMIZATION_LEVEL": "O2"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "default",
+      "configurePreset": "default"
+    },
+    {
+      "name": "release",
+      "configurePreset": "release"
+    }
+  ]
+}

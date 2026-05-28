@@ -25,16 +25,11 @@
 #include "../../vendor/ImGuiColorTextEdit/TextEditor.h"
 #include "../../vendor/imgui/backends/imgui_impl_glfw.h"
 #include "../../vendor/imgui/backends/imgui_impl_opengl3.h"
-#include "../../vendor/imgui/misc/single_file/imgui_single_file.h"
 #include "../../vendor/hex/hex.h"
 #include "integration/interpreter/interpreter.hpp"
 #include "windows/windows.hpp"
-#include "../../vendor/json/json.hpp"
 #include <capstone/capstone.h>
 #include "actions/actions.hpp"
-#define CPPHTTPLIB_OPENSSL_SUPPORT
-#include <http.hpp>
-using json = nlohmann::json;
 constexpr std::string VERSION = "1.0";
 #define CONFIG_NAME "config"
 

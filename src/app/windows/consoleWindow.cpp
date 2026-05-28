@@ -1,6 +1,7 @@
 #include "windows.hpp"
 #include <algorithm>
 #include <functional>
+#include <regex>
 #include <unordered_map>
 #include <mutex>
 
