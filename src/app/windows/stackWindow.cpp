@@ -49,7 +49,7 @@ bool handleStackError() {
 
     if (1) {
         const auto result = icicle_mem_map(icicle, STACK_ADDRESS, STACK_SIZE, MemoryProtection::ReadWrite);
-        if (result != 0) {
+        if (result == 0) {
             LOG_INFO("Successfully mapped stack memory at 0x" << std::hex << STACK_ADDRESS);
             showPopupError = false;
             return true;
@@ -93,7 +93,7 @@ void stackEditorWindow() {
                 LOG_INFO("Stack memory is already mapped");
             } else {
                 LOG_INFO("Stack memory needs mapping");
-                if (icicle_mem_map(icicle, STACK_ADDRESS, STACK_SIZE, ReadWrite) != 0) {
+                if (icicle_mem_map(icicle, STACK_ADDRESS, STACK_SIZE, ReadWrite) == 0) {
                     LOG_INFO("Successfully mapped stack memory");
                 } else {
                     LOG_ERROR("Failed to map stack memory!");

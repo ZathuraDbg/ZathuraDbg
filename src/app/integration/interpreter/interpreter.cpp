@@ -21,7 +21,7 @@ uint64_t lineNo = 1;
 uint64_t expectedIP = 0;
 int stepOverBPLineNo = -1;
 
-std::mutex execMutex;
+std::recursive_mutex execMutex;
 std::mutex breakpointMutex;
 std::mutex criticalSection{};
 

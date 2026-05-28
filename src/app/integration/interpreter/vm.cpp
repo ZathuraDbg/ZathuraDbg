@@ -1,4 +1,33 @@
 #include "interpreter.hpp"
+#include <unordered_set>
+
+namespace {
+
+void freeSnapshotOnce(VmSnapshot* snapshotToFree, std::unordered_set<VmSnapshot*>& freedSnapshots)
+{
+    if (snapshotToFree && freedSnapshots.insert(snapshotToFree).second)
+    {
+        icicle_vm_snapshot_free(snapshotToFree);
+    }
+}
+
+void clearVmSnapshots()
+{
+    std::unordered_set<VmSnapshot*> freedSnapshots;
+    while (!vmSnapshots.empty())
+    {
+        freeSnapshotOnce(vmSnapshots.top(), freedSnapshots);
+        vmSnapshots.pop();
+    }
+
+    freeSnapshotOnce(snapshot, freedSnapshots);
+    snapshot = nullptr;
+
+    freeSnapshotOnce(snapshotLast, freedSnapshots);
+    snapshotLast = nullptr;
+}
+
+}
 
 VmSnapshot* saveICSnapshot(Icicle* icicle){
     if (icicle == nullptr){
@@ -83,7 +112,7 @@ bool createStack(Icicle* ic)
     // Only map if not already mapped
     if (!alreadyMapped) {
         const auto mapped = icicle_mem_map(ic, STACK_ADDRESS, STACK_SIZE, MemoryProtection::ReadWrite);
-        if (mapped == -1)
+        if (mapped != 0)
         {
             LOG_ERROR("Icicle was unable to map memory for the stack.");
             free(zeroBuf);
@@ -92,8 +121,11 @@ bool createStack(Icicle* ic)
         for (uint64_t off = 0; off < STACK_SIZE; off += 0x1000) {
             size_t out = 0;
             // A 1‑byte read is enough to trigger the lazy page allocation
-            const auto s = icicle_mem_read(icicle, STACK_ADDRESS + off, 1, &out);
-            icicle_free_buffer(s, 1);
+            const auto s = icicle_mem_read(ic, STACK_ADDRESS + off, 1, &out);
+            if (s)
+            {
+                icicle_free_buffer(s, out);
+            }
         }
     }
     LOG_INFO("Attempting a mem_write");
@@ -153,6 +185,8 @@ bool resetState(bool reInit){
     }
     restoreLocalEditorAfterRemoteSession();
 
+    clearVmSnapshots();
+
     if (icicle != nullptr)
     {
         icicle_free(icicle);
@@ -163,17 +197,6 @@ bool resetState(bool reInit){
     {
         ks_close(ks);
         ks = nullptr;
-    }
-
-
-    if (!vmSnapshots.empty())
-    {
-        for (int j = 0; j < vmSnapshots.size(); j++)
-        {
-            icicle_vm_snapshot_free(vmSnapshots.top());
-            vmSnapshots.pop();
-        }
-        vmSnapshots = {};
     }
 
     labels.clear();

@@ -151,14 +151,13 @@ void stepBack()
 
     safeHighlightLine(addressLineNoMap[icicle_get_pc(icicle)] - 1);
     updateRegs(false);
-    icicle_vm_snapshot_free(stateToRestore);
 
-    if (snapshot) {
+    if (snapshot && snapshot != stateToRestore) {
         icicle_vm_snapshot_free(snapshot);
-        snapshot = nullptr;
     }
 
     snapshot = icicle_vm_snapshot(icicle);
+    icicle_vm_snapshot_free(stateToRestore);
     LOG_DEBUG("Stepped back successfully. Snapshots remaining: " << vmSnapshots.size());
 }
 
