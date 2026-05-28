@@ -84,6 +84,8 @@ void stackWriteHook(void* data, uint64_t address, uint8_t size, const uint64_t v
     updateStack = true;
 }
 
+static bool executeCodeCore(Icicle* icicle, const size_t& instructionCount);
+
 bool preExecutionSetup(const std::string& codeIn)
 {
     initRegistersToDefinedVals();
@@ -200,7 +202,7 @@ bool checkStatusUpdateState(const size_t& instructionCount, RunStatus status, co
                 // This doesn't have to be done for continues though
                 if (instructionCount == 1)
                 {
-                    executeCode(icicle, 1);
+                    executeCodeCore(icicle, 1);
                 }
             }
         }
@@ -233,15 +235,13 @@ bool checkStatusUpdateState(const size_t& instructionCount, RunStatus status, co
     return true;
 }
 
-bool executeCode(Icicle* icicle, const size_t& instructionCount)
+static bool executeCodeCore(Icicle* icicle, const size_t& instructionCount)
 {
     if (icicle == nullptr)
     {
         LOG_ERROR("Attempted to run code when icicle was not initialised!");
         return false;
     }
-
-    std::lock_guard<std::recursive_mutex> execLock(execMutex);
 
     if (executionComplete)
     {
@@ -317,6 +317,12 @@ bool executeCode(Icicle* icicle, const size_t& instructionCount)
     return checkStatusUpdateState(instructionCount, status, currentInstrAddr);
 }
 
+bool executeCode(Icicle* icicle, const size_t& instructionCount)
+{
+    std::lock_guard<std::mutex> execLock(execMutex);
+    return executeCodeCore(icicle, instructionCount);
+}
+
 bool stepCode(const size_t instructionCount){
     LOG_DEBUG("Stepping into code requested...");
 
@@ -326,7 +332,7 @@ bool stepCode(const size_t instructionCount){
     }
     LOG_DEBUG("Debug state confirmed ready, proceeding with step.");
 
-    std::lock_guard<std::recursive_mutex> execLock(execMutex);
+    std::lock_guard<std::mutex> execLock(execMutex);
 
     if (isCodeRunning || executionComplete){
         LOG_DEBUG("Step request ignored: Code already running or execution complete.");
@@ -342,7 +348,7 @@ bool stepCode(const size_t instructionCount){
     size_t siz{};
     RunStatus status{};
 
-    executeCode(icicle, instructionCount); // This contains the core execution
+    executeCodeCore(icicle, instructionCount); // This contains the core execution
 
     // Update state *after* execution
     ip = icicle_get_pc(icicle);
@@ -402,7 +408,7 @@ bool stepCode(const size_t instructionCount){
 bool runCode(const std::string& codeIn, const bool& execCode)
 {
     LOG_INFO("Running code...");
-    std::lock_guard<std::recursive_mutex> execLock(execMutex);
+    std::lock_guard<std::mutex> execLock(execMutex);
 
     if (!preExecutionSetup(codeIn)) {
         return false;
@@ -421,7 +427,7 @@ bool runCode(const std::string& codeIn, const bool& execCode)
             isEndBreakpointSet = true;
         }
 
-        if (!executeCode(icicle, 0))
+        if (!executeCodeCore(icicle, 0))
         {
             LOG_ERROR("Failed to run code.");
         }
