@@ -12,9 +12,8 @@
 //  [X] Platform: IME support.
 //  [x] Platform: Multi-viewport / platform windows.
 // Missing features or Issues:
-//  [ ] Missing ImGuiMouseCursor_Wait and ImGuiMouseCursor_Progress cursors.
-//  [ ] Multi-viewport: Window size not correctly reported when enabling io.ConfigViewportsNoDecoration
-//  [ ] Multi-viewport: ParentViewportID not honored, and so io.ConfigViewportsNoDefaultParent has no effect (minor).
+//  [ ] Platform: Multi-viewport: Window size not correctly reported when enabling io.ConfigViewportsNoDecoration
+//  [ ] Platform: Multi-viewport: Missing ImGuiBackendFlags_HasParentViewport support. The viewport->ParentViewportID field is ignored, and therefore io.ConfigViewportsNoDefaultParent has no effect either.
 
 // You can use unmodified imgui_impl_* files in your project. See examples/ folder for examples of using this.
 // Prefer including the entire imgui/ repository into your project (either as a copy or as a submodule), and only build the backends you need.
@@ -34,7 +33,11 @@
 
 // CHANGELOG
 // (minor and older changes stripped away, please see git history for details)
-//  2025-XX-XX: Added support for multiple windows via the ImGuiPlatformIO interface.
+//  2026-XX-XX: Added support for multiple windows via the ImGuiPlatformIO interface.
+//  2025-09-18: Call platform_io.ClearPlatformHandlers() on shutdown.
+//  2025-07-08: [Docking] Fixed multi-viewport handling broken on 2025-06-02. (#8644, #8777)
+//  2025-06-27: Added ImGuiMouseCursor_Wait and ImGuiMouseCursor_Progress mouse cursor support.
+//  2025-06-12: ImGui_ImplOSX_HandleEvent() only process event for window containing our view. (#8644)
 //  2025-05-15: [Docking] Add Platform_GetWindowFramebufferScale() handler, to allow varying Retina display density on multiple monitors.
 //  2025-03-21: Fill gamepad inputs and set ImGuiBackendFlags_HasGamepad regardless of ImGuiConfigFlags_NavEnableGamepad being set.
 //  2025-01-20: Removed notification observer when shutting down. (#8331)
@@ -117,6 +120,7 @@ static bool ImGui_ImplOSX_HandleEvent(NSEvent* event, NSView* view);
 + (id)_windowResizeNorthEastSouthWestCursor;
 + (id)_windowResizeNorthSouthCursor;
 + (id)_windowResizeEastWestCursor;
++ (id)busyButClickableCursor;
 @end
 
 /**
@@ -464,6 +468,7 @@ bool ImGui_ImplOSX_Init(NSView* view)
     bd->MouseCursors[ImGuiMouseCursor_ResizeNESW] = [NSCursor respondsToSelector:@selector(_windowResizeNorthEastSouthWestCursor)] ? [NSCursor _windowResizeNorthEastSouthWestCursor] : [NSCursor closedHandCursor];
     bd->MouseCursors[ImGuiMouseCursor_ResizeNWSE] = [NSCursor respondsToSelector:@selector(_windowResizeNorthWestSouthEastCursor)] ? [NSCursor _windowResizeNorthWestSouthEastCursor] : [NSCursor closedHandCursor];
     bd->MouseCursors[ImGuiMouseCursor_Hand] = [NSCursor pointingHandCursor];
+    bd->MouseCursors[ImGuiMouseCursor_Wait] = bd->MouseCursors[ImGuiMouseCursor_Progress] = [NSCursor respondsToSelector:@selector(busyButClickableCursor)] ? [NSCursor busyButClickableCursor] : [NSCursor arrowCursor];
     bd->MouseCursors[ImGuiMouseCursor_NotAllowed] = [NSCursor operationNotAllowedCursor];
 
     // Note that imgui.cpp also include default OSX clipboard handlers which can be enabled
@@ -546,9 +551,12 @@ void ImGui_ImplOSX_Shutdown()
     ImGui_ImplOSX_ShutdownMultiViewportSupport();
     ImGui_ImplOSX_DestroyBackendData();
     ImGuiIO& io = ImGui::GetIO();
+    ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
+
     io.BackendPlatformName = nullptr;
     io.BackendPlatformUserData = nullptr;
     io.BackendFlags &= ~(ImGuiBackendFlags_HasMouseCursors | ImGuiBackendFlags_HasGamepad | ImGuiBackendFlags_PlatformHasViewports);
+    platform_io.ClearPlatformHandlers();
 }
 
 static void ImGui_ImplOSX_UpdateMouseCursor()
@@ -697,8 +705,11 @@ static ImGuiMouseSource GetMouseSource(NSEvent* event)
 
 static bool ImGui_ImplOSX_HandleEvent(NSEvent* event, NSView* view)
 {
-    ImGuiIO& io = ImGui::GetIO();
+    // Only process events from the window containing ImGui view
+    if (!ImGui::FindViewportByPlatformHandle((__bridge void*)event.window))
+        return false;
 
+    ImGuiIO& io = ImGui::GetIO();
     if (event.type == NSEventTypeLeftMouseDown || event.type == NSEventTypeRightMouseDown || event.type == NSEventTypeOtherMouseDown)
     {
         int button = (int)[event buttonNumber];
@@ -940,9 +951,6 @@ static void ImGui_ImplOSX_CreateWindow(ImGuiViewport* viewport)
 
 static void ImGui_ImplOSX_DestroyWindow(ImGuiViewport* viewport)
 {
-    NSWindow* window = (__bridge_transfer NSWindow*)viewport->PlatformHandleRaw;
-    window = nil;
-
     if (ImGui_ImplOSX_ViewportData* vd = (ImGui_ImplOSX_ViewportData*)viewport->PlatformUserData)
     {
         NSWindow* window = vd->Window;

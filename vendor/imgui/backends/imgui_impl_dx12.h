@@ -2,8 +2,9 @@
 // This needs to be used along with a Platform Backend (e.g. Win32)
 
 // Implemented features:
-//  [X] Renderer: User texture binding. Use 'D3D12_GPU_DESCRIPTOR_HANDLE' as ImTextureID. Read the FAQ about ImTextureID!
+//  [X] Renderer: User texture binding. Use 'D3D12_GPU_DESCRIPTOR_HANDLE' as texture identifier. Read the FAQ about ImTextureID/ImTextureRef!
 //  [X] Renderer: Large meshes support (64k+ vertices) even with 16-bit indices (ImGuiBackendFlags_RendererHasVtxOffset).
+//  [X] Renderer: Texture updates support for dynamic font atlas (ImGuiBackendFlags_RendererHasTextures).
 //  [X] Renderer: Expose selected render state for draw callbacks to use. Access in '(ImGui_ImplXXXX_RenderState*)GetPlatformIO().Renderer_RenderState'.
 //  [X] Renderer: Multi-viewport support (multiple windows). Enable with 'io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable'.
 
@@ -23,6 +24,12 @@
 #ifndef IMGUI_DISABLE
 #include <dxgiformat.h> // DXGI_FORMAT
 #include <d3d12.h>      // D3D12_CPU_DESCRIPTOR_HANDLE
+
+// Clang/GCC warnings with -Weverything
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wold-style-cast" // warning: use of old-style cast
+#endif
 
 // Initialization data, for ImGui_ImplDX12_Init()
 struct ImGui_ImplDX12_InitInfo
@@ -64,6 +71,9 @@ IMGUI_IMPL_API bool     ImGui_ImplDX12_Init(ID3D12Device* device, int num_frames
 IMGUI_IMPL_API bool     ImGui_ImplDX12_CreateDeviceObjects();
 IMGUI_IMPL_API void     ImGui_ImplDX12_InvalidateDeviceObjects();
 
+// (Advanced) Use e.g. if you need to precisely control the timing of texture updates (e.g. for staged rendering), by setting ImDrawData::Textures = nullptr to handle this manually.
+IMGUI_IMPL_API void     ImGui_ImplDX12_UpdateTexture(ImTextureData* tex);
+
 // [BETA] Selected render state data shared with callbacks.
 // This is temporarily stored in GetPlatformIO().Renderer_RenderState during the ImGui_ImplDX12_RenderDrawData() call.
 // (Please open an issue if you feel you need access to more data)
@@ -72,5 +82,9 @@ struct ImGui_ImplDX12_RenderState
     ID3D12Device*               Device;
     ID3D12GraphicsCommandList*  CommandList;
 };
+
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
 
 #endif // #ifndef IMGUI_DISABLE
