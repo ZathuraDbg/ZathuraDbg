@@ -193,6 +193,7 @@ if (NOT WIN32)
             ${APP_DIR}/integration/gdb/elfSymbols.cpp
             ${PROJECT_ROOT}/tests/elfSymbolsTest.cpp
     )
+    set_target_properties(zathura_elf_symbols_test PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
     target_include_directories(zathura_elf_symbols_test PRIVATE ${APP_DIR})
     add_test(NAME zathura_elf_symbols_test COMMAND zathura_elf_symbols_test)
 endif()
