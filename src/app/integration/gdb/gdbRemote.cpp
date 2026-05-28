@@ -460,6 +460,7 @@ bool GdbRemoteClient::connectTo(const RemoteConnectionConfig& config) {
         disconnect();
         return false;
     }
+    clearSocketTimeout(socket_);
     return true;
 }
 
