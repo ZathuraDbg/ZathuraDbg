@@ -42,6 +42,9 @@ namespace {
 
 RemoteLogSink g_logSink;
 RemoteArchHook g_archHook;
+constexpr size_t kMaxPacketPayloadSize = 16 * 1024 * 1024;
+constexpr size_t kMaxSkippedPacketBytes = 4096;
+constexpr size_t kMaxChecksumFailures = 3;
 
 void log(const std::string& text) {
     if (g_logSink) g_logSink(text);
@@ -457,7 +460,6 @@ bool GdbRemoteClient::connectTo(const RemoteConnectionConfig& config) {
         disconnect();
         return false;
     }
-    clearSocketTimeout(socket_);
     return true;
 }
 
@@ -526,17 +528,21 @@ bool GdbRemoteClient::readPacket(std::string& payload) {
         return false;
     }
 
-    while (true) {
+    size_t skippedBytes = 0;
+    size_t checksumFailures = 0;
+    while (skippedBytes < kMaxSkippedPacketBytes && checksumFailures < kMaxChecksumFailures) {
         char ch = '\0';
         if (!recvByte(socket_, ch)) {
             return false;
         }
 
         if (ch == '+' || ch == '-') {
+            ++skippedBytes;
             continue;
         }
 
         if (ch != '$') {
+            ++skippedBytes;
             if (static_cast<unsigned char>(ch) == 0x03) {
                 continue;
             }
@@ -552,6 +558,10 @@ bool GdbRemoteClient::readPacket(std::string& payload) {
                 break;
             }
             packet.push_back(ch);
+            if (packet.size() > kMaxPacketPayloadSize) {
+                log("remote >> packet payload exceeded size limit\n");
+                return false;
+            }
         }
 
         std::array<char, 2> checksumChars{};
@@ -562,6 +572,7 @@ bool GdbRemoteClient::readPacket(std::string& payload) {
         unsigned int expected = 0;
         auto parse = std::from_chars(checksumChars.data(), checksumChars.data() + checksumChars.size(), expected, 16);
         if (parse.ec != std::errc{} || static_cast<uint8_t>(expected) != packetChecksum(packet)) {
+            ++checksumFailures;
             if (!noAckMode_) {
                 sendAll(socket_, "-");
             }
@@ -571,6 +582,8 @@ bool GdbRemoteClient::readPacket(std::string& payload) {
         if (!noAckMode_) {
             sendAll(socket_, "+");
         }
+        checksumFailures = 0;
+        skippedBytes = 0;
 
         if (!packet.empty() && packet[0] == 'O' &&
             ((packet.size() - 1) % 2 == 0) &&
@@ -582,6 +595,9 @@ bool GdbRemoteClient::readPacket(std::string& payload) {
         payload = std::move(packet);
         return true;
     }
+
+    log("remote >> packet read aborted after repeated invalid data\n");
+    return false;
 }
 
 void GdbRemoteClient::teardownSocket() {
