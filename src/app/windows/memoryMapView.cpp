@@ -98,6 +98,7 @@ void memoryMapWindow()
         return;
     }
 
+    const bool allowMemoryMapEdits = !remote_gdb::useRemoteDebugging();
     auto memInfo = debugMemoryRegions();
     auto [x, y] = ImGui::GetWindowSize();
     ImGui::SetNextWindowSize({x - 230, (y - 125 + (52 * memInfo.size()))});
@@ -107,6 +108,9 @@ void memoryMapWindow()
         bool tableSizeInc = false;
         bool tableUpdated = false;
         bool mapped = true;
+        if (!allowMemoryMapEdits) {
+            ImGui::TextWrapped("Remote memory maps are read-only in this view.");
+        }
         ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[JetBrainsMono20]);
         if (ImGui::BeginTable("memoryMapTable", 4,
                               ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_Resizable))
@@ -232,6 +236,9 @@ void memoryMapWindow()
                 uint64_t endAddr = memInfo[i].size + memInfo[i].address;
                 const std::string endAddrText = std::to_string(endAddr);
                 std::snprintf(inputValue, 80, "%s", endAddrText.c_str());
+                if (!allowMemoryMapEdits) {
+                    ImGui::BeginDisabled();
+                }
                 if (InputHexadecimal("##end_addr", inputValue, ImGuiInputTextFlags_CharsNoBlank | ImGuiInputTextFlags_EnterReturnsTrue))
                 {
                     newEndAddr = strtoll(inputValue, nullptr, 16);
@@ -239,6 +246,9 @@ void memoryMapWindow()
                     {
                         endAddrChanged = true;
                     }
+                }
+                if (!allowMemoryMapEdits) {
+                    ImGui::EndDisabled();
                 }
 
                 ImGui::PopID();
@@ -248,6 +258,9 @@ void memoryMapWindow()
 
                 posX = ImGui::GetCursorPosX() + 2;
 
+                if (!allowMemoryMapEdits) {
+                    ImGui::BeginDisabled();
+                }
                 ImGui::SetCursorPosX(posX);
                 ImGui::Selectable("Read: ");
                 ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[6]);
@@ -314,6 +327,9 @@ void memoryMapWindow()
                         unmapDebugMemory(memInfo[i].address, memInfo[i].size);
                     }
                 }
+                if (!allowMemoryMapEdits) {
+                    ImGui::EndDisabled();
+                }
 
                 ImGui::PopFont ();
                 ImGui::TableNextRow();
@@ -321,7 +337,7 @@ void memoryMapWindow()
                 ImGui::PopStyleColor();
                 ImGui::PopID();
 
-                if (permsChanged)
+                if (allowMemoryMapEdits && permsChanged)
                 {
                     // Convert individual flags back to MemoryProtection enum
                     MemoryProtection newPerms;
@@ -343,7 +359,7 @@ void memoryMapWindow()
                     permsChanged = false;
                 }
 
-                if (endAddrChanged)
+                if (allowMemoryMapEdits && endAddrChanged)
                 {
                     if (expandMemoryRegion(icicle, memInfo[i].address, memInfo[i].size + memInfo[i].address,
                                            newEndAddr,
@@ -371,9 +387,15 @@ void memoryMapWindow()
         }
 
         ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[RubikRegular16]);
+        if (!allowMemoryMapEdits) {
+            ImGui::BeginDisabled();
+        }
         if (ImGui::Button("ADD"))
         {
             keep = true;
+        }
+        if (!allowMemoryMapEdits) {
+            ImGui::EndDisabled();
         }
 
 
@@ -394,7 +416,7 @@ void memoryMapWindow()
         ImGui::PopFont();
     }
 
-    if (keep)
+    if (keep && allowMemoryMapEdits)
     {
         auto [address, size] = infoPopup("Map a new region", "Multiple of 4KB");
         if (address != 0 && size != 0)
