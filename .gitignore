@@ -17,6 +17,8 @@ src/.gdb_history
 *.dll
 
 # Runtime artifacts
+.Zathura.zlog
+config.zlyt
 src/.Zathura.zlog
 src/config.zlyt
 src/imgui.ini

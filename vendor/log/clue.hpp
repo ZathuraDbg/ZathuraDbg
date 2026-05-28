@@ -9,6 +9,10 @@
 #ifndef CLUE_CLUE_H_INCLUDED
 #define CLUE_CLUE_H_INCLUDED
 
+#if defined(ZATHURA_REQUIRE_LOGGER_ADAPTER) && !defined(ZATHURA_ALLOW_DIRECT_CLUE_INCLUDE)
+# error Include src/utils/logger.hpp instead of vendor/log/clue.hpp in Zathura sources.
+#endif
+
 #define clue_MAJOR  1
 #define clue_MINOR  0
 #define clue_PATCH  0

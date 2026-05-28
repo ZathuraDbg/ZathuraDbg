@@ -25,6 +25,8 @@ SOURCES += $(DIALOGS)/fileDialogs.cpp
 # SOURCES += $(EXTRA)/UnitTests.cpp
 SOURCES += $(APP)/app.hpp
 SOURCES += $(UTILS)/fonts.hpp
+SOURCES += $(UTILS)/logger.cpp
+SOURCES += $(UTILS)/runtimePaths.cpp
 SOURCES += $(UTILS)/layoutmanager.h
 SOURCES += $(TASKS)/fileTasks.hpp
 SOURCES += $(TASKS)/editorTasks.hpp
@@ -51,9 +53,9 @@ LINUX_GL_LIBS = -lGL
 
 CXXFLAGS = -std=c++23 -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends -I$(REGEX) -I$(MAP) -I$(DIALOGS) -I$(TASKS) -I$(WINDOWS)
 CXXFLAGS += -g  -Wformat
+CXXFLAGS += -DZATHURA_REQUIRE_LOGGER_ADAPTER
 CXXFLAGS += -L../vendor/unicorn/include -lunicorn
 CXXFLAGS += -L../vendor/keystone -l:libkeystone.a -L../vendor/keystone/include 
-CXXFLAGS += -DLOG_TO_FILE=\".Zathura.zlog\"
 # CXXFLAGS += -DLOG_TO_STRING
 LIBS =
 

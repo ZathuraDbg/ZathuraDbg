@@ -1,5 +1,6 @@
 #include "app.hpp"
 #include "tasks/editorTasks.hpp"
+#include "../utils/runtimePaths.hpp"
 bool toggleBreakpoint = false;
 bool runUntilHere = false;
 bool isRunning = true;
@@ -113,8 +114,7 @@ void setupViewPort() {
 
 
 void loadIniFile() {
-    const std::string filename = relativeToRealPath(executablePath, "config.zlyt");
-    const std::filesystem::path dir(filename);
+    const std::filesystem::path dir = Zathura::RuntimePaths::configFile();
     ImGui::LoadIniSettingsFromDisk(dir.string().c_str());
     LOG_DEBUG("Loaded config file from " << dir.string());
 }

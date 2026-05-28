@@ -9,18 +9,21 @@
 #include "app/arch/arch.hpp"
 #include "app/integration/gdb/gdbRemote.hpp"
 #include "app/shortcuts.hpp"
+#include "utils/runtimePaths.hpp"
 #include "../vendor/whereami/src/whereami.h"
 #include "app/windows/windows.hpp" // Make sure this imports the stack window functions
 #include <map>
+#include <cstdint>
 #define GL_SILENCE_DEPRECATION
 #if defined(IMGUI_IMPL_OPENGL_ES2)
 #include <GLES2/gl2.h>
 #endif
 #include <GLFW/glfw3.h> // Will drag system OpenGL headers
-#include <fstream>
 #include <chrono>
 #include <thread>
 #include <filesystem>
+#include <system_error>
+#include <iostream>
 GLFWwindow* window = nullptr;
 #if defined(_MSC_VER) && (_MSC_VER >= 1900) && !defined(IMGUI_DISABLE_WIN32_FUNCTIONS)
 #pragma comment(lib, "legacy_stdio_definitions")
@@ -31,6 +34,34 @@ GLFWwindow* window = nullptr;
 static void glfw_error_callback(int error, const char* description)
 {
     fprintf(stderr, "GLFW Error %d: %s\n", error, description);
+}
+
+namespace {
+
+constexpr std::uintmax_t MAX_LOG_FILE_SIZE = 3 * 1024 * 1024;
+
+void rotateLogFile(const std::filesystem::path &logPath) {
+    std::error_code error;
+    const auto logSize = std::filesystem::file_size(logPath, error);
+    if (error || logSize <= MAX_LOG_FILE_SIZE) {
+        return;
+    }
+
+    std::filesystem::remove(logPath, error);
+    if (!error) {
+        LOG_ALERT("Logging restarted!");
+    }
+}
+
+void reportStartupWarning(const std::string &message) {
+    if (message.empty()) {
+        return;
+    }
+
+    std::cerr << message << '\n';
+    tinyfd_messageBox("ZathuraDbg startup warning", message.c_str(), "ok", "warning", 0);
+}
+
 }
 
 void destroyWindow(){
@@ -100,6 +131,13 @@ int main(int argc, const char** argv)
         }
     }
 
+    std::string startupWarning;
+    Zathura::RuntimePaths::ensureUserDirectories(&startupWarning);
+    Zathura::RuntimePaths::migrateConfigIfNeeded(executablePath, &startupWarning);
+    Zathura::Logger::initialize(Zathura::RuntimePaths::logFile(), &startupWarning);
+    reportStartupWarning(startupWarning);
+    rotateLogFile(Zathura::Logger::logFilePath());
+
 #ifdef _WIN32
     std::stringstream ss{};
     ss << "GHIDRA_SRC=" << relativeToRealPath(executablePath, "../vendor/ghidra");
@@ -111,7 +149,8 @@ int main(int argc, const char** argv)
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
-    io.IniFilename = "config.zlyt";
+    static const std::string iniFilePath = Zathura::RuntimePaths::configFile().string();
+    io.IniFilename = iniFilePath.c_str();
 	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
     loadIniFile();
@@ -131,20 +170,6 @@ int main(int argc, const char** argv)
     icons[0].pixels = stbi_load(relativeToRealPath(executablePath, "../assets/ZathuraDbg.png").c_str(), &icons[0].width, &icons[0].height, nullptr, 4);
     glfwSetWindowIcon(window, 1, icons); // Set icon
     stbi_image_free(icons[0].pixels);
-
-    // rotate log files after they fill more than 3MB of space
-    const std::filesystem::path logPath = executablePath + "/.Zathura.zlog";
-    if (std::filesystem::exists(logPath))
-    {
-        std::ifstream logFile(logPath, std::ifstream::ate | std::ifstream::binary);
-        if (logFile.tellg() > 3000)
-        {
-            if (std::filesystem::remove(logPath))
-            {
-                LOG_ALERT("Logging restarted!");
-            }
-        }
-    }
 
     ImVec4 clearColor = hexToImVec4("101010");
     setupAppStyle();

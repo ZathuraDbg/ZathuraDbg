@@ -3,7 +3,7 @@
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include "../tasks/editorTasks.hpp"
 #include "../../../vendor/ordered-map/include/tsl/ordered_map.h"
-#include "../../../vendor/log/clue.hpp"
+#include "../../utils/logger.hpp"
 #include <mutex>
 #include "../integration/interpreter/interpreter.hpp"
 #include "../integration/gdb/gdbRemote.hpp"

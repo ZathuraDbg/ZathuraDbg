@@ -46,7 +46,7 @@
 #include <cstring>
 #include <cstdlib>
 #include <iostream>
-#include "../../../vendor/log/clue.hpp"
+#include "../../../utils/logger.hpp"
 #include <unicorn/unicorn.h>
 #include <unordered_map>
 #include <iomanip>

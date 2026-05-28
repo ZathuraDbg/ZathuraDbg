@@ -108,6 +108,8 @@ set(SRC_INTEGRATION
 
 set(SRC_UTILS
         ${UTILS_DIR}/fonts.cpp
+        ${UTILS_DIR}/logger.cpp
+        ${UTILS_DIR}/runtimePaths.cpp
         ${UTILS_DIR}/stringHelper.cpp
         ${UTILS_DIR}/uiElements.cpp
 )
@@ -173,6 +175,7 @@ target_compile_options(zathura_textedit PRIVATE -Wformat -pipe)
 
 add_executable(${PROJECT_NAME} ${SRC_ZATHURA})
 target_link_libraries(${PROJECT_NAME} PRIVATE zathura_imgui_core zathura_imgui_backends zathura_textedit)
+target_compile_definitions(${PROJECT_NAME} PRIVATE ZATHURA_REQUIRE_LOGGER_ADAPTER)
 
 # Target include directories (replaces global include_directories)
 target_include_directories(${PROJECT_NAME} PRIVATE ${ZATHURA_COMMON_INCLUDES})
@@ -182,7 +185,7 @@ target_precompile_headers(${PROJECT_NAME} PRIVATE ${PROJECT_ROOT}/pch.hpp)
 set_source_files_properties(${SRC_VENDOR_C} PROPERTIES SKIP_PRECOMPILE_HEADERS ON)
 
 # Debug info comes from CMAKE_*_FLAGS_DEBUG; avoid passing -g twice.
-target_compile_options(${PROJECT_NAME} PRIVATE -Wformat -pipe -DLOG_TO_FILE=\".Zathura.zlog\")
+target_compile_options(${PROJECT_NAME} PRIVATE -Wformat -pipe)
 
 # Platform-specific target settings
 if (UNIX AND NOT APPLE)

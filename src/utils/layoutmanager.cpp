@@ -1,6 +1,8 @@
 #include <optional>
+#include <system_error>
 #include "../app/app.hpp"
 #include "layoutmanager.h"
+#include "runtimePaths.hpp"
 
 namespace Utils{
 
@@ -17,7 +19,7 @@ namespace Utils{
 
 
     void LayoutManager::load(const std::filesystem::path &path) {
-        s_layoutPathToLoad = path;
+        s_layoutPathToLoad = path.string();
     }
 
     void LayoutManager::loadFromString(const std::string &content) {
@@ -25,15 +27,14 @@ namespace Utils{
     }
 
     void LayoutManager::save(const std::string &name) {
-        auto fileName = name;
-        fileName = "config";
-        fileName += ".zlyt";
+        std::filesystem::path fileName = name.empty() ? std::filesystem::path("config") : std::filesystem::path(name);
+        if (fileName.extension() != ".zlyt") {
+            fileName += ".zlyt";
+        }
 
-        std::filesystem::path layoutPath;
-
-        std::string pathString = executablePath;
-        pathString += "/";
-        pathString += fileName; ImGui::SaveIniSettingsToDisk(pathString.c_str()); LayoutManager::reload();
+        const auto layoutPath = Zathura::RuntimePaths::configDir() / fileName.filename();
+        ImGui::SaveIniSettingsToDisk(layoutPath.string().c_str());
+        LayoutManager::reload();
     }
 
     std::string LayoutManager::saveToString() {
@@ -42,9 +43,7 @@ namespace Utils{
 
     void LayoutManager::process() {
         if (!s_layoutPathToLoad.empty()) {
-            std::string pathString = executablePath;
-            pathString += "/";
-            ImGui::LoadIniSettingsFromDisk(pathString.c_str());
+            ImGui::LoadIniSettingsFromDisk(s_layoutPathToLoad.c_str());
 
             s_layoutPathToLoad.clear() ;
         }
@@ -58,8 +57,13 @@ namespace Utils{
     void LayoutManager::reload() {
         s_layouts.clear();
 
-        for (const auto &directory : {executablePath + "/"})
-            for (const auto &entry : std::filesystem::directory_iterator(directory)) {
+        for (const auto &directory : {Zathura::RuntimePaths::configDir()}) {
+            std::error_code error;
+            if (!std::filesystem::is_directory(directory, error) || error) {
+                continue;
+            }
+
+            for (const auto &entry : std::filesystem::directory_iterator(directory, error)) {
                 const auto &path = entry.path();
 
                 if (path.extension() != ".zlyt")
@@ -77,6 +81,7 @@ namespace Utils{
                 });
             }
         }
+    }
 
     void LayoutManager::reset() {
         s_layoutPathToLoad.clear();

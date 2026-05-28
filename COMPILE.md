@@ -184,12 +184,13 @@ cmake --build .
 ```
 
 ### 4. Logging
-Enable logging to file by ensuring `LOG_TO_FILE` is defined in `src/CMakeLists.txt`:
-```cmake
-add_compile_options(-g -Wformat -DLOG_TO_FILE=\".Zathura.zlog\")
-```
+ZathuraDbg writes logs to the user-specific state/log directory at runtime:
 
-Check the log file `.Zathura.zlog` for detailed error messages about which architecture capstone is using.
+- Linux/BSD: `$XDG_STATE_HOME/ZathuraDbg/Zathura.zlog`, or `~/.local/state/ZathuraDbg/Zathura.zlog` if `XDG_STATE_HOME` is not set.
+- Windows: `%LOCALAPPDATA%\ZathuraDbg\Logs\Zathura.zlog`.
+- macOS: `~/Library/Logs/ZathuraDbg/Zathura.zlog`.
+
+Check that file for detailed error messages about which architecture capstone is using. The ImGui layout/config file is stored separately in the user config directory, such as `~/.config/ZathuraDbg/config.zlyt` on Linux.
 
 ## Build Errors
 

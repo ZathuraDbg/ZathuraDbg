@@ -1,8 +1,6 @@
 #ifndef ZATHURA_UI_APP_HPP
 #define ZATHURA_UI_APP_HPP
 #define IMGUI_DEFINE_MATH_OPERATORS
-#define LOG_MODULE_NAME "Zathura"
-#define LOG_TO_FILE ".Zathura.zlog"
 #include <cstdio>
 #include <map>
 #include <string>
@@ -11,7 +9,7 @@
 #include <filesystem>
 #include <charconv>
 #include <tinyfiledialogs.h>
-#include "../../vendor/log/clue.hpp"
+#include "../utils/logger.hpp"
 #include <tsl/ordered_map.h>
 #include <unicorn/unicorn.h>
 #include "../utils/style.h"
