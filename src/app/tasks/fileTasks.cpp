@@ -108,7 +108,7 @@ bool serializeState()
         return false;
     }
 
-    const char* fileName = tinyfd_saveFileDialog("Select a file to serialize into", NULL, NULL, NULL, NULL);
+    const char* fileName = tinyfd_saveFileDialog("Select a file to serialize into", nullptr, 0, nullptr, nullptr);
     if (!fileName)
     {
         LOG_ERROR("No file selected...");
@@ -135,8 +135,8 @@ bool deserializeState()
         startDebugging();
     }
 
-    const char* fileName = tinyfd_openFileDialog("Select file to deserialize", NULL, NULL, NULL, NULL, NULL);
-    if (fileName == NULL)
+    const char* fileName = tinyfd_openFileDialog("Select file to deserialize", nullptr, 0, nullptr, nullptr, 0);
+    if (fileName == nullptr)
     {
         LOG_INFO("No file selected. Stopping debugging...");
         debugStop = true;
