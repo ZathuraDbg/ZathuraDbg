@@ -43,7 +43,7 @@ static void renderDebugTargetSettingsPopup() {
         refreshInputs = false;
     }
 
-    constexpr const char* modeItems[] = {"Local Emulation", "Remote GDB"};
+    constexpr const char* modeItems[] = {"Emulation", "Remote GDB"};
     constexpr auto popupSize = ImVec2(360, 220);
     ImGui::SetNextWindowSize(popupSize, ImGuiCond_Appearing);
     ImGui::PushStyleVar(ImGuiStyleVar_PopupBorderSize, 5.0f);
@@ -72,7 +72,7 @@ static void renderDebugTargetSettingsPopup() {
             ImGui::TextWrapped("Remote register decoding follows the architecture selected in Edit > Change emulation settings.");
         } else {
             ImGui::Dummy({0.0f, 8.0f});
-            ImGui::TextWrapped("Local mode keeps the current built-in emulator workflow.");
+            ImGui::TextWrapped("Emulation mode runs your code in the built-in emulator.");
         }
 
         ImGui::Dummy({0.0f, 12.0f});

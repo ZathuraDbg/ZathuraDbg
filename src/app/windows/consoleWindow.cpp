@@ -278,7 +278,7 @@ static void cmdStep(const std::vector<std::string>&) {
 
 static void cmdTarget(const std::vector<std::string>& arguments) {
     if (arguments.empty() || arguments[0] == "status") {
-        consoleWrite("Target mode: " + std::string(remote_gdb::useRemoteDebugging() ? "remote" : "local"));
+        consoleWrite("Target mode: " + std::string(remote_gdb::useRemoteDebugging() ? "remote" : "emulation"));
         consoleWrite("Endpoint: " + remote_gdb::remoteConnectionLabel());
         consoleWrite("Connected: " + std::string(remote_gdb::remoteDebugConnected() ? "yes" : "no"));
         const auto stopReason = remote_gdb::remoteLastStopReason();
@@ -313,9 +313,9 @@ static void cmdTarget(const std::vector<std::string>& arguments) {
 
     if (subcommand == "mode" && arguments.size() > 1) {
         const auto value = toLowerCase(arguments[1]);
-        if (value == "local") {
+        if (value == "emulation" || value == "emulated") {
             remote_gdb::debugTargetMode = remote_gdb::DebugTargetMode::Emulation;
-            consoleWrite("Switched target mode to local emulation.");
+            consoleWrite("Switched target mode to emulation.");
             return;
         }
         if (value == "remote") {
@@ -340,7 +340,7 @@ static void cmdTarget(const std::vector<std::string>& arguments) {
         }
     }
 
-    consoleWrite("Usage: target [status|connect [ip] [port]|disconnect|mode local|mode remote|host <ip>|port <n>]");
+    consoleWrite("Usage: target [status|connect [ip] [port]|disconnect|mode emulation|mode remote|host <ip>|port <n>]");
 }
 
 static void cmdMonitor(const std::vector<std::string>& arguments) {
@@ -428,7 +428,7 @@ static void cmdReadMem(const std::vector<std::string>& arguments) {
     size_t outSize = 0;
     unsigned char* data = icicle_mem_read(icicle, address, size, &outSize);
     if (!data) {
-        consoleWrite("Local memory read failed.");
+        consoleWrite("Emulated memory read failed.");
         return;
     }
     std::string out = "0x" + arguments[0] + ": ";
@@ -750,7 +750,7 @@ void consoleWindow() {
     if (firstRender) {
         registerCommands();
         consoleWrite(">>> Type 'help' to get the list of all available commands.");
-        consoleWrite(">>> Active target mode: " + std::string(remote_gdb::useRemoteDebugging() ? "remote gdb" : "local emulation"));
+        consoleWrite(">>> Active target mode: " + std::string(remote_gdb::useRemoteDebugging() ? "remote gdb" : "emulation"));
         firstRender = false;
     }
 
