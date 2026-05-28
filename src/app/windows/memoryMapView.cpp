@@ -23,24 +23,35 @@ std::vector<MemRegionInfo> getMemoryMapping(Icicle* ic)
         return memMapInfo;
     }
 
-    size_t count;
-    MemRegionInfo* memRegionInfoArray = icicle_mem_list_mapped(icicle, &count);
+    if (!ic) {
+        return {};
+    }
+
+    size_t count = 0;
+    MemRegionInfo* memRegionInfoArray = icicle_mem_list_mapped(ic, &count);
     
     std::vector<MemRegionInfo> memMapInfo;
     memMapInfo.reserve(count);
 
-    for (size_t i = 0; i < count; i++) {
-        memMapInfo.push_back(memRegionInfoArray[i]);
+    if (memRegionInfoArray) {
+        for (size_t i = 0; i < count; i++) {
+            memMapInfo.push_back(memRegionInfoArray[i]);
+        }
+
+        icicle_mem_list_mapped_free(memRegionInfoArray, count);
     }
 
-    icicle_mem_list_mapped_free(memRegionInfoArray, count);
     return memMapInfo;
 }
 
 inline bool updateMemoryPermissions(Icicle* ic, const uint64_t startAddr, const uint64_t endAddr,
                                     const MemoryProtection newPerms)
 {
-    auto err = icicle_mem_protect(icicle, startAddr, endAddr - startAddr, newPerms);
+    if (!ic) {
+        return false;
+    }
+
+    auto err = icicle_mem_protect(ic, startAddr, endAddr - startAddr, newPerms);
     if (err != 0)
     {
         return false;
@@ -52,6 +63,11 @@ inline bool updateMemoryPermissions(Icicle* ic, const uint64_t startAddr, const 
 bool expandMemoryRegion(Icicle* ic, const uint64_t startAddr, uint64_t oldEndAddr, uint64_t newEndAddr,
                         const uint64_t oldSize, const MemoryProtection perms)
 {
+    if (!ic)
+    {
+        return false;
+    }
+
     if (!(perms & MemoryProtection::ReadWrite) && !(perms & MemoryProtection::ExecuteReadWrite))
     {
         LOG_ERROR("The memory region expansion process could not be completed because the memory region does not have read and write permissions.");
@@ -79,6 +95,11 @@ bool expandMemoryRegion(Icicle* ic, const uint64_t startAddr, uint64_t oldEndAdd
     }
 
     VmSnapshot* tempMemSnapshot = icicle_vm_snapshot(ic);
+    if (!tempMemSnapshot)
+    {
+        LOG_ERROR("Unable to snapshot memory before expansion.");
+        return false;
+    }
     // maybe allocate a page?
     // const auto saved = static_cast<char*>(malloc(oldSize));
     // size_t outSize{};
@@ -90,7 +111,7 @@ bool expandMemoryRegion(Icicle* ic, const uint64_t startAddr, uint64_t oldEndAdd
     //     return false;
     // }
 
-    int err = icicle_mem_unmap(icicle, startAddr, oldSize);
+    int err = icicle_mem_unmap(ic, startAddr, oldSize);
     if (err != 0)
     {
         LOG_ERROR("Unable to unmap the memory region for expansion.");
@@ -98,7 +119,7 @@ bool expandMemoryRegion(Icicle* ic, const uint64_t startAddr, uint64_t oldEndAdd
         return false;
     }
 
-    err = icicle_mem_map(icicle, startAddr, newSize, perms);
+    err = icicle_mem_map(ic, startAddr, newSize, perms);
     if (err != 0){
         LOG_ERROR("Unable to remap the memory region which was unmapped with a bigger size!");
         LOG_NOTICE("Attempting to recover the unmapped memory region...");
@@ -110,14 +131,18 @@ bool expandMemoryRegion(Icicle* ic, const uint64_t startAddr, uint64_t oldEndAdd
 
         LOG_INFO("The memory maps are now in the default state.");
         icicle_vm_snapshot_free(tempMemSnapshot);
-        return true;
+        return false;
     }
 
     // we have to touch the avoid fragmentation bug
     size_t outSize{};
-    icicle_mem_read(icicle, startAddr, newSize, &outSize);
+    auto* touchedMemory = icicle_mem_read(ic, startAddr, newSize, &outSize);
+    if (touchedMemory)
+    {
+        icicle_free_buffer(touchedMemory, outSize);
+    }
 
-    std::cout << "After the remapping" << std::endl;
+    icicle_vm_snapshot_free(tempMemSnapshot);
     return true;
 }
 
@@ -265,7 +290,8 @@ void memoryMapWindow()
                 ImGui::PushID(("third" + std::to_string(i)).c_str());
                 ImGui::SetNextItemWidth(150);
                 uint64_t endAddr = memInfo[i].size + memInfo[i].address;
-                strncpy(inputValue, std::to_string(endAddr).c_str(), std::to_string(endAddr).length());
+                const std::string endAddrText = std::to_string(endAddr);
+                std::snprintf(inputValue, 80, "%s", endAddrText.c_str());
                 if (InputHexadecimal("##end_addr", inputValue, ImGuiInputTextFlags_CharsNoBlank | ImGuiInputTextFlags_EnterReturnsTrue))
                 {
                     newEndAddr = strtoll(inputValue, nullptr, 16);
