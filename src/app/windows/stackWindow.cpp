@@ -111,10 +111,12 @@ void stackEditorWindow() {
     static size_t remoteStackReadable = 0;
     static uintptr_t lastStackAddr = 0;
     static bool remoteStackProbeFailed = false;
+    static uint64_t lastStackResumeGen = ~uint64_t{0};
 
-    if (lastStackAddr != STACK_ADDRESS) {
+    if (lastStackAddr != STACK_ADDRESS || lastStackResumeGen != remoteResumeGeneration) {
         remoteStackReadable = 0;
         lastStackAddr = STACK_ADDRESS;
+        lastStackResumeGen = remoteResumeGeneration;
         remoteStackProbeFailed = false;
     }
 

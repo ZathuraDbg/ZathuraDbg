@@ -6,6 +6,8 @@
 #include <cstdio>
 #include "../vendor/ImGuiColorTextEdit/TextEditor.h"
 #include "app/app.hpp"
+#include "app/arch/arch.hpp"
+#include "app/integration/gdb/gdbRemote.hpp"
 #include "app/shortcuts.hpp"
 #include "../vendor/whereami/src/whereami.h"
 #include "app/windows/windows.hpp" // Make sure this imports the stack window functions
@@ -147,6 +149,41 @@ int main(int argc, const char** argv)
     ImVec4 clearColor = hexToImVec4("101010");
     setupAppStyle();
     setupEditor();
+
+    initArch();
+
+    remote_gdb::setRemoteLogSink([](const std::string& text) {
+        consoleWriteThreadSafe(text);
+    });
+    remote_gdb::setRemoteArchHook([](const std::string& alias) {
+        if (alias == "x86_64") {
+            codeInformation.archIC = IC_ARCH_X86_64;
+            codeInformation.archKS = KS_ARCH_X86;
+            codeInformation.archCS = CS_ARCH_X86;
+            codeInformation.mode = UC_MODE_64;
+            codeInformation.modeKS = KS_MODE_64;
+            codeInformation.modeCS = CS_MODE_64;
+            codeInformation.syntax = KS_OPT_SYNTAX_NASM;
+            codeInformation.archStr = "x86_64";
+        } else if (alias == "aarch64") {
+            codeInformation.archIC = IC_ARCH_AARCH64;
+            codeInformation.archKS = KS_ARCH_ARM64;
+            codeInformation.archCS = CS_ARCH_ARM64;
+            codeInformation.mode = UC_MODE_ARM;
+            codeInformation.modeKS = KS_MODE_LITTLE_ENDIAN;
+            codeInformation.modeCS = CS_MODE_LITTLE_ENDIAN;
+            codeInformation.archStr = "aarch64";
+        } else if (alias == "arm") {
+            codeInformation.archIC = IC_ARCH_ARM;
+            codeInformation.archKS = KS_ARCH_ARM;
+            codeInformation.archCS = CS_ARCH_ARM;
+            codeInformation.mode = UC_MODE_ARM;
+            codeInformation.modeKS = KS_MODE_ARM;
+            codeInformation.modeCS = CS_MODE_ARM;
+            codeInformation.archStr = "arm";
+        }
+        initArch();
+    });
 
     MEMORY_EDITOR_BASE = ENTRY_POINT_ADDRESS;
 

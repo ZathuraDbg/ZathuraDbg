@@ -4,6 +4,7 @@
 #include <optional>
 extern std::mutex debugActionsMutex;
 extern std::optional<uint64_t> remoteDisassemblyBaseAddress;
+extern uint64_t remoteResumeGeneration;
 extern void runActions();
 extern void startDebugging();
 extern void startOrRefreshRemoteDebugSession();

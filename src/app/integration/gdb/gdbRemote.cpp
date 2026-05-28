@@ -34,13 +34,18 @@ constexpr socket_handle_t invalid_socket_handle = -1;
 #endif
 
 #include "../../arch/arch.hpp"
-#include "../../windows/windows.hpp"
 #include "../../../utils/stringHelper.hpp"
-#include "../../../../vendor/log/clue.hpp"
 
 namespace remote_gdb {
 
 namespace {
+
+RemoteLogSink g_logSink;
+RemoteArchHook g_archHook;
+
+void log(const std::string& text) {
+    if (g_logSink) g_logSink(text);
+}
 
 struct RemoteRegisterDescriptor {
     std::string name;
@@ -90,8 +95,11 @@ std::optional<std::vector<uint8_t>> decodeHexBytes(std::string_view input) {
     for (size_t i = 0; i < input.size(); ++i) {
         const auto ch = input[i];
         if (ch == '*' && !expanded.empty() && (i + 1) < input.size()) {
-            const auto repeatCount = static_cast<unsigned char>(input[++i]) - 29;
-            expanded.append(repeatCount, expanded.back());
+            const int repeatCount = static_cast<unsigned char>(input[++i]) - 29;
+            if (repeatCount < 3 || repeatCount > 97) {
+                return std::nullopt;
+            }
+            expanded.append(static_cast<size_t>(repeatCount), expanded.back());
             continue;
         }
         expanded.push_back(ch);
@@ -179,6 +187,18 @@ bool recvByte(socket_handle_t handle, char& byte) {
     return received == 1;
 }
 
+void clearSocketTimeout(socket_handle_t handle) {
+#ifdef _WIN32
+    DWORD zero = 0;
+    setsockopt(handle, SOL_SOCKET, SO_RCVTIMEO, reinterpret_cast<const char*>(&zero), sizeof(zero));
+    setsockopt(handle, SOL_SOCKET, SO_SNDTIMEO, reinterpret_cast<const char*>(&zero), sizeof(zero));
+#else
+    struct timeval zero{0, 0};
+    setsockopt(handle, SOL_SOCKET, SO_RCVTIMEO, &zero, sizeof(zero));
+    setsockopt(handle, SOL_SOCKET, SO_SNDTIMEO, &zero, sizeof(zero));
+#endif
+}
+
 std::optional<uint64_t> littleEndianUint(std::span<const uint8_t> bytes) {
     if (bytes.size() > sizeof(uint64_t)) {
         return std::nullopt;
@@ -257,6 +277,8 @@ private:
     bool sendPacket(const std::string& payload);
     bool transact(const std::string& payload, std::string& response);
     bool readPacket(std::string& payload);
+    void resetSessionState();
+    void teardownSocket();
     bool initialHandshake();
     bool loadTargetDescription();
     bool loadFeatureAnnex(const std::string& annex, std::string& xml);
@@ -272,7 +294,7 @@ private:
     std::optional<DecodedInstruction> decodeCurrentInstruction();
     static bool isCallInstruction(const cs_insn& instruction);
     [[nodiscard]] bool hasTrackedBreakpoint(uint64_t address) const;
-    std::optional<std::vector<uint8_t>> readDisassemblyBytes(uint64_t startAddress, size_t preferredSize) const;
+    std::optional<std::vector<uint8_t>> readDisassemblyBytes(uint64_t startAddress, size_t preferredSize);
     std::optional<uint64_t> archRegisterValue(const char* name);
     static std::string attrValue(const std::string& tag, const char* name);
     static std::string trim(std::string value);
@@ -312,38 +334,8 @@ std::string archAliasFromTargetXml(const std::string& targetArch) {
 
 void maybeApplyRemoteArchitecture(const std::string& targetArch) {
     const auto alias = archAliasFromTargetXml(targetArch);
-    if (alias.empty()) {
-        return;
-    }
-
-    if (alias == "x86_64") {
-        codeInformation.archIC = IC_ARCH_X86_64;
-        codeInformation.archKS = KS_ARCH_X86;
-        codeInformation.archCS = CS_ARCH_X86;
-        codeInformation.mode = UC_MODE_64;
-        codeInformation.modeKS = KS_MODE_64;
-        codeInformation.modeCS = CS_MODE_64;
-        codeInformation.syntax = KS_OPT_SYNTAX_NASM;
-        codeInformation.archStr = "x86_64";
-    } else if (alias == "aarch64") {
-        codeInformation.archIC = IC_ARCH_AARCH64;
-        codeInformation.archKS = KS_ARCH_ARM64;
-        codeInformation.archCS = CS_ARCH_ARM64;
-        codeInformation.mode = UC_MODE_ARM;
-        codeInformation.modeKS = KS_MODE_LITTLE_ENDIAN;
-        codeInformation.modeCS = CS_MODE_LITTLE_ENDIAN;
-        codeInformation.archStr = "aarch64";
-    } else if (alias == "arm") {
-        codeInformation.archIC = IC_ARCH_ARM;
-        codeInformation.archKS = KS_ARCH_ARM;
-        codeInformation.archCS = CS_ARCH_ARM;
-        codeInformation.mode = UC_MODE_ARM;
-        codeInformation.modeKS = KS_MODE_ARM;
-        codeInformation.modeCS = CS_MODE_ARM;
-        codeInformation.archStr = "arm";
-    }
-
-    initArch();
+    if (alias.empty()) return;
+    if (g_archHook) g_archHook(alias);
 }
 
 std::vector<RemoteRegisterDescriptor> fallbackRegisterLayout() {
@@ -397,13 +389,22 @@ std::vector<RemoteRegisterDescriptor> fallbackRegisterLayout() {
     return descriptors;
 }
 
+#ifdef _WIN32
+bool ensureWinsockInit() {
+    static const bool initialized = []() {
+        WSADATA wsaData;
+        return WSAStartup(MAKEWORD(2, 2), &wsaData) == 0;
+    }();
+    return initialized;
+}
+#endif
+
 bool GdbRemoteClient::connectTo(const RemoteConnectionConfig& config) {
     disconnect();
 
 #ifdef _WIN32
-    WSADATA wsaData;
-    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
-        consoleWriteThreadSafe("remote >> failed to initialize winsock\n");
+    if (!ensureWinsockInit()) {
+        log("remote >> failed to initialize winsock\n");
         return false;
     }
 #endif
@@ -415,7 +416,7 @@ bool GdbRemoteClient::connectTo(const RemoteConnectionConfig& config) {
     addrinfo* result = nullptr;
     const auto port = std::to_string(config.port);
     if (getaddrinfo(config.host.c_str(), port.c_str(), &hints, &result) != 0) {
-        consoleWriteThreadSafe("remote >> failed to resolve host\n");
+        log("remote >> failed to resolve host\n");
         return false;
     }
 
@@ -436,7 +437,7 @@ bool GdbRemoteClient::connectTo(const RemoteConnectionConfig& config) {
     freeaddrinfo(result);
 
     if (socket_ == invalid_socket_handle) {
-        consoleWriteThreadSafe("remote >> Failed to connect to the remote target. Are you sure it's running?\n");
+        log("remote >> Failed to connect to the remote target. Are you sure it's running?\n");
         return false;
     }
 
@@ -450,12 +451,13 @@ bool GdbRemoteClient::connectTo(const RemoteConnectionConfig& config) {
     setsockopt(socket_, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv));
 #endif
 
-    consoleWriteThreadSafe("remote >> connected to " + config.host + ":" + std::to_string(config.port) + "\n");
+    log("remote >> connected to " + config.host + ":" + std::to_string(config.port) + "\n");
     if (!initialHandshake() || !refreshState()) {
-        consoleWriteThreadSafe("remote >> handshake/init failed, disconnecting\n");
+        log("remote >> handshake/init failed, disconnecting\n");
         disconnect();
         return false;
     }
+    clearSocketTimeout(socket_);
     return true;
 }
 
@@ -464,6 +466,10 @@ void GdbRemoteClient::disconnect() {
         closeSocket(socket_);
         socket_ = invalid_socket_handle;
     }
+    resetSessionState();
+}
+
+void GdbRemoteClient::resetSessionState() {
     noAckMode_ = false;
     supportsTargetXml_ = false;
     supportsMemoryMap_ = false;
@@ -476,9 +482,6 @@ void GdbRemoteClient::disconnect() {
     activeBreakpoints_.clear();
     lastStopReason_.clear();
     cachedRegValues_.clear();
-#ifdef _WIN32
-    WSACleanup();
-#endif
 }
 
 bool GdbRemoteClient::sendPacket(const std::string& payload) {
@@ -572,7 +575,7 @@ bool GdbRemoteClient::readPacket(std::string& payload) {
         if (!packet.empty() && packet[0] == 'O' &&
             ((packet.size() - 1) % 2 == 0) &&
             isHexString(std::string_view(packet).substr(1))) {
-            consoleWriteThreadSafe("stdout >> " + decodeHexText(std::string_view(packet).substr(1)));
+            log("stdout >> " + decodeHexText(std::string_view(packet).substr(1)));
             continue;
         }
 
@@ -581,10 +584,17 @@ bool GdbRemoteClient::readPacket(std::string& payload) {
     }
 }
 
-bool GdbRemoteClient::transact(const std::string& payload, std::string& response) {
-    if (!sendPacket(payload) || !readPacket(response)) {
+void GdbRemoteClient::teardownSocket() {
+    if (socket_ != invalid_socket_handle) {
         closeSocket(socket_);
         socket_ = invalid_socket_handle;
+    }
+    resetSessionState();
+}
+
+bool GdbRemoteClient::transact(const std::string& payload, std::string& response) {
+    if (!sendPacket(payload) || !readPacket(response)) {
+        teardownSocket();
         return false;
     }
     return true;
@@ -593,13 +603,13 @@ bool GdbRemoteClient::transact(const std::string& payload, std::string& response
 bool GdbRemoteClient::initialHandshake() {
     std::string response;
 
-    consoleWriteThreadSafe("remote >> starting handshake\n");
+    log("remote >> starting handshake\n");
 
     if (!transact("qSupported", response)) {
-        consoleWriteThreadSafe("remote >> qSupported failed\n");
+        log("remote >> qSupported failed\n");
         return false;
     }
-    consoleWriteThreadSafe("remote >> qSupported ok\n");
+    log("remote >> qSupported ok\n");
 
     supportedFeatures_.clear();
     std::stringstream stream(response);
@@ -623,32 +633,31 @@ bool GdbRemoteClient::initialHandshake() {
 
     if (transact("QStartNoAckMode", response) && response == "OK") {
         noAckMode_ = true;
-        consoleWriteThreadSafe("remote >> no-ack mode enabled\n");
+        log("remote >> no-ack mode enabled\n");
     }
 
     if (transact("vCont?", response)) {
         supportsVCont_ = response.contains("vCont");
-        consoleWriteThreadSafe("remote >> vCont support: " + std::string(supportsVCont_ ? "yes" : "no") + "\n");
+        log("remote >> vCont support: " + std::string(supportsVCont_ ? "yes" : "no") + "\n");
     }
 
     if (registers_.empty()) {
-        initArch();
         registers_ = fallbackRegisterLayout();
         registerIndexByName_.clear();
         for (size_t i = 0; i < registers_.size(); ++i) {
             registerIndexByName_[registers_[i].name] = i;
         }
         if (!registers_.empty()) {
-            consoleWriteThreadSafe("remote >> using fallback register layout for the selected architecture\n");
+            log("remote >> using fallback register layout for the selected architecture\n");
         }
     }
 
     if (supportsMemoryMap_) {
-        consoleWriteThreadSafe("remote >> loading memory map\n");
+        log("remote >> loading memory map\n");
         loadMemoryMap();
     }
 
-    consoleWriteThreadSafe("remote >> handshake complete\n");
+    log("remote >> handshake complete\n");
     return true;
 }
 
@@ -661,11 +670,11 @@ bool GdbRemoteClient::loadFeatureAnnex(const std::string& annex, std::string& xm
         std::ostringstream command;
         command << "qXfer:features:read:" << annex << ":" << std::hex << offset << "," << chunkLen;
         if (!transact(command.str(), response)) {
-            consoleWriteThreadSafe("remote >> failed to read feature annex " + annex + "\n");
+            log("remote >> failed to read feature annex " + annex + "\n");
             return false;
         }
         if (response.empty() || (response[0] != 'm' && response[0] != 'l')) {
-            consoleWriteThreadSafe("remote >> unexpected feature-annex response for " + annex + ": " + response + "\n");
+            log("remote >> unexpected feature-annex response for " + annex + ": " + response + "\n");
             return false;
         }
         xml += response.substr(1);
@@ -794,11 +803,11 @@ bool GdbRemoteClient::loadMemoryMap() {
         std::ostringstream command;
         command << "qXfer:memory-map:read::" << std::hex << offset << ",1000";
         if (!transact(command.str(), response)) {
-            consoleWriteThreadSafe("remote >> failed to read memory map\n");
+            log("remote >> failed to read memory map\n");
             return false;
         }
         if (response.empty() || (response[0] != 'm' && response[0] != 'l')) {
-            consoleWriteThreadSafe("remote >> unexpected memory-map response: " + response + "\n");
+            log("remote >> unexpected memory-map response: " + response + "\n");
             return false;
         }
         xml += response.substr(1);
@@ -824,13 +833,13 @@ bool GdbRemoteClient::refreshRegisters() {
 
     std::string response;
     if (!transact("g", response)) {
-        consoleWriteThreadSafe("remote >> register refresh packet failed\n");
+        log("remote >> register refresh packet failed\n");
         return false;
     }
 
     const auto bytes = decodeHexBytes(response);
     if (!bytes.has_value()) {
-        consoleWriteThreadSafe("remote >> register refresh returned non-hex data\n");
+        log("remote >> register refresh returned non-hex data\n");
         return false;
     }
 
@@ -864,7 +873,7 @@ void GdbRemoteClient::parseStopRegisters(const std::string& response) {
 bool GdbRemoteClient::queryStopReason() {
     std::string response;
     if (!transact("?", response)) {
-        consoleWriteThreadSafe("remote >> stop-reason query failed\n");
+        log("remote >> stop-reason query failed\n");
         return false;
     }
     lastStopReason_ = response;
@@ -884,19 +893,19 @@ bool GdbRemoteClient::resume(const bool singleStep) {
         : (singleStep ? "s" : "c");
 
     if (!transact(command, response)) {
-        consoleWriteThreadSafe(connected()
+        log(connected()
             ? "remote >> " + command + " failed (no response)\n"
             : "remote >> target disconnected\n");
         return false;
     }
 
     if (response.starts_with('E')) {
-        consoleWriteThreadSafe("remote >> resume error: " + response + "\n");
+        log("remote >> resume error: " + response + "\n");
         return false;
     }
 
     if (response.starts_with('W') || response.starts_with('X')) {
-        consoleWriteThreadSafe("remote >> target exited with: " + response + "\n");
+        log("remote >> target exited with: " + response + "\n");
         lastStopReason_ = response;
         return false;
     }
@@ -905,7 +914,7 @@ bool GdbRemoteClient::resume(const bool singleStep) {
     parseStopRegisters(response);
 
     if (!refreshRegisters()) {
-        consoleWriteThreadSafe("remote >> register refresh after resume failed\n");
+        log("remote >> register refresh after resume failed\n");
         return false;
     }
 
@@ -918,14 +927,12 @@ bool GdbRemoteClient::interrupt() {
     }
     const char ctrlC = 0x03;
     if (!sendAll(socket_, std::string_view(&ctrlC, 1))) {
-        closeSocket(socket_);
-        socket_ = invalid_socket_handle;
+        teardownSocket();
         return false;
     }
     std::string response;
     if (!readPacket(response)) {
-        closeSocket(socket_);
-        socket_ = invalid_socket_handle;
+        teardownSocket();
         return false;
     }
     lastStopReason_ = response;
@@ -935,7 +942,7 @@ bool GdbRemoteClient::interrupt() {
 std::optional<DecodedInstruction> GdbRemoteClient::decodeCurrentInstruction() {
     const auto pc = programCounter();
     if (!pc.has_value()) {
-        consoleWriteThreadSafe("remote >> decode failed: no program counter\n");
+        log("remote >> decode failed: no program counter\n");
         return std::nullopt;
     }
 
@@ -954,7 +961,7 @@ std::optional<DecodedInstruction> GdbRemoteClient::decodeCurrentInstruction() {
     if (!bytes.has_value() || bytes->empty()) {
         std::ostringstream os;
         os << "remote >> decode failed: cannot read memory at 0x" << std::hex << *pc << "\n";
-        consoleWriteThreadSafe(os.str());
+        log(os.str());
         return std::nullopt;
     }
 
@@ -1001,7 +1008,7 @@ bool GdbRemoteClient::hasTrackedBreakpoint(const uint64_t address) const {
 }
 
 bool GdbRemoteClient::restart() {
-    consoleWriteThreadSafe("remote >> restart falls back to reconnect; protocol rewind is target-dependent\n");
+    log("remote >> restart falls back to reconnect; protocol rewind is target-dependent\n");
     return connectTo(remoteConnectionConfig);
 }
 
@@ -1035,7 +1042,7 @@ std::optional<std::vector<uint8_t>> GdbRemoteClient::readRegisterSlice(const std
 std::optional<std::vector<uint8_t>> GdbRemoteClient::registerBytes(const std::string& regName) {
     auto result = readRegisterSlice(regName);
     if (!result.has_value()) {
-        consoleWriteThreadSafe("remote >> register read " + regName + " failed\n");
+        log("remote >> register read " + regName + " failed\n");
     }
     return result;
 }
@@ -1058,16 +1065,17 @@ bool GdbRemoteClient::writeRegisterSlice(const std::string& regName, const std::
             std::copy(bytes.begin(), bytes.end(),
                       registerBlob_.begin() + static_cast<std::ptrdiff_t>(desc.offset));
         }
+        cachedRegValues_.erase(desc.regnum);
         return true;
     }
 
     if (registerBlob_.empty() && !refreshRegisters()) {
-        consoleWriteThreadSafe("remote >> G fallback: cannot refresh registers for write to " + regName + "\n");
+        log("remote >> G fallback: cannot refresh registers for write to " + regName + "\n");
         return false;
     }
 
     if (desc.offset + bytes.size() > registerBlob_.size()) {
-        consoleWriteThreadSafe("remote >> G fallback: register " + regName + " out of blob bounds\n");
+        log("remote >> G fallback: register " + regName + " out of blob bounds\n");
         return false;
     }
 
@@ -1077,10 +1085,11 @@ bool GdbRemoteClient::writeRegisterSlice(const std::string& regName, const std::
     std::ostringstream gCmd;
     gCmd << "G" << encodeHex(registerBlob_);
     if (!transact(gCmd.str(), response) || response != "OK") {
-        consoleWriteThreadSafe("remote >> G fallback write failed: " + response + "\n");
+        log("remote >> G fallback write failed: " + response + "\n");
         return false;
     }
 
+    cachedRegValues_.erase(desc.regnum);
     return true;
 }
 
@@ -1097,12 +1106,11 @@ std::optional<std::vector<uint8_t>> GdbRemoteClient::readMemory(const uint64_t a
     std::string response;
     if (!transact(command.str(), response)) {
         if (connected()) {
-            consoleWriteThreadSafe("remote >> m packet no response\n");
+            log("remote >> m packet no response\n");
         }
         return std::nullopt;
     }
     if (response.starts_with('E')) {
-        consoleWriteThreadSafe("remote >> m packet error: " + response + "\n");
         return std::nullopt;
     }
     return decodeHexBytes(response);
@@ -1185,7 +1193,7 @@ std::optional<uint64_t> GdbRemoteClient::stackPointer() {
 }
 
 std::optional<std::vector<uint8_t>> GdbRemoteClient::readDisassemblyBytes(
-    const uint64_t startAddress, const size_t preferredSize) const
+    const uint64_t startAddress, const size_t preferredSize)
 {
     size_t maxReadableSize = preferredSize;
     for (const auto& region : memoryRegions_) {
@@ -1209,7 +1217,7 @@ std::optional<std::vector<uint8_t>> GdbRemoteClient::readDisassemblyBytes(
         if (size == 0) {
             continue;
         }
-        if (const auto bytes = const_cast<GdbRemoteClient*>(this)->readMemory(startAddress, size); bytes.has_value()) {
+        if (const auto bytes = readMemory(startAddress, size); bytes.has_value()) {
             return bytes;
         }
     }
@@ -1344,7 +1352,7 @@ std::optional<RemoteDisassemblyView> GdbRemoteClient::buildDisassemblyView(
 bool GdbRemoteClient::stepOver() {
     const auto instruction = decodeCurrentInstruction();
     if (!instruction.has_value()) {
-        consoleWriteThreadSafe("remote >> step-over decode failed; falling back to single-step\n");
+        log("remote >> step-over decode failed; falling back to single-step\n");
         return resume(true);
     }
 
@@ -1359,7 +1367,7 @@ bool GdbRemoteClient::stepOver() {
     if (!alreadyTracked) {
         insertedTemporaryBreakpoint = insertBreakpoint(nextAddress);
         if (!insertedTemporaryBreakpoint) {
-            consoleWriteThreadSafe("remote >> step-over temp breakpoint failed; falling back to single-step\n");
+            log("remote >> step-over temp breakpoint failed; falling back to single-step\n");
             return resume(true);
         }
     }
@@ -1367,7 +1375,7 @@ bool GdbRemoteClient::stepOver() {
     const bool resumed = resume(false);
 
     if (insertedTemporaryBreakpoint && !removeBreakpoint(nextAddress)) {
-        consoleWriteThreadSafe("remote >> warning: failed to remove step-over temp breakpoint\n");
+        log("remote >> warning: failed to remove step-over temp breakpoint\n");
     }
 
     return resumed;
@@ -1377,6 +1385,14 @@ bool GdbRemoteClient::stepOver() {
 
 DebugTargetMode debugTargetMode = DebugTargetMode::Emulation;
 RemoteConnectionConfig remoteConnectionConfig{};
+
+void setRemoteLogSink(RemoteLogSink sink) {
+    g_logSink = std::move(sink);
+}
+
+void setRemoteArchHook(RemoteArchHook hook) {
+    g_archHook = std::move(hook);
+}
 
 bool useRemoteDebugging() {
     return debugTargetMode == DebugTargetMode::RemoteGdb;

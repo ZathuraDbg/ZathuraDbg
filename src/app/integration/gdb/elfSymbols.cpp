@@ -1,5 +1,17 @@
 #include "elfSymbols.hpp"
 
+#ifdef _WIN32
+
+namespace remote_gdb {
+
+ElfSymbols loadElfSymbols(const std::string&) {
+    return {};
+}
+
+}
+
+#else
+
 #include <elf.h>
 #include <fcntl.h>
 #include <sys/mman.h>
@@ -124,3 +136,5 @@ ElfSymbols loadElfSymbols(const std::string& path) {
 }
 
 }
+
+#endif

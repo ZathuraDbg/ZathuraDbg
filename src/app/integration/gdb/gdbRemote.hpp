@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <functional>
 #include <map>
 #include <optional>
 #include <string>
@@ -43,6 +44,11 @@ struct RemoteDisassemblyView {
 
 extern DebugTargetMode debugTargetMode;
 extern RemoteConnectionConfig remoteConnectionConfig;
+
+using RemoteLogSink = std::function<void(const std::string&)>;
+using RemoteArchHook = std::function<void(const std::string&)>;
+void setRemoteLogSink(RemoteLogSink sink);
+void setRemoteArchHook(RemoteArchHook hook);
 
 bool useRemoteDebugging();
 bool remoteDebugConnected();

@@ -236,36 +236,7 @@ static std::string joinArguments(const std::vector<std::string>& arguments, size
 
 // --- Individual command handlers ---
 
-static void cmdHelp(const std::vector<std::string>&) {
-    consoleWrite("Available commands:");
-    consoleWrite("");
-    consoleWrite("  Execution:");
-    consoleWrite("    run, r           Run the assembly code");
-    consoleWrite("    start             Start debug mode");
-    consoleWrite("    restart, re       Restart debugging");
-    consoleWrite("    pause             Pause debug mode");
-    consoleWrite("    continue, c       Continue execution");
-    consoleWrite("    stop              Stop debug mode");
-    consoleWrite("    next, n           Step over one line");
-    consoleWrite("    step, s           Step into next line");
-    consoleWrite("");
-    consoleWrite("  Breakpoints:");
-    consoleWrite("    breakpoint, b <n> Set breakpoint at line/address/label");
-    consoleWrite("    delete, d <n>     Delete breakpoint at line/address/label");
-    consoleWrite("");
-    consoleWrite("  Information:");
-    consoleWrite("    info, i <sub>     Show program state (sub: registers/r, breakpoints/b, labels/l)");
-    consoleWrite("    info registers [name]  Show register values, optionally for one register");
-    consoleWrite("    info breakpoints        List all breakpoints");
-    consoleWrite("    info labels             List all labels");
-    consoleWrite("");
-    consoleWrite("  Other:");
-    consoleWrite("    help, h           Show this message");
-    consoleWrite("    target ...        Configure/show the local vs remote backend");
-    consoleWrite("    monitor <cmd>     Send qRcmd to a remote target");
-    consoleWrite("    packet <rsp>      Send a raw remote-serial packet");
-    consoleWrite("    readmem <a> <n>   Read memory from the current backend");
-}
+static void cmdHelp(const std::vector<std::string>&);
 
 static void cmdRun(const std::vector<std::string>&) {
     consoleWrite("Running code...");
@@ -646,35 +617,53 @@ static void cmdInfo(const std::vector<std::string>& arguments) {
     consoleWrite("Unknown info subcommand: " + sub + ". Use: registers, breakpoints, labels.");
 }
 
+struct CmdDef {
+    const char*    names;       // comma-separated: "primary,alias1,alias2"
+    const char*    description;
+    CommandHandler handler;
+};
+
+static const CmdDef commandDefs[] = {
+    {"help,h",        "Show this help message",      cmdHelp},
+    {"run,r",         "Run the assembly code",       cmdRun},
+    {"start",         "Start debug mode",            cmdStart},
+    {"restart,re",    "Restart debugging",           cmdRestart},
+    {"pause",         "Pause debug mode",            cmdPause},
+    {"continue,c",    "Continue execution",          cmdContinue},
+    {"stop",          "Stop debug mode",             cmdStop},
+    {"next,n",        "Step over one line",          cmdNext},
+    {"step,s",        "Step into next line",         cmdStep},
+    {"breakpoint,b",  "Set a breakpoint",            cmdBreakpoint},
+    {"delete,d",      "Delete a breakpoint",         cmdDelete},
+    {"info,i",        "Show program information",    cmdInfo},
+    {"target",        "Manage debug target mode",    cmdTarget},
+    {"monitor",       "Send a remote monitor command", cmdMonitor},
+    {"packet",        "Send a raw remote packet",    cmdPacket},
+    {"readmem",       "Read memory from the backend", cmdReadMem},
+    {"symbol-file",   "Load ELF symbols for labels",  cmdSymbolFile},
+};
+
+static void cmdHelp(const std::vector<std::string>&) {
+    consoleWrite("Available commands:");
+    for (const auto& def : commandDefs) {
+        std::string names(def.names);
+        std::string formatted;
+        size_t pos = 0;
+        while (pos < names.size()) {
+            size_t comma = names.find(',', pos);
+            if (comma == std::string::npos) comma = names.size();
+            if (!formatted.empty()) formatted += ", ";
+            formatted += names.substr(pos, comma - pos);
+            pos = comma + 1;
+        }
+        while (formatted.size() < 22) formatted += ' ';
+        consoleWrite("  " + formatted + def.description);
+    }
+}
+
 static void registerCommands() {
-    struct CmdDef {
-        const char*    names;       // comma-separated: "primary,alias1,alias2"
-        const char*    description;
-        CommandHandler handler;
-    };
-
-    static const CmdDef defs[] = {
-        {"help,h",        "Show this help message",      cmdHelp},
-        {"run,r",         "Run the assembly code",       cmdRun},
-        {"start",         "Start debug mode",            cmdStart},
-        {"restart,re",    "Restart debugging",           cmdRestart},
-        {"pause",         "Pause debug mode",            cmdPause},
-        {"continue,c",    "Continue execution",          cmdContinue},
-        {"stop",          "Stop debug mode",             cmdStop},
-        {"next,n",        "Step over one line",          cmdNext},
-        {"step,s",        "Step into next line",         cmdStep},
-        {"breakpoint,b",  "Set a breakpoint",            cmdBreakpoint},
-        {"delete,d",      "Delete a breakpoint",         cmdDelete},
-        {"info,i",        "Show program information",    cmdInfo},
-        {"target",        "Manage debug target mode",    cmdTarget},
-        {"monitor",       "Send a remote monitor command", cmdMonitor},
-        {"packet",        "Send a raw remote packet",    cmdPacket},
-        {"readmem",       "Read memory from the backend", cmdReadMem},
-        {"symbol-file",   "Load ELF symbols for labels",  cmdSymbolFile},
-    };
-
     commands.clear();
-    for (const auto& def : defs) {
+    for (const auto& def : commandDefs) {
         std::string names(def.names);
         size_t pos = 0;
         while (pos < names.size()) {

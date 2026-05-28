@@ -19,6 +19,7 @@ bool pendingRemoteRefreshTarget = false;
 bool pendingRemoteResetCodeMemoryBase = false;
 int times = 1;
 std::optional<uint64_t> remoteDisassemblyBaseAddress{};
+uint64_t remoteResumeGeneration = 0;
 
 static void syncRemoteUiState(bool refreshTarget, bool resetCodeMemoryBase);
 
@@ -325,6 +326,7 @@ static void syncRemoteUiState(const bool refreshTarget, const bool resetCodeMemo
         return;
     }
 
+    ++remoteResumeGeneration;
     codeHasRun = true;
     syncRemoteCodeView();
     updateRegs();
