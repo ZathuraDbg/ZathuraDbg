@@ -45,15 +45,10 @@ static void renderDebugTargetSettingsPopup() {
 
     constexpr const char* modeItems[] = {"Local Emulation", "Remote GDB"};
     constexpr auto popupSize = ImVec2(360, 220);
-    const auto titleSize = ImGui::CalcTextSize("Debug Target");
-
     ImGui::SetNextWindowSize(popupSize, ImGuiCond_Appearing);
     ImGui::PushStyleVar(ImGuiStyleVar_PopupBorderSize, 5.0f);
     ImGui::PushStyleColor(ImGuiCol_PopupBg, ImColor(0x1e, 0x20, 0x2f).Value);
     if (ImGui::BeginPopupModal("Debug Target", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
-        const auto windowSize = ImGui::GetWindowSize();
-        ImGui::SetCursorPosX((windowSize.x - titleSize.x) * 0.5f);
-        ImGui::TextUnformatted("Debug Target");
         ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal, 3);
         ImGui::Dummy({0.0f, 10.0f});
 
