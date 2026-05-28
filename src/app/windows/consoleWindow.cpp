@@ -522,11 +522,17 @@ static std::string paddedColumn(const int base, const std::string& str, const in
     return std::string(base + len, ' ');
 }
 
-static void printLanes(const std::string& regName, int laneCount, int laneBits,
+static std::string formatHexValue(uint64_t value) {
+    std::stringstream stream;
+    stream << "0x" << std::hex << value;
+    return stream.str();
+}
+
+static void printLanes(const std::string& regName, const std::string& displayName, int laneCount, int laneBits,
                        int spacing, bool useFloat) {
     int firstLaneNum = 0;
     for (int i = 0; i < laneCount; i++) {
-        std::string outStr = regName + "[" + std::to_string(firstLaneNum) + ":";
+        std::string outStr = displayName + "[" + std::to_string(firstLaneNum) + ":";
         firstLaneNum = laneBits + laneBits * i;
         outStr += std::to_string(firstLaneNum - 1) + "]";
         auto val = useFloat
@@ -540,32 +546,54 @@ static void cmdInfoRegisters(const std::vector<std::string>& arguments) {
     std::string header = "Register\t\tHex";
 
     if (arguments.size() > 1) {
-        if (!isRegisterValid(toUpperCase(arguments[1]))) goto showAll;
-        std::string regName = toUpperCase(arguments[1]);
+        const std::string regName = toLowerCase(arguments[1]);
+        const std::string displayName = toUpperCase(regName);
+        const std::string baseRegName = getRegisterActualName(regName);
+        if (!isRegisterValid(regName) || !regInfoMap.contains(baseRegName)) goto showAll;
 
-        if (registerValueMap.contains(regName)) {
+        if (!codeHasRun) {
+            const auto tempValue = tempRegisterValueMap.find(displayName);
+            const auto displayValue = tempValue != tempRegisterValueMap.end()
+                ? tempValue->second
+                : registerValueMap.contains(baseRegName) ? registerValueMap[baseRegName] : "0x00";
+            consoleWrite(displayValue.starts_with("0x") ? header : "Register\t\tValue");
+            consoleWrite(displayName + paddedColumn(12, displayName, 4) + displayValue);
+            return;
+        }
+
+        const auto registerValue = getRegisterValue(baseRegName);
+        if (registerValue.info.isFloatReg) {
+            header = "Register\t\tValue";
             consoleWrite(header);
-            consoleWrite(regName + paddedColumn(12, regName, 4) + registerValueMap[regName]);
-        } else if (!getRegisterValue(regName).info.is256bit && !getRegisterValue(regName).info.is128bit) {
+            consoleWrite(displayName + paddedColumn(12, displayName, 4) +
+                         std::to_string(registerValue.floatVal));
+        } else if (registerValue.info.isDoubleReg) {
+            header = "Register\t\tValue";
             consoleWrite(header);
-            consoleWrite(regName + paddedColumn(12, regName, 4) +
-                         std::to_string(getRegisterValue(regName).eightByteVal));
-        } else if (getRegisterValue(regName).info.is128bit) {
+            consoleWrite(displayName + paddedColumn(12, displayName, 4) +
+                         std::to_string(registerValue.doubleVal));
+        } else if (!registerValue.info.is256bit && !registerValue.info.is128bit) {
             consoleWrite(header);
-            printLanes(regName, use32BitLanes ? 4 : 2, use32BitLanes ? 32 : 64, 12, use32BitLanes);
+            consoleWrite(displayName + paddedColumn(12, displayName, 4) +
+                         formatHexValue(registerValue.eightByteVal));
+        } else if (registerValue.info.is128bit) {
+            header = "Register\t\tValue";
+            consoleWrite(header);
+            printLanes(baseRegName, displayName, use32BitLanes ? 4 : 2, use32BitLanes ? 32 : 64, 12, use32BitLanes);
         } else {
-            header = "Register\t\t\t\t\t\t Hex";
+            header = "Register\t\t\t\t\t\t Value";
             consoleWrite(header);
-            printLanes(regName, use32BitLanes ? 8 : 4, use32BitLanes ? 32 : 64, 13, use32BitLanes);
+            printLanes(baseRegName, displayName, use32BitLanes ? 8 : 4, use32BitLanes ? 32 : 64, 13, use32BitLanes);
         }
         return;
     }
 
 showAll:
-    header = "Register\t\tHex";
+    header = "Register\t\tValue";
     consoleWrite(header);
     for (const auto& [registerName, value] : registerValueMap) {
-        consoleWrite(registerName + paddedColumn(12, registerName, 4) + value);
+        const std::string displayName = toUpperCase(registerName);
+        consoleWrite(displayName + paddedColumn(12, displayName, 4) + value);
     }
 }
 
