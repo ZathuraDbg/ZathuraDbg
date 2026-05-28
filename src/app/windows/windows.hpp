@@ -103,7 +103,6 @@ extern void parseRegisterValueInput(const std::string& regName, const char *regV
 extern void removeRegisterFromView(const std::string& reg, int regType = 1);
 extern std::string getRegisterActualName(const std::string& regName);
 extern bool updateRegistersOnLaneChange();
-extern std::vector<memoryMapInfo> getMemoryMapping(uc_engine* uc);
 extern void memoryMapWindow();
 extern std::pair<size_t, size_t> infoPopup(const std::string& title = "", const std::string& sizeHint = "");
 extern std::vector<newMemEditWindowsInfo> newMemEditWindows;

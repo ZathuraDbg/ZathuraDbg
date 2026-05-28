@@ -1,65 +1,5 @@
 #include "windows.hpp"
 
-std::vector<MemRegionInfo> getMemoryMapping(Icicle* ic)
-{
-    if (remote_gdb::useRemoteDebugging()) {
-        std::vector<MemRegionInfo> memMapInfo;
-        for (const auto& region : remote_gdb::remoteMemoryRegions()) {
-            MemoryProtection protection = NoAccess;
-            if (region.read && region.write && region.execute) {
-                protection = ExecuteReadWrite;
-            } else if (region.read && region.write) {
-                protection = ReadWrite;
-            } else if (region.read && region.execute) {
-                protection = ExecuteRead;
-            } else if (region.execute) {
-                protection = ExecuteOnly;
-            } else if (region.read) {
-                protection = ReadOnly;
-            }
-
-            memMapInfo.push_back({region.start, region.end - region.start, protection});
-        }
-        return memMapInfo;
-    }
-
-    if (!ic) {
-        return {};
-    }
-
-    size_t count = 0;
-    MemRegionInfo* memRegionInfoArray = icicle_mem_list_mapped(ic, &count);
-    
-    std::vector<MemRegionInfo> memMapInfo;
-    memMapInfo.reserve(count);
-
-    if (memRegionInfoArray) {
-        for (size_t i = 0; i < count; i++) {
-            memMapInfo.push_back(memRegionInfoArray[i]);
-        }
-
-        icicle_mem_list_mapped_free(memRegionInfoArray, count);
-    }
-
-    return memMapInfo;
-}
-
-inline bool updateMemoryPermissions(Icicle* ic, const uint64_t startAddr, const uint64_t endAddr,
-                                    const MemoryProtection newPerms)
-{
-    if (!ic) {
-        return false;
-    }
-
-    auto err = icicle_mem_protect(ic, startAddr, endAddr - startAddr, newPerms);
-    if (err != 0)
-    {
-        return false;
-    }
-
-    return true;
-}
-
 bool expandMemoryRegion(Icicle* ic, const uint64_t startAddr, uint64_t oldEndAddr, uint64_t newEndAddr,
                         const uint64_t oldSize, const MemoryProtection perms)
 {
@@ -158,7 +98,7 @@ void memoryMapWindow()
         return;
     }
 
-    auto memInfo = getMemoryMapping(icicle);
+    auto memInfo = debugMemoryRegions();
     auto [x, y] = ImGui::GetWindowSize();
     ImGui::SetNextWindowSize({x - 230, (y - 125 + (52 * memInfo.size()))});
 
@@ -371,7 +311,7 @@ void memoryMapWindow()
 
                     if (unmap)
                     {
-                        icicle_mem_unmap(icicle, memInfo[i].address, memInfo[i].size);
+                        unmapDebugMemory(memInfo[i].address, memInfo[i].size);
                     }
                 }
 
@@ -399,7 +339,7 @@ void memoryMapWindow()
                         newPerms = NoAccess;
                     }
                     
-                    updateMemoryPermissions(icicle, memInfo[i].address, memInfo[i].address + memInfo[i].size, newPerms);
+                    protectDebugMemory(memInfo[i].address, memInfo[i].size, newPerms);
                     permsChanged = false;
                 }
 
@@ -459,8 +399,7 @@ void memoryMapWindow()
         auto [address, size] = infoPopup("Map a new region", "Multiple of 4KB");
         if (address != 0 && size != 0)
         {
-            auto err = icicle_mem_map(icicle, address, size, MemoryProtection::NoAccess);
-            if (err != 0)
+            if (!mapDebugMemory(address, size, MemoryProtection::NoAccess))
             {
                 LOG_INFO("Unable to map the newly requested memory region.");
                 keep = false;
