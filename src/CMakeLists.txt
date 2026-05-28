@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 project(Zathura)
+enable_testing()
 
 set(CMAKE_CXX_STANDARD 23)
 set(OPTIMIZATION_LEVEL "O0" CACHE STRING "Optimization level (O0, Og, O1, O2, O3)")
@@ -186,6 +187,15 @@ set_source_files_properties(${SRC_VENDOR_C} PROPERTIES SKIP_PRECOMPILE_HEADERS O
 
 # Debug info comes from CMAKE_*_FLAGS_DEBUG; avoid passing -g twice.
 target_compile_options(${PROJECT_NAME} PRIVATE -Wformat -pipe)
+
+if (NOT WIN32)
+    add_executable(zathura_elf_symbols_test
+            ${APP_DIR}/integration/gdb/elfSymbols.cpp
+            ${PROJECT_ROOT}/tests/elfSymbolsTest.cpp
+    )
+    target_include_directories(zathura_elf_symbols_test PRIVATE ${APP_DIR})
+    add_test(NAME zathura_elf_symbols_test COMMAND zathura_elf_symbols_test)
+endif()
 
 # Platform-specific target settings
 if (UNIX AND NOT APPLE)
