@@ -436,12 +436,27 @@ bool GdbRemoteClient::connectTo(const RemoteConnectionConfig& config) {
     freeaddrinfo(result);
 
     if (socket_ == invalid_socket_handle) {
-        consoleWriteThreadSafe("remote >> failed to connect to target\n");
+        consoleWriteThreadSafe("remote >> Failed to connect to the remote target. Are you sure it's running?\n");
         return false;
     }
 
+#ifdef _WIN32
+    DWORD timeout_ms = 5000;
+    setsockopt(socket_, SOL_SOCKET, SO_RCVTIMEO, reinterpret_cast<const char*>(&timeout_ms), sizeof(timeout_ms));
+    setsockopt(socket_, SOL_SOCKET, SO_SNDTIMEO, reinterpret_cast<const char*>(&timeout_ms), sizeof(timeout_ms));
+#else
+    struct timeval tv{5, 0};
+    setsockopt(socket_, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
+    setsockopt(socket_, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv));
+#endif
+
     consoleWriteThreadSafe("remote >> connected to " + config.host + ":" + std::to_string(config.port) + "\n");
-    return initialHandshake() && refreshState();
+    if (!initialHandshake() || !refreshState()) {
+        consoleWriteThreadSafe("remote >> handshake/init failed, disconnecting\n");
+        disconnect();
+        return false;
+    }
+    return true;
 }
 
 void GdbRemoteClient::disconnect() {
@@ -567,10 +582,12 @@ bool GdbRemoteClient::readPacket(std::string& payload) {
 }
 
 bool GdbRemoteClient::transact(const std::string& payload, std::string& response) {
-    if (!sendPacket(payload)) {
+    if (!sendPacket(payload) || !readPacket(response)) {
+        closeSocket(socket_);
+        socket_ = invalid_socket_handle;
         return false;
     }
-    return readPacket(response);
+    return true;
 }
 
 bool GdbRemoteClient::initialHandshake() {
@@ -901,10 +918,14 @@ bool GdbRemoteClient::interrupt() {
     }
     const char ctrlC = 0x03;
     if (!sendAll(socket_, std::string_view(&ctrlC, 1))) {
+        closeSocket(socket_);
+        socket_ = invalid_socket_handle;
         return false;
     }
     std::string response;
     if (!readPacket(response)) {
+        closeSocket(socket_);
+        socket_ = invalid_socket_handle;
         return false;
     }
     lastStopReason_ = response;
@@ -1068,11 +1089,16 @@ bool GdbRemoteClient::writeRegister(const std::string& regName, const std::vecto
 }
 
 std::optional<std::vector<uint8_t>> GdbRemoteClient::readMemory(const uint64_t address, const size_t size) {
+    if (!connected()) {
+        return std::nullopt;
+    }
     std::ostringstream command;
     command << "m" << std::hex << address << "," << size;
     std::string response;
     if (!transact(command.str(), response)) {
-        consoleWriteThreadSafe("remote >> m packet no response\n");
+        if (connected()) {
+            consoleWriteThreadSafe("remote >> m packet no response\n");
+        }
         return std::nullopt;
     }
     if (response.starts_with('E')) {
