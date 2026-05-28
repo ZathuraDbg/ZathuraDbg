@@ -4,12 +4,14 @@
 #include "../tasks/editorTasks.hpp"
 #include "../../../vendor/ordered-map/include/tsl/ordered_map.h"
 #include "../../../vendor/log/clue.hpp"
+#include <mutex>
 #include "../integration/interpreter/interpreter.hpp"
+#include "../integration/gdb/gdbRemote.hpp"
+#include "../integration/debugBackend.hpp"
 #include "../../../vendor/imgui/misc/cpp/imgui_stdlib.h"
 #include "../arch/arch.hpp"
 #include <regex>
 #include "../../vendor/tinyexpr/tinyexpr.h"
-#include "../actions/actions.hpp"
 #include "../actions/actions.hpp"
 #include "../../utils/uiElements.h"
 
@@ -89,6 +91,7 @@ extern uint64_t hexStrToInt(const std::string& val);
 extern void stackEditorWindow();
 extern std::vector<std::string> parseRegisters(std::string registerString);
 extern MemoryEditor memoryEditorWindow;
+extern bool remoteMemoryViewFollowsPc;
 extern void stackWriteFunc(ImU8* data, size_t offset, ImU8 delta);
 extern void hexWriteFunc(ImU8* data, size_t off, ImU8 d);
 extern MemoryEditor stackEditor;
@@ -108,5 +111,7 @@ extern std::vector<newMemEditWindowsInfo> newMemEditWindows;
 extern unsigned char* stackEditorData;
 extern unsigned char* stackEditorTemp;
 extern void cleanupStackEditor();
-extern std::vector<std::string> output;
+extern std::string consoleOutput;
+extern std::mutex  consoleOutputMutex;
+extern void consoleWriteThreadSafe(const std::string& text);
 #endif

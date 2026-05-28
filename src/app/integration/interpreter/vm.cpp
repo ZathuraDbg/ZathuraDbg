@@ -148,6 +148,11 @@ bool resetState(bool reInit){
     editor->ClearSelections();
     editor->HighlightDebugCurrentLine(-1);
 
+    if (remote_gdb::remoteDebugConnected()) {
+        remote_gdb::disconnectRemoteDebugSession();
+    }
+    restoreLocalEditorAfterRemoteSession();
+
     if (icicle != nullptr)
     {
         icicle_free(icicle);
@@ -175,6 +180,9 @@ bool resetState(bool reInit){
     emptyLineNumbers.clear();
     addressLineNoMap.clear();
     labelLineNoMapInternal.clear();
+    breakpointAddresses.clear();
+    remoteMemoryViewFollowsPc = true;
+    remoteDisassemblyBaseAddress.reset();
 
 
     labels = {};

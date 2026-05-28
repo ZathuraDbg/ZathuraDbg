@@ -4,6 +4,7 @@
 #define LOG_MODULE_NAME "Zathura"
 #define LOG_TO_FILE ".Zathura.zlog"
 #include <cstdio>
+#include <map>
 #include <string>
 #include <fstream>
 #include <iostream>
@@ -46,6 +47,14 @@ bool setupButtons();
 void mainWindow();
 void setupEditor();
 extern  std::string getDataToCopy(const std::stringstream &selectedAsmText, const bool asArray);
+void showRemoteDisassemblyInEditor(const std::string& text, int currentLine);
+void showRemoteDisassemblyInEditor(const std::string& text, int currentLine,
+                                   const std::map<int, std::string>& lineAddressLabels);
+void showRemoteDisassemblyInEditor(const std::string& text, int currentLine,
+                                   const std::map<int, std::string>& lineOffsetLabels,
+                                   const std::map<int, std::string>& lineAddressLabels);
+void restoreLocalEditorAfterRemoteSession();
+bool editorShowingRemoteDisassembly();
 extern bool lineNumbersShown;
 extern float frameRate;
 extern std::string executablePath;

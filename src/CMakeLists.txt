@@ -60,11 +60,14 @@ set(SRC_ARCH
 )
 
 set(SRC_INTEGRATION
+    ${APP_DIR}/integration/debugBackend.cpp
     ${APP_DIR}/integration/interpreter/interpreter.cpp
     ${APP_DIR}/integration/interpreter/registers.cpp
     ${APP_DIR}/integration/interpreter/vm.cpp
     ${APP_DIR}/integration/interpreter/execution.cpp
     ${APP_DIR}/integration/interpreter/breakpoints.cpp
+    ${APP_DIR}/integration/gdb/gdbRemote.cpp
+    ${APP_DIR}/integration/gdb/elfSymbols.cpp
     ${APP_DIR}/integration/keystone/assembler.cpp
 )
 

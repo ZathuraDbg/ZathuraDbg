@@ -24,6 +24,96 @@ bool debugStepBack = false;
 bool ttdEnabled = false;
 bool showUpdateWindow = false;
 bool showEmuSettings = false;
+bool showDebugTargetSettings = false;
+
+static void renderDebugTargetSettingsPopup() {
+    if (showDebugTargetSettings) {
+        ImGui::OpenPopup("Debug Target");
+    }
+
+    static int selectedMode = static_cast<int>(remote_gdb::debugTargetMode);
+    static std::string host = remote_gdb::remoteConnectionConfig.host;
+    static int port = remote_gdb::remoteConnectionConfig.port;
+    static bool refreshInputs = true;
+
+    if (showDebugTargetSettings && refreshInputs) {
+        selectedMode = static_cast<int>(remote_gdb::debugTargetMode);
+        host = remote_gdb::remoteConnectionConfig.host;
+        port = remote_gdb::remoteConnectionConfig.port;
+        refreshInputs = false;
+    }
+
+    constexpr const char* modeItems[] = {"Emulation", "Remote GDB"};
+    constexpr auto popupSize = ImVec2(360, 220);
+    ImGui::SetNextWindowSize(popupSize, ImGuiCond_Appearing);
+    ImGui::PushStyleVar(ImGuiStyleVar_PopupBorderSize, 5.0f);
+    ImGui::PushStyleColor(ImGuiCol_PopupBg, ImColor(0x1e, 0x20, 0x2f).Value);
+    if (ImGui::BeginPopupModal("Debug Target", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+        ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal, 3);
+        ImGui::Dummy({0.0f, 10.0f});
+
+        ImGui::TextUnformatted("Mode");
+        ImGui::SetNextItemWidth(220);
+        ImGui::Combo("##debugTargetMode", &selectedMode, modeItems, IM_ARRAYSIZE(modeItems));
+
+        if (selectedMode == static_cast<int>(remote_gdb::DebugTargetMode::RemoteGdb)) {
+            ImGui::Dummy({0.0f, 8.0f});
+            ImGui::TextUnformatted("Host");
+            ImGui::SetNextItemWidth(220);
+            ImGui::InputText("##remoteHost", &host);
+
+            ImGui::Dummy({0.0f, 4.0f});
+            ImGui::TextUnformatted("Port");
+            ImGui::SetNextItemWidth(120);
+            ImGui::InputInt("##remotePort", &port);
+
+            ImGui::Dummy({0.0f, 6.0f});
+            ImGui::TextWrapped("Console commands: target status, target connect, target disconnect, monitor <cmd>, packet <rsp>.");
+            ImGui::TextWrapped("Remote register decoding follows the architecture selected in Edit > Change emulation settings.");
+        } else {
+            ImGui::Dummy({0.0f, 8.0f});
+            ImGui::TextWrapped("Emulation mode runs your code in the built-in emulator.");
+        }
+
+        ImGui::Dummy({0.0f, 12.0f});
+        if (ImGui::Button("OK")) {
+            if (port < 1) {
+                port = 1;
+            } else if (port > 65535) {
+                port = 65535;
+            }
+
+            const auto newMode = static_cast<remote_gdb::DebugTargetMode>(selectedMode);
+            const bool modeChanged = newMode != remote_gdb::debugTargetMode ||
+                host != remote_gdb::remoteConnectionConfig.host ||
+                port != static_cast<int>(remote_gdb::remoteConnectionConfig.port);
+
+            remote_gdb::debugTargetMode = newMode;
+            remote_gdb::remoteConnectionConfig.host = host.empty() ? "127.0.0.1" : host;
+            remote_gdb::remoteConnectionConfig.port = static_cast<uint16_t>(port);
+
+            if (modeChanged && debugModeEnabled) {
+                remote_gdb::disconnectRemoteDebugSession();
+                debugModeEnabled = false;
+                resetState(false);
+            }
+
+            showDebugTargetSettings = false;
+            refreshInputs = true;
+            ImGui::CloseCurrentPopup();
+        }
+
+        ImGui::SameLine();
+        if (ImGui::Button("Cancel")) {
+            showDebugTargetSettings = false;
+            refreshInputs = true;
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::EndPopup();
+    }
+    ImGui::PopStyleColor();
+    ImGui::PopStyleVar();
+}
 
 void changeEmulationSettings(){
     showEmuSettings = true;
@@ -194,7 +284,8 @@ void appMenuBar()
         }
         if (ImGui::BeginMenu("Edit"))
         {
-            if (ImGui::MenuItem("Undo", "CTRL+Z")) {
+            const bool sourceEditingDisabled = editorShowingRemoteDisassembly();
+            if (ImGui::MenuItem("Undo", "CTRL+Z", false, !sourceEditingDisabled && editor->CanUndo())) {
                 if (editor->CanUndo()){
                     editor->Undo();
                     LOG_INFO("Editor serviced undo");
@@ -203,7 +294,7 @@ void appMenuBar()
                     LOG_ERROR("Undo requested but couldn't be fulfilled by editor");
                 }
             }
-            if (ImGui::MenuItem("Redo", "CTRL+Y", false)) {
+            if (ImGui::MenuItem("Redo", "CTRL+Y", false, !sourceEditingDisabled && editor->CanRedo())) {
                 if (editor->CanRedo()){
                     editor->Redo();
                     LOG_INFO("Editor serviced redo");
@@ -214,7 +305,7 @@ void appMenuBar()
 
             }
             ImGui::Separator();
-            if (ImGui::MenuItem("Cut", "CTRL+X")) {
+            if (ImGui::MenuItem("Cut", "CTRL+X", false, !sourceEditingDisabled)) {
                 editor->Cut();
                 LOG_INFO("Editor cut to clipboard");
             }
@@ -222,7 +313,7 @@ void appMenuBar()
                 editor->Copy();
                 LOG_INFO("Editor copied to clipboard");
             }
-            if (ImGui::MenuItem("Paste", "CTRL+V")) {
+            if (ImGui::MenuItem("Paste", "CTRL+V", false, !sourceEditingDisabled)) {
                 editor->Paste();
                 LOG_INFO("Editor pasted from clipboard");
             }
@@ -238,6 +329,7 @@ void appMenuBar()
             else{
                 ImGui::MenuItem("Stop debugging", "Shift+F5", &debugStop);
             }
+            ImGui::MenuItem("Configure target", nullptr, &showDebugTargetSettings);
             ImGui::MenuItem("Step In", "CTRL+J", &debugStepIn, debugModeEnabled ? true : false);
             ImGui::MenuItem("Step Over", "CTRL+K", &debugStepOver, debugModeEnabled ? true : false);
             ImGui::MenuItem("Continue", debugModeEnabled ? "F5" : nullptr, &debugContinue, debugModeEnabled ? true : false);
@@ -254,5 +346,6 @@ void appMenuBar()
         isRunning = false;
     }
 
+    renderDebugTargetSettingsPopup();
     ImGui::PopFont();
 }

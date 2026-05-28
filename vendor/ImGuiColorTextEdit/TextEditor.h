@@ -2,6 +2,8 @@
 
 #include <cassert>
 #include <iostream>
+#include <map>
+#include <set>
 #include <string>
 #include <vector>
 #include <array>
@@ -114,7 +116,15 @@ public:
 	std::string GetText() const;
 
     std::map<std::string, int> labelLineNoMap;
+    std::map<int, std::string> mCustomLineNumberLabels;
+    std::map<int, std::string> mCustomLineNumberLabelsShort;
+    std::map<int, std::string> mCustomLineNumberLabelsFull;
+    std::set<int> mFullAddressLines;
 	void SetTextLines(const std::vector<std::string>& aLines);
+	void SetCustomLineNumberLabels(const std::map<int, std::string>& aLabels);
+	void SetCustomLineNumberLabels(const std::map<int, std::string>& aShort,
+	                               const std::map<int, std::string>& aFull);
+	void ClearCustomLineNumberLabels();
 	std::vector<std::string> GetTextLines() const;
 
 	bool Render(const char* aTitle, bool aParentIsFocused = false, const ImVec2& aSize = ImVec2(), bool aBorder = false);

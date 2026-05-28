@@ -10,6 +10,12 @@ std::string executablePath;
 #include "codeContextMenu.hpp"
 TextEditor::LanguageDefinitionId currentDefinitionId = TextEditor::LanguageDefinitionId::Asm;
 
+namespace {
+bool remoteEditorViewActive = false;
+std::string cachedLocalEditorText{};
+TextEditor::LanguageDefinitionId cachedLocalDefinitionId = TextEditor::LanguageDefinitionId::Asm;
+}
+
 void setupEditor() {
     LOG_INFO("Setting up the editor...");
     auto selectedFileStream = std::ifstream(selectedFile);
@@ -33,6 +39,68 @@ void setupEditor() {
     }
 
     LOG_INFO("Editor setup complete!");
+}
+
+bool editorShowingRemoteDisassembly() {
+    return remoteEditorViewActive;
+}
+
+void showRemoteDisassemblyInEditor(const std::string& text, const int currentLine) {
+    if (editor == nullptr) {
+        return;
+    }
+
+    if (!remoteEditorViewActive) {
+        cachedLocalEditorText = editor->GetText();
+        cachedLocalDefinitionId = currentDefinitionId;
+        remoteEditorViewActive = true;
+    }
+
+    editor->SetReadOnlyEnabled(false);
+    editor->SetLanguageDefinition(currentDefinitionId);
+    if (editor->GetText() != text) {
+        editor->SetText(text);
+    }
+    editor->SetReadOnlyEnabled(true);
+
+    editor->ClearCustomLineNumberLabels();
+
+    if (currentLine >= 0) {
+        editor->SetCursorPosition(currentLine, 0);
+    }
+}
+
+void showRemoteDisassemblyInEditor(const std::string& text, const int currentLine,
+                                   const std::map<int, std::string>& lineAddressLabels) {
+    showRemoteDisassemblyInEditor(text, currentLine);
+    if (editor != nullptr) {
+        editor->SetCustomLineNumberLabels(lineAddressLabels);
+    }
+}
+
+void showRemoteDisassemblyInEditor(const std::string& text, const int currentLine,
+                                   const std::map<int, std::string>& lineOffsetLabels,
+                                   const std::map<int, std::string>& lineAddressLabels) {
+    showRemoteDisassemblyInEditor(text, currentLine);
+    if (editor != nullptr) {
+        editor->SetCustomLineNumberLabels(lineOffsetLabels, lineAddressLabels);
+    }
+}
+
+void restoreLocalEditorAfterRemoteSession() {
+    if (editor == nullptr || !remoteEditorViewActive) {
+        return;
+    }
+
+    editor->SetReadOnlyEnabled(false);
+    currentDefinitionId = cachedLocalDefinitionId;
+    editor->SetLanguageDefinition(currentDefinitionId);
+    editor->SetText(cachedLocalEditorText.empty() ? "; Press CTRL + O to open a file..." : cachedLocalEditorText);
+    editor->HighlightDebugCurrentLine(-1);
+    editor->HighlightBreakpoints(-1, true);
+
+    cachedLocalEditorText.clear();
+    remoteEditorViewActive = false;
 }
 
 void setupViewPort() {

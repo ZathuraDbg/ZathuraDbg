@@ -1,27 +1,24 @@
 #include "windows.hpp"
 MemoryEditor stackEditor;
 
-// Optimized big-endian copy using a more efficient algorithm
 static void* copyBigEndian(void* dst, const void* src, size_t size)
 {
     uint8_t* dst_ptr = static_cast<uint8_t*>(dst);
     const uint8_t* src_ptr = static_cast<const uint8_t*>(src) + size - 1;
-    
-    // Use 8-byte chunks to speed up copying when possible
+
     const size_t chunks = size / 8;
     const size_t remainder = size % 8;
-    
+
     for (size_t i = 0; i < chunks; ++i) {
         for (size_t j = 0; j < 8; ++j) {
             *dst_ptr++ = *src_ptr--;
         }
     }
-    
-    // Handle remaining bytes
+
     for (size_t i = 0; i < remainder; ++i) {
         *dst_ptr++ = *src_ptr--;
     }
-    
+
     return dst;
 }
 
@@ -32,15 +29,15 @@ void stackWriteFunc(ImU8* data, const size_t offset, const ImU8 delta) {
 
     const uint64_t address = STACK_ADDRESS + STACK_SIZE - offset - 1;
     LOG_INFO("Stack write at 0x" << std::hex << address << ": " << static_cast<int>(delta));
-    
-    const auto err = icicle_mem_write(icicle, address, &delta, 1);
-    if (err == -1) {
+
+    const bool writeOk = writeDebugMemory(address, delta);
+
+    if (!writeOk) {
         LOG_ERROR("Failed to write to memory. Address: 0x" << std::hex << address);
         tinyfd_messageBox("ERROR!", "Failed to write to the memory address!!", "ok", "error", 0);
         return;
     }
-    
-    // Memory successfully written, mark for update
+
     updateStack = true;
 }
 
@@ -60,8 +57,7 @@ bool handleStackError() {
             LOG_ERROR("Failed to map stack memory at 0x" << std::hex << STACK_ADDRESS);
         }
     }
-    
-    // Reset to default address if mapping failed or was declined
+
     STACK_ADDRESS = DEFAULT_STACK_ADDRESS;
     if (!isCodeRunning) {
         tempRegisterValueMap[archSPStr] = "0x00";
@@ -79,21 +75,11 @@ void stackEditorWindow() {
     const auto io = ImGui::GetIO();
     ImGui::PushFont(io.Fonts->Fonts[3]);
 
-    // Initialize our buffer if not already done
     if (!stackBuffer) {
         stackBuffer.reset(static_cast<unsigned char*>(calloc(1, STACK_SIZE)));
     }
 
-    // if (stackBuffer == nullptr) {
-    //     stackBuffer = static_cast<unsigned char*>(calloc(1, STACK_SIZE));
-    //     if (!stackBuffer) {
-    //         LOG_ERROR("Failed to allocate stack buffer");
-    //         ImGui::PopFont();
-    //         return;
-    //     }
-    // }
-
-    if (icicle && isDebugReady)
+    if (!remote_gdb::useRemoteDebugging() && icicle && isDebugReady)
     {
         static bool stack_mapped_once = false;
         if (!stack_mapped_once) {
@@ -101,7 +87,6 @@ void stackEditorWindow() {
 
             size_t test_size = 0;
             unsigned char* test_data = icicle_mem_read(icicle, STACK_ADDRESS, 1, &test_size);
-            bool already_mapped = (test_data != nullptr);
 
             if (test_data) {
                 icicle_free_buffer(test_data, test_size);
@@ -118,24 +103,45 @@ void stackEditorWindow() {
                 }
             }
 
-            // Mark as mapped to avoid attempting again
             stack_mapped_once = true;
         }
     }
-    
-    size_t outSize = 0;
-    unsigned char* memData = NULL;
 
-    if (isDebugReady)
-    {
-        memData = icicle_mem_read(icicle, STACK_ADDRESS, STACK_SIZE, &outSize);
+    std::optional<std::vector<uint8_t>> memData;
+    static size_t remoteStackReadable = 0;
+    static uintptr_t lastStackAddr = 0;
+    static bool remoteStackProbeFailed = false;
+    static uint64_t lastStackResumeGen = ~uint64_t{0};
+
+    if (lastStackAddr != STACK_ADDRESS || lastStackResumeGen != remoteResumeGeneration) {
+        remoteStackReadable = 0;
+        lastStackAddr = STACK_ADDRESS;
+        lastStackResumeGen = remoteResumeGeneration;
+        remoteStackProbeFailed = false;
     }
-    
-    if (!memData) {
-        memset(stackBuffer.get(), 0, STACK_SIZE);
-    } else {
-        copyBigEndian(stackBuffer.get(), memData, STACK_SIZE);
-        icicle_free_buffer(memData, outSize);
+
+    if (isDebugReady) {
+        if (remote_gdb::useRemoteDebugging()) {
+            if (!remoteStackProbeFailed) {
+                const size_t trySize = remoteStackReadable > 0 ? remoteStackReadable : STACK_SIZE;
+                memData = remote_gdb::remoteReadMemoryWithFallback(STACK_ADDRESS, trySize);
+                if (memData.has_value()) {
+                    remoteStackReadable = memData->size();
+                } else {
+                    remoteStackReadable = 0;
+                    remoteStackProbeFailed = true;
+                }
+            }
+        } else {
+            memData = readDebugMemory(STACK_ADDRESS, STACK_SIZE);
+        }
+    }
+
+    const size_t displaySize = memData.has_value() ? memData->size() : STACK_SIZE;
+
+    memset(stackBuffer.get(), 0, STACK_SIZE);
+    if (memData.has_value()) {
+        copyBigEndian(stackBuffer.get(), memData->data(), memData->size());
     }
 
     stackEditor.HighlightColor = ImColor(59, 60, 79);
@@ -145,32 +151,20 @@ void stackEditorWindow() {
     stackEditor.StackFashionAddrSubtraction = true;
     stackEditor.WriteFn = &stackWriteFunc;
 
-    stackEditor.DrawWindow("Stack", reinterpret_cast<void*>(stackBuffer.get()), STACK_SIZE, STACK_ADDRESS + STACK_SIZE);
+    stackEditor.DrawWindow("Stack", reinterpret_cast<void*>(stackBuffer.get()), displaySize, STACK_ADDRESS + displaySize);
 
     if (!newMemEditWindows.empty()) {
         int i = 0;
         for (auto& [memEditor, address, size]: newMemEditWindows){
-            size_t newMemSize = 0;
-            unsigned char* newMemData = icicle_mem_read(icicle, address, size, &newMemSize);
-            if (newMemData == NULL)
-            {
+            const auto newMemData = readDebugMemory(address, size);
+            if (!newMemData.has_value()) {
                 memEditor.DrawWindow(("Memory Editor " + std::to_string(++i)).c_str(), (void*)zeroArr, 0x1000, address);
-            }
-            else
-            {
-                memEditor.DrawWindow(("Memory Editor " + std::to_string(++i)).c_str(), (void*)newMemData, size, address);
-                icicle_free_buffer(newMemData, newMemSize);
+            } else {
+                memEditor.DrawWindow(("Memory Editor " + std::to_string(++i)).c_str(),
+                    const_cast<void*>(static_cast<const void*>(newMemData->data())), size, address);
             }
         }
     }
-    // cleanupStackEditor();
 
     ImGui::PopFont();
 }
-
-// void cleanupStackEditor() {
-//     if (stackBuffer) {
-//         free(stackBuffer);
-//         stackBuffer = nullptr;
-//     }
-// }

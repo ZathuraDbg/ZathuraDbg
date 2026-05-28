@@ -1,6 +1,7 @@
 #include "codeContextMenu.hpp"
 void contextMenu() {
     const auto& io = ImGui::GetIO();
+    const bool sourceEditingDisabled = editorShowingRemoteDisassembly();
     ImGui::GetStyle().Colors[ImGuiCol_PopupBg] = ImColor(0x1e, 0x20, 0x30);
 
     ImGui::GetStyle().Colors[ImGuiCol_HeaderHovered] = ImColor(0x18, 0x19, 0x26);
@@ -15,7 +16,7 @@ void contextMenu() {
 
         ImGui::Separator();
 
-        if (ImGui::MenuItem("Cut", "Ctrl + X", false))
+        if (ImGui::MenuItem("Cut", "Ctrl + X", false, !sourceEditingDisabled))
         {
             editor->Cut();
             LOG_INFO("Cut text to clipboard");
@@ -23,7 +24,7 @@ void contextMenu() {
 
         ImGui::Separator();
 
-        if (ImGui::MenuItem("Paste", "Ctrl + V", false))
+        if (ImGui::MenuItem("Paste", "Ctrl + V", false, !sourceEditingDisabled))
         {
             editor->Paste();
             LOG_INFO("Pasted text from clipboard");
@@ -31,22 +32,18 @@ void contextMenu() {
 
         ImGui::Separator();
 
-        if (ImGui::MenuItem("Undo", "Ctrl + Z", false))
+        if (ImGui::MenuItem("Undo", "Ctrl + Z", false, !sourceEditingDisabled && editor->CanUndo()))
         {
-            if (editor->CanUndo()) {
-                editor->Undo();
-                LOG_INFO("Performed undo!");
-            }
+            editor->Undo();
+            LOG_INFO("Performed undo!");
         }
 
         ImGui::Separator();
 
-        if (ImGui::MenuItem("Redo", "Ctrl + Y", false))
+        if (ImGui::MenuItem("Redo", "Ctrl + Y", false, !sourceEditingDisabled && editor->CanRedo()))
         {
-            if (editor->CanRedo()) {
-                editor->Redo();
-                LOG_INFO("Performed redo!");
-            }
+            editor->Redo();
+            LOG_INFO("Performed redo!");
         }
 
         ImGui::Separator();
@@ -73,7 +70,7 @@ void contextMenu() {
 
         ImGui::Separator();
 
-        if (ImGui::BeginMenu("Copy as")) {
+        if (ImGui::BeginMenu("Copy as", !sourceEditingDisabled)) {
             std::stringstream selectedAsmText(editor->GetSelectedText());
             if (ImGui::MenuItem("C array")){
                 if (!selectedAsmText.str().empty()) {
@@ -98,12 +95,12 @@ void contextMenu() {
 
         ImGui::Separator();
         if (!debugModeEnabled){
-            if (ImGui::MenuItem("Run selected code", "F3", false)){
+            if (ImGui::MenuItem("Run selected code", "F3", false, !sourceEditingDisabled)){
                 runSelectedCode = true;
             }
         }
 
-        if (ImGui::MenuItem("Go to definition", "F4")){
+        if (ImGui::MenuItem("Go to definition", "F4", false, !sourceEditingDisabled)){
             goToDefinition = true;
         }
 

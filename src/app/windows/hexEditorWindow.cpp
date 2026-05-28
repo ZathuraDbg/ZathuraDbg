@@ -3,6 +3,7 @@
 
 MemoryEditor memoryEditorWindow;
 std::vector<newMemEditWindowsInfo> newMemEditWindows{};
+bool remoteMemoryViewFollowsPc = true;
 
 void hexWriteFunc(ImU8* data, const size_t off, const ImU8 d){
     if (!isDebugReady)
@@ -11,8 +12,10 @@ void hexWriteFunc(ImU8* data, const size_t off, const ImU8 d){
         return;
     }
 
-    const auto err = icicle_mem_write(icicle, ENTRY_POINT_ADDRESS + off, &d, 1);
-    if (err == -1){
+    const auto targetAddress = MEMORY_EDITOR_BASE + off;
+    const bool writeOk = writeDebugMemory(targetAddress, d);
+
+    if (!writeOk){
         LOG_ERROR("Failed to write to memory. Address: " << MEMORY_EDITOR_BASE + off);
         const auto hex = static_cast<char *>(malloc(24));
         sprintf(static_cast<char *>(hex), "Data change: %x", d);
@@ -354,6 +357,9 @@ std::variant<bool, std::pair<void*, size_t>> setBaseAddr2(uintptr_t baseAddr, ui
     if (baseAddr && editorSize) {
         MEMORY_EDITOR_BASE = baseAddr;
         MEMORY_DEFAULT_SIZE = editorSize;
+        if (remote_gdb::useRemoteDebugging()) {
+            remoteMemoryViewFollowsPc = false;
+        }
         std::pair<void*, size_t> ret = {reinterpret_cast<void*>(baseAddr), editorSize};
         return ret;
     }
@@ -361,12 +367,18 @@ std::variant<bool, std::pair<void*, size_t>> setBaseAddr2(uintptr_t baseAddr, ui
     auto [address, size] = infoPopup("Modify Base Address", "8192 bytes default");
     if (address && size){
         MEMORY_EDITOR_BASE = address;
+        if (remote_gdb::useRemoteDebugging()) {
+            remoteMemoryViewFollowsPc = false;
+        }
         std::pair<void*, size_t> ret = {reinterpret_cast<void*>(address), size};
         return ret;
     }
     else if (address && (!size)) {
         MEMORY_EDITOR_BASE = address;
         MEMORY_DEFAULT_SIZE = 8192;
+        if (remote_gdb::useRemoteDebugging()) {
+            remoteMemoryViewFollowsPc = false;
+        }
         std::pair<void*, size_t> ret = {reinterpret_cast<void*>(address), 8192};
         return ret;
     }
@@ -393,10 +405,7 @@ bool fillMemoryRange(){
 }
 
 unsigned char zeroArr[0x1000];
-bool dataZerod = false;
 void hexEditorWindow(){
-    static int frameCount = 0;
-
     const auto io = ImGui::GetIO();
     ImGui::PushFont(io.Fonts->Fonts[3]);
 
@@ -406,17 +415,14 @@ void hexEditorWindow(){
         zeroArrInitialized = true;
     }
 
-    size_t outSize = 0;
-    unsigned char* data = nullptr;
-
-    if (icicle && isDebugReady) {
-        data = icicle_mem_read(icicle, ENTRY_POINT_ADDRESS, CODE_BUF_SIZE, &outSize);
+    std::optional<std::vector<uint8_t>> memData;
+    if (isDebugReady) {
+        memData = readDebugMemory(MEMORY_EDITOR_BASE, MEMORY_DEFAULT_SIZE);
     }
 
-    if (data == NULL) {
-        data = zeroArr;
-        dataZerod = true;
-    }
+    void* displayData = memData.has_value()
+        ? static_cast<void*>(memData->data())
+        : static_cast<void*>(zeroArr);
 
     memoryEditorWindow.HighlightColor = ImColor(59, 60, 79);
     memoryEditorWindow.OptShowAddWindowButton = true;
@@ -426,13 +432,7 @@ void hexEditorWindow(){
     memoryEditorWindow.OptFillMemoryRange = true;
     memoryEditorWindow.SetBaseAddress2 = setBaseAddr2;
     memoryEditorWindow.FillMemoryRange = fillMemoryWithBytePopup;
-    memoryEditorWindow.DrawWindow("Memory Editor", (void*)data, 0x3000, MEMORY_EDITOR_BASE);
+    memoryEditorWindow.DrawWindow("Memory Editor", displayData, MEMORY_DEFAULT_SIZE, MEMORY_EDITOR_BASE);
 
-    if (data && !dataZerod)
-    {
-        icicle_free_buffer(data, CODE_BUF_SIZE);
-    }
-
-    dataZerod = false;
     ImGui::PopFont();
 }

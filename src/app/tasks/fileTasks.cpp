@@ -21,6 +21,7 @@ static std::mutex icicleMutex;
 bool fileOpenTask(const std::string& fileName){
     if (!fileName.empty()){
         LOG_DEBUG("Opening the file " << fileName);
+        resetState(false);
         if (!readFileIntoEditor(fileName)){
             LOG_ERROR("Read operation failed on the file: " << fileName);
             return false;
@@ -28,7 +29,6 @@ bool fileOpenTask(const std::string& fileName){
 
         selectedFile = fileName;
         editor->HighlightBreakpoints(-1);
-        resetState(false);
         getBytes(fileName);
         // Note: initInsSizeInfoMap() is already called by getBytes()
         LOG_INFO("The provided file " << fileName << " opened successfully.");

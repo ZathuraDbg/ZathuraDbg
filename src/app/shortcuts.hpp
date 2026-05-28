@@ -4,4 +4,6 @@
 #include "tasks/fileTasks.hpp"
 #include "dialogs/dialogHeader.hpp"
 
+extern float gFontScale;
+
 #endif //ZATHURA_SHORTCUTS_HPP

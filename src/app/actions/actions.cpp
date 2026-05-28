@@ -14,7 +14,14 @@
 std::mutex uiUpdateMutex;
 bool pendingUIUpdate = false;
 int pendingHighlightLine = -1;
+bool pendingRemoteUiSync = false;
+bool pendingRemoteRefreshTarget = false;
+bool pendingRemoteResetCodeMemoryBase = false;
 int times = 1;
+std::optional<uint64_t> remoteDisassemblyBaseAddress{};
+uint64_t remoteResumeGeneration = 0;
+
+static void syncRemoteUiState(bool refreshTarget, bool resetCodeMemoryBase);
 
 void openBrowser(const std::string& url) {
 #ifdef _WIN32
@@ -164,27 +171,267 @@ void safeHighlightLine(int lineNo) {
     pendingHighlightLine = lineNo;
 }
 
-void processUIUpdates() {
+void requestRemoteUiSync(const bool refreshTarget, const bool resetCodeMemoryBase) {
     std::lock_guard<std::mutex> lock(uiUpdateMutex);
-    if (pendingUIUpdate) {
-        if (pendingHighlightLine >= 0) {
-            editor->HighlightDebugCurrentLine(pendingHighlightLine);
+    pendingRemoteUiSync = true;
+    pendingRemoteRefreshTarget = pendingRemoteRefreshTarget || refreshTarget;
+    pendingRemoteResetCodeMemoryBase = pendingRemoteResetCodeMemoryBase || resetCodeMemoryBase;
+}
+
+void processUIUpdates() {
+    bool applyHighlight = false;
+    int highlightLine = -1;
+    bool applyRemoteSync = false;
+    bool refreshTarget = false;
+    bool resetCodeMemoryBase = false;
+
+    {
+        std::lock_guard<std::mutex> lock(uiUpdateMutex);
+        if (pendingUIUpdate) {
+            applyHighlight = true;
+            highlightLine = pendingHighlightLine;
+            pendingUIUpdate = false;
         }
-        pendingUIUpdate = false;
+
+        if (pendingRemoteUiSync) {
+            applyRemoteSync = true;
+            refreshTarget = pendingRemoteRefreshTarget;
+            resetCodeMemoryBase = pendingRemoteResetCodeMemoryBase;
+            pendingRemoteUiSync = false;
+            pendingRemoteRefreshTarget = false;
+            pendingRemoteResetCodeMemoryBase = false;
+        }
+    }
+
+    if (applyRemoteSync) {
+        syncRemoteUiState(refreshTarget, resetCodeMemoryBase);
+    }
+
+    if (applyHighlight) {
+        editor->HighlightDebugCurrentLine(highlightLine);
     }
 }
 
-void startDebugging(){
-    LOG_INFO("Starting debugging...");
+static void rebuildRemoteBreakpointHighlights() {
+    breakpointLines.clear();
+    editor->HighlightBreakpoints(-1, true);
 
-    // Reset isDebugReady flag before starting setup
+    for (const auto address : breakpointAddresses) {
+        const auto it = addressLineNoMap.find(address);
+        if (it == addressLineNoMap.end() || it->second == 0) {
+            continue;
+        }
+
+        breakpointLines.push_back(it->second);
+        editor->HighlightBreakpoints(static_cast<int>(it->second - 1));
+    }
+}
+
+static void syncRemoteCodeView() {
+    const auto currentPc = remote_gdb::remoteProgramCounter();
+    if (!currentPc.has_value()) {
+        consoleWriteThreadSafe("remote >> failed to read the current pc for disassembly\n");
+        addressLineNoMap.clear();
+        breakpointLines.clear();
+        editor->HighlightBreakpoints(-1, true);
+        showRemoteDisassemblyInEditor("; remote disassembly unavailable: current pc could not be read", -1);
+        safeHighlightLine(-1);
+        return;
+    }
+
+    if (!remoteDisassemblyBaseAddress.has_value() ||
+        (!addressLineNoMap.empty() && !addressLineNoMap.contains(*currentPc))) {
+        remoteDisassemblyBaseAddress = *currentPc;
+    }
+
+    auto view = remote_gdb::remoteBuildDisassemblyView(64, remoteDisassemblyBaseAddress);
+    if ((!view.has_value() || view->currentLine == 0) && remoteDisassemblyBaseAddress != *currentPc) {
+        remoteDisassemblyBaseAddress = *currentPc;
+        view = remote_gdb::remoteBuildDisassemblyView(64, remoteDisassemblyBaseAddress);
+    }
+
+    if (!view.has_value()) {
+        consoleWriteThreadSafe("remote >> failed to build the disassembly view\n");
+        addressLineNoMap.clear();
+        breakpointLines.clear();
+        editor->HighlightBreakpoints(-1, true);
+        showRemoteDisassemblyInEditor("; remote disassembly unavailable for the current target state", -1);
+        safeHighlightLine(-1);
+        return;
+    }
+
+    addressLineNoMap = view->addressLineMap;
+    labelLineNoMapInternal = view->labelMap;
+    labels.clear();
+    for (const auto& [name, line] : view->labelMap) {
+        labels.push_back(name);
+    }
+    emptyLineNumbers.clear();
+    lastInstructionLineNo = view->addressLineMap.size();
+    ENTRY_POINT_ADDRESS = view->startAddress;
+    remoteDisassemblyBaseAddress = view->startAddress;
+
+    showRemoteDisassemblyInEditor(view->text, static_cast<int>(view->currentLine > 0 ? view->currentLine - 1 : 0),
+                                  view->lineOffsetLabels, view->lineAddressLabels);
+    rebuildRemoteBreakpointHighlights();
+
+    if (view->currentLine > 0) {
+        safeHighlightLine(static_cast<int>(view->currentLine - 1));
+    } else {
+        safeHighlightLine(-1);
+    }
+}
+
+static void initRemoteAddresses() {
+    if (const auto pc = remote_gdb::remoteProgramCounter(); pc.has_value()) {
+        MEMORY_EDITOR_BASE = *pc & ~static_cast<uint64_t>(0xfff);
+    }
+    if (const auto sp = remote_gdb::remoteStackPointer(); sp.has_value()) {
+        STACK_ADDRESS = *sp;
+    }
+}
+
+static bool connectAndInitRemote() {
     {
         std::lock_guard<std::mutex> lk(debugReadyMutex);
         isDebugReady = false;
     }
 
-    // Execute setup in a background thread to prevent UI freezing
+    if (!remote_gdb::connectRemoteDebugSession()) {
+        {
+            std::lock_guard<std::mutex> lk(debugReadyMutex);
+            isDebugReady = true;
+        }
+        debugReadyCv.notify_all();
+        return false;
+    }
+
+    initRemoteAddresses();
+
+    {
+        std::lock_guard<std::mutex> lk(debugReadyMutex);
+        isDebugReady = true;
+    }
+    debugReadyCv.notify_all();
+    debugModeEnabled = true;
+    remoteMemoryViewFollowsPc = true;
+    remoteDisassemblyBaseAddress.reset();
+    requestRemoteUiSync(false, true);
+    return true;
+}
+
+static void syncRemoteUiState(const bool refreshTarget, const bool resetCodeMemoryBase) {
+    if (refreshTarget && !remote_gdb::remoteRefreshState()) {
+        consoleWriteThreadSafe("remote >> failed to refresh target state\n");
+        return;
+    }
+
+    ++remoteResumeGeneration;
+    codeHasRun = true;
+    syncRemoteCodeView();
+    updateRegs();
+    updateStack = true;
+
+    if (const auto pc = remote_gdb::remoteProgramCounter(); pc.has_value()) {
+        if (resetCodeMemoryBase || remoteMemoryViewFollowsPc) {
+            MEMORY_EDITOR_BASE = *pc & ~static_cast<uint64_t>(0xfff);
+        }
+    }
+
+    if (const auto sp = remote_gdb::remoteStackPointer(); sp.has_value()) {
+        STACK_ADDRESS = *sp;
+    }
+}
+
+void startOrRefreshRemoteDebugSession() {
     executeInBackground([]{
+        if (!remote_gdb::useRemoteDebugging()) {
+            consoleWriteThreadSafe("remote >> remote gdb mode is not enabled\n");
+            return;
+        }
+
+        if (!remote_gdb::remoteDebugConnected()) {
+            if (!connectAndInitRemote()) {
+                consoleWriteThreadSafe("remote >> failed to connect\n");
+                return;
+            }
+            consoleWriteThreadSafe("remote >> connected\n");
+            return;
+        }
+
+        debugModeEnabled = true;
+        requestRemoteUiSync(false, true);
+        consoleWriteThreadSafe("remote >> ui refresh requested\n");
+    });
+}
+
+bool debugAddBreakpointAddress(const uint64_t address) {
+    if (!address) {
+        return false;
+    }
+
+    if (std::ranges::find(breakpointAddresses, address) != breakpointAddresses.end()) {
+        return false;
+    }
+
+    if (remote_gdb::useRemoteDebugging()) {
+        if (!remote_gdb::remoteAddBreakpoint(address)) {
+            return false;
+        }
+    } else if (!addBreakpoint(address, false)) {
+        return false;
+    }
+
+    breakpointAddresses.push_back(address);
+    const auto it = addressLineNoMap.find(address);
+    if (it != addressLineNoMap.end() && it->second > 0) {
+        breakpointLines.push_back(it->second);
+        editor->HighlightBreakpoints(static_cast<int>(it->second - 1));
+    }
+
+    return true;
+}
+
+bool debugRemoveBreakpointAddress(const uint64_t address) {
+    const auto addressIt = std::ranges::find(breakpointAddresses, address);
+    if (addressIt == breakpointAddresses.end()) {
+        return false;
+    }
+
+    if (remote_gdb::useRemoteDebugging()) {
+        if (!remote_gdb::remoteRemoveBreakpoint(address)) {
+            return false;
+        }
+    } else if (!removeBreakpoint(address)) {
+        return false;
+    }
+
+    breakpointAddresses.erase(addressIt);
+    const auto lineIt = addressLineNoMap.find(address);
+    if (lineIt != addressLineNoMap.end() && lineIt->second > 0) {
+        const auto bpLineIt = std::ranges::find(breakpointLines, lineIt->second);
+        if (bpLineIt != breakpointLines.end()) {
+            breakpointLines.erase(bpLineIt);
+            editor->RemoveHighlight(static_cast<int>(lineIt->second - 1));
+        }
+    }
+
+    return true;
+}
+
+void startDebugging(){
+    LOG_INFO("Starting debugging...");
+
+    executeInBackground([]{
+        if (remote_gdb::useRemoteDebugging()) {
+            if (!connectAndInitRemote()) {
+                LOG_ERROR("Unable to start remote debugging.");
+                return;
+            }
+            LOG_INFO("Remote debugging connected successfully.");
+            return;
+        }
+
         if (!fileRunTask(false)) {
             LOG_ERROR("Unable to start debugging.");
             LOG_ERROR("fileRunTask failed!");
@@ -208,6 +455,16 @@ void restartDebugging(){
     LOG_INFO("Restarting debugging...");
     
     executeInBackground([]{
+        if (remote_gdb::useRemoteDebugging()) {
+            if (remote_gdb::remoteRestartSession()) {
+                remoteMemoryViewFollowsPc = true;
+                remoteDisassemblyBaseAddress.reset();
+                requestRemoteUiSync(false, true);
+            } else {
+                consoleWriteThreadSafe("remote >> restart failed\n");
+            }
+            return;
+        }
         resetState();
         fileRunTask(false);
         LOG_INFO("Debugging restarted successfully.");
@@ -226,6 +483,15 @@ void stepOverAction(){
             debugReadyCv.wait(lk, []{ return isDebugReady; });
         }
         LOG_DEBUG("Debug state confirmed ready, proceeding with step over.");
+
+        if (remote_gdb::useRemoteDebugging()) {
+            if (remote_gdb::remoteStepOver()) {
+                requestRemoteUiSync(false);
+            } else {
+                consoleWriteThreadSafe("remote >> step-over failed\n");
+            }
+            return;
+        }
 
         // It may cause issues if the actual line is 0 and not undefined. (Need to start from 1)
         const uint64_t lineNo = addressLineNoMap[icicle_get_pc(icicle)];
@@ -281,6 +547,15 @@ void stepInAction(){
         }
         LOG_DEBUG("Debug state confirmed ready, proceeding with step in.");
 
+        if (remote_gdb::useRemoteDebugging()) {
+            if (remote_gdb::remoteStep()) {
+                requestRemoteUiSync(false);
+            } else {
+                consoleWriteThreadSafe("remote >> step failed\n");
+            }
+            return;
+        }
+
         stepIn = true; // Flag likely unused now, but keep for consistency
         stepCode(1);   // Use the synchronized stepCode function
         
@@ -303,6 +578,14 @@ void debugPauseAction(){
     LOG_INFO("Pause action requested!");
     
     executeInBackground([]{
+        if (remote_gdb::useRemoteDebugging()) {
+            if (remote_gdb::remotePause()) {
+                requestRemoteUiSync(false);
+            } else {
+                consoleWriteThreadSafe("remote >> interrupt failed\n");
+            }
+            return;
+        }
         auto instructionPointer = getRegisterValue(archIPStr);
         const uint64_t lineNumber = addressLineNoMap[instructionPointer.eightByteVal];
 
@@ -319,6 +602,9 @@ void debugPauseAction(){
 }
 
 void debugStopAction(){
+    if (remote_gdb::useRemoteDebugging()) {
+        remote_gdb::disconnectRemoteDebugSession();
+    }
     debugModeEnabled = false;
     resetState();
     LOG_INFO("Debugging stopped successfully.");
@@ -327,21 +613,26 @@ void debugStopAction(){
 void debugToggleBreakpoint(){
     int line, _;
     editor->GetCursorPosition(line, _);
-
-    // this call will return false if the breakpoint was not found
-    const auto isBreakpointRemoved = removeBreakpointFromLineNo(line + 1);
-    if (isBreakpointRemoved){
-        LOG_DEBUG("Removing the breakpoint at line: " <<  line);
-        editor->RemoveHighlight(line);
-    }
-    else{
-        LOG_DEBUG("Adding the breakpoint at line: " << line);
-        addBreakpointToLine(line);
+    if (!debugRemoveBreakpoint(line)) {
+        debugAddBreakpoint(line);
     }
 }
 
 bool debugAddBreakpoint(const int lineNum){
     LOG_DEBUG("Adding breakpoint on the line " << lineNum);
+
+    if (remote_gdb::useRemoteDebugging()) {
+        if (std::ranges::find(breakpointLines, lineNum + 1) != breakpointLines.end()) {
+            return false;
+        }
+        const auto address = lineNoToAddress(lineNum + 1);
+        if (!address) {
+            consoleWriteThreadSafe("remote >> cannot resolve line to address for breakpoint\n");
+            return false;
+        }
+        return debugAddBreakpointAddress(address);
+    }
+
     breakpointMutex.lock();
 
     const auto breakpointLineNo = (std::ranges::find(breakpointLines, lineNum + 1));
@@ -353,6 +644,7 @@ bool debugAddBreakpoint(const int lineNum){
     else{
         addBreakpointToLine(lineNum);
         editor->HighlightBreakpoints(lineNum);
+        breakpointAddresses.push_back(lineNoToAddress(lineNum + 1));
         LOG_DEBUG("Breakpoint added successfully!");
     }
 
@@ -369,10 +661,21 @@ bool debugRemoveBreakpoint(const int lineNum){
         return false;
     }
     else{
-        breakpointMutex.lock();
-        breakpointLines.erase(breakpointIter);
-        breakpointMutex.unlock();
-        editor->RemoveHighlight(lineNum);
+        if (remote_gdb::useRemoteDebugging()) {
+            const auto address = lineNoToAddress(lineNum + 1);
+            if (!address) {
+                return false;
+            }
+            return debugRemoveBreakpointAddress(address);
+        }
+        if (!removeBreakpointFromLineNo(lineNum + 1)) {
+            return false;
+        }
+        const auto address = lineNoToAddress(lineNum + 1);
+        const auto addressIter = std::ranges::find(breakpointAddresses, address);
+        if (addressIter != breakpointAddresses.end()) {
+            breakpointAddresses.erase(addressIter);
+        }
         LOG_DEBUG("Removed breakpoint at line no. " << lineNum);
     }
 
@@ -414,6 +717,15 @@ void debugContinueAction(const bool skipBP) {
             debugReadyCv.wait(lk, []{ return isDebugReady; });
         }
         LOG_DEBUG("Debug state confirmed ready, proceeding with continue.");
+
+        if (remote_gdb::useRemoteDebugging()) {
+            if (remote_gdb::remoteContinue()) {
+                requestRemoteUiSync(false);
+            } else {
+                consoleWriteThreadSafe("remote >> continue failed\n");
+            }
+            return;
+        }
 
         if (std::ranges::find(breakpointLines, stepOverBPLineNo) != breakpointLines.end()){
             const auto it = std::ranges::find(breakpointLines, tempBPLineNum);
@@ -497,32 +809,73 @@ void runActions(){
         int _;
         editor->GetCursorPosition(runUntilLine, _);
         LOG_DEBUG("Run until line is " << runUntilLine);
-        if (!debugModeEnabled){
-            startDebugging();
-        }
-        
-        executeInBackground([]{
-            {
-                std::unique_lock<std::mutex> lk(debugReadyMutex);
-                debugReadyCv.wait(lk, []{ return isDebugReady; });
+
+        if (remote_gdb::useRemoteDebugging()) {
+            const auto targetAddress = lineNoToAddress(runUntilLine + 1);
+            if (!targetAddress) {
+                consoleWriteThreadSafe("remote >> cannot resolve the selected disassembly line to an address\n");
+                runUntilHere = false;
+                return;
             }
 
-            skipEndStep = true;
-            addBreakpointToLine(runUntilLine, true);
-            stepCode(0);
-            skipEndStep = false;
+            executeInBackground([targetAddress]{
+                {
+                    std::unique_lock<std::mutex> lk(debugReadyMutex);
+                    debugReadyCv.wait(lk, []{ return isDebugReady; });
+                }
 
-            if (!executionComplete) {
-                const uint64_t newLineNo = addressLineNoMap[icicle_get_pc(icicle)];
-                if (newLineNo)
-                    safeHighlightLine(newLineNo - 1);
+                const bool alreadyTracked =
+                    std::ranges::find(breakpointAddresses, targetAddress) != breakpointAddresses.end();
+                bool temporaryBreakpoint = false;
+
+                if (!alreadyTracked) {
+                    if (!remote_gdb::remoteAddBreakpoint(targetAddress)) {
+                        consoleWriteThreadSafe("remote >> failed to add a temporary breakpoint for run-until-here\n");
+                        return;
+                    }
+                    temporaryBreakpoint = true;
+                }
+
+                if (remote_gdb::remoteContinue()) {
+                    requestRemoteUiSync(false);
+                } else {
+                    consoleWriteThreadSafe("remote >> run-until-here continue failed\n");
+                }
+
+                if (temporaryBreakpoint && !remote_gdb::remoteRemoveBreakpoint(targetAddress)) {
+                    consoleWriteThreadSafe("remote >> warning: failed to remove the temporary run-until-here breakpoint\n");
+                }
+            });
+
+            runUntilHere = false;
+        } else {
+            if (!debugModeEnabled){
+                startDebugging();
             }
             
-            // Remove temporary breakpoint
-            icicle_remove_breakpoint(icicle, lineNoToAddress(runUntilLine));
-        });
-        
-        runUntilHere = false;
+            executeInBackground([]{
+                {
+                    std::unique_lock<std::mutex> lk(debugReadyMutex);
+                    debugReadyCv.wait(lk, []{ return isDebugReady; });
+                }
+
+                skipEndStep = true;
+                addBreakpointToLine(runUntilLine, true);
+                stepCode(0);
+                skipEndStep = false;
+
+                if (!executionComplete) {
+                    const uint64_t newLineNo = addressLineNoMap[icicle_get_pc(icicle)];
+                    if (newLineNo)
+                        safeHighlightLine(newLineNo - 1);
+                }
+                
+                // Remove temporary breakpoint
+                icicle_remove_breakpoint(icicle, lineNoToAddress(runUntilLine));
+            });
+            
+            runUntilHere = false;
+        }
     }
     if (debugRun){
         if (isCodeRunning){
@@ -530,6 +883,22 @@ void runActions(){
             return;
         }
         executeInBackground([]{
+            if (remote_gdb::useRemoteDebugging()) {
+                if (!debugModeEnabled) {
+                    if (!connectAndInitRemote()) {
+                        consoleWriteThreadSafe("remote >> failed to connect for run\n");
+                        return;
+                    }
+                }
+
+                if (remote_gdb::remoteContinue()) {
+                    requestRemoteUiSync(false, true);
+                } else {
+                    consoleWriteThreadSafe("remote >> run/continue failed\n");
+                }
+                return;
+            }
+
             skipBreakpoints = true;
             // Initialize debugging environment first
             if (!debugModeEnabled) {
@@ -573,7 +942,6 @@ void runActions(){
     if (openFile){
         LOG_INFO("File open dialog requested!");
         executeInBackground([](){
-            resetState(false);
             fileOpenTask(openFileDialog());
         });
         openFile = false;
@@ -620,13 +988,21 @@ void runActions(){
     }
 
     if (runSelectedCode){
-        debugRunSelectionAction();
+        if (editorShowingRemoteDisassembly()) {
+            consoleWriteThreadSafe("remote >> run selected code is unavailable while the code pane is showing remote disassembly\n");
+        } else {
+            debugRunSelectionAction();
+        }
         runSelectedCode = false;
     }
 
     if (goToDefinition){
-        LOG_INFO("Going to label's definiton...");
-        editor->SelectLabelDefinition(false);
+        if (editorShowingRemoteDisassembly()) {
+            consoleWriteThreadSafe("remote >> go to definition is unavailable in the remote disassembly view\n");
+        } else {
+            LOG_INFO("Going to label's definiton...");
+            editor->SelectLabelDefinition(false);
+        }
         goToDefinition = false;
     }
 

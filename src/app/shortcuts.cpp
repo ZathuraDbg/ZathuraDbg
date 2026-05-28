@@ -1,5 +1,7 @@
 #include "shortcuts.hpp"
 
+float gFontScale = 1.0f;
+
 void manageShortcuts(){
     using namespace ImGui;
     ImGuiIO& io = ImGui::GetIO();
@@ -87,5 +89,15 @@ void manageShortcuts(){
     }
     if (IsKeyPressed(ImGuiKey_F10)){
         debugRun = true;
+    }
+
+    if (isCtrlShiftShortcut && IsKeyPressed(ImGuiKey_Equal)) {
+        gFontScale = gFontScale < 2.5f ? gFontScale + 0.1f : 2.5f;
+    }
+    if (isCtrlShiftShortcut && IsKeyPressed(ImGuiKey_Minus)) {
+        gFontScale = gFontScale > 0.5f ? gFontScale - 0.1f : 0.5f;
+    }
+    if (isCtrlShiftShortcut && IsKeyPressed(ImGuiKey_0)) {
+        gFontScale = 1.0f;
     }
 }
