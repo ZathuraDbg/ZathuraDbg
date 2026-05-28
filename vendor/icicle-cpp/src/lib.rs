@@ -1,64 +1,17 @@
-use std::collections::HashMap;
 use std::ffi::{CStr, CString};
 use std::os::raw::{c_char, c_int, c_uchar, c_void};
 use std::ptr;
-use std::fs::File;
-use std::io::{Read, Write};
-use icicle_cpu::mem::{Mapping, perm, Mmu, ReadAfterHook, WriteHook, MemoryMapping};
-use icicle_cpu::{Cpu, ValueSource, VmExit, ExceptionCode, Regs, ShadowStack, Exception};
+use icicle_cpu::mem::{Mapping, perm, Mmu, ReadAfterHook, WriteHook};
+use icicle_cpu::{Cpu, VmExit, Regs, ShadowStack, Exception};
 use icicle_vm::cpu::{Environment, debug_info::{DebugInfo, SourceLocation}};
 use icicle_vm::cpu::mem::AllocLayout;
-use target_lexicon::Architecture;
-use sleigh_runtime::NamedRegister;
 use serde::{Serialize, Deserialize};
-// We need to add bincode for serialization
-extern crate bincode;
 
-// Import log for logging
-extern crate tracing;
+mod types;
+mod vm;
 
-pub type ViolationFunction = extern "C" fn(data: *mut c_void, address: u64, permission: u8, unmapped: c_int) -> c_int;
-pub type RawFunction = extern "C" fn(data: *mut c_void);
-pub type PtrFunction = extern "C" fn(data: *mut c_void, address: u64);
-pub type SyscallHookFunction = extern "C" fn(data: *mut c_void, syscall_nr: u64, args: *const SyscallArgs) -> c_int;
-
-// Define Memory Hook callback types matching ffi.h
-pub type MemReadHookFunction = extern "C" fn(data: *mut c_void, address: u64, size: u8, value_read: *const u8);
-pub type MemWriteHookFunction = extern "C" fn(data: *mut c_void, address: u64, size: u8, value_written: u64);
-
-// Define debug instrumentation callback types
-pub type LogWriteHookFunction = extern "C" fn(data: *mut c_void, name: *const c_char, address: u64, size: u8, value: u64);
-pub type LogRegsHookFunction = extern "C" fn(data: *mut c_void, name: *const c_char, address: u64, num_regs: usize, reg_names: *const *const c_char, reg_values: *const u64);
-
-// Define SyscallArgs struct matching ffi.h (must be repr(C))
-#[repr(C)]
-pub struct SyscallArgs {
-    pub arg0: u64, // RDI
-    pub arg1: u64, // RSI
-    pub arg2: u64, // RDX
-    pub arg3: u64, // R10
-    pub arg4: u64, // R8
-    pub arg5: u64, // R9
-}
-
-// Hook type identifiers for tracking different hook types
-#[repr(C)]
-pub enum HookType {
-    Memory = 0,
-    Execution = 1,
-    Syscall = 2,
-    Violation = 3,
-}
-
-// Coverage modes for instrumentation (matching the icicle_fuzzing::CoverageMode enum)
-#[repr(C)]
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub enum CoverageMode {
-    Blocks = 0,      // Store a bit whenever a block is hit
-    Edges = 1,       // Store a bit whenever an edge is hit
-    BlockCounts = 2, // Increment a counter whenever a block is hit
-    EdgeCounts = 3,  // Increment a counter whenever an edge is hit
-}
+use crate::types::*;
+use crate::vm::{Icicle, reg_find};
 
 /// Adds a hook for memory access violations (read/write/execute violations and unmapped memory)
 /// 
@@ -170,12 +123,11 @@ pub extern "C" fn icicle_remove_execution_hook(
 
     // Remove the hook from our tracking map.
     // The actual hook closure will be dropped when removed from the map.
-    // We cannot remove it from the core VM's hook list.
+    // Note: we cannot remove a hook from the core VM's hook list (the upstream
+    // API doesn't expose hook-removal), so the hook stays active in the VM but
+    // its closure is dropped, making it a no-op.
     vm.execution_hooks.remove(&hook_id);
-    // Maybe clear TLB? Unsure if needed for execution hooks.
-    // vm.vm.cpu.mem.tlb.clear(); 
-
-    0 // Return success
+    0
 }
 
 /// Removes a previously registered hook (Violation or Syscall ONLY)
@@ -214,473 +166,12 @@ pub extern "C" fn icicle_remove_hook(
     }
 }
 
-/// Legacy function to maintain compatibility with existing code
+/// Legacy function to maintain compatibility with existing code.
+/// The hook_id parameter is ignored — there is exactly one syscall hook
+/// (ID 2) and this always removes it.
 #[no_mangle]
-pub extern "C" fn icicle_remove_syscall_hook(vm_ptr: *mut Icicle, hook_id: u32) -> c_int {
-    icicle_remove_hook(vm_ptr, hook_id)
-}
-
-#[repr(C)]
-pub struct RegInfo {
-    pub name: *mut c_char, // allocated C string (to be freed by caller)
-    pub offset: u32,
-    pub size: u8,
-}
-
-// ----- Helper for x86 flags handling -----
-struct X86FlagsRegHandler {
-    pub eflags: pcode::VarNode,
-}
-
-pub struct RawEnvironment {
-    debug_info: DebugInfo,
-}
-
-impl RawEnvironment {
-    pub fn new() -> Self {
-        Self { debug_info: DebugInfo::default() }
-    }
-}
-
-impl icicle_cpu::RegHandler for X86FlagsRegHandler {
-    fn read(&mut self, cpu: &mut Cpu) {
-        let eflags = icicle_vm::x86::eflags(cpu);
-        cpu.write_var::<u32>(self.eflags, eflags);
-    }
-
-    fn write(&mut self, cpu: &mut Cpu) {
-        let eflags = cpu.read_var::<u32>(self.eflags);
-        icicle_vm::x86::set_eflags(cpu, eflags);
-    }
-}
-
-// ----- C-friendly enums -----
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub enum MemoryProtection {
-    NoAccess = 0,
-    ReadOnly = 1,
-    ReadWrite = 2,
-    ExecuteOnly = 3,
-    ExecuteRead = 4,
-    ExecuteReadWrite = 5,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub enum RunStatus {
-    Running = 0,
-    InstructionLimit = 1,
-    Breakpoint = 2,
-    Interrupted = 3,
-    Halt = 4,
-    Killed = 5,
-    Deadlock = 6,
-    OutOfMemory = 7,
-    Unimplemented = 8,
-    UnhandledException = 9,
-}
-
-/// Helper function to map our MemoryProtection to the underlying permission bits.
-fn convert_protection(protection: MemoryProtection) -> u8 {
-    match protection {
-        MemoryProtection::NoAccess => perm::NONE,
-        MemoryProtection::ReadOnly => perm::READ,
-        MemoryProtection::ReadWrite => perm::READ | perm::WRITE,
-        MemoryProtection::ExecuteOnly => perm::EXEC,
-        MemoryProtection::ExecuteRead => perm::EXEC | perm::READ,
-        MemoryProtection::ExecuteReadWrite => perm::EXEC | perm::READ | perm::WRITE,
-    }
-}
-
-// ----- The Icicle VM structure -----
-// This structure is treated as opaque in the FFI API.
-pub struct Icicle {
-    architecture: String,
-    vm: icicle_vm::Vm,
-    regs: HashMap<String, NamedRegister>,
-    violation_callback: Option<(ViolationFunction, *mut c_void)>,
-    syscall_callback: Option<(SyscallHookFunction, *mut c_void)>,
-    // Track memory hooks
-    mem_read_hooks: HashMap<u32, Box<dyn ReadAfterHook>>,
-    mem_write_hooks: HashMap<u32, Box<dyn WriteHook>>,
-    next_mem_hook_id: u32,
-    // Track execution hooks
-    execution_hooks: HashMap<u32, Box<dyn FnMut(&mut Cpu, u64)>>,
-    next_execution_hook_id: u32,
-    // Coverage instrumentation
-    coverage_mode: CoverageMode,
-    coverage_start_addr: u64,
-    coverage_end_addr: u64,
-    context_bits: u8,
-    compcov_level: u8,
-    instrumentation_enabled: bool,
-    coverage_map: Vec<u8>,
-    coverage_hook_id: Option<u32>,
-}
-
-impl Icicle {
-    /// Create a new Icicle instance.
-    pub fn new(
-        architecture: &str,
-        jit: bool,
-        jit_mem: bool,
-        shadow_stack: bool,
-        recompilation: bool,
-        track_uninitialized: bool,
-        optimize_instructions: bool,
-        optimize_block: bool,
-        tracing: bool,
-    ) -> Result<Self, String> {
-        // Prevent mixing '_' and '-'
-        if architecture.split('-').count() != 1 {
-            return Err(format!("Bad architecture format: {}", architecture));
-        }
-
-        if tracing {
-            let _ = tracing_subscriber::fmt()
-                .with_max_level(tracing::Level::DEBUG)
-                .with_target(false)
-                .try_init();
-        }
-
-        let mut config = icicle_vm::cpu::Config::from_target_triple(
-            format!("{}-none", architecture).as_str(),
-        );
-        if config.triple.architecture == target_lexicon::Architecture::Unknown {
-            return Err(format!("Unknown architecture: {}", architecture));
-        }
-
-        config.enable_jit = jit;
-        config.enable_jit_mem = jit_mem;
-        config.enable_shadow_stack = shadow_stack;
-        config.enable_recompilation = recompilation;
-        config.track_uninitialized = track_uninitialized;
-        config.optimize_instructions = optimize_instructions;
-        config.optimize_block = optimize_block;
-
-        let mut vm = icicle_vm::build(&config)
-            .map_err(|e| format!("VM build error: {}", e))?;
-
-        let mut regs = HashMap::new();
-        let sleigh = &vm.cpu.arch.sleigh;
-        for reg in &sleigh.named_registers {
-            let name = sleigh.get_str(reg.name);
-            regs.insert(name.to_lowercase(), reg.clone());
-        }
-
-        // Special handling for x86 flags
-        match config.triple.architecture {
-            Architecture::X86_32(_) | Architecture::X86_64 | Architecture::X86_64h => {
-                let eflags = sleigh.get_reg("eflags").unwrap().var;
-                let reg_handler = X86FlagsRegHandler { eflags };
-                vm.cpu.add_reg_handler(eflags.id, Box::new(reg_handler));
-            }
-            _ => {}
-        }
-
-        Ok(Icicle {
-            architecture: architecture.to_string(),
-            vm,
-            regs,
-            violation_callback: None,
-            syscall_callback: None,
-            mem_read_hooks: HashMap::new(),
-            mem_write_hooks: HashMap::new(),
-            next_mem_hook_id: 0, // Start memory IDs at 0
-            execution_hooks: HashMap::new(),
-            next_execution_hook_id: 3, // Start execution IDs after Violation(1) and Syscall(2)
-            coverage_mode: CoverageMode::Blocks,
-            coverage_start_addr: 0,
-            coverage_end_addr: 0,
-            context_bits: 0,
-            compcov_level: 0,
-            instrumentation_enabled: true,
-            coverage_map: vec![0; 4096],
-            coverage_hook_id: None,
-        })
-    }
-
-    // Methods for icicle functions follow:
-    pub fn get_icount_limit(&self) -> u64 {
-        self.vm.icount_limit
-    }
-
-    pub fn set_icount_limit(&mut self, value: u64) {
-        self.vm.icount_limit = value;
-    }
-
-    pub fn get_icount(&self) -> u64 {
-        self.vm.cpu.icount
-    }
-
-    pub fn set_icount(&mut self, value: u64) {
-        self.vm.cpu.icount = value;
-    }
-
-    pub fn get_pc(&self) -> u64 {
-        self.vm.cpu.read_pc()
-    }
-
-    pub fn set_pc(&mut self, address: u64) {
-        self.vm.cpu.write_pc(address)
-    }
-
-    pub fn get_sp(&mut self) -> u64 {
-        self.vm.cpu.read_reg(self.vm.cpu.arch.reg_sp)
-    }
-
-    pub fn set_sp(&mut self, address: u64) {
-        self.vm.cpu.write_reg(self.vm.cpu.arch.reg_sp, address)
-    }
-
-    pub fn get_mem_capacity(&self) -> usize {
-        self.vm.cpu.mem.capacity()
-    }
-
-    pub fn set_mem_capacity(&mut self, capacity: usize) -> Result<(), String> {
-        if self.vm.cpu.mem.set_capacity(capacity) {
-            Ok(())
-        } else {
-            Err("Reducing memory capacity is not supported".to_string())
-        }
-    }
-
-    pub fn mem_map(&mut self, address: u64, size: u64, protection: MemoryProtection) -> Result<(), String> {
-        let init_perm = if self.vm.cpu.mem.track_uninitialized { perm::NONE } else { perm::INIT };
-        let mapping = Mapping {
-            perm: convert_protection(protection) | init_perm,
-            value: 0,
-        };
-        if self.vm.cpu.mem.map_memory_len(address, size, mapping) {
-            Ok(())
-        } else {
-            Err(format!("Failed to map memory {:#X}[{:#X}]", address, size))
-        }
-    }
-
-    pub fn mem_unmap(&mut self, address: u64, size: u64) -> Result<(), String> {
-        if self.vm.cpu.mem.unmap_memory_len(address, size) {
-            Ok(())
-        } else {
-            Err(format!("Failed to unmap memory {:#X}[{:#X}]", address, size))
-        }
-    }
-
-    pub fn mem_protect(&mut self, address: u64, size: usize, protection: MemoryProtection) -> Result<(), String> {
-        self.vm.cpu.mem.update_perm(address, size as u64, convert_protection(protection))
-            .map_err(|e| format!("Failed to protect memory {:#X}[{:#X}]: {:?}", address, size, e))?;
-        Ok(())
-    }
-
-    /// Reads memory into a newly allocated Vec.
-    pub fn mem_read(&mut self, address: u64, size: usize) -> Result<Vec<u8>, String> {
-        let mut buffer = vec![0u8; size];
-        self.vm.cpu.mem.read_bytes(address, &mut buffer[..], perm::NONE)
-            .map_err(|e| format!("Failed to read memory {:#X}[{:#X}]: {:?}", address, size, e))?;
-        Ok(buffer)
-    }
-
-    pub fn mem_write(&mut self, address: u64, data: &[u8]) -> Result<(), String> {
-        let size = data.len();
-        self.vm.cpu.mem.write_bytes(address, data, perm::NONE)
-            .map_err(|e| format!("Failed to write memory {:#X}[{:#X}]: {:?}", address, size, e))
-    }
-
-    pub fn reset(&mut self) {
-        self.vm.reset();
-    }
-
-    pub fn run(&mut self) -> RunStatus {
-        let original_exit = self.vm.run();
-
-        match original_exit {
-            VmExit::UnhandledException(_) => {
-                let cpu = &mut self.vm.cpu;
-                let exception_code_val = cpu.exception.code;
-                let exception_value = cpu.exception.value;
-                
-                let is_syscall = exception_code_val == ExceptionCode::Syscall as u32;
-                let is_violation = !is_syscall && (
-                       exception_code_val == ExceptionCode::ReadUnmapped as u32 ||
-                       exception_code_val == ExceptionCode::WriteUnmapped as u32 ||
-                       exception_code_val == ExceptionCode::ReadPerm as u32 ||
-                       exception_code_val == ExceptionCode::WritePerm as u32 ||
-                       exception_code_val == ExceptionCode::ExecViolation as u32);
-
-                if is_violation && self.violation_callback.is_some() {
-                    let (callback, data) = self.violation_callback.as_ref().unwrap(); 
-                    let address = exception_value;
-                    let unmapped = if exception_code_val == ExceptionCode::ReadUnmapped as u32 ||
-                                     exception_code_val == ExceptionCode::WriteUnmapped as u32 { 1 } else { 0 };
-                    let permission = match exception_code_val { 
-                         code if code == ExceptionCode::ReadPerm as u32 || code == ExceptionCode::ReadUnmapped as u32 => perm::READ,
-                         code if code == ExceptionCode::WritePerm as u32 || code == ExceptionCode::WriteUnmapped as u32 => perm::WRITE,
-                         code if code == ExceptionCode::ExecViolation as u32 => perm::EXEC,
-                         _ => 0 };
-                    
-                    let result = (callback)(*data, address, permission, unmapped);
-                    
-                    if result != 0 { 
-                        if address == 0 && (exception_code_val == ExceptionCode::WriteUnmapped as u32 ||
-                                            exception_code_val == ExceptionCode::WritePerm as u32) {
-                            let pc = cpu.read_pc(); 
-                            cpu.write_pc(pc + 6);    
-                        }
-                        cpu.exception.clear(); 
-                        return self.run(); 
-                    } else {
-                        return RunStatus::UnhandledException;
-                    }
-
-                } else if is_syscall && self.syscall_callback.is_some() {
-                    let (callback, data) = self.syscall_callback.as_ref().unwrap(); 
-                    
-                    let syscall_nr = match cpu.arch.sleigh.get_reg("RAX") {
-                        Some(reg) => cpu.read_reg(reg.var),
-                        None => u64::MAX, 
-                    };
-                    let args = SyscallArgs {
-                        arg0: match cpu.arch.sleigh.get_reg("RDI") { Some(r) => cpu.read_reg(r.var), None => 0 },
-                        arg1: match cpu.arch.sleigh.get_reg("RSI") { Some(r) => cpu.read_reg(r.var), None => 0 },
-                        arg2: match cpu.arch.sleigh.get_reg("RDX") { Some(r) => cpu.read_reg(r.var), None => 0 },
-                        arg3: match cpu.arch.sleigh.get_reg("R10") { Some(r) => cpu.read_reg(r.var), None => 0 },
-                        arg4: match cpu.arch.sleigh.get_reg("R8")  { Some(r) => cpu.read_reg(r.var), None => 0 },
-                        arg5: match cpu.arch.sleigh.get_reg("R9")  { Some(r) => cpu.read_reg(r.var), None => 0 },
-                    };
-                    
-                    let callback_result = (callback)(*data, syscall_nr, &args as *const SyscallArgs);
-
-                    match callback_result {
-                        0 => { 
-                            if syscall_nr == 0x3C { // sys_exit
-                                cpu.exception.clear();
-                                return RunStatus::Halt;
-                            } else {
-                                let pc = cpu.read_pc();
-                                cpu.write_pc(pc + 2); 
-                                cpu.exception.clear();
-                                return self.run(); 
-                            }
-                        }
-                        1 => { 
-                            let pc = cpu.read_pc();
-                            cpu.write_pc(pc + 2); 
-                            cpu.exception.clear();
-                            return self.run(); 
-                        }
-                        _ => { 
-                            return RunStatus::UnhandledException;
-                        }
-                    }
-                } else {
-                    return RunStatus::UnhandledException;
-                }
-            }
-            // Map other VmExit types
-            VmExit::Running => RunStatus::Running,
-            VmExit::InstructionLimit => RunStatus::InstructionLimit,
-            VmExit::Breakpoint => RunStatus::Breakpoint,
-            VmExit::Interrupted => RunStatus::Interrupted,
-            VmExit::Halt => RunStatus::Halt,
-            VmExit::Killed => RunStatus::Killed,
-            VmExit::Deadlock => RunStatus::Deadlock,
-            VmExit::OutOfMemory => RunStatus::OutOfMemory,
-            VmExit::Unimplemented => RunStatus::Unimplemented,
-        }
-    }
-
-    pub fn run_until(&mut self, address: u64) -> RunStatus {
-        let breakpoint_added = self.vm.add_breakpoint(address);
-        let status = self.run();
-        if breakpoint_added {
-            self.vm.remove_breakpoint(address);
-        }
-        status
-    }
-
-    pub fn step(&mut self, count: u64) -> RunStatus {
-        let old_limit = self.vm.icount_limit;
-        self.vm.icount_limit = self.vm.cpu.icount.saturating_add(count);
-        let status = self.run();
-        self.vm.icount_limit = old_limit;
-        status
-    }
-
-    pub fn add_breakpoint(&mut self, address: u64) -> bool {
-        self.vm.add_breakpoint(address)
-    }
-
-    pub fn remove_breakpoint(&mut self, address: u64) -> bool {
-        self.vm.remove_breakpoint(address)
-    }
-
-    pub fn get_backtrace(&mut self, max_frames: usize) -> String {
-        icicle_vm::debug::backtrace_with_limit(&mut self.vm, max_frames)
-    }
-
-    pub fn dump_disasm(&self) -> Result<String, String> {
-        icicle_vm::debug::dump_disasm(&self.vm)
-            .map_err(|e| format!("Failed to dump disassembly: {}", e))
-    }
-
-    pub fn current_disasm(&self) -> String {
-        icicle_vm::debug::current_disasm(&self.vm)
-    }
-
-    /// Steps backward in execution by the specified number of instructions.
-    /// Returns None if there are no snapshots to step back to.
-    pub fn step_back(&mut self, count: u64) -> Option<RunStatus> {
-        // Map VmExit to RunStatus if step_back succeeds
-        self.vm.step_back(count).map(|exit| match exit {
-            VmExit::Running => RunStatus::Running,
-            VmExit::InstructionLimit => RunStatus::InstructionLimit,
-            VmExit::Breakpoint => RunStatus::Breakpoint,
-            VmExit::Interrupted => RunStatus::Interrupted,
-            VmExit::Halt => RunStatus::Halt,
-            VmExit::Killed => RunStatus::Killed,
-            VmExit::Deadlock => RunStatus::Deadlock,
-            VmExit::OutOfMemory => RunStatus::OutOfMemory,
-            VmExit::Unimplemented => RunStatus::Unimplemented,
-            VmExit::UnhandledException(_) => RunStatus::UnhandledException,
-        })
-    }
-
-    /// Goes to a specific instruction count if snapshots are available.
-    /// Returns None if there are no snapshots that can reach the specified instruction count.
-    pub fn goto_icount(&mut self, target_icount: u64) -> Option<RunStatus> {
-        // Map VmExit to RunStatus if goto_icount succeeds
-        self.vm.goto_icount(target_icount).map(|exit| match exit {
-            VmExit::Running => RunStatus::Running,
-            VmExit::InstructionLimit => RunStatus::InstructionLimit,
-            VmExit::Breakpoint => RunStatus::Breakpoint,
-            VmExit::Interrupted => RunStatus::Interrupted,
-            VmExit::Halt => RunStatus::Halt,
-            VmExit::Killed => RunStatus::Killed,
-            VmExit::Deadlock => RunStatus::Deadlock,
-            VmExit::OutOfMemory => RunStatus::OutOfMemory,
-            VmExit::Unimplemented => RunStatus::Unimplemented,
-            VmExit::UnhandledException(_) => RunStatus::UnhandledException,
-        })
-    }
-
-    /// Saves a snapshot at the current execution state.
-    /// Snapshots are required for step_back and goto_icount functionality.
-    pub fn save_snapshot(&mut self) {
-        self.vm.save_snapshot();
-    }
-}
-
-fn reg_find<'a>(i: &'a Icicle, name: &str) -> Result<&'a NamedRegister, String> {
-    let sleigh = &i.vm.cpu.arch.sleigh;
-    match sleigh.get_reg(name) {
-        None => {
-            i.regs.get(&name.to_lowercase())
-                .ok_or(format!("Register not found: {}", name))
-        }
-        Some(r) => Ok(r),
-    }
+pub extern "C" fn icicle_remove_syscall_hook(vm_ptr: *mut Icicle, _hook_id: u32) -> c_int {
+    icicle_remove_hook(vm_ptr, 2)
 }
 
 #[no_mangle]
@@ -716,16 +207,14 @@ pub extern "C" fn icicle_new(
         tracing,
     ) {
         Ok(vm) => Box::into_raw(Box::new(vm)),
-        Err(err) => {
-            std::ptr::null_mut()
-        }
+        Err(_) => std::ptr::null_mut(),
     }
 }
 
 #[no_mangle]
 pub extern "C" fn icicle_free(ptr: *mut Icicle) {
     if !ptr.is_null() {
-        unsafe { Box::from_raw(ptr); }
+        unsafe { drop(Box::from_raw(ptr)); }
     }
 }
 
@@ -793,9 +282,7 @@ pub extern "C" fn icicle_mem_map(ptr: *mut Icicle, address: u64, size: u64, prot
     let res = unsafe { (*ptr).mem_map(address, size, protection) };
     match res {
         Ok(_) => 0,
-        Err(err) => {
-            -1
-        }
+        Err(_) => -1,
     }
 }
 
@@ -807,9 +294,7 @@ pub extern "C" fn icicle_mem_unmap(ptr: *mut Icicle, address: u64, size: u64) ->
     let res = unsafe { (*ptr).mem_unmap(address, size) };
     match res {
         Ok(_) => 0,
-        Err(err) => {
-            -1
-        }
+        Err(_) => -1,
     }
 }
 
@@ -821,9 +306,7 @@ pub extern "C" fn icicle_mem_protect(ptr: *mut Icicle, address: u64, size: usize
     let res = unsafe { (*ptr).mem_protect(address, size, protection) };
     match res {
         Ok(_) => 0,
-        Err(err) => {
-            -1
-        }
+        Err(_) => -1,
     }
 }
 
@@ -842,9 +325,7 @@ pub extern "C" fn icicle_mem_read(ptr: *mut Icicle, address: u64, size: usize, o
             std::mem::forget(buf);
             ptr
         }
-        Err(err) => {
-            std::ptr::null_mut()
-        }
+        Err(_) => std::ptr::null_mut(),
     }
 }
 
@@ -857,9 +338,7 @@ pub extern "C" fn icicle_mem_write(ptr: *mut Icicle, address: u64, data: *const 
     let res = unsafe { (*ptr).mem_write(address, slice) };
     match res {
         Ok(_) => 0,
-        Err(err) => {
-            -1
-        }
+        Err(_) => -1,
     }
 }
 
@@ -886,13 +365,11 @@ pub extern "C" fn icicle_reg_read(vm_ptr: *mut Icicle, reg_name: *const c_char, 
     };
     match reg_find(vm, name) {
         Ok(reg) => {
-            let value = vm.vm.cpu.read_reg(reg.var);
+            let value = vm.vm.cpu.read_reg(reg.get_raw_var());
             unsafe { *out_value = value; }
             0
         }
-        Err(err) => {
-            -1
-        }
+        Err(_) => -1,
     }
 }
 
@@ -909,16 +386,14 @@ pub extern "C" fn icicle_reg_write(vm_ptr: *mut Icicle, reg_name: *const c_char,
     };
     match reg_find(vm, name) {
         Ok(reg) => {
-            if reg.var == vm.vm.cpu.arch.reg_pc {
+            if reg.get_raw_var() == vm.vm.cpu.arch.reg_pc {
                 vm.vm.cpu.write_pc(value);
             } else {
-                vm.vm.cpu.write_reg(reg.var, value);
+                vm.vm.cpu.write_reg(reg.get_raw_var(), value);
             }
             0
         }
-        Err(err) => {
-            -1
-        }
+        Err(_) => -1,
     }
 }
 
@@ -955,7 +430,7 @@ pub extern "C" fn icicle_reg_list(vm_ptr: *mut Icicle, out_count: *mut usize) ->
         regs_vec.push(RegInfo {
             name: cstring.into_raw(),
             offset: reg.offset,
-            size: reg.var.size,
+            size: reg.get_raw_var().size,
         });
     }
     unsafe {
@@ -993,7 +468,7 @@ pub extern "C" fn icicle_reg_size(vm_ptr: *mut Icicle, reg_name: *const c_char) 
         Err(_) => return -1,
     };
     match reg_find(vm, name) {
-        Ok(reg) => reg.var.size as c_int,
+        Ok(reg) => reg.get_raw_var().size as c_int,
         Err(_) => -1,
     }
 }
@@ -1020,9 +495,7 @@ pub extern "C" fn icicle_set_mem_capacity(ptr: *mut Icicle, capacity: usize) -> 
 
     match vm.set_mem_capacity(capacity) {
         Ok(()) => 0,
-        Err(err) => {
-            -1
-        }
+        Err(_) => -1,
     }
 }
 
@@ -1104,6 +577,16 @@ pub extern "C" fn icicle_get_exception_code(ptr: *const Icicle) -> u32 {
     }
 }
 
+pub struct RawEnvironment {
+    debug_info: DebugInfo,
+}
+
+impl RawEnvironment {
+    pub fn new() -> Self {
+        Self { debug_info: DebugInfo::default() }
+    }
+}
+
 impl Environment for RawEnvironment {
     fn load(&mut self, cpu: &mut Cpu, code_bytes: &[u8]) -> Result<(), String> {
         let layout = AllocLayout { addr: Some(0x10000), size: 0x1000, align: 0x1000 };
@@ -1149,7 +632,7 @@ pub extern "C" fn icicle_rawenv_new() -> *mut RawEnvironment {
 #[no_mangle]
 pub extern "C" fn icicle_rawenv_free(env: *mut RawEnvironment) {
     if !env.is_null() {
-        unsafe { Box::from_raw(env); }
+        unsafe { drop(Box::from_raw(env)); }
     }
 }
 
@@ -1167,9 +650,7 @@ pub extern "C" fn icicle_rawenv_load(
     let code_slice = unsafe { std::slice::from_raw_parts(code, size) };
     match unsafe { &mut *env }.load(cpu, code_slice) {
         Ok(()) => 0,
-        Err(e) => {
-            -1
-        }
+        Err(_) => -1,
     }
 }
 
@@ -1196,27 +677,16 @@ pub extern "C" fn icicle_add_mem_read_hook(
     }
     let vm = unsafe { &mut *vm_ptr };
 
-    let wrapper = ReadHookWrapper {
-        callback,
-        user_data: data,
-    };
+    let wrapper = ReadHookWrapper { callback, user_data: data };
 
-    // Generate a new hook ID
-    let hook_id = vm.mem_read_hooks.len() as u32;
-    
-    // Store the wrapper in our tracking map
-    vm.mem_read_hooks.insert(hook_id, Box::new(wrapper.clone()));
-
-    // Add the hook to the MMU
-    match vm.vm.cpu.mem.add_read_after_hook(start_addr, end_addr, Box::new(wrapper)) {
+    match vm.vm.cpu.mem.add_read_after_hook(start_addr, end_addr, Box::new(wrapper.clone())) {
         Some(_) => {
+            let hook_id = vm.next_mem_hook_id;
+            vm.next_mem_hook_id += 1;
+            vm.mem_read_hooks.insert(hook_id, Box::new(wrapper));
             hook_id
         }
-        None => {
-            // Clean up our tracking if MMU addition failed
-            vm.mem_read_hooks.remove(&hook_id);
-            0
-        }
+        None => 0,
     }
 }
 
@@ -1233,27 +703,16 @@ pub extern "C" fn icicle_add_mem_write_hook(
     }
     let vm = unsafe { &mut *vm_ptr };
 
-    let wrapper = WriteHookWrapper {
-        callback,
-        user_data: data,
-    };
+    let wrapper = WriteHookWrapper { callback, user_data: data };
 
-    // Generate a new hook ID
-    let hook_id = vm.mem_write_hooks.len() as u32;
-    
-    // Store the wrapper in our tracking map
-    vm.mem_write_hooks.insert(hook_id, Box::new(wrapper.clone()));
-
-    // Add the hook to the MMU
-    match vm.vm.cpu.mem.add_write_hook(start_addr, end_addr, Box::new(wrapper)) {
+    match vm.vm.cpu.mem.add_write_hook(start_addr, end_addr, Box::new(wrapper.clone())) {
         Some(_) => {
+            let hook_id = vm.next_mem_hook_id;
+            vm.next_mem_hook_id += 1;
+            vm.mem_write_hooks.insert(hook_id, Box::new(wrapper));
             hook_id
         }
-        None => {
-            // Clean up our tracking if MMU addition failed
-            vm.mem_write_hooks.remove(&hook_id);
-            0
-        }
+        None => 0,
     }
 }
 
@@ -1414,9 +873,9 @@ pub extern "C" fn icicle_cpu_snapshot_free(snapshot: *mut CpuSnapshot) {
     if !snapshot.is_null() {
         unsafe {
             let snapshot = Box::from_raw(snapshot);
-            Box::from_raw(snapshot.regs);
-            Box::from_raw(snapshot.shadow_stack);
-            Box::from_raw(snapshot.pending_exception);
+            drop(Box::from_raw(snapshot.regs));
+            drop(Box::from_raw(snapshot.shadow_stack));
+            drop(Box::from_raw(snapshot.pending_exception));
         }
     }
 }
@@ -1477,8 +936,8 @@ pub extern "C" fn icicle_vm_snapshot_free(snapshot: *mut VmSnapshot) {
         unsafe {
             let snapshot = Box::from_raw(snapshot);
             icicle_cpu_snapshot_free(snapshot.cpu);
-            Box::from_raw(snapshot.mem);
-            Box::from_raw(snapshot.env);
+            drop(Box::from_raw(snapshot.mem));
+            drop(Box::from_raw(snapshot.env));
         }
     }
 }
@@ -1785,7 +1244,7 @@ pub extern "C" fn icicle_debug_log_regs(
         // Collect register values
         for reg_name in &rust_reg_names {
             let var = match cpu.arch.sleigh.get_reg(reg_name.to_str().unwrap_or("")) {
-                Some(reg) => reg.var,
+                Some(reg) => reg.get_raw_var(),
                 None => continue,
             };
             
@@ -1796,16 +1255,14 @@ pub extern "C" fn icicle_debug_log_regs(
         
         // Call the C callback
         if !c_reg_names.is_empty() {
-            unsafe {
-                (reg_hook.callback)(
-                    reg_hook.user_data,
-                    reg_hook.name.as_ptr(),
-                    addr,
-                    c_reg_names.len(),
-                    c_reg_names.as_ptr(),
-                    reg_values.as_ptr(),
-                );
-            }
+            (reg_hook.callback)(
+                reg_hook.user_data,
+                reg_hook.name.as_ptr(),
+                addr,
+                c_reg_names.len(),
+                c_reg_names.as_ptr(),
+                reg_values.as_ptr(),
+            );
         }
     };
     
@@ -1815,8 +1272,10 @@ pub extern "C" fn icicle_debug_log_regs(
     
     // Add execution hook to the VM
     let internal_hook_id = vm.vm.cpu.add_hook(Box::new(hook_fn.clone()));
-    // Register to activate the hook at specific address
-    icicle_vm::injector::register_block_hook_injector(&mut vm.vm, address, address + 1, internal_hook_id);
+    // Register to activate the hook at the specific instruction address.
+    // Instruction-level injection is more precise than block-level for
+    // single-address hooks, especially when the address is a jmp target.
+    icicle_vm::injector::register_instruction_hook_injector(&mut vm.vm, vec![address], internal_hook_id);
     
     // Store for future reference
     vm.execution_hooks.insert(hook_id, Box::new(hook_fn));
@@ -1825,7 +1284,7 @@ pub extern "C" fn icicle_debug_log_regs(
 }
 
 // Default debug hook that will be used if environment variable configuration is used
-extern "C" fn default_log_write_hook(data: *mut c_void, name: *const c_char, address: u64, size: u8, value: u64) {
+extern "C" fn default_log_write_hook(_data: *mut c_void, name: *const c_char, address: u64, size: u8, value: u64) {
     let name_str = unsafe { 
         if name.is_null() { 
             "unknown" 
@@ -1837,7 +1296,7 @@ extern "C" fn default_log_write_hook(data: *mut c_void, name: *const c_char, add
 }
 
 // Default debug hook for register values
-extern "C" fn default_log_regs_hook(data: *mut c_void, name: *const c_char, address: u64, num_regs: usize, reg_names: *const *const c_char, reg_values: *const u64) {
+extern "C" fn default_log_regs_hook(_data: *mut c_void, name: *const c_char, address: u64, num_regs: usize, reg_names: *const *const c_char, reg_values: *const u64) {
     let name_str = unsafe { 
         if name.is_null() { 
             "unknown" 
@@ -2028,18 +1487,17 @@ pub extern "C" fn icicle_set_coverage_mode(
     }
     let vm = unsafe { &mut *vm_ptr };
     
-    // Clear existing coverage data
-    vm.coverage_map.clear();
-    
-    // Initialize a coverage map based on the mode
-    // For block/edge coverage modes, we use a bit map
-    // For count modes, we use a counter map
+    // Resize the existing coverage map in-place rather than allocating a new
+    // Vec. This avoids invalidating the raw pointer held by any still-registered
+    // coverage hooks (a known upstream limitation: hooks cannot be removed from
+    // the core VM).  If the size stays the same, the internal buffer is reused
+    // and existing hooks continue to write to valid memory.
     let size = match mode {
-        CoverageMode::Blocks | CoverageMode::Edges => 4096, // 32K bits
-        CoverageMode::BlockCounts | CoverageMode::EdgeCounts => 4096 * 2, // 4K counters
+        CoverageMode::Blocks | CoverageMode::Edges => 4096,
+        CoverageMode::BlockCounts | CoverageMode::EdgeCounts => 4096 * 2,
     };
-    
-    vm.coverage_map = vec![0; size];
+    vm.coverage_map.clear();
+    vm.coverage_map.resize(size, 0);
     vm.coverage_mode = mode;
     
     // If we already have an execution hook, remove it
@@ -2058,217 +1516,106 @@ pub extern "C" fn icicle_set_coverage_mode(
     0
 }
 
-// Internal function to add the appropriate coverage hook
+// Returns a fresh boxed coverage hook for `mode` that writes into the Vec<u8>
+// behind `coverage_map_ptr`. The caller is responsible for ensuring the pointer
+// outlives the hook (in practice it points into the Icicle struct, which lives
+// as long as the FFI handle).
+fn build_coverage_hook(
+    coverage_map_ptr: *mut Vec<u8>,
+    mode: CoverageMode,
+) -> Box<dyn FnMut(&mut Cpu, u64)> {
+    // SAFETY: coverage_map_ptr is the only mutable alias kept on the coverage
+    // map for the lifetime of this hook; the VM invokes hooks single-threaded
+    // and the Vec is reallocated only when coverage is reset (which removes
+    // and replaces the hook beforehand).
+    match mode {
+        CoverageMode::Blocks => Box::new(move |_cpu: &mut Cpu, pc: u64| {
+            let map = unsafe { &mut *coverage_map_ptr };
+            mark_bit(map, pc as usize);
+        }),
+        CoverageMode::Edges => {
+            let mut prev_pc = 0u64;
+            Box::new(move |_cpu: &mut Cpu, pc: u64| {
+                let map = unsafe { &mut *coverage_map_ptr };
+                let edge_hash = ((prev_pc >> 4) ^ pc) as usize;
+                mark_bit(map, edge_hash);
+                prev_pc = pc;
+            })
+        }
+        CoverageMode::BlockCounts => Box::new(move |_cpu: &mut Cpu, pc: u64| {
+            let map = unsafe { &mut *coverage_map_ptr };
+            inc_counter(map, pc as usize);
+        }),
+        CoverageMode::EdgeCounts => {
+            let mut prev_pc = 0u64;
+            Box::new(move |_cpu: &mut Cpu, pc: u64| {
+                let map = unsafe { &mut *coverage_map_ptr };
+                let edge_hash = ((prev_pc >> 4) ^ pc) as usize;
+                inc_counter(map, edge_hash);
+                prev_pc = pc;
+            })
+        }
+    }
+}
+
+// Sets a single coverage bit at the given hash index in a bit-mapped coverage table.
+fn mark_bit(map: &mut [u8], hash: usize) {
+    if map.is_empty() {
+        return;
+    }
+    let idx = hash % (map.len() * 8);
+    let byte_idx = idx / 8;
+    let bit_idx = idx % 8;
+    if byte_idx < map.len() {
+        map[byte_idx] |= 1 << bit_idx;
+    }
+}
+
+// Increments a saturating u16 counter at the given hash index in a counter-based
+// coverage table (2 bytes per slot).
+fn inc_counter(map: &mut [u8], hash: usize) {
+    if map.len() < 2 {
+        return;
+    }
+    let idx = hash % (map.len() / 2);
+    let byte_idx = idx * 2;
+    if byte_idx + 1 >= map.len() {
+        return;
+    }
+    let counter = u16::from_le_bytes([map[byte_idx], map[byte_idx + 1]]);
+    if counter < u16::MAX {
+        let bytes = (counter + 1).to_le_bytes();
+        map[byte_idx] = bytes[0];
+        map[byte_idx + 1] = bytes[1];
+    }
+}
+
+// Internal function to add the appropriate coverage hook.
 fn add_coverage_hook(vm_ptr: *mut Icicle, mode: CoverageMode) -> u32 {
     let vm = unsafe { &mut *vm_ptr };
-    
-    // Create a weak reference to the coverage map
     let coverage_map_ptr = &mut vm.coverage_map as *mut Vec<u8>;
-    
-    // Since we can't modify the CPU directly, we'll use our execution hook system
-    let hook_fn: Box<dyn FnMut(&mut Cpu, u64)> = match mode {
-        CoverageMode::Blocks => {
-            Box::new(move |_cpu: &mut Cpu, pc: u64| {
-                // Calculate a hash/index based on the PC
-                let coverage_map = unsafe { &mut *coverage_map_ptr };
-                let idx = (pc as usize) % (coverage_map.len() * 8);
-                let byte_idx = idx / 8;
-                let bit_idx = idx % 8;
-                
-                if byte_idx < coverage_map.len() {
-                    coverage_map[byte_idx] |= 1 << bit_idx;
-                }
-            })
-        },
-        CoverageMode::Edges => {
-            // For edge coverage, we need to track the previous block
-            let mut prev_pc = 0;
-            Box::new(move |_cpu: &mut Cpu, pc: u64| {
-                // Calculate a hash/index based on the edge (prev_pc -> pc)
-                let coverage_map = unsafe { &mut *coverage_map_ptr };
-                let edge_hash = ((prev_pc >> 4) ^ pc) as usize; 
-                let idx = edge_hash % (coverage_map.len() * 8);
-                let byte_idx = idx / 8;
-                let bit_idx = idx % 8;
-                
-                if byte_idx < coverage_map.len() {
-                    coverage_map[byte_idx] |= 1 << bit_idx;
-                }
-                
-                prev_pc = pc;
-            })
-        },
-        CoverageMode::BlockCounts => {
-            Box::new(move |_cpu: &mut Cpu, pc: u64| {
-                // Calculate a hash/index based on the PC
-                let coverage_map = unsafe { &mut *coverage_map_ptr };
-                let idx = (pc as usize) % (coverage_map.len() / 2);
-                let byte_idx = idx * 2;
-                
-                if byte_idx + 1 < coverage_map.len() {
-                    // Increment the counter (2 bytes per counter)
-                    let counter = u16::from_le_bytes([
-                        coverage_map[byte_idx],
-                        coverage_map[byte_idx + 1]
-                    ]);
-                    
-                    // Don't overflow the counter
-                    if counter < u16::MAX {
-                        let new_counter = counter + 1;
-                        let bytes = new_counter.to_le_bytes();
-                        coverage_map[byte_idx] = bytes[0];
-                        coverage_map[byte_idx + 1] = bytes[1];
-                    }
-                }
-            })
-        },
-        CoverageMode::EdgeCounts => {
-            // Edge counts need to track previous block
-            let mut prev_pc = 0;
-            Box::new(move |_cpu: &mut Cpu, pc: u64| {
-                // Calculate a hash/index based on the edge (prev_pc -> pc)
-                let coverage_map = unsafe { &mut *coverage_map_ptr };
-                let edge_hash = ((prev_pc >> 4) ^ pc) as usize;
-                let idx = edge_hash % (coverage_map.len() / 2);
-                let byte_idx = idx * 2;
-                
-                if byte_idx + 1 < coverage_map.len() {
-                    // Increment the counter (2 bytes per counter)
-                    let counter = u16::from_le_bytes([
-                        coverage_map[byte_idx],
-                        coverage_map[byte_idx + 1]
-                    ]);
-                    
-                    // Don't overflow the counter
-                    if counter < u16::MAX {
-                        let new_counter = counter + 1;
-                        let bytes = new_counter.to_le_bytes();
-                        coverage_map[byte_idx] = bytes[0];
-                        coverage_map[byte_idx + 1] = bytes[1];
-                    }
-                }
-                
-                prev_pc = pc;
-            })
-        },
-    };
-    
-    // Register the hook with the system
+
+    // Register the hook with the core VM.
+    let hook_fn = build_coverage_hook(coverage_map_ptr, mode);
     let internal_id = vm.vm.cpu.add_hook(hook_fn);
-    
-    // Register a hook injector if we have a range specified
-    if vm.coverage_start_addr < vm.coverage_end_addr {
-        icicle_vm::injector::register_block_hook_injector(
-            &mut vm.vm, 
-            vm.coverage_start_addr, 
-            vm.coverage_end_addr, 
-            internal_id
-        );
+
+    // Activate it for the configured address range (default: all addresses).
+    let (start, end) = if vm.coverage_start_addr < vm.coverage_end_addr {
+        (vm.coverage_start_addr, vm.coverage_end_addr)
     } else {
-        // Register for all addresses
-        icicle_vm::injector::register_block_hook_injector(
-            &mut vm.vm, 
-            0, 
-            u64::MAX, 
-            internal_id
-        );
-    }
-    
-    // Generate and store the hook ID for later removal
-    let ffi_hook_id = vm.next_execution_hook_id;
-    
-    // We need to save a separate hook function for the FFI layer
-    // since the original hook_fn is consumed by the add_hook call
-    let hook_fn2: Box<dyn FnMut(&mut Cpu, u64)> = match mode {
-        CoverageMode::Blocks => {
-            Box::new(move |_cpu: &mut Cpu, pc: u64| {
-                // Calculate a hash/index based on the PC
-                let coverage_map = unsafe { &mut *coverage_map_ptr };
-                let idx = (pc as usize) % (coverage_map.len() * 8);
-                let byte_idx = idx / 8;
-                let bit_idx = idx % 8;
-                
-                if byte_idx < coverage_map.len() {
-                    coverage_map[byte_idx] |= 1 << bit_idx;
-                }
-            })
-        },
-        CoverageMode::Edges => {
-            // For edge coverage, we need to track the previous block
-            let mut prev_pc = 0;
-            Box::new(move |_cpu: &mut Cpu, pc: u64| {
-                // Calculate a hash/index based on the edge (prev_pc -> pc)
-                let coverage_map = unsafe { &mut *coverage_map_ptr };
-                let edge_hash = ((prev_pc >> 4) ^ pc) as usize; 
-                let idx = edge_hash % (coverage_map.len() * 8);
-                let byte_idx = idx / 8;
-                let bit_idx = idx % 8;
-                
-                if byte_idx < coverage_map.len() {
-                    coverage_map[byte_idx] |= 1 << bit_idx;
-                }
-                
-                prev_pc = pc;
-            })
-        },
-        CoverageMode::BlockCounts => {
-            Box::new(move |_cpu: &mut Cpu, pc: u64| {
-                // Calculate a hash/index based on the PC
-                let coverage_map = unsafe { &mut *coverage_map_ptr };
-                let idx = (pc as usize) % (coverage_map.len() / 2);
-                let byte_idx = idx * 2;
-                
-                if byte_idx + 1 < coverage_map.len() {
-                    // Increment the counter (2 bytes per counter)
-                    let counter = u16::from_le_bytes([
-                        coverage_map[byte_idx],
-                        coverage_map[byte_idx + 1]
-                    ]);
-                    
-                    // Don't overflow the counter
-                    if counter < u16::MAX {
-                        let new_counter = counter + 1;
-                        let bytes = new_counter.to_le_bytes();
-                        coverage_map[byte_idx] = bytes[0];
-                        coverage_map[byte_idx + 1] = bytes[1];
-                    }
-                }
-            })
-        },
-        CoverageMode::EdgeCounts => {
-            // Edge counts need to track previous block
-            let mut prev_pc = 0;
-            Box::new(move |_cpu: &mut Cpu, pc: u64| {
-                // Calculate a hash/index based on the edge (prev_pc -> pc)
-                let coverage_map = unsafe { &mut *coverage_map_ptr };
-                let edge_hash = ((prev_pc >> 4) ^ pc) as usize;
-                let idx = edge_hash % (coverage_map.len() / 2);
-                let byte_idx = idx * 2;
-                
-                if byte_idx + 1 < coverage_map.len() {
-                    // Increment the counter (2 bytes per counter)
-                    let counter = u16::from_le_bytes([
-                        coverage_map[byte_idx],
-                        coverage_map[byte_idx + 1]
-                    ]);
-                    
-                    // Don't overflow the counter
-                    if counter < u16::MAX {
-                        let new_counter = counter + 1;
-                        let bytes = new_counter.to_le_bytes();
-                        coverage_map[byte_idx] = bytes[0];
-                        coverage_map[byte_idx + 1] = bytes[1];
-                    }
-                }
-                
-                prev_pc = pc;
-            })
-        },
+        (0, u64::MAX)
     };
-    
-    vm.execution_hooks.insert(ffi_hook_id, hook_fn2);
+    icicle_vm::injector::register_block_hook_injector(&mut vm.vm, start, end, internal_id);
+
+    // Store an inert tracking entry so the FFI ID can be allocated/removed.
+    // The core VM owns the live closure; the entry in execution_hooks is only
+    // used so icicle_remove_execution_hook can recognize this ID. Removing it
+    // does NOT deactivate the core hook (a known limitation).
+    let ffi_hook_id = vm.next_execution_hook_id;
     vm.next_execution_hook_id += 1;
-    
+    vm.execution_hooks
+        .insert(ffi_hook_id, Box::new(|_cpu: &mut Cpu, _pc: u64| {}));
+
     ffi_hook_id
 }
 
@@ -2291,7 +1638,7 @@ pub extern "C" fn icicle_enable_instrumentation(
     start_addr: u64,
     end_addr: u64,
 ) -> c_int {
-    if vm_ptr.is_null() || start_addr >= end_addr {
+    if vm_ptr.is_null() || start_addr > end_addr {
         return -1;
     }
     let vm = unsafe { &mut *vm_ptr };
@@ -2502,15 +1849,15 @@ pub extern "C" fn icicle_reg_read_bytes(
 
     match reg_find(vm, name) {
         Ok(reg) => {
-            let reg_size = reg.var.size as usize;
+            let reg_size = reg.get_raw_var().size as usize;
             // Ensure the provided buffer is large enough
             if buffer_size < reg_size {
                 return -1; // Buffer too small
             }
 
             // Read the raw bytes directly from the Regs storage
-            if let Some(bytes) = vm.vm.cpu.regs.get(reg.var) {
-                 // Check length just in case, though reg.var.size should be correct
+            if let Some(bytes) = vm.vm.cpu.regs.get(reg.get_raw_var()) {
+                 // Check length just in case, though reg.get_raw_var().size should be correct
                 if bytes.len() != reg_size {
                      eprintln!("Warning: Register size mismatch for {}", name);
                      return -1;
@@ -2550,7 +1897,7 @@ pub extern "C" fn icicle_reg_write_bytes(
 
     match reg_find(vm, name) {
         Ok(reg) => {
-            let reg_size = reg.var.size as usize;
+            let reg_size = reg.get_raw_var().size as usize;
             // Ensure the provided buffer size matches the register size
             if buffer_size != reg_size {
                 return -1; // Buffer size mismatch
@@ -2560,7 +1907,7 @@ pub extern "C" fn icicle_reg_write_bytes(
             let input_bytes = unsafe { std::slice::from_raw_parts(buffer, buffer_size) };
             
             // Get mutable access to the register's bytes
-            if let Some(reg_bytes) = vm.vm.cpu.regs.get_mut(reg.var) {
+            if let Some(reg_bytes) = vm.vm.cpu.regs.get_mut(reg.get_raw_var()) {
                 // Check length just in case
                 if reg_bytes.len() != reg_size {
                     eprintln!("Warning: Register size mismatch for {}", name);
@@ -2612,31 +1959,6 @@ pub extern "C" fn icicle_breakpoint_list_free(list: *mut u64, count: usize) {
 }
 
 // Helper function to map underlying permission bits back to our MemoryProtection enum.
-fn perm_to_protection(perm: u8) -> MemoryProtection {
-    let read = (perm & perm::READ) != 0;
-    let write = (perm & perm::WRITE) != 0;
-    let exec = (perm & perm::EXEC) != 0;
-
-    match (read, write, exec) {
-        (true, true, true) => MemoryProtection::ExecuteReadWrite,
-        (true, true, false) => MemoryProtection::ReadWrite,
-        (true, false, true) => MemoryProtection::ExecuteRead,
-        (true, false, false) => MemoryProtection::ReadOnly,
-        (false, false, true) => MemoryProtection::ExecuteOnly,
-        _ => MemoryProtection::NoAccess,
-    }
-}
-
-// ----- C-compatible struct for memory region info -----
-#[repr(C)]
-pub struct MemRegionInfo {
-    pub address: u64,
-    pub size: u64,
-    pub protection: MemoryProtection,
-}
-
-/// Retrieves a list of physically mapped memory regions in the VM.
-///
 /// @param vm_ptr Pointer to the Icicle VM instance.
 /// @param out_count Pointer to a size_t where the number of mapped regions will be stored.
 /// @return A pointer to an array of MemRegionInfo structs. The caller is responsible
@@ -2789,97 +2111,91 @@ impl SerializableVmState {
     // Magic signature for compressed data
     const ZSTD_MAGIC: [u8; 4] = [0x28, 0xB5, 0x2F, 0xFD]; // Standard zstd magic number
     
-    // Create a serializable state from CPU and memory
-    fn from_vm(vm: &Icicle) -> Self {
-        // Get CPU state
+    // Capture the CPU-only portion of the VM state (no memory touched).
+    fn cpu_state_from_vm(vm: &Icicle) -> (Vec<u8>, Vec<(u64, u64)>, u32, u64, u64) {
         let cpu = &vm.vm.cpu;
-        
-        // Capture register data
         let regs = cpu.regs.clone();
-        let regs_data = unsafe { 
+        // SAFETY: Regs is repr(C) / POD-like; we transmute its byte representation
+        // to a Vec<u8>. The same Regs layout must be used at deserialize time.
+        let regs_data = unsafe {
             std::slice::from_raw_parts(
                 &regs as *const Regs as *const u8,
-                std::mem::size_of::<Regs>()
+                std::mem::size_of::<Regs>(),
             ).to_vec()
         };
-
-        // Extract shadow stack entries
         let shadow_stack_entries = if cpu.shadow_stack.depth() > 0 {
-            cpu.shadow_stack.as_slice()
+            cpu.shadow_stack
+                .as_slice()
                 .iter()
-                .map(|entry| {
-                    (entry.addr, entry.block)
-                })
+                .map(|entry| (entry.addr, entry.block))
                 .collect()
         } else {
             Vec::new()
         };
+        (
+            regs_data,
+            shadow_stack_entries,
+            cpu.exception.code,
+            cpu.exception.value,
+            cpu.icount,
+        )
+    }
 
-        // Capture CPU exception and icount
-        let exception_code = cpu.exception.code;
-        let exception_value = cpu.exception.value;
-        let icount = cpu.icount;
-
-        // Capture memory regions
+    // Collect mapped regions and their contents for serialization.
+    fn collect_memory_regions(vm: &mut Icicle) -> Vec<SerializedMemoryRegion> {
         let mut memory_regions = Vec::new();
         let mut region_count: usize = 0;
-        
-        // Use existing function to get mapped memory regions
-        let regions_ptr = unsafe { icicle_mem_list_mapped(vm as *const _ as *mut Icicle, &mut region_count as *mut usize) };
-        
+        let regions_ptr = icicle_mem_list_mapped(vm, &mut region_count);
+
         if !regions_ptr.is_null() && region_count > 0 {
             let regions = unsafe { std::slice::from_raw_parts(regions_ptr, region_count) };
-            
-            // For each region, capture metadata and content
+            const MAX_REGION_SIZE: u64 = 100 * 1024 * 1024;
+
             for region in regions {
-                // Skip regions that are too large (optional safety check)
-                if region.size > 1024 * 1024 * 100 { // 100 MB limit per region
-                    tracing::warn!("Skipping very large memory region at 0x{:x} (size: {} bytes)", 
-                                  region.address, region.size);
+                if region.size > MAX_REGION_SIZE {
+                    tracing::warn!(
+                        "Skipping very large memory region at 0x{:x} (size: {} bytes)",
+                        region.address, region.size
+                    );
                     continue;
                 }
-                
-                // Read memory content
-                let mut content = Vec::new();
+
                 let size = region.size as usize;
-                
-                // Read the memory region content
                 let mut content_size: usize = 0;
-                let content_ptr = unsafe { 
-                    icicle_mem_read(
-                        vm as *const _ as *mut Icicle, 
-                        region.address, 
-                        size, 
-                        &mut content_size as *mut usize
-                    ) 
+                let content_ptr = icicle_mem_read(vm, region.address, size, &mut content_size);
+
+                let content = if !content_ptr.is_null() && content_size > 0 {
+                    let bytes = unsafe { std::slice::from_raw_parts(content_ptr, content_size).to_vec() };
+                    icicle_free_buffer(content_ptr, content_size);
+                    bytes
+                } else {
+                    Vec::new()
                 };
-                
-                if !content_ptr.is_null() && content_size > 0 {
-                    content = unsafe { 
-                        let slice = std::slice::from_raw_parts(content_ptr, content_size);
-                        slice.to_vec() 
-                    };
-                    
-                    // Free the buffer allocated by icicle_mem_read
-                    unsafe { icicle_free_buffer(content_ptr, content_size) };
-                }
-                
-                // Convert protection to numeric value
-                let protection = convert_protection(region.protection);
-                
-                // Add region to the list
+
                 memory_regions.push(SerializedMemoryRegion {
                     address: region.address,
                     size: region.size,
-                    protection,
+                    protection: convert_protection(region.protection),
                     content,
                 });
             }
-            
-            // Free the regions list
-            unsafe { icicle_mem_list_mapped_free(regions_ptr, region_count) };
+
+            icicle_mem_list_mapped_free(regions_ptr, region_count);
         }
-        
+
+        memory_regions
+    }
+
+    // Build the full state (CPU + optionally memory).
+    fn from_vm(vm: &mut Icicle, include_memory: bool) -> Self {
+        let (regs_data, shadow_stack_entries, exception_code, exception_value, icount) =
+            Self::cpu_state_from_vm(vm);
+        let memory_regions = if include_memory {
+            Self::collect_memory_regions(vm)
+        } else {
+            Vec::new()
+        };
+
         SerializableVmState {
             regs_data,
             shadow_stack_entries,
@@ -2992,12 +2308,6 @@ impl SerializableVmState {
         }
     }
 
-    // Deserialize from binary
-    fn deserialize(data: &[u8]) -> Result<Self, String> {
-        // Default to allow decompression
-        Self::deserialize_with_options(data, true)
-    }
-    
     // Deserialize with options
     fn deserialize_with_options(data: &[u8], allow_decompression: bool) -> Result<Self, String> {
         // Check if data is compressed (has zstd magic number)
@@ -3021,11 +2331,6 @@ impl SerializableVmState {
 
 // ----- FFI Functions for Serialization/Deserialization -----
 
-// Define the log level constants
-const LOG_NONE: i32 = 0;
-const LOG_ERRORS: i32 = 1;
-const LOG_VERBOSE: i32 = 2;
-
 #[no_mangle]
 pub extern "C" fn icicle_serialize_vm_state(
     vm_ptr: *mut Icicle,
@@ -3046,44 +2351,13 @@ pub extern "C" fn icicle_serialize_vm_state(
         }
     };
     
-    // Get the VM state
-    let vm_state = SerializableVmState::from_vm(vm);
-    
-    // If we don't want to include memory, create a copy without memory regions
-    let serialized_data = if include_memory {
-        // Determine whether to compress and at what level based on log_level
-        // For simplicity: if log_level > 2, enable compression with level = log_level - 2
-        let use_compression = log_level > 2;
-        let compression_level = log_level - 2;
-        
-        match vm_state.serialize_with_options(use_compression, compression_level) {
-            Ok(data) => data,
-            Err(_) => {
-                return -1;
-            }
-        }
-    } else {
-        // Create a copy without memory regions
-        let cpu_only_state = SerializableVmState {
-            regs_data: vm_state.regs_data,
-            shadow_stack_entries: vm_state.shadow_stack_entries,
-            exception_code: vm_state.exception_code,
-            exception_value: vm_state.exception_value,
-            icount: vm_state.icount,
-            memory_regions: Vec::new(),
-            version: vm_state.version,
-        };
-        
-        // For CPU-only, use compression if log_level > 2
-        let use_compression = log_level > 2;
-        let compression_level = log_level - 2;
-        
-        match cpu_only_state.serialize_with_options(use_compression, compression_level) {
-            Ok(data) => data,
-            Err(_) => {
-                return -1;
-            }
-        }
+    let use_compression = log_level > 2;
+    let compression_level = log_level - 2;
+    let vm_state = SerializableVmState::from_vm(vm, include_memory);
+
+    let serialized_data = match vm_state.serialize_with_options(use_compression, compression_level) {
+        Ok(data) => data,
+        Err(_) => return -1,
     };
     
     // Write to file
@@ -3102,7 +2376,7 @@ pub extern "C" fn icicle_deserialize_vm_state(
     vm_ptr: *mut Icicle,
     filename: *const c_char,
     apply_memory: bool,
-    log_level: c_int
+    _log_level: c_int,
 ) -> c_int {
     if vm_ptr.is_null() || filename.is_null() {
         return -1;
@@ -3178,21 +2452,7 @@ pub extern "C" fn icicle_get_serialized_size(vm_ptr: *mut Icicle) -> usize {
     }
     
     let vm = unsafe { &mut *vm_ptr };
-    
-    // Create serializable state (CPU only for compatibility)
-    let vm_state = SerializableVmState::from_vm(vm);
-    let cpu_only_state = SerializableVmState {
-        regs_data: vm_state.regs_data,
-        shadow_stack_entries: vm_state.shadow_stack_entries,
-        exception_code: vm_state.exception_code,
-        exception_value: vm_state.exception_value,
-        icount: vm_state.icount,
-        memory_regions: Vec::new(),
-        version: vm_state.version,
-    };
-    
-    // Serialize to get size
-    match cpu_only_state.serialize() {
+    match SerializableVmState::from_vm(vm, false).serialize() {
         Ok(data) => data.len(),
         Err(_) => 0,
     }
@@ -3204,14 +2464,8 @@ pub extern "C" fn icicle_get_vm_serialized_size(vm_ptr: *mut Icicle) -> usize {
     if vm_ptr.is_null() {
         return 0;
     }
-    
     let vm = unsafe { &mut *vm_ptr };
-    
-    // Create full serializable state
-    let vm_state = SerializableVmState::from_vm(vm);
-    
-    // Serialize to get size
-    match vm_state.serialize() {
+    match SerializableVmState::from_vm(vm, true).serialize() {
         Ok(data) => data.len(),
         Err(_) => 0,
     }

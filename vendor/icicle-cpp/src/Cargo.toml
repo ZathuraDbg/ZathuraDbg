@@ -20,7 +20,7 @@ icicle-cpu = { git = "https://github.com/icicle-emu/icicle-emu" }
 sleigh-runtime = { git = "https://github.com/icicle-emu/icicle-emu" }
 sleigh-compile = { path = "./sleigh/sleigh-compile" }
 indexmap = "1.9.1"
-target-lexicon = "0.12"
+target-lexicon = "0.13"
 tracing-subscriber = "0.3"
 tracing = "0.1"
 object = { version = "0.36.2", default-features = false, features = ["write", "read_core", "elf"] }

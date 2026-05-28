@@ -1,1 +1,4 @@
 src/target
+tests/*-debug
+tests/*-release
+tests/*.bin
