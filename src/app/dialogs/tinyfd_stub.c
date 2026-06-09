@@ -45,7 +45,9 @@ int tinyfd_messageBox(char const* aTitle, char const* aMessage, char const* aDia
     (void)aDialogType;
     (void)aIconType;
     log_dialog(aTitle, aMessage);
-    /* Report the default button so callers proceed as if "ok/yes". */
+    /* Return the caller's default button. Every confirmation site in the app
+     * passes 0 (cancel/no), so destructive "okcancel"/"yesno" prompts default
+     * to the safe, non-destructive choice in the browser build. */
     return aDefaultButton;
 }
 

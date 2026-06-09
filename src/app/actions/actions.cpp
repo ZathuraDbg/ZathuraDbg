@@ -26,7 +26,6 @@ int pendingHighlightLine = -1;
 bool pendingRemoteUiSync = false;
 bool pendingRemoteRefreshTarget = false;
 bool pendingRemoteResetCodeMemoryBase = false;
-int actionRunCount = 1;
 std::optional<uint64_t> remoteDisassemblyBaseAddress{};
 uint64_t remoteResumeGeneration = 0;
 

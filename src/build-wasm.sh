@@ -8,9 +8,17 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
-EMSDK_ENV="${EMSDK_ENV:-/home/rc/icicle-wasm/emsdk/emsdk_env.sh}"
-WASM_LIBS_ROOT="${WASM_LIBS_ROOT:-/home/rc/icicle-wasm}"
+# Defaults assume the icicle-wasm workspace sits next to this repo. Override via
+# the environment if it lives elsewhere.
+WASM_LIBS_ROOT="${WASM_LIBS_ROOT:-$(cd ../../icicle-wasm && pwd)}"
+EMSDK_ENV="${EMSDK_ENV:-$WASM_LIBS_ROOT/emsdk/emsdk_env.sh}"
 BUILD_DIR="${BUILD_DIR:-build-wasm}"
+
+if [[ ! -f "$EMSDK_ENV" ]]; then
+    echo "error: emsdk_env.sh not found at $EMSDK_ENV" >&2
+    echo "set EMSDK_ENV=/path/to/emsdk/emsdk_env.sh (and WASM_LIBS_ROOT)" >&2
+    exit 1
+fi
 
 # shellcheck disable=SC1090
 source "$EMSDK_ENV" >/dev/null 2>&1

@@ -167,9 +167,10 @@ set(OpenGL_GL_PREFERENCE GLVND)
 # Define the output directory for the binary
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
 
-# Locations of the wasm-compiled third-party static libraries. Defaults point
-# at the icicle-wasm workspace; override on the cmake command line if needed.
-set(WASM_LIBS_ROOT "/home/rc/icicle-wasm" CACHE PATH "Root of prebuilt wasm libs")
+# Locations of the wasm-compiled third-party static libraries. Defaults assume
+# the icicle-wasm workspace sits next to this repo (../../icicle-wasm relative
+# to src/); override with -DWASM_LIBS_ROOT=... if it lives elsewhere.
+set(WASM_LIBS_ROOT "${CMAKE_SOURCE_DIR}/../../icicle-wasm" CACHE PATH "Root of prebuilt wasm libs")
 set(WASM_ICICLE_LIB "${WASM_LIBS_ROOT}/icicle-cpp/src/target/wasm32-unknown-emscripten/release/libicicle.a" CACHE FILEPATH "wasm libicicle.a")
 set(WASM_KEYSTONE_LIB "${WASM_LIBS_ROOT}/keystone-src/build-wasm/llvm/lib/libkeystone.a" CACHE FILEPATH "wasm libkeystone.a")
 set(WASM_CAPSTONE_LIB "${WASM_LIBS_ROOT}/capstone/build-wasm/libcapstone.a" CACHE FILEPATH "wasm libcapstone.a")
@@ -256,8 +257,8 @@ if (EMSCRIPTEN)
             -sMAX_WEBGL_VERSION=2
             -sFULL_ES3=1
             -sALLOW_MEMORY_GROWTH=1
-            -sINITIAL_MEMORY=536870912
-            -sSTACK_SIZE=8388608
+            -sINITIAL_MEMORY=536870912   # 512 MiB: emulator heap + embedded MEMFS headroom; grows on demand
+            -sSTACK_SIZE=8388608         # 8 MiB: sleigh spec compilation recurses deeply
             -sFORCE_FILESYSTEM=1
             -sEXIT_RUNTIME=0
             -sASSERTIONS=1
