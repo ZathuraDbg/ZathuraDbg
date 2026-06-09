@@ -1,4 +1,5 @@
 #include "interpreter.hpp"
+#include "../debugState.hpp"
 #include <unordered_set>
 
 namespace {
@@ -184,6 +185,8 @@ bool resetState(bool reInit){
         remote_gdb::disconnectRemoteDebugSession();
     }
     restoreLocalEditorAfterRemoteSession();
+    resetDebugWatchpointHooks();
+    clearDebugDiffs();
 
     clearVmSnapshots();
 

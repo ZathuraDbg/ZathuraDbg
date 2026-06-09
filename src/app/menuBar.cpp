@@ -10,6 +10,9 @@ const cs_mode armCSModes[] = {CS_MODE_ARM, CS_MODE_THUMB};
 
 bool debugRestart = false;
 bool memoryMapsUI = false;
+bool breakpointsUI = false;
+bool watchpointsUI = false;
+bool stateChangesUI = false;
 bool debugStepIn = false;
 bool debugStepOver = false;
 bool debugContinue = false;
@@ -272,6 +275,7 @@ void appMenuBar()
         if (ImGui::BeginMenu("File"))
         {
             ImGui::MenuItem("Open", "Ctrl+O", &openFile);
+            ImGui::MenuItem("Load ELF Binary", nullptr, &openElfBinary);
             ImGui::MenuItem("New File", "Ctrl+N", &createFile);
             ImGui::MenuItem("Save", "Ctrl+S", &saveFile);
             ImGui::MenuItem("Save As", "Ctrl+Shift+S", &saveFileAs);
@@ -335,6 +339,9 @@ void appMenuBar()
             ImGui::MenuItem("Continue", debugModeEnabled ? "F5" : nullptr, &debugContinue, debugModeEnabled ? true : false);
             ImGui::MenuItem("Restart debugging", "CTRL+F5", &debugRestart, debugModeEnabled ? true : false);
             ImGui::MenuItem("Memory maps", "CTRL+F7", &memoryMapsUI, debugModeEnabled ? true : false);
+            ImGui::MenuItem("Breakpoints", nullptr, &breakpointsUI, true);
+            ImGui::MenuItem("Watchpoints", nullptr, &watchpointsUI, true);
+            ImGui::MenuItem("State changes", nullptr, &stateChangesUI, true);
             ImGui::MenuItem("Enable time travel debugging", nullptr, &ttdEnabled, true);
             ImGui::Separator();
             ImGui::EndMenu();

@@ -1,9 +1,14 @@
 #include "windows.hpp"
 #include "../app.hpp"
+#include "../integration/debugState.hpp"
 
 MemoryEditor memoryEditorWindow;
 std::vector<newMemEditWindowsInfo> newMemEditWindows{};
 bool remoteMemoryViewFollowsPc = true;
+
+static bool memoryDiffHighlightFn(const ImU8*, const size_t off) {
+    return isDebugMemoryChanged(MEMORY_EDITOR_BASE + off);
+}
 
 void hexWriteFunc(ImU8* data, const size_t off, const ImU8 d){
     if (!isDebugReady)
@@ -418,13 +423,17 @@ void hexEditorWindow(){
     std::optional<std::vector<uint8_t>> memData;
     if (isDebugReady) {
         memData = readDebugMemory(MEMORY_EDITOR_BASE, MEMORY_DEFAULT_SIZE);
+        if (memData.has_value()) {
+            trackDebugMemory(MEMORY_EDITOR_BASE, *memData);
+        }
     }
 
     void* displayData = memData.has_value()
         ? static_cast<void*>(memData->data())
         : static_cast<void*>(zeroArr);
 
-    memoryEditorWindow.HighlightColor = ImColor(59, 60, 79);
+    memoryEditorWindow.HighlightColor = IM_COL32(230, 154, 70, 130);
+    memoryEditorWindow.HighlightFn = memoryDiffHighlightFn;
     memoryEditorWindow.OptShowAddWindowButton = true;
     memoryEditorWindow.NewWindowInfoFn = createNewWindow;
     memoryEditorWindow.ShowRequiredButton = stackEditor.ShowRequiredButton = &showRequiredButton;

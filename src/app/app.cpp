@@ -204,6 +204,28 @@ void mainWindow() {
     ImGui::End();
     hexEditorWindow();
 
+    ImGui::Begin("Remote Source", &keepWindow, ImGuiWindowFlags_NoCollapse);
+    remoteSourceWindow();
+    ImGui::End();
+
+    if (breakpointsUI) {
+        ImGui::Begin("Breakpoints", &breakpointsUI, ImGuiWindowFlags_NoCollapse);
+        breakpointManagerWindow();
+        ImGui::End();
+    }
+
+    if (watchpointsUI) {
+        ImGui::Begin("Watchpoints", &watchpointsUI, ImGuiWindowFlags_NoCollapse);
+        watchpointWindow();
+        ImGui::End();
+    }
+
+    if (stateChangesUI) {
+        ImGui::Begin("State Changes", &stateChangesUI, ImGuiWindowFlags_NoCollapse);
+        stateChangesWindow();
+        ImGui::End();
+    }
+
     ImGui::Begin("Stack", &keepWindow, ImGuiWindowFlags_NoCollapse);
     stackEditorWindow();
     ImGui::End();

@@ -13,6 +13,8 @@
 
 #include "imgui_impl_opengl3_loader.h"
 #include "../integration/interpreter/interpreter.hpp"
+#include "../integration/debugState.hpp"
+#include "../integration/elfLoader.hpp"
 
 std::mutex uiUpdateMutex;
 bool pendingUIUpdate = false;
@@ -309,6 +311,7 @@ static bool connectAndInitRemote() {
     }
 
     initRemoteAddresses();
+    syncRemoteDebugWatchpoints();
 
     {
         std::lock_guard<std::mutex> lk(debugReadyMutex);
@@ -771,6 +774,7 @@ void runActions(){
     }
     if (debugModeEnabled) {
         if (debugRestart){
+            clearVisibleDebugDiffs();
             if (isCodeRunning){
                 debugPauseAction();
             }
@@ -778,6 +782,7 @@ void runActions(){
             debugRestart = false;
         }
         if (debugContinue){
+            clearVisibleDebugDiffs();
             debugContinueAction(false);
             debugContinue = false;
         }
@@ -786,6 +791,7 @@ void runActions(){
                 debugStepOver = false;
                 return;
             }
+            clearVisibleDebugDiffs();
             stepOverAction();
             debugStepOver = false;
         }
@@ -794,6 +800,7 @@ void runActions(){
                 debugStepIn = false;
                 return;
             }
+            clearVisibleDebugDiffs();
             stepInAction();
             debugStepIn = false;
         }
@@ -808,6 +815,7 @@ void runActions(){
     }
 
     if (runUntilHere){
+        clearVisibleDebugDiffs();
         int _;
         editor->GetCursorPosition(runUntilLine, _);
         LOG_DEBUG("Run until line is " << runUntilLine);
@@ -884,6 +892,7 @@ void runActions(){
             debugRun = false;
             return;
         }
+        clearVisibleDebugDiffs();
         executeInBackground([]{
             if (remote_gdb::useRemoteDebugging()) {
                 if (!debugModeEnabled) {
@@ -947,6 +956,13 @@ void runActions(){
             fileOpenTask(openFileDialog());
         });
         openFile = false;
+    }
+    if (openElfBinary){
+        LOG_INFO("ELF binary open dialog requested!");
+        executeInBackground([](){
+            loadElfBinaryForDebug(openFileDialog());
+        });
+        openElfBinary = false;
     }
     if (createFile)
     {

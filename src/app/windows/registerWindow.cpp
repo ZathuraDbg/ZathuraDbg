@@ -1,4 +1,5 @@
 #include "windows.hpp"
+#include "../integration/debugState.hpp"
 #include <cstring>
 bool codeHasRun = false;
 bool stepClickedOnce = false;
@@ -8,6 +9,29 @@ std::string hoveredReg;
 std::string reg32BitFirstElemStr = "[0:31]";
 std::string reg64BitFirstElemStr = "[0:63]";
 
+namespace {
+
+constexpr ImU32 kRegisterDiffCellColor = IM_COL32(230, 154, 70, 78);
+constexpr ImVec4 kRegisterDiffFrameColor = ImVec4(0.42f, 0.25f, 0.07f, 0.78f);
+
+bool isRegisterChangedInLastDiff(const std::string& regName) {
+    const auto normalized = toLowerCase(regName);
+    for (const auto& change : debugRegisterChanges()) {
+        if (toLowerCase(change.name) == normalized) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void markRegisterDiffCell(const bool changed) {
+    if (changed) {
+        ImGui::TableSetBgColor(ImGuiTableBgTarget_CellBg, kRegisterDiffCellColor);
+    }
+}
+
+}
+
 const std::vector<std::string> reg32BitLaneStrs = {"[0:31]", "[32:63]", "[64:95]", "[96:127]", "[128:159]", "[160:191]", "[192:223]", "[224:255]", "[256:287]", "[288:319]", "[320:351]", "[352:383]", "[384:415]", "[416:447]", "[448:479]", "[480:511]"};
 const std::vector<std::string> reg64BitLaneStrs = {"[0:63]", "[64:127]", "[128:191]", "[192:255]", "[256:319]", "[320:383]", "[384:447]", "[448:511]"};
 
@@ -15,6 +39,7 @@ void initDefaultRegs(){
     for (auto& reg: defaultShownRegs){
         registerValueMap[reg] = "0x00";
     }
+    trackDebugRegisters(registerValueMap);
 }
 
 void removeRegisterFromView(const std::string& reg, const int regType){
@@ -206,6 +231,7 @@ void updateRegs(bool useTempContext){
 
     // Update the main map with the temporary map
     registerValueMap = std::move(tempMap);
+    trackDebugRegisters(registerValueMap);
 }
 
 std::vector<std::string> parseRegisters(std::string registerString){
@@ -826,6 +852,8 @@ void registerWindow() {
 
             ImGui::TableNextRow();
             ImGui::TableSetColumnIndex(0);
+            bool isFirstRegisterChanged = isRegisterChangedInLastDiff(regValMapInfo->first);
+            markRegisterDiffCell(isFirstRegisterChanged);
 
             const float textHeight = ImGui::GetTextLineHeight();
             const float frameHeight = ImGui::GetFrameHeight();
@@ -845,6 +873,7 @@ void registerWindow() {
             ImGui::PopID();
 
             ImGui::TableSetColumnIndex(1);
+            markRegisterDiffCell(isFirstRegisterChanged);
 
             static char regValueFirst[64] = {};
             strncpy(regValueFirst, regValMapInfo->second.c_str(), sizeof(regValueFirst) - 1);
@@ -861,9 +890,15 @@ void registerWindow() {
             }
 
             int (*callback)(ImGuiInputTextCallbackData* data) = isBigReg ? decimalCallback: checkHexCharsCallback;
+            if (isFirstRegisterChanged) {
+                ImGui::PushStyleColor(ImGuiCol_FrameBg, kRegisterDiffFrameColor);
+            }
             if (ImGui::InputText(("##regValueFirst" + std::to_string(index)).c_str(), regValueFirst, IM_ARRAYSIZE(regValueFirst), ImGuiInputTextFlags_CharsNoBlank | ImGuiInputTextFlags_EnterReturnsTrue
             | flags, callback)) {
                 parseRegisterValueInput(regValMapInfo->first, regValueFirst, isBigReg);
+            }
+            if (isFirstRegisterChanged) {
+                ImGui::PopStyleColor();
             }
             ImGui::PopID();
 
@@ -876,6 +911,8 @@ void registerWindow() {
             if (regValMapInfo == registerValueMap.end()) break;
 
             ImGui::TableSetColumnIndex(2);
+            bool isSecondRegisterChanged = isRegisterChangedInLastDiff(regValMapInfo->first);
+            markRegisterDiffCell(isSecondRegisterChanged);
             ImGui::PushID(index + 3 * 4);
 
             if (ImGui::Selectable(toUpperCase(regValMapInfo->first).c_str(), false)) {
@@ -889,6 +926,7 @@ void registerWindow() {
             ImGui::PopID();
 
             ImGui::TableSetColumnIndex(3);
+            markRegisterDiffCell(isSecondRegisterChanged);
             static char regValueSecond[64] = {};
             strncpy(regValueSecond, regValMapInfo->second.c_str(), sizeof(regValueSecond) - 1);
             regValueSecond[sizeof(regValueSecond) - 1] = '\0';
@@ -902,8 +940,14 @@ void registerWindow() {
             isBigReg = getRegisterActualSize(regValMapInfo->first) > 64 || (getRegister(regValMapInfo->first).registerValueUn.info.isFloatReg || getRegister(regValMapInfo->first).registerValueUn.info.isFloatReg);
             int (*callback2)(ImGuiInputTextCallbackData* data) = isBigReg ? decimalCallback: checkHexCharsCallback;
 
+            if (isSecondRegisterChanged) {
+                ImGui::PushStyleColor(ImGuiCol_FrameBg, kRegisterDiffFrameColor);
+            }
             if (ImGui::InputText(("##regValueSecond" + std::to_string(index)).c_str(), regValueSecond, IM_ARRAYSIZE(regValueSecond), ImGuiInputTextFlags_CharsNoBlank | ImGuiInputTextFlags_EnterReturnsTrue | flags, callback2)) {
                 parseRegisterValueInput(regValMapInfo->first, regValueSecond, isBigReg);
+            }
+            if (isSecondRegisterChanged) {
+                ImGui::PopStyleColor();
             }
 
             ImGui::PopID();

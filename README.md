@@ -43,11 +43,11 @@ Read [COMPILE.md](/COMPILE.md) to compile ZathuraDbg on your machine.
 - everyone else who supported this project
 
 # FAQs
-Q. Can ZathuraDbg debug binaries?    
-A. No, ZathuraDbg does not have this feature yet.     
-    
-Q. Does ZathuraDbg support syscalls and OS level APIs?    
-A. Common syscalls are planned to be implemented in the future.    
+Q. Can ZathuraDbg debug binaries?
+A. ZathuraDbg can load ELF binaries into the local emulator experimentally. Full process-level binary debugging, dynamic loader emulation, and OS API coverage are still under development.
 
-Q. Which architectures are currently supported in ZathuraDbg?    
+Q. Does ZathuraDbg support syscalls and OS level APIs?
+A. Common syscalls are planned to be implemented in the future.
+
+Q. Which architectures are currently supported in ZathuraDbg?
 A. Intel x86_64 and ARM 32 bit, Thumbv7m and AArch64.

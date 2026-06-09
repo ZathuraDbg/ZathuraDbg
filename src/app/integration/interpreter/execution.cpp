@@ -1,4 +1,5 @@
 #include "interpreter.hpp"
+#include "../debugState.hpp"
 #include <algorithm>
 
 int getCurrentLine(){
@@ -132,6 +133,7 @@ bool preExecutionSetup(const std::string& codeIn)
     uint32_t instructionHookID = icicle_add_execution_hook(icicle, instructionHook, nullptr);
     uint32_t stackWriteHookID = icicle_add_mem_write_hook(icicle, stackWriteHook, nullptr, STACK_ADDRESS, STACK_ADDRESS + STACK_SIZE);
     icicle_add_syscall_hook(icicle, handleSyscalls, icicle);
+    installDebugWatchpointHooks();
 
     // Signal that debugging setup is complete and ready for execution
     {

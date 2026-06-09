@@ -3,9 +3,11 @@
 #include <elf.h>
 
 #include <cstdint>
+#include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <string>
 #include <vector>
 
 namespace {
@@ -65,6 +67,67 @@ std::vector<uint8_t> malformedElf64WithUnexpectedSectionEntrySize()
     return bytes;
 }
 
+std::string shellQuote(const std::filesystem::path& path)
+{
+    std::string quoted = "'";
+    for (const char c : path.string())
+    {
+        if (c == '\'')
+        {
+            quoted += "'\\''";
+        }
+        else
+        {
+            quoted += c;
+        }
+    }
+    quoted += "'";
+    return quoted;
+}
+
+bool expectSourceLinesFromDebugElf()
+{
+    const auto sourcePath = std::filesystem::temp_directory_path() / "zathura-source-lines-fixture.c";
+    const auto elfPath = std::filesystem::temp_directory_path() / "zathura-source-lines-fixture";
+
+    {
+        std::ofstream source(sourcePath, std::ios::trunc);
+        source << "static int add_one(int x) { return x + 1; }\n"
+               << "int main(void) { return add_one(2); }\n";
+    }
+
+    const std::string command = "cc -g -O0 -o " + shellQuote(elfPath) + " " + shellQuote(sourcePath);
+    if (std::system(command.c_str()) != 0)
+    {
+        std::cerr << "Failed to compile source-line fixture\n";
+        std::filesystem::remove(sourcePath);
+        return false;
+    }
+
+    const auto symbols = remote_gdb::loadElfSymbols(elfPath.string());
+    std::filesystem::remove(sourcePath);
+    std::filesystem::remove(elfPath);
+
+    if (symbols.addrToSourceLine.empty())
+    {
+        std::cerr << "Expected source line entries from a debug ELF\n";
+        return false;
+    }
+
+    for (const auto& [address, location] : symbols.addrToSourceLine)
+    {
+        if (address != 0 &&
+            location.line > 0 &&
+            std::filesystem::path(location.file).filename() == sourcePath.filename())
+        {
+            return true;
+        }
+    }
+
+    std::cerr << "Expected at least one source line entry for " << sourcePath.filename() << '\n';
+    return false;
+}
+
 }
 
 int main()
@@ -75,5 +138,6 @@ int main()
     ok &= expectNoSymbols("zathura-malformed-elf64-fixture", malformedElf64WithOutOfRangeSections());
     ok &= expectNoSymbols("zathura-oversized-shentsize-elf64-fixture",
                           malformedElf64WithUnexpectedSectionEntrySize());
+    ok &= expectSourceLinesFromDebugElf();
     return ok ? 0 : 1;
 }

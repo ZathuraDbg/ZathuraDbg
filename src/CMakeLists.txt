@@ -85,6 +85,8 @@ set(SRC_WINDOWS
         ${APP_DIR}/windows/registerWindow.cpp
         ${APP_DIR}/windows/consoleWindow.cpp
         ${APP_DIR}/windows/hexEditorWindow.cpp
+        ${APP_DIR}/windows/sourceWindow.cpp
+        ${APP_DIR}/windows/debugToolWindows.cpp
         ${APP_DIR}/windows/stackWindow.cpp
         ${APP_DIR}/windows/memoryMapView.cpp
 )
@@ -97,6 +99,8 @@ set(SRC_ARCH
 
 set(SRC_INTEGRATION
     ${APP_DIR}/integration/debugBackend.cpp
+    ${APP_DIR}/integration/debugState.cpp
+    ${APP_DIR}/integration/elfLoader.cpp
     ${APP_DIR}/integration/interpreter/interpreter.cpp
     ${APP_DIR}/integration/interpreter/registers.cpp
     ${APP_DIR}/integration/interpreter/vm.cpp
@@ -158,8 +162,9 @@ if (UNIX AND NOT APPLE)
     find_package(glfw3 REQUIRED)
     find_package(Threads REQUIRED)
 
+    set(VENDORED_KEYSTONE_LIB ${CMAKE_SOURCE_DIR}/../vendor/local/usr/local/lib/libkeystone.so.0)
     link_directories(/usr/lib /usr/local/lib ${CMAKE_SOURCE_DIR}/../vendor/local/usr/local/lib)
-    set(LIBS ${GLFW_LDFLAGS} -lGL -ldl -lstdc++ -lkeystone -lcapstone -lunicorn -L/usr/lib -L/usr/local/lib -L${CMAKE_SOURCE_DIR}/../vendor/local/usr/local/lib -licicle -lssl -lcrypto)
+    set(LIBS ${GLFW_LDFLAGS} -lGL -ldl -lstdc++ ${VENDORED_KEYSTONE_LIB} -lcapstone -lunicorn -L/usr/lib -L/usr/local/lib -L${CMAKE_SOURCE_DIR}/../vendor/local/usr/local/lib -licicle -lssl -lcrypto)
 elseif (APPLE)
     message("Mac OS X")
     find_library(GLFW_LIB glfw3)
@@ -201,6 +206,8 @@ endif()
 
 # Platform-specific target settings
 if (UNIX AND NOT APPLE)
+    set_target_properties(${PROJECT_NAME} PROPERTIES
+            BUILD_RPATH "${CMAKE_SOURCE_DIR}/../vendor/local/usr/local/lib")
     target_include_directories(${PROJECT_NAME} PRIVATE ${OPENGL_INCLUDE_DIR})
     target_include_directories(zathura_imgui_core PRIVATE ${OPENGL_INCLUDE_DIR})
     target_include_directories(zathura_imgui_backends PRIVATE ${OPENGL_INCLUDE_DIR})

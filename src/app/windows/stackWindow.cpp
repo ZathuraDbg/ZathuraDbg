@@ -1,5 +1,22 @@
 #include "windows.hpp"
+#include "../integration/debugState.hpp"
+
 MemoryEditor stackEditor;
+
+namespace {
+
+size_t g_stackDisplaySize = 0;
+
+bool stackDiffHighlightFn(const ImU8*, const size_t off) {
+    if (g_stackDisplaySize == 0 || off >= g_stackDisplaySize) {
+        return false;
+    }
+
+    const uint64_t address = STACK_ADDRESS + g_stackDisplaySize - off - 1;
+    return isDebugStackMemoryChanged(address);
+}
+
+}
 
 static void* copyBigEndian(void* dst, const void* src, size_t size)
 {
@@ -27,7 +44,13 @@ void stackWriteFunc(ImU8* data, const size_t offset, const ImU8 delta) {
         std::lock_guard<std::mutex> lk(debugReadyMutex);
     }
 
-    const uint64_t address = STACK_ADDRESS + STACK_SIZE - offset - 1;
+    const size_t displayedSize = g_stackDisplaySize > 0 ? g_stackDisplaySize : STACK_SIZE;
+    if (offset >= displayedSize) {
+        LOG_ERROR("Stack write offset is outside the displayed stack range. Offset: " << offset);
+        return;
+    }
+
+    const uint64_t address = STACK_ADDRESS + displayedSize - offset - 1;
     LOG_INFO("Stack write at 0x" << std::hex << address << ": " << static_cast<int>(delta));
 
     const bool writeOk = writeDebugMemory(address, delta);
@@ -136,13 +159,16 @@ void stackEditorWindow() {
     }
 
     const size_t displaySize = memData.has_value() ? memData->size() : STACK_SIZE;
+    g_stackDisplaySize = displaySize;
 
     memset(stackBuffer.get(), 0, STACK_SIZE);
     if (memData.has_value()) {
+        trackDebugStackMemory(STACK_ADDRESS, *memData);
         copyBigEndian(stackBuffer.get(), memData->data(), memData->size());
     }
 
-    stackEditor.HighlightColor = ImColor(59, 60, 79);
+    stackEditor.HighlightColor = IM_COL32(230, 154, 70, 130);
+    stackEditor.HighlightFn = stackDiffHighlightFn;
     stackEditor.OptShowAddWindowButton = false;
     stackEditor.OptFillMemoryRange = true;
     stackEditor.FillMemoryRange = fillMemoryWithBytePopup;

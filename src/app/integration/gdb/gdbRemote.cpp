@@ -1469,7 +1469,7 @@ std::string remoteLastStopReason() {
 
 bool remoteLoadSymbolFile(const std::string& path) {
     auto symbols = loadElfSymbols(path);
-    if (symbols.addrToName.empty()) return false;
+    if (symbols.addrToName.empty() && symbols.addrToSourceLine.empty()) return false;
     globalElfSymbols = std::move(symbols);
     return true;
 }
