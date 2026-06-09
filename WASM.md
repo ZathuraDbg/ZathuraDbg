@@ -13,18 +13,29 @@ breakpoints, registers, memory and the stack views all work.
 ## Prerequisites (built once, out-of-tree)
 
 The wasm build links three third-party static libraries and the icicle bindings,
-all compiled for `wasm32-unknown-emscripten`. They live in a sibling workspace
-(`/home/rc/icicle-wasm` by default; override with `-DWASM_LIBS_ROOT=...`):
+all compiled for `wasm32-unknown-emscripten`, plus a staged MEMFS. These are
+built **reproducibly** by `src/scripts/wasm/build-wasm-deps.sh` into a sibling
+workspace (`../../icicle-wasm` by default; override with `WASM_LIBS_ROOT=...`):
 
 | Artifact | Source | Notes |
 |----------|--------|-------|
-| `libicicle.a` | icicle-emu + icicle-cpp bindings | interpreter-only (JIT feature-gated off); see that workspace's README |
+| `libicicle.a` | icicle-emu @ pinned commit + `icicle-emu-wasm.patch`, vendored `vendor/icicle-cpp` + `icicle-cpp-wasm.patch` | interpreter-only (JIT feature-gated off) |
 | `libkeystone.a` | vendored `vendor/keystone` | `emcmake` build, `LLVM_TARGETS=X86;AArch64;ARM` |
-| `libcapstone.a` | capstone 5.x | headers used for `cs_*` enums; engine unused in wasm |
-| `zathura-fs/` | staged MEMFS | `app/bin/test.asm`, `app/assets/*` (fonts), `ghidra/Ghidra/Processors/{x86,AARCH64,ARM}` |
+| `libcapstone.a` | capstone 5.0.1 (cloned) | headers used for `cs_*` enums; engine unused in wasm |
+| `zathura-fs/` | staged MEMFS | `app/bin/test.asm`, `app/config.zlyt`, `app/assets/*`, `ghidra/Ghidra/Processors/{x86,AARCH64,ARM}` |
 
-Also needed: the Emscripten SDK (`emsdk`) and the `wasm32-unknown-emscripten`
-Rust target (for rebuilding icicle).
+The icicle patches live in `src/scripts/wasm/` (`icicle-emu-wasm.patch` +
+`icicle-emu-commit.txt` pin the upstream base; `icicle-cpp-wasm.patch` adds the
+`jit` cargo feature and disables it). Also needed: the Emscripten SDK (`emsdk`)
+and the `wasm32-unknown-emscripten` Rust target.
+
+```sh
+source /path/to/emsdk/emsdk_env.sh
+./src/scripts/wasm/build-wasm-deps.sh   # builds the libs + stages the MEMFS
+```
+
+CI runs exactly this (`.github/workflows/wasm.yml`): a fast stub-drift gate plus
+a full reproducible wasm build, caching the dependency libs.
 
 ## Build
 
