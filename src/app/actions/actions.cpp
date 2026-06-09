@@ -8,8 +8,12 @@
 #endif
 #include "actions.hpp"
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten/emscripten.h>
+#else
 #define CPPHTTPLIB_OPENSSL_SUPPORT
 #include <http.hpp>
+#endif
 
 #include "imgui_impl_opengl3_loader.h"
 #include "../integration/interpreter/interpreter.hpp"
@@ -22,14 +26,16 @@ int pendingHighlightLine = -1;
 bool pendingRemoteUiSync = false;
 bool pendingRemoteRefreshTarget = false;
 bool pendingRemoteResetCodeMemoryBase = false;
-int times = 1;
+int actionRunCount = 1;
 std::optional<uint64_t> remoteDisassemblyBaseAddress{};
 uint64_t remoteResumeGeneration = 0;
 
 static void syncRemoteUiState(bool refreshTarget, bool resetCodeMemoryBase);
 
 void openBrowser(const std::string& url) {
-#ifdef _WIN32
+#ifdef __EMSCRIPTEN__
+    EM_ASM({ window.open(UTF8ToString($0), '_blank'); }, url.c_str());
+#elif _WIN32
     ShellExecuteA(nullptr, "open", url.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
 #elif __APPLE__
     pid_t pid = fork();
@@ -49,6 +55,11 @@ void openBrowser(const std::string& url) {
 std::string currentVersion{};
 std::string getLatestVersion()
 {
+#ifdef __EMSCRIPTEN__
+    // No update check in the browser build; report the running version so the
+    // UI shows "you're on the latest version".
+    return VERSION;
+#else
     httplib::SSLClient cli("raw.githubusercontent.com");
     if (auto res = cli.Get("/ZathuraDbg/ZathuraDbg/refs/heads/master/VERSION")) {
         std::erase(res->body, '\n');
@@ -56,6 +67,7 @@ std::string getLatestVersion()
     } else {
         return "";
     }
+#endif
 }
 
 void updateWindow()
@@ -164,9 +176,16 @@ void stepBack()
 }
 
 void executeInBackground(const std::function<void()>& func) {
+#ifdef __EMSCRIPTEN__
+    // The wasm build is single-threaded (no SharedArrayBuffer requirement), so
+    // run the work synchronously. The icicle interpreter honours an icount
+    // limit, so emulation cannot hang the browser indefinitely.
+    func();
+#else
     std::thread([func]() {
         func();
     }).detach();
+#endif
 }
 
 void safeHighlightLine(int lineNo) {
@@ -484,8 +503,7 @@ void stepOverAction(){
     executeInBackground([]{
         // Wait until debugging state is fully ready
         {
-            std::unique_lock<std::mutex> lk(debugReadyMutex);
-            debugReadyCv.wait(lk, []{ return isDebugReady; });
+            waitForDebugReady();
         }
         LOG_DEBUG("Debug state confirmed ready, proceeding with step over.");
 
@@ -547,8 +565,7 @@ void stepInAction(){
     executeInBackground([]{
         // Wait until debugging state is fully ready
         {
-            std::unique_lock<std::mutex> lk(debugReadyMutex);
-            debugReadyCv.wait(lk, []{ return isDebugReady; });
+            waitForDebugReady();
         }
         LOG_DEBUG("Debug state confirmed ready, proceeding with step in.");
 
@@ -718,8 +735,7 @@ void debugContinueAction(const bool skipBP) {
     executeInBackground([skipBP]{
         // Wait until debugging state is fully ready
         {
-            std::unique_lock<std::mutex> lk(debugReadyMutex);
-            debugReadyCv.wait(lk, []{ return isDebugReady; });
+            waitForDebugReady();
         }
         LOG_DEBUG("Debug state confirmed ready, proceeding with continue.");
 
@@ -830,8 +846,7 @@ void runActions(){
 
             executeInBackground([targetAddress]{
                 {
-                    std::unique_lock<std::mutex> lk(debugReadyMutex);
-                    debugReadyCv.wait(lk, []{ return isDebugReady; });
+                    waitForDebugReady();
                 }
 
                 const bool alreadyTracked =
@@ -865,8 +880,7 @@ void runActions(){
             
             executeInBackground([]{
                 {
-                    std::unique_lock<std::mutex> lk(debugReadyMutex);
-                    debugReadyCv.wait(lk, []{ return isDebugReady; });
+                    waitForDebugReady();
                 }
 
                 skipEndStep = true;

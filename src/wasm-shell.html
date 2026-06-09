@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+  <title>ZathuraDbg</title>
+  <style>
+    :root { color-scheme: dark; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #101010;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    }
+    /* The emulator canvas fills the entire viewport. */
+    canvas.zathura {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+      border: 0;
+      outline: none;
+      background: #101010;
+      /* Avoid the browser interpreting touch gestures as scroll/zoom. */
+      touch-action: none;
+    }
+    #loading {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      background: #101010;
+      color: #d0d0d0;
+      transition: opacity 0.4s ease;
+      z-index: 10;
+    }
+    #loading.hidden { opacity: 0; pointer-events: none; }
+    #loading h1 { font-size: 20px; font-weight: 600; margin: 0; letter-spacing: 0.5px; }
+    #bar-track { width: 280px; height: 6px; background: #262626; border-radius: 3px; overflow: hidden; }
+    #bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg,#5b8cff,#9b6bff); transition: width 0.2s ease; }
+    #loading p { font-size: 13px; color: #888; margin: 0; }
+    #error-box {
+      position: fixed; inset: 0; display: none; flex-direction: column;
+      align-items: center; justify-content: center; gap: 12px;
+      background: #1a1010; color: #ff9b9b; padding: 24px; text-align: center; z-index: 20;
+    }
+    #error-box pre { max-width: 90vw; overflow: auto; font-size: 12px; color: #ffcaca; }
+  </style>
+</head>
+<body>
+  <canvas class="zathura" id="canvas" tabindex="-1" oncontextmenu="event.preventDefault()"></canvas>
+
+  <div id="loading">
+    <h1>ZathuraDbg</h1>
+    <div id="bar-track"><div id="bar-fill"></div></div>
+    <p id="loading-status">Loading emulator…</p>
+  </div>
+
+  <div id="error-box">
+    <h1>Failed to start</h1>
+    <pre id="error-text"></pre>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const loading = document.getElementById('loading');
+    const barFill = document.getElementById('bar-fill');
+    const loadingStatus = document.getElementById('loading-status');
+
+    // CSS sizes the canvas to the full viewport (100vw x 100vh). ImGui's GLFW
+    // Emscripten callback reads that CSS size on every resize/fullscreen change
+    // and drives glfwSetWindowSize, which also sets the canvas backing store --
+    // so we deliberately do NOT touch canvas.width/height here to avoid fighting
+    // it. Focus the canvas so it receives keyboard input immediately.
+    window.addEventListener('load', () => canvas.focus());
+
+    function showError(msg) {
+      document.getElementById('error-text').textContent = msg;
+      document.getElementById('error-box').style.display = 'flex';
+      loading.classList.add('hidden');
+    }
+    window.addEventListener('error', (e) => showError(e.message || String(e.error)));
+
+    var Module = {
+      canvas: canvas,
+      preRun: [],
+      postRun: [],
+      print: (...args) => console.log(...args),
+      printErr: (...args) => console.warn(...args),
+      setStatus: (text) => {
+        if (!text) {
+          // Empty status => runtime is up. Fade the overlay out.
+          loadingStatus.textContent = 'Ready';
+          barFill.style.width = '100%';
+          setTimeout(() => loading.classList.add('hidden'), 300);
+          return;
+        }
+        loadingStatus.textContent = text;
+        const m = text.match(/([\d.]+)\s*\/\s*([\d.]+)/);
+        if (m) {
+          const pct = (parseFloat(m[1]) / parseFloat(m[2])) * 100;
+          barFill.style.width = Math.max(5, Math.min(100, pct)) + '%';
+        }
+      },
+      totalDependencies: 0,
+      monitorRunDependencies: function (left) {
+        this.totalDependencies = Math.max(this.totalDependencies, left);
+        Module.setStatus(left ? 'Preparing… (' + (this.totalDependencies - left) + '/' + this.totalDependencies + ')' : '');
+      },
+    };
+    Module.setStatus('Downloading…');
+  </script>
+  {{{ SCRIPT }}}
+</body>
+</html>

@@ -154,6 +154,43 @@ void pushFont(){
     ImGui::PushFont(io.Fonts->Fonts[SatoshiBold18]);
 }
 
+#ifdef __EMSCRIPTEN__
+// First-run docking layout for the browser build, which starts with no saved
+// imgui.ini. Splits the viewport so the editor, registers, memory, stack and
+// console all fill the screen. The layout is responsive: it is sized to the
+// current viewport and ImGui rescales it on resize.
+static void buildDefaultDockLayout(ImGuiID rootId) {
+    ImGui::DockBuilderRemoveNode(rootId);
+    ImGui::DockBuilderAddNode(rootId, ImGuiDockNodeFlags_DockSpace);
+    ImGui::DockBuilderSetNodeSize(rootId, ImGui::GetMainViewport()->Size);
+
+    ImGuiID right;
+    const ImGuiID left = ImGui::DockBuilderSplitNode(rootId, ImGuiDir_Left, 0.58f, nullptr, &right);
+
+    ImGuiID leftBottom;
+    const ImGuiID leftTop = ImGui::DockBuilderSplitNode(left, ImGuiDir_Up, 0.72f, nullptr, &leftBottom);
+
+    ImGuiID rightBottom;
+    const ImGuiID rightTop = ImGui::DockBuilderSplitNode(right, ImGuiDir_Up, 0.45f, nullptr, &rightBottom);
+
+    ImGuiID rightBottomRight;
+    const ImGuiID rightBottomLeft = ImGui::DockBuilderSplitNode(rightBottom, ImGuiDir_Left, 0.5f, nullptr, &rightBottomRight);
+
+    ImGui::DockBuilderDockWindow("Code", leftTop);
+    ImGui::DockBuilderDockWindow("Console", leftBottom);
+    ImGui::DockBuilderDockWindow("Remote Source", leftBottom);
+    ImGui::DockBuilderDockWindow("Breakpoints", leftBottom);
+    ImGui::DockBuilderDockWindow("Watchpoints", leftBottom);
+    ImGui::DockBuilderDockWindow("State Changes", leftBottom);
+    ImGui::DockBuilderDockWindow("Register Values", rightTop);
+    ImGui::DockBuilderDockWindow("Memory Editor", rightBottomLeft);
+    ImGui::DockBuilderDockWindow("Memory Mappings", rightBottomLeft);
+    ImGui::DockBuilderDockWindow("Stack", rightBottomRight);
+
+    ImGui::DockBuilderFinish(rootId);
+}
+#endif
+
 std::mutex updateMutex{};
 void mainWindow() {
     const ImGuiIO &io = ImGui::GetIO();
@@ -169,7 +206,20 @@ void mainWindow() {
         });
     }
     setupAppStyle();
-    ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport());
+    const ImGuiID dockId = ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport());
+#ifdef __EMSCRIPTEN__
+    // On the first frame, if no docking layout was loaded from a saved ini,
+    // build a sensible full-viewport default so the UI isn't a pile of
+    // overlapping windows in the top-left corner.
+    static bool dockLayoutInit = false;
+    if (!dockLayoutInit) {
+        dockLayoutInit = true;
+        const ImGuiDockNode* node = ImGui::DockBuilderGetNode(dockId);
+        if (node == nullptr || node->IsLeafNode()) {
+            buildDefaultDockLayout(dockId);
+        }
+    }
+#endif
 
     appMenuBar();
     setupViewPort();

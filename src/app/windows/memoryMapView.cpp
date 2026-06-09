@@ -223,7 +223,7 @@ void memoryMapWindow()
                 if (ImGui::TextLink(ss.str().c_str()))
                 {
                     memoryEditorWindow.OptShowAddWindowButton = false;
-                    newMemEditWindowsInfo memWindowInfo = {memoryEditorWindow, memInfo[i].address, memInfo[i].size};
+                    newMemEditWindowsInfo memWindowInfo = {memoryEditorWindow, memInfo[i].address, static_cast<size_t>(memInfo[i].size)};
                     newMemEditWindows.push_back(memWindowInfo);
                 }
                 ImGui::PopStyleColor();

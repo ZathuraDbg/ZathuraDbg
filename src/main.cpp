@@ -24,6 +24,9 @@
 #include <filesystem>
 #include <system_error>
 #include <iostream>
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
 GLFWwindow* window = nullptr;
 #if defined(_MSC_VER) && (_MSC_VER >= 1900) && !defined(IMGUI_DISABLE_WIN32_FUNCTIONS)
 #pragma comment(lib, "legacy_stdio_definitions")
@@ -75,6 +78,60 @@ void destroyWindow(){
 
 float frameRate = 120;
 
+// Clear color, set once in main() and used by every rendered frame. Hoisted to
+// file scope so the Emscripten main-loop callback can reach it.
+static ImVec4 gClearColor;
+
+// One rendered frame. Native builds call this from a while loop; the Emscripten
+// build registers it with emscripten_set_main_loop so the browser drives it.
+static void renderFrame()
+{
+    ImGuiIO& io = ImGui::GetIO();
+
+    glfwPollEvents();
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+
+    static float prevFontScale = 1.0f;
+    static ImGuiStyle baseStyle = ImGui::GetStyle();
+    if (gFontScale != prevFontScale) {
+        ImGui::GetStyle() = baseStyle;
+        ImGui::GetStyle().ScaleAllSizes(gFontScale);
+        prevFontScale = gFontScale;
+    }
+    io.FontGlobalScale = gFontScale;
+
+    ImGui::NewFrame();
+
+    io.ConfigDockingWithShift = true;
+    io.ConfigDockingAlwaysTabBar = true;
+    isRunning = true;
+
+    processUIUpdates();
+    mainWindow();
+    if (!isRunning){
+        LOG_ERROR("Quitting!");
+        glfwSetWindowShouldClose(window, 1);
+    }
+
+    int displayW, displayH;
+    glfwGetFramebufferSize(window, &displayW, &displayH);
+    glViewport(0, 0, displayW, displayH);
+    glClearColor(gClearColor.x * gClearColor.w, gClearColor.y * gClearColor.w, gClearColor.z * gClearColor.w, gClearColor.w);
+    glClear(GL_COLOR_BUFFER_BIT);
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+    if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+    {
+        GLFWwindow* backupCurrentContext = glfwGetCurrentContext();
+        ImGui::UpdatePlatformWindows();
+        ImGui::RenderPlatformWindowsDefault();
+        glfwMakeContextCurrent(backupCurrentContext);
+    }
+
+    glfwSwapBuffers(window);
+}
+
 // Declare these as null pointers since some code might still reference them
 bool stackArraysZeroed = false;
 
@@ -84,7 +141,13 @@ int main(int argc, const char** argv)
     if (!glfwInit())
         return 1;
 
-#if defined(IMGUI_IMPL_OPENGL_ES2)
+#if defined(__EMSCRIPTEN__)
+    // WebGL2 / GLES 3.0 + GLSL ES 3.00
+    const char* glsl_version = "#version 300 es";
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
+#elif defined(IMGUI_IMPL_OPENGL_ES2)
     // GL ES 2.0 + GLSL 100
     const char* glsl_version = "#version 100";
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
@@ -103,16 +166,29 @@ int main(int argc, const char** argv)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 #endif
     glfwWindowHint(GLFW_DECORATED, GLFW_TRUE);
+#ifdef __EMSCRIPTEN__
+    // Size to the canvas; the browser/CSS controls the actual displayed size.
+    window = glfwCreateWindow(1280, 720, "Zathura!", nullptr, nullptr);
+#else
     window = glfwCreateWindow(glfwGetVideoMode(glfwGetPrimaryMonitor())->width, glfwGetVideoMode(glfwGetPrimaryMonitor())->height, "Zathura!", nullptr, nullptr);
     glfwSetWindowSizeLimits(window, 980, 435, GLFW_DONT_CARE, GLFW_DONT_CARE);
+#endif
 
     if (window == nullptr)
         return 1;
 
+#ifndef __EMSCRIPTEN__
     glfwHideWindow(window);
+#endif
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1); // Enable vsync
 
+#ifdef __EMSCRIPTEN__
+    // No real executable path in the browser; use the fixed MEMFS layout that
+    // build-wasm.sh embeds (binary dir at /app/bin, assets at /app/assets).
+    executablePath = "/app/bin";
+    selectedFile = relativeToRealPath(executablePath, "test.asm");
+#else
     {
         int dirnameLength;
 
@@ -130,6 +206,7 @@ int main(int argc, const char** argv)
             free(path);
         }
     }
+#endif
 
     std::string startupWarning;
     Zathura::RuntimePaths::ensureUserDirectories(&startupWarning);
@@ -138,7 +215,10 @@ int main(int argc, const char** argv)
     reportStartupWarning(startupWarning);
     rotateLogFile(Zathura::Logger::logFilePath());
 
-#ifdef _WIN32
+#ifdef __EMSCRIPTEN__
+    // Sleigh specs are embedded at /ghidra/Ghidra/Processors in MEMFS.
+    setenv("GHIDRA_SRC", "/ghidra/", 1);
+#elif defined(_WIN32)
     std::stringstream ss{};
     ss << "GHIDRA_SRC=" << relativeToRealPath(executablePath, "../vendor/ghidra");
     _putenv(ss.str().c_str());
@@ -164,14 +244,21 @@ int main(int argc, const char** argv)
     }
 
     ImGui_ImplGlfw_InitForOpenGL(window, true);
+#ifdef __EMSCRIPTEN__
+    // Track the browser canvas: resizes the GLFW window (and thus ImGui's
+    // display size) whenever the canvas / window / fullscreen state changes.
+    ImGui_ImplGlfw_InstallEmscriptenCallbacks(window, "#canvas");
+#endif
     ImGui_ImplOpenGL3_Init(glsl_version);
 
+#ifndef __EMSCRIPTEN__
     GLFWimage icons[1];
     icons[0].pixels = stbi_load(relativeToRealPath(executablePath, "../assets/ZathuraDbg.png").c_str(), &icons[0].width, &icons[0].height, nullptr, 4);
     glfwSetWindowIcon(window, 1, icons); // Set icon
     stbi_image_free(icons[0].pixels);
+#endif
 
-    ImVec4 clearColor = hexToImVec4("101010");
+    gClearColor = hexToImVec4("101010");
     setupAppStyle();
     setupEditor();
 
@@ -224,50 +311,14 @@ int main(int argc, const char** argv)
         tinyfd_messageBox("Environment variable missing!", "The environment variable GHIDRA_SRC is missing. The emulator can\'t run without this.", "ok", "warning", 0);
     }
 
+#ifdef __EMSCRIPTEN__
+    // The browser owns the event loop; hand it renderFrame and never return.
+    // (Viewports/multi-window are disabled in the wasm build — single canvas.)
+    emscripten_set_main_loop(renderFrame, 0, 1);
+#else
     while (!glfwWindowShouldClose(window))
     {
-        glfwPollEvents();
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-
-        static float prevFontScale = 1.0f;
-        static ImGuiStyle baseStyle = ImGui::GetStyle();
-        if (gFontScale != prevFontScale) {
-            ImGui::GetStyle() = baseStyle;
-            ImGui::GetStyle().ScaleAllSizes(gFontScale);
-            prevFontScale = gFontScale;
-        }
-        io.FontGlobalScale = gFontScale;
-
-        ImGui::NewFrame();
-
-        io.ConfigDockingWithShift = true;
-        io.ConfigDockingAlwaysTabBar = true;
-        isRunning = true;
-
-        processUIUpdates();
-        mainWindow();
-        if (!isRunning){
-            LOG_ERROR("Quitting!");
-            glfwSetWindowShouldClose(window, 1);
-        }
-
-        int displayW, displayH;
-        glfwGetFramebufferSize(window, &displayW, &displayH);
-        glViewport(0, 0, displayW, displayH);
-        glClearColor(clearColor.x * clearColor.w, clearColor.y * clearColor.w, clearColor.z * clearColor.w, clearColor.w);
-        glClear(GL_COLOR_BUFFER_BIT);
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
-       if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-       {
-           GLFWwindow* backupCurrentContext = glfwGetCurrentContext();
-           ImGui::UpdatePlatformWindows();
-           ImGui::RenderPlatformWindowsDefault();
-           glfwMakeContextCurrent(backupCurrentContext);
-       }
-
-       glfwSwapBuffers(window);
+        renderFrame();
     }
 
     if (isCodeRunning) {
@@ -282,4 +333,5 @@ int main(int argc, const char** argv)
 
     destroyWindow();
     return 0;
+#endif
 }

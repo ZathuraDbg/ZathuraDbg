@@ -32,6 +32,14 @@ src/*.o
 src/CMakeFiles/
 src/*.cmake
 
+# Wasm build outputs
+src/build-wasm/
+src/Zathura.html
+src/Zathura.js
+src/Zathura.wasm
+src/Zathura.data
+src/Zathura.worker.js
+
 # IDE files (already partially covered but .idea is tracked)
 .idea/
 

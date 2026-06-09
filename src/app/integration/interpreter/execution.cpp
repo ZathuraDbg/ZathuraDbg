@@ -328,10 +328,7 @@ bool executeCode(Icicle* icicle, const size_t& instructionCount)
 bool stepCode(const size_t instructionCount){
     LOG_DEBUG("Stepping into code requested...");
 
-    {
-        std::unique_lock<std::mutex> lk(debugReadyMutex);
-        debugReadyCv.wait(lk, []{ return isDebugReady; });
-    }
+    waitForDebugReady();
     LOG_DEBUG("Debug state confirmed ready, proceeding with step.");
 
     std::lock_guard<std::mutex> execLock(execMutex);

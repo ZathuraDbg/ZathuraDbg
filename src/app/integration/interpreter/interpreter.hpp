@@ -157,6 +157,17 @@ extern bool isSilentBreakpoint(const uint64_t& lineNo);
 extern std::mutex debugReadyMutex;
 extern std::condition_variable debugReadyCv;
 extern bool isDebugReady;
+
+// Blocks until the background execution thread signals that debug state is
+// ready. The wasm build runs emulation synchronously on the single main
+// thread, so there is no producer thread to wait for and the wait would
+// deadlock -- it becomes a no-op there.
+inline void waitForDebugReady() {
+#ifndef __EMSCRIPTEN__
+    std::unique_lock<std::mutex> lk(debugReadyMutex);
+    debugReadyCv.wait(lk, []{ return isDebugReady; });
+#endif
+}
 extern const std::unordered_set<std::string> vfpRegs;
 extern std::unordered_set<std::string> dRegs;
 extern bool skipEndStep;

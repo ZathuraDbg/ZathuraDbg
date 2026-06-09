@@ -218,7 +218,9 @@ registerValueT read256BitRegister(const std::string& regName)
     }
 
     if (!use32BitLanes){
-        double valueArray[arrSize] = {0};
+        // Fixed-size (not a VLA): arrSize is 4 in this branch, 8 is the max for
+        // either lane mode. A VLA with an initializer is rejected by clang/wasm.
+        double valueArray[8] = {0};
 
         // Convert bytes to doubles
         for (int i = 0; i < 4; i++) {

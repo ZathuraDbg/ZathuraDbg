@@ -225,8 +225,8 @@ bool resetState(bool reInit){
         }
     }
 
-    for (const auto &key: registerValueMap | std::views::keys){
-        registerValueMap[key] = "0x00";
+    for (const auto &entry: registerValueMap){
+        registerValueMap[entry.first] = "0x00";
     }
 
     stackArraysZeroed = false;
