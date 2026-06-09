@@ -73,7 +73,7 @@ build is unaffected.
 | Sleigh specs | `vendor/ghidra` via `GHIDRA_SRC` | embedded at `/ghidra` |
 | Main loop | `while (!shouldClose)` | `emscripten_set_main_loop` |
 | Window | desktop GLFW + OpenGL3 | Emscripten GLFW + WebGL2/GLES3 |
-| Layout | saved `imgui.ini` | first-run `DockBuilder` default layout |
+| Layout | saved `config.zlyt` | embedded desktop layout (`wasm-default-layout.zlyt` → `/app/config.zlyt`), `DockBuilder` fallback |
 
 ### Known limitations
 
@@ -89,4 +89,6 @@ build is unaffected.
 - `src/build-wasm.sh` — configure + build wrapper
 - `src/app/integration/gdb/gdbRemoteStub.cpp` — inert `remote_gdb::` API
 - `src/app/dialogs/tinyfd_stub.c` — inert tinyfiledialogs
+- `src/wasm-default-layout.zlyt` — desktop window layout, staged into the
+  embedded MEMFS as `/app/config.zlyt` and loaded on startup
 - `if (EMSCRIPTEN)` branches in `src/CMakeLists.txt`

@@ -1,0 +1,58 @@
+[Window][DockSpaceViewport_11111111]
+Pos=0,19
+Size=1920,1024
+Collapsed=0
+
+[Window][Code]
+Pos=0,22
+Size=801,938
+Collapsed=0
+DockId=0x00000001,0
+
+[Window][Register Values]
+Pos=1158,22
+Size=442,531
+Collapsed=0
+DockId=0x00000007,0
+
+[Window][Console]
+Pos=803,22
+Size=353,529
+Collapsed=0
+DockId=0x00000008,0
+
+[Window][Memory Editor]
+Pos=803,553
+Size=353,407
+Collapsed=0
+DockId=0x00000004,0
+
+[Window][Stack]
+Pos=1158,555
+Size=442,405
+Collapsed=0
+DockId=0x00000005,0
+
+[Window][WindowOverViewport_11111111]
+Pos=0,22
+Size=1600,938
+Collapsed=0
+
+[Window][Memory Mappings]
+Pos=162,219
+Size=661,203
+Collapsed=0
+
+[Docking][Data]
+DockNode        ID=0x00000009 Pos=373,941 Size=461,844 Selected=0x18B1EB53
+DockSpace       ID=0x08BD597D Window=0x1BBC0F80 Pos=0,22 Size=1600,938 Split=X
+  DockNode      ID=0x00000001 Parent=0x08BD597D SizeRef=801,1181 Selected=0x440BB4FB
+  DockNode      ID=0x00000006 Parent=0x08BD597D SizeRef=797,1181 Split=X Selected=0xEA83D666
+    DockNode    ID=0x00000003 Parent=0x00000006 SizeRef=353,1258 Split=Y Selected=0xEA83D666
+      DockNode  ID=0x00000008 Parent=0x00000003 SizeRef=1063,538 CentralNode=1 Selected=0xEA83D666
+      DockNode  ID=0x00000004 Parent=0x00000003 SizeRef=1063,407 Selected=0x9138AE3F
+    DockNode    ID=0x00000002 Parent=0x00000006 SizeRef=442,1258 Split=Y Selected=0x1BF93D82
+      DockNode  ID=0x00000007 Parent=0x00000002 SizeRef=446,531 Selected=0x1BF93D82
+      DockNode  ID=0x00000005 Parent=0x00000002 SizeRef=446,405 Selected=0x550D5646
+DockSpace       ID=0x7C6B3D9B Pos=0,22 Size=994,1181 CentralNode=1
+

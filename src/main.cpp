@@ -229,7 +229,12 @@ int main(int argc, const char** argv)
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
+#ifdef __EMSCRIPTEN__
+    // Use the layout shipped in the embedded MEMFS (the desktop default layout).
+    static const std::string iniFilePath = "/app/config.zlyt";
+#else
     static const std::string iniFilePath = Zathura::RuntimePaths::configFile().string();
+#endif
     io.IniFilename = iniFilePath.c_str();
 	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
