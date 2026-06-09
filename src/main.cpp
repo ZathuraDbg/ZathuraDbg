@@ -26,6 +26,7 @@
 #include <iostream>
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
+#include "app/integration/wasm/browserFiles.hpp"
 #endif
 GLFWwindow* window = nullptr;
 #if defined(_MSC_VER) && (_MSC_VER >= 1900) && !defined(IMGUI_DISABLE_WIN32_FUNCTIONS)
@@ -265,6 +266,11 @@ int main(int argc, const char** argv)
 
     gClearColor = hexToImVec4("101010");
     setupAppStyle();
+#ifdef __EMSCRIPTEN__
+    // If the page URL carries a shared program (#code=...), load it instead of
+    // the default sample so setupEditor() picks it up.
+    browserLoadCodeFromUrl();
+#endif
     setupEditor();
 
     initArch();

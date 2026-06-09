@@ -77,7 +77,8 @@ build is unaffected.
 | Assembler | Keystone (system lib) | Keystone (wasm static lib) |
 | Disassembler | Capstone (system lib) | unused; headers only for enums |
 | GDB remote | `gdbRemote.cpp` (sockets) | `gdbRemoteStub.cpp` (inert no-ops) |
-| File dialogs | tinyfiledialogs | `tinyfd_stub.c` (cancel + console log) |
+| File dialogs | tinyfiledialogs | browser file picker (open) + download (save); other dialogs inert |
+| Share | n/a | `#code=` URL permalink (File ▸ Copy Share Link); loaded on startup |
 | Update check | httplib + OpenSSL | reports current version |
 | Background work | `std::thread` | runs synchronously (single-threaded) |
 | Executable path | whereami | fixed `/app/bin` in MEMFS |
@@ -86,9 +87,19 @@ build is unaffected.
 | Window | desktop GLFW + OpenGL3 | Emscripten GLFW + WebGL2/GLES3 |
 | Layout | saved `config.zlyt` | embedded desktop layout (`wasm-default-layout.zlyt` → `/app/config.zlyt`), `DockBuilder` fallback |
 
+### Browser file open / save / share
+
+- **Open** (File ▸ Open / Ctrl+O): a browser file picker; the chosen file is
+  written into MEMFS and loaded into the editor.
+- **Save / Save As** (Ctrl+S): downloads the current editor contents.
+- **Copy Share Link** (File menu): encodes the current program into the page
+  URL (`#code=<base64>`) and copies the link to the clipboard. Opening that URL
+  loads the program on startup. Implemented in
+  `src/app/integration/wasm/browserFiles.cpp`.
+
 ### Known limitations
 
-- **No GDB remote / no native file open-save** in the browser (by design).
+- **No GDB remote** in the browser (by design).
 - **x86 `HLT` spins** (the Ghidra spec lifts it as `goto inst_start`); stop with
   `run_until`, breakpoints, or an instruction limit — same as native.
 - HiDPI rendering uses CSS-pixel resolution (the Emscripten GLFW backend owns

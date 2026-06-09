@@ -279,6 +279,9 @@ void appMenuBar()
             ImGui::MenuItem("New File", "Ctrl+N", &createFile);
             ImGui::MenuItem("Save", "Ctrl+S", &saveFile);
             ImGui::MenuItem("Save As", "Ctrl+Shift+S", &saveFileAs);
+#ifdef __EMSCRIPTEN__
+            ImGui::MenuItem("Copy Share Link", nullptr, &shareLink);
+#endif
             ImGui::MenuItem("Save State To File", "Ctrl+Shift+M", &fileSerializeState);
             ImGui::MenuItem("Load State From File", "Ctrl+Shift+O", &fileDeserializeState);
             ImGui::Separator();

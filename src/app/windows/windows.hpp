@@ -49,6 +49,7 @@ extern bool openElfBinary;
 extern bool createFile;
 extern bool saveFile;
 extern bool saveFileAs;
+extern bool shareLink;
 extern bool debugRestart;
 extern bool debugStepIn;
 extern bool debugStepOver;

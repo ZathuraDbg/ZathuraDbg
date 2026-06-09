@@ -10,6 +10,7 @@
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten/emscripten.h>
+#include "../integration/wasm/browserFiles.hpp"
 #else
 #define CPPHTTPLIB_OPENSSL_SUPPORT
 #include <http.hpp>
@@ -960,14 +961,23 @@ void runActions(){
 
     if (saveFile){
         LOG_INFO("File save requested!");
+#ifdef __EMSCRIPTEN__
+        browserSaveEditor(browserDownloadName());
+#else
         fileSaveTask(selectedFile);
+#endif
         saveFile = false;
     }
     if (openFile){
         LOG_INFO("File open dialog requested!");
+#ifdef __EMSCRIPTEN__
+        // Async browser picker; loads into the editor via a JS->C callback.
+        browserOpenFile();
+#else
         executeInBackground([](){
             fileOpenTask(openFileDialog());
         });
+#endif
         openFile = false;
     }
     if (openElfBinary){
@@ -994,9 +1004,20 @@ void runActions(){
     }
     if (saveFileAs){
         LOG_INFO("File save as requested!");
+#ifdef __EMSCRIPTEN__
+        browserSaveEditor(browserDownloadName());
+#else
         fileSaveAsTask(saveAsFileDialog());
+#endif
         saveFileAs = false;
     }
+#ifdef __EMSCRIPTEN__
+    if (shareLink){
+        LOG_INFO("Share link requested!");
+        browserShareCode();
+        shareLink = false;
+    }
+#endif
 
     if (fileSerializeState){
         serializeState();

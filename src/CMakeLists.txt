@@ -141,7 +141,8 @@ if (EMSCRIPTEN)
             ${APP_DIR}/integration/gdb/gdbRemote.cpp
             ${APP_DIR}/integration/gdb/gdbPacket.cpp)
     list(APPEND SRC_INTEGRATION
-            ${APP_DIR}/integration/gdb/gdbRemoteStub.cpp)
+            ${APP_DIR}/integration/gdb/gdbRemoteStub.cpp
+            ${APP_DIR}/integration/wasm/browserFiles.cpp)
     list(REMOVE_ITEM SRC_VENDOR_C
             ${VENDOR_DIR}/tinyfdialogue/tinyfiledialogs.c
             ${VENDOR_DIR}/whereami/src/whereami.c)
@@ -262,7 +263,7 @@ if (EMSCRIPTEN)
             -sFORCE_FILESYSTEM=1
             -sEXIT_RUNTIME=0
             -sASSERTIONS=1
-            -sEXPORTED_RUNTIME_METHODS=ccall,cwrap,FS
+            -sEXPORTED_RUNTIME_METHODS=ccall,cwrap,FS,UTF8ToString,HEAPU8
             "SHELL:--embed-file ${WASM_FS_ROOT}@/"
             "SHELL:--shell-file ${PROJECT_ROOT}/wasm-shell.html")
     set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".html")
