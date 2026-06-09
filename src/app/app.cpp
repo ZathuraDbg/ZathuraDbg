@@ -174,11 +174,14 @@ static void buildDefaultDockLayout(ImGuiID rootId) {
     const ImGuiID rightTop = ImGui::DockBuilderSplitNode(right, ImGuiDir_Up, 0.45f, nullptr, &rightBottom);
 
     ImGuiID rightBottomRight;
-    const ImGuiID rightBottomLeft = ImGui::DockBuilderSplitNode(rightBottom, ImGuiDir_Left, 0.5f, nullptr, &rightBottomRight);
+    const ImGuiID rightBottomLeft = ImGui::DockBuilderSplitNode(rightBottom, ImGuiDir_Left, 0.6f, nullptr, &rightBottomRight);
 
+    // Mirrors the layout used in the desktop build: code editor + console on the
+    // left, registers across the top-right, hexdump and stack along the bottom
+    // right. "Remote Source" is intentionally not docked -- it only appears when
+    // attached to a remote target, which the browser build never does.
     ImGui::DockBuilderDockWindow("Code", leftTop);
     ImGui::DockBuilderDockWindow("Console", leftBottom);
-    ImGui::DockBuilderDockWindow("Remote Source", leftBottom);
     ImGui::DockBuilderDockWindow("Breakpoints", leftBottom);
     ImGui::DockBuilderDockWindow("Watchpoints", leftBottom);
     ImGui::DockBuilderDockWindow("State Changes", leftBottom);
@@ -254,9 +257,14 @@ void mainWindow() {
     ImGui::End();
     hexEditorWindow();
 
-    ImGui::Begin("Remote Source", &keepWindow, ImGuiWindowFlags_NoCollapse);
-    remoteSourceWindow();
-    ImGui::End();
+    // The remote source view is only meaningful when attached to a remote GDB
+    // target. It is hidden in emulation mode (and therefore always hidden in
+    // the browser build, where remote debugging is unavailable).
+    if (remote_gdb::useRemoteDebugging()) {
+        ImGui::Begin("Remote Source", &keepWindow, ImGuiWindowFlags_NoCollapse);
+        remoteSourceWindow();
+        ImGui::End();
+    }
 
     if (breakpointsUI) {
         ImGui::Begin("Breakpoints", &breakpointsUI, ImGuiWindowFlags_NoCollapse);
