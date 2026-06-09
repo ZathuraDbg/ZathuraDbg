@@ -167,7 +167,7 @@ void stackEditorWindow() {
         copyBigEndian(stackBuffer.get(), memData->data(), memData->size());
     }
 
-    stackEditor.HighlightColor = IM_COL32(230, 154, 70, 130);
+    stackEditor.HighlightColor = IM_COL32(74, 144, 255, 130);
     stackEditor.HighlightFn = stackDiffHighlightFn;
     stackEditor.OptShowAddWindowButton = false;
     stackEditor.OptFillMemoryRange = true;

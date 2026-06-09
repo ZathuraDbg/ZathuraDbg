@@ -432,7 +432,7 @@ void hexEditorWindow(){
         ? static_cast<void*>(memData->data())
         : static_cast<void*>(zeroArr);
 
-    memoryEditorWindow.HighlightColor = IM_COL32(230, 154, 70, 130);
+    memoryEditorWindow.HighlightColor = IM_COL32(74, 144, 255, 130);
     memoryEditorWindow.HighlightFn = memoryDiffHighlightFn;
     memoryEditorWindow.OptShowAddWindowButton = true;
     memoryEditorWindow.NewWindowInfoFn = createNewWindow;

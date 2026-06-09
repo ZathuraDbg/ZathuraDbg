@@ -11,7 +11,7 @@ std::string reg64BitFirstElemStr = "[0:63]";
 
 namespace {
 
-constexpr ImU32 kRegisterDiffCellColor = IM_COL32(230, 154, 70, 78);
+constexpr ImU32 kRegisterDiffCellColor = IM_COL32(74, 144, 255, 78);
 constexpr ImVec4 kRegisterDiffFrameColor = ImVec4(0.42f, 0.25f, 0.07f, 0.78f);
 
 bool isRegisterChangedInLastDiff(const std::string& regName) {
