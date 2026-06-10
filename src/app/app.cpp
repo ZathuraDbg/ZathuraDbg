@@ -114,12 +114,9 @@ void setupViewPort() {
 
 
 void loadIniFile() {
-#ifdef __EMSCRIPTEN__
-    // Layout ships in the embedded MEMFS, not a user config dir.
-    const std::filesystem::path dir = "/app/config.zlyt";
-#else
+    // Native only. The wasm build manages layout via localStorage; see
+    // browserRestoreLayout() / browserPersistTick().
     const std::filesystem::path dir = Zathura::RuntimePaths::configFile();
-#endif
     ImGui::LoadIniSettingsFromDisk(dir.string().c_str());
     LOG_DEBUG("Loaded config file from " << dir.string());
 }

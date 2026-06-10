@@ -264,7 +264,11 @@ if (EMSCRIPTEN)
             -sEXIT_RUNTIME=0
             -sASSERTIONS=1
             -sEXPORTED_RUNTIME_METHODS=ccall,cwrap,FS,UTF8ToString,HEAPU8
-            "SHELL:--embed-file ${WASM_FS_ROOT}@/"
+            # --preload-file (vs --embed-file) keeps the ~6MB sleigh/asset data
+            # out of the wasm: it ships as a separate Zathura.data fetched in
+            # parallel and cached independently. The loader populates MEMFS
+            # before main() runs, so no code change is needed.
+            "SHELL:--preload-file ${WASM_FS_ROOT}@/"
             "SHELL:--shell-file ${PROJECT_ROOT}/wasm-shell.html")
     set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".html")
     # Relink when the shell template changes.

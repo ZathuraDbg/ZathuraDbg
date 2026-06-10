@@ -25,4 +25,19 @@ void browserShareCode();
 // if a shared program was loaded. Call before setupEditor().
 bool browserLoadCodeFromUrl();
 
+// --- localStorage persistence -------------------------------------------------
+
+// If a previously-edited program is saved in localStorage, materialise it and
+// point `selectedFile` at it. Returns true if restored. Call before
+// setupEditor() and only if no shared (#code) program was loaded.
+bool browserRestoreSavedCode();
+
+// Restore the window layout from localStorage if present, otherwise from the
+// embedded default layout. Call after ImGui::CreateContext().
+void browserRestoreLayout();
+
+// Per-frame autosave: persists the editor program (throttled) and the window
+// layout (when ImGui flags a change) to localStorage. Call once per frame.
+void browserPersistTick();
+
 #endif  // __EMSCRIPTEN__

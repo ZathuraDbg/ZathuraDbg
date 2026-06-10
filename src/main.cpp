@@ -26,6 +26,7 @@
 #include <iostream>
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
+#include <emscripten/html5.h>
 #include "app/integration/wasm/browserFiles.hpp"
 #endif
 GLFWwindow* window = nullptr;
@@ -83,6 +84,32 @@ float frameRate = 120;
 // file scope so the Emscripten main-loop callback can reach it.
 static ImVec4 gClearColor;
 
+#ifdef __EMSCRIPTEN__
+// Keep the canvas backing store at CSS-size x devicePixelRatio. ImGui's GLFW
+// backend keeps the GLFW *window* size at the CSS size, so a larger backing
+// store makes glfwGetFramebufferSize report dpr-scaled pixels -> ImGui renders
+// at full device resolution (crisp text on HiDPI) while mouse/layout stay in
+// CSS coordinates. No-op when the size already matches.
+static void updateHiDpiCanvas()
+{
+    double cssW = 0.0, cssH = 0.0;
+    if (emscripten_get_element_css_size("#canvas", &cssW, &cssH) != EMSCRIPTEN_RESULT_SUCCESS) {
+        return;
+    }
+    const double dpr = emscripten_get_device_pixel_ratio();
+    const int bw = static_cast<int>(cssW * dpr + 0.5);
+    const int bh = static_cast<int>(cssH * dpr + 0.5);
+    if (bw <= 0 || bh <= 0) {
+        return;
+    }
+    int curW = 0, curH = 0;
+    emscripten_get_canvas_element_size("#canvas", &curW, &curH);
+    if (curW != bw || curH != bh) {
+        emscripten_set_canvas_element_size("#canvas", bw, bh);
+    }
+}
+#endif
+
 // One rendered frame. Native builds call this from a while loop; the Emscripten
 // build registers it with emscripten_set_main_loop so the browser drives it.
 static void renderFrame()
@@ -90,6 +117,9 @@ static void renderFrame()
     ImGuiIO& io = ImGui::GetIO();
 
     glfwPollEvents();
+#ifdef __EMSCRIPTEN__
+    updateHiDpiCanvas();
+#endif
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
 
@@ -110,6 +140,10 @@ static void renderFrame()
 
     processUIUpdates();
     mainWindow();
+#ifdef __EMSCRIPTEN__
+    // Persist editor program + window layout to localStorage.
+    browserPersistTick();
+#endif
     if (!isRunning){
         LOG_ERROR("Quitting!");
         glfwSetWindowShouldClose(window, 1);
@@ -231,15 +265,20 @@ int main(int argc, const char** argv)
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
 #ifdef __EMSCRIPTEN__
-    // Use the layout shipped in the embedded MEMFS (the desktop default layout).
-    static const std::string iniFilePath = "/app/config.zlyt";
+    // Manage layout persistence manually via localStorage (no writable ini file
+    // in MEMFS); see browserRestoreLayout() / browserPersistTick().
+    io.IniFilename = nullptr;
 #else
     static const std::string iniFilePath = Zathura::RuntimePaths::configFile().string();
-#endif
     io.IniFilename = iniFilePath.c_str();
+#endif
 	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
+#ifdef __EMSCRIPTEN__
+    browserRestoreLayout();
+#else
     loadIniFile();
+#endif
     io = setupIO();
 
     ImGuiStyle& style = ImGui::GetStyle();
@@ -267,9 +306,11 @@ int main(int argc, const char** argv)
     gClearColor = hexToImVec4("101010");
     setupAppStyle();
 #ifdef __EMSCRIPTEN__
-    // If the page URL carries a shared program (#code=...), load it instead of
-    // the default sample so setupEditor() picks it up.
-    browserLoadCodeFromUrl();
+    // Program precedence: shared URL (#code=...) > localStorage autosave >
+    // default sample. Whichever wins, setupEditor() loads selectedFile.
+    if (!browserLoadCodeFromUrl()) {
+        browserRestoreSavedCode();
+    }
 #endif
     setupEditor();
 

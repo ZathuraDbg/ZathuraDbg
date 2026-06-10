@@ -73,6 +73,20 @@ EM_JS(int, zathura_js_url_code_to_file, (const char* destC), {
     return 1;
 });
 
+// localStorage set/get. get writes the value into a MEMFS file so the existing
+// file pipeline can consume it; returns 1 if the key existed.
+EM_JS(void, zathura_js_ls_set, (const char* keyC, const char* valC), {
+    try { localStorage.setItem(UTF8ToString(keyC), UTF8ToString(valC)); } catch (e) {}
+});
+
+EM_JS(int, zathura_js_ls_get_to_file, (const char* keyC, const char* destC), {
+    let v;
+    try { v = localStorage.getItem(UTF8ToString(keyC)); } catch (e) { return 0; }
+    if (v === null) return 0;
+    try { FS.writeFile(UTF8ToString(destC), v); } catch (e) { return 0; }
+    return 1;
+});
+
 // --- C entry points -----------------------------------------------------------
 
 // Called from JS once a picked file has been written into MEMFS.
@@ -109,5 +123,52 @@ bool browserLoadCodeFromUrl() {
         return true;
     }
     return false;
+}
+
+// --- localStorage persistence -------------------------------------------------
+
+static const char* kCodeKey = "zathura.code";
+static const char* kLayoutKey = "zathura.layout";
+static const char* kLayoutFile = "/tmp/zathura_layout.ini";
+
+bool browserRestoreSavedCode() {
+    if (zathura_js_ls_get_to_file(kCodeKey, kSharedPath)) {
+        selectedFile = kSharedPath;
+        return true;
+    }
+    return false;
+}
+
+void browserRestoreLayout() {
+    if (zathura_js_ls_get_to_file(kLayoutKey, kLayoutFile)) {
+        ImGui::LoadIniSettingsFromDisk(kLayoutFile);
+    } else {
+        ImGui::LoadIniSettingsFromDisk("/app/config.zlyt");
+    }
+}
+
+void browserPersistTick() {
+    ImGuiIO& io = ImGui::GetIO();
+
+    // Layout: persist whenever ImGui reports a change.
+    if (io.WantSaveIniSettings) {
+        if (const char* ini = ImGui::SaveIniSettingsToMemory(nullptr)) {
+            zathura_js_ls_set(kLayoutKey, ini);
+        }
+        io.WantSaveIniSettings = false;
+    }
+
+    // Editor program: diff against the last save every ~30 frames (cheap for
+    // the small programs this tool edits) and persist on change.
+    static int frames = 0;
+    static std::string lastSaved;
+    if (editor && ++frames >= 30) {
+        frames = 0;
+        std::string text = editor->GetText();
+        if (text != lastSaved) {
+            zathura_js_ls_set(kCodeKey, text.c_str());
+            lastSaved = std::move(text);
+        }
+    }
 }
 #endif  // __EMSCRIPTEN__

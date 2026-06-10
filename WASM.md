@@ -84,7 +84,9 @@ build is unaffected.
 | Executable path | whereami | fixed `/app/bin` in MEMFS |
 | Sleigh specs | `vendor/ghidra` via `GHIDRA_SRC` | embedded at `/ghidra` |
 | Main loop | `while (!shouldClose)` | `emscripten_set_main_loop` |
-| Window | desktop GLFW + OpenGL3 | Emscripten GLFW + WebGL2/GLES3 |
+| Window | desktop GLFW + OpenGL3 | Emscripten GLFW + WebGL2/GLES3 (HiDPI-aware) |
+| Persistence | user config dir | editor + layout in `localStorage` |
+| Asset delivery | filesystem | `--preload-file` Zathura.data (cacheable, parallel) |
 | Layout | saved `config.zlyt` | embedded desktop layout (`wasm-default-layout.zlyt` → `/app/config.zlyt`), `DockBuilder` fallback |
 
 ### Browser file open / save / share
@@ -102,8 +104,14 @@ build is unaffected.
 - **No GDB remote** in the browser (by design).
 - **x86 `HLT` spins** (the Ghidra spec lifts it as `goto inst_start`); stop with
   `run_until`, breakpoints, or an instruction limit — same as native.
-- HiDPI rendering uses CSS-pixel resolution (the Emscripten GLFW backend owns
-  the canvas backing store); crisp at 1x, slightly soft on retina.
+
+### Persistence
+
+The editor program and window layout are saved to `localStorage` and restored on
+load (program precedence: `#code` URL > localStorage > default sample). Window
+layout is managed manually (`io.IniFilename = nullptr`) and round-tripped through
+`SaveIniSettingsToMemory` / `LoadIniSettingsFromDisk`. See `browserPersistTick()`
+/ `browserRestoreLayout()` in `browserFiles.cpp`.
 
 ## Files specific to the wasm port
 
