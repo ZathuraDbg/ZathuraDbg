@@ -15,6 +15,7 @@
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SmallString.h"
 #include "llvm/ADT/StringMap.h"
+#include "llvm/ADT/StringSwitch.h"
 #include "llvm/ADT/Twine.h"
 #include "llvm/MC/MCAsmInfo.h"
 #include "llvm/MC/MCContext.h"
@@ -387,6 +388,16 @@ private:
     DK_NASM_BITS,    // NASM directive 'bits'
     DK_NASM_DEFAULT, // NASM directive 'default'
     DK_NASM_USE32,   // NASM directive 'use32'
+    DK_NASM_RESB,    // NASM reserve: resb/resw/resd/resq/rest/reso/resy/resz
+    DK_NASM_TIMES,   // NASM 'times' prefix
+    DK_NASM_EQU,     // NASM 'equ'
+    DK_NASM_ALIGN,   // NASM 'align'
+    DK_NASM_DT,      // NASM 'dt' (10 bytes)
+    DK_NASM_DO,      // NASM 'do' (16 bytes)
+    DK_NASM_DY,      // NASM 'dy' (32 bytes)
+    DK_NASM_DZ,      // NASM 'dz' (64 bytes)
+    DK_NASM_ORG,     // NASM 'org'
+    DK_NASM_SECTION, // NASM 'section' / 'segment'
     DK_END
   };
 
@@ -518,6 +529,21 @@ private:
 
   // "bits" (Nasm)
   bool parseNasmDirectiveBits();
+
+  // "resb"/"resw"/"resd"/"resq"/... (Nasm) -- reserve uninitialized space
+  bool parseNasmDirectiveReserve(unsigned Size, unsigned int &KsError);
+
+  // "times" (Nasm) -- repeat the rest of the statement N times
+  bool parseNasmDirectiveTimes(SMLoc DirectiveLoc, unsigned int &KsError);
+
+  // "times <location-dependent count> db <const>" -- layout-time fill
+  bool parseNasmTimesFill(const MCExpr *CountExpr, unsigned int &KsError);
+
+  // "align" (Nasm)
+  bool parseNasmDirectiveAlign(unsigned int &KsError);
+
+  // "org" (Nasm) -- set the origin/base address
+  bool parseNasmDirectiveOrg(unsigned int &KsError);
 
   // "use32" (Nasm)
   bool parseNasmDirectiveUse32();
@@ -662,6 +688,12 @@ const AsmToken &AsmParser::Lex() {
     if (ParentIncludeLoc != SMLoc()) {
       jumpToLoc(ParentIncludeLoc);
       tok = &Lexer.Lex();   // qq
+    } else if (isInsideMacroInstantiation()) {
+      // End of a macro-like instantiation buffer that has no explicit
+      // terminator directive (e.g. NASM 'times', where '.endr' is not a
+      // recognized directive). Pop back to where we came from.
+      handleMacroExit();
+      tok = &Lexer.getTok();
     }
   }
 
@@ -867,6 +899,29 @@ bool AsmParser::parsePrimaryExprAux(const MCExpr *&Res, SMLoc &EndLoc, unsigned 
     Res = MCUnaryExpr::createLNot(Res, getContext());
     return false;
   case AsmToken::Dollar:
+    // NASM location counters: '$' (current address) and '$$' (start of the
+    // current section). In NASM syntax '$' references the PC; the global
+    // DollarIsPC flag is left untouched so AT&T '$'-immediates keep working.
+    if (FirstTokenKind == AsmToken::Dollar &&
+        (Lexer.getMAI().getDollarIsPC() || KsSyntax == KS_OPT_SYNTAX_NASM)) {
+      Lex(); // eat the first '$'
+      if (Lexer.is(AsmToken::Dollar)) {
+        // '$$' => start address of the current section (the base address).
+        Lex(); // eat the second '$'
+        Res = MCConstantExpr::create(getContext().getBaseAddress(),
+                                     getContext());
+        EndLoc = FirstTokenLoc;
+        return false;
+      }
+      // '$' => current PC. Emit a temporary label and refer to it.
+      MCSymbol *Sym = Ctx.createTempSymbol();
+      Out.EmitLabel(Sym);
+      Res = MCSymbolRefExpr::create(Sym, MCSymbolRefExpr::VK_None,
+                                    getContext());
+      EndLoc = FirstTokenLoc;
+      return false;
+    }
+    // fall through
   case AsmToken::At:
   case AsmToken::String:
   case AsmToken::Identifier: {
@@ -1583,6 +1638,18 @@ bool AsmParser::parseStatement(ParseStatementInfo &Info,
 
   // FIXME: Recurse on local labels?
 
+  // NASM constant definition: "name equ expression". Here 'equ' shows up as
+  // an identifier token following the symbol name.
+  if (KsSyntax == KS_OPT_SYNTAX_NASM && !IDVal.empty() &&
+      Lexer.is(AsmToken::Identifier) && getTok().getIdentifier().lower() == "equ") {
+    Lex(); // consume 'equ'
+    if (parseAssignment(IDVal, /*allow_redef=*/true)) {
+      Info.KsError = KS_ERR_ASM_DIRECTIVE_EQU;
+      return true;
+    }
+    return false;
+  }
+
   // See what kind of statement we have.
   switch (Lexer.getKind()) {
   case AsmToken::Colon: {
@@ -1929,6 +1996,43 @@ bool AsmParser::parseStatement(ParseStatementInfo &Info,
       } else {
         return false;
       }
+    case DK_NASM_RESB: {
+      unsigned Unit = StringSwitch<unsigned>(IDVal.lower())
+                          .Case("resb", 1)
+                          .Case("resw", 2)
+                          .Case("resd", 4)
+                          .Case("resq", 8)
+                          .Case("rest", 10)
+                          .Case("reso", 16)
+                          .Case("resy", 32)
+                          .Case("resz", 64)
+                          .Default(1);
+      return parseNasmDirectiveReserve(Unit, Info.KsError);
+    }
+    case DK_NASM_TIMES:
+      return parseNasmDirectiveTimes(IDLoc, Info.KsError);
+    case DK_NASM_EQU:
+      // Bare 'equ' with no preceding label name is invalid.
+      Info.KsError = KS_ERR_ASM_DIRECTIVE_ID;
+      return true;
+    case DK_NASM_ALIGN:
+      return parseNasmDirectiveAlign(Info.KsError);
+    case DK_NASM_DT:
+      return parseDirectiveValue(10, Info.KsError);
+    case DK_NASM_DO:
+      return parseDirectiveValue(16, Info.KsError);
+    case DK_NASM_DY:
+      return parseDirectiveValue(32, Info.KsError);
+    case DK_NASM_DZ:
+      return parseDirectiveValue(64, Info.KsError);
+    case DK_NASM_ORG:
+      return parseNasmDirectiveOrg(Info.KsError);
+    case DK_NASM_SECTION:
+      // Keystone uses a single flat output stream (code and data are mixed in
+      // one section by design), so section/segment switches are accepted and
+      // output stays in source order. Consume the section name and attributes.
+      eatToEndOfStatement();
+      return false;
     }
 
     //return Error(IDLoc, "unknown directive");
@@ -2810,6 +2914,74 @@ bool AsmParser::parseDirectiveValue(unsigned Size, unsigned int &KsError)
     checkForValidSection();
 
     for (;;) {
+      // NASM allows string literals as operands of db/dw/dd/dq. The string
+      // bytes are laid out in order and zero-padded up to a multiple of the
+      // unit size (e.g. `dw "ABC"` => 41 42 43 00).
+      if (KsSyntax == KS_OPT_SYNTAX_NASM && getLexer().is(AsmToken::String)) {
+        bool valid;
+        StringRef Str = getTok().getStringContents(valid);
+        if (!valid) {
+          KsError = KS_ERR_ASM_DIRECTIVE_STR;
+          return true;
+        }
+        bool Error;
+        for (unsigned char C : Str)
+          getStreamer().EmitIntValue(C, 1, Error);
+        // Zero-pad to a whole number of units.
+        if (Size > 1 && (Str.size() % Size) != 0) {
+          for (size_t i = Str.size() % Size; i < Size; ++i)
+            getStreamer().EmitIntValue(0, 1, Error);
+        }
+        Lex(); // consume the string token
+
+        if (getLexer().is(AsmToken::EndOfStatement))
+          break;
+        if (getLexer().isNot(AsmToken::Comma)) {
+          KsError = KS_ERR_ASM_DIRECTIVE_TOKEN;
+          return true;
+        }
+        Lex();
+        continue;
+      }
+
+      // NASM allows floating-point literals in dd/dq/dt, emitting the value in
+      // the matching IEEE/x87 format (dd => 32-bit single, dq => 64-bit double,
+      // dt => 80-bit extended). db/dw cannot hold a float.
+      if (KsSyntax == KS_OPT_SYNTAX_NASM && getLexer().is(AsmToken::Real)) {
+        if (Size != 4 && Size != 8 && Size != 10) {
+          KsError = KS_ERR_ASM_DIRECTIVE_FPOINT;
+          return true;
+        }
+        const fltSemantics &Sem = Size == 4 ? APFloat::IEEEsingle
+                                : Size == 8 ? APFloat::IEEEdouble
+                                            : APFloat::x87DoubleExtended;
+        APFloat F(Sem);
+        if (F.convertFromString(getTok().getString(),
+                                APFloat::rmNearestTiesToEven) ==
+            APFloat::opInvalidOp) {
+          KsError = KS_ERR_ASM_DIRECTIVE_FPOINT;
+          return true;
+        }
+        APInt Bits = F.bitcastToAPInt();
+        const uint64_t *Raw = Bits.getRawData();
+        unsigned NumBytes = Bits.getBitWidth() / 8;
+        bool Error;
+        for (unsigned i = 0; i < Size; ++i) {
+          uint8_t b = (i < NumBytes) ? (uint8_t)(Raw[i / 8] >> ((i % 8) * 8)) : 0;
+          getStreamer().EmitIntValue(b, 1, Error);
+        }
+        Lex(); // consume the real token
+
+        if (getLexer().is(AsmToken::EndOfStatement))
+          break;
+        if (getLexer().isNot(AsmToken::Comma)) {
+          KsError = KS_ERR_ASM_DIRECTIVE_TOKEN;
+          return true;
+        }
+        Lex();
+        continue;
+      }
+
       const MCExpr *Value;
       SMLoc ExprLoc = getLexer().getLoc();
       if (parseExpression(Value)) {
@@ -2819,18 +2991,26 @@ bool AsmParser::parseDirectiveValue(unsigned Size, unsigned int &KsError)
 
       // Special case constant expressions to match code generator.
       if (const MCConstantExpr *MCE = dyn_cast<MCConstantExpr>(Value)) {
-        assert(Size <= 8 && "Invalid size");
         uint64_t IntValue = MCE->getValue();
-        if (!isUIntN(8 * Size, IntValue) && !isIntN(8 * Size, IntValue)) {
-            // return Error(ExprLoc, "literal value out of range for directive");
-            KsError = KS_ERR_ASM_DIRECTIVE_VALUE_RANGE;
-            return true;
-        }
         bool Error;
-        getStreamer().EmitIntValue(IntValue, Size, Error);
-        if (Error) {
-            KsError = KS_ERR_ASM_DIRECTIVE_TOKEN;
-            return true;
+        if (Size > 8) {
+          // Wide units (dt/do/dy/dz): emit the value in the low 8 bytes and
+          // zero-extend to the full width.
+          for (unsigned i = 0; i < Size; ++i) {
+            uint8_t b = (i < 8) ? (uint8_t)(IntValue >> (i * 8)) : 0;
+            getStreamer().EmitIntValue(b, 1, Error);
+          }
+        } else {
+          if (!isUIntN(8 * Size, IntValue) && !isIntN(8 * Size, IntValue)) {
+              // return Error(ExprLoc, "literal value out of range for directive");
+              KsError = KS_ERR_ASM_DIRECTIVE_VALUE_RANGE;
+              return true;
+          }
+          getStreamer().EmitIntValue(IntValue, Size, Error);
+          if (Error) {
+              KsError = KS_ERR_ASM_DIRECTIVE_TOKEN;
+              return true;
+          }
         }
       } else
         getStreamer().EmitValue(Value, Size, ExprLoc);
@@ -5326,6 +5506,258 @@ bool AsmParser::parseNasmDirectiveDefault()
   return true;
 }
 
+/// parseNasmDirectiveReserve
+/// ::= (resb | resw | resd | resq | rest | reso | resy | resz) count
+/// Reserves uninitialized space; in a flat binary this emits zero bytes.
+bool AsmParser::parseNasmDirectiveReserve(unsigned Size, unsigned int &KsError)
+{
+  checkForValidSection();
+
+  int64_t Count;
+  if (parseAbsoluteExpression(Count)) {
+    KsError = KS_ERR_ASM_DIRECTIVE_INVALID;
+    return true;
+  }
+
+  if (getLexer().isNot(AsmToken::EndOfStatement)) {
+    KsError = KS_ERR_ASM_DIRECTIVE_TOKEN;
+    return true;
+  }
+  Lex();
+
+  if (Count < 0) {
+    KsError = KS_ERR_ASM_DIRECTIVE_VALUE_RANGE;
+    return true;
+  }
+
+  getStreamer().EmitFill((uint64_t)Count * Size, 0);
+  return false;
+}
+
+/// parseNasmDirectiveAlign
+/// ::= align boundary [, fill]
+/// where fill is an optional 'db <value>', 'nop', or bare value.
+bool AsmParser::parseNasmDirectiveAlign(unsigned int &KsError)
+{
+  checkForValidSection();
+
+  int64_t Alignment;
+  if (parseAbsoluteExpression(Alignment)) {
+    KsError = KS_ERR_ASM_DIRECTIVE_INVALID;
+    return true;
+  }
+  if (Alignment <= 0) {
+    KsError = KS_ERR_ASM_DIRECTIVE_VALUE_RANGE;
+    return true;
+  }
+
+  // NASM pads with single-byte nops (0x90) in a code context, matching its
+  // 'bin' output, unless an explicit fill value is supplied.
+  int64_t FillValue = 0x90;
+  if (getLexer().is(AsmToken::Comma)) {
+    Lex();
+    if (getLexer().is(AsmToken::Identifier)) {
+      StringRef Kw = getTok().getIdentifier().lower();
+      if (Kw == "nop") {
+        FillValue = 0x90;
+        Lex();
+      } else if (Kw == "db" || Kw == "dw" || Kw == "dd" || Kw == "dq") {
+        Lex(); // consume the data keyword, then read the fill value
+        if (parseAbsoluteExpression(FillValue)) {
+          KsError = KS_ERR_ASM_DIRECTIVE_INVALID;
+          return true;
+        }
+      } else if (parseAbsoluteExpression(FillValue)) {
+        KsError = KS_ERR_ASM_DIRECTIVE_INVALID;
+        return true;
+      }
+    } else if (parseAbsoluteExpression(FillValue)) {
+      KsError = KS_ERR_ASM_DIRECTIVE_INVALID;
+      return true;
+    }
+  }
+
+  if (getLexer().isNot(AsmToken::EndOfStatement)) {
+    KsError = KS_ERR_ASM_DIRECTIVE_TOKEN;
+    return true;
+  }
+  Lex();
+
+  getStreamer().EmitValueToAlignment(Alignment, FillValue, 1, 0);
+  return false;
+}
+
+/// Returns true if the expression tree references any symbol/label (including
+/// the NASM '$' location counter). Defined labels fold to their parse-time
+/// offset during evaluation, so this structural check is the only reliable way
+/// to tell a true compile-time constant from a layout-dependent value.
+static bool exprReferencesSymbol(const MCExpr *E) {
+  switch (E->getKind()) {
+  case MCExpr::Constant:
+    return false;
+  case MCExpr::SymbolRef:
+    return true;
+  case MCExpr::Unary:
+    return exprReferencesSymbol(cast<MCUnaryExpr>(E)->getSubExpr());
+  case MCExpr::Binary: {
+    const MCBinaryExpr *BE = cast<MCBinaryExpr>(E);
+    return exprReferencesSymbol(BE->getLHS()) ||
+           exprReferencesSymbol(BE->getRHS());
+  }
+  case MCExpr::Target:
+    return true; // conservative
+  }
+  return true;
+}
+
+/// parseNasmDirectiveTimes
+/// ::= times count statement
+/// Repeats the rest of the statement 'count' times. Implemented by building a
+/// fresh source buffer holding the body repeated count times and lexing it.
+bool AsmParser::parseNasmDirectiveTimes(SMLoc DirectiveLoc, unsigned int &KsError)
+{
+  const char *CountStart = getTok().getLoc().getPointer();
+  const MCExpr *CountExpr;
+  if (parseExpression(CountExpr)) {
+    KsError = KS_ERR_ASM_DIRECTIVE_INVALID;
+    return true;
+  }
+  StringRef CountText(CountStart, getTok().getLoc().getPointer() - CountStart);
+
+  // A count that depends on the current location -- the NASM '$'/'$$' counters,
+  // as in 'times 510-($-$$) db 0' -- is not a compile-time constant (and
+  // parseExpression folds the embedded labels to a wrong parse-time offset).
+  // Such a count is handled by the location-dependent path below; it requires a
+  // single 'db <constant>' body, which becomes a layout-time fill to a computed
+  // offset. ('equ' constants fold to a plain constant and take the fast path.)
+  bool LocationDependent =
+      CountText.find('$') != StringRef::npos || exprReferencesSymbol(CountExpr);
+
+  if (LocationDependent)
+    return parseNasmTimesFill(CountExpr, KsError);
+
+  int64_t Count;
+  if (!CountExpr->evaluateAsAbsolute(Count)) {
+    KsError = KS_ERR_ASM_DIRECTIVE_VALUE_RANGE;
+    return true;
+  }
+  if (Count < 0) {
+    KsError = KS_ERR_ASM_DIRECTIVE_VALUE_RANGE;
+    return true;
+  }
+
+  // Capture the remaining text of the statement as the body to repeat.
+  const char *BodyStart = getTok().getLoc().getPointer();
+  while (Lexer.isNot(AsmToken::EndOfStatement) && Lexer.isNot(AsmToken::Eof))
+    Lex();
+  const char *BodyEnd = getTok().getLoc().getPointer();
+  StringRef Body(BodyStart, BodyEnd - BodyStart);
+
+  if (Count == 0) {
+    // Nothing to emit; consume the end-of-statement and move on.
+    Lex();
+    return false;
+  }
+
+  SmallString<256> Buf;
+  raw_svector_ostream OS(Buf);
+  while (Count--)
+    OS << Body << "\n";
+
+  std::unique_ptr<MemoryBuffer> Instantiation =
+      MemoryBuffer::getMemBufferCopy(OS.str(), "<times>");
+
+  // Push an instantiation entry; the EOF of the new buffer returns us here.
+  MacroInstantiation *MI = new MacroInstantiation(
+      DirectiveLoc, CurBuffer, getTok().getLoc(), TheCondStack.size());
+  ActiveMacros.push_back(MI);
+
+  CurBuffer = SrcMgr.AddNewSourceBuffer(std::move(Instantiation), SMLoc());
+  Lexer.setBuffer(SrcMgr.getMemoryBuffer(CurBuffer)->getBuffer());
+  Lex();
+  return false;
+}
+
+/// parseNasmTimesFill -- handle 'times <count> db <const>' when the count is
+/// location-dependent (involves $/$$ or labels). Such a count is only knowable
+/// at layout time, so we emit a fill to a computed offset rather than repeating
+/// the body. With a 'db <fill>' body the fill is a single repeated byte, which
+/// the org fragment produces. The target section offset is
+///   <here> + count   ==   (anchor - $$) + count_expr
+/// where 'anchor' is a label at the current position; the count's own '$' and
+/// our anchor sit at the same place, so the symbol difference resolves to the
+/// intended constant offset at layout.
+bool AsmParser::parseNasmTimesFill(const MCExpr *CountExpr, unsigned int &KsError)
+{
+  // Only 'db <constant>' is representable here. A location-dependent count is
+  // turned into a layout-time fill to a computed offset, and the org fragment
+  // fills a single repeated byte. A wider unit (dw/dd/dq) would scale the
+  // count -- hence the '$' label inside it -- by the unit size, which a
+  // relocatable expression cannot represent; the forms people actually use
+  // (e.g. 'times (N-($-$$))/4 dd 0') additionally divide a label, which is not
+  // evaluable single-pass. Such fills genuinely require a multi-pass assembler.
+  if (!(getLexer().is(AsmToken::Identifier) &&
+        getTok().getIdentifier().lower() == "db")) {
+    KsError = KS_ERR_ASM_DIRECTIVE_VALUE_RANGE;
+    return true;
+  }
+  Lex(); // consume 'db'
+
+  const MCExpr *FillExpr;
+  if (parseExpression(FillExpr)) {
+    KsError = KS_ERR_ASM_DIRECTIVE_INVALID;
+    return true;
+  }
+  int64_t FillVal;
+  if (exprReferencesSymbol(FillExpr) || !FillExpr->evaluateAsAbsolute(FillVal) ||
+      (!isUIntN(8, FillVal) && !isIntN(8, FillVal))) {
+    KsError = KS_ERR_ASM_DIRECTIVE_VALUE_RANGE;
+    return true;
+  }
+  if (getLexer().isNot(AsmToken::EndOfStatement)) {
+    KsError = KS_ERR_ASM_DIRECTIVE_TOKEN;
+    return true;
+  }
+  Lex();
+
+  // Anchor the current position and build the target-location expression
+  //   CountExpr + <here>
+  // which evaluates, at layout, to the location the fill must reach. The org
+  // fragment compares against a base-address-inclusive fragment offset, so the
+  // anchor's full address (not a section-relative offset) is used; the count's
+  // own '$' and our anchor sit at the same place, so any base/offset terms
+  // cancel (as a symbol difference) to the intended fill length.
+  MCSymbol *Anchor = getContext().createTempSymbol();
+  getStreamer().EmitLabel(Anchor);
+  const MCExpr *AnchorRef =
+      MCSymbolRefExpr::create(Anchor, MCSymbolRefExpr::VK_None, getContext());
+  const MCExpr *Offset =
+      MCBinaryExpr::createAdd(CountExpr, AnchorRef, getContext());
+  getStreamer().emitValueToOffset(Offset, (unsigned char)FillVal);
+  return false;
+}
+
+/// parseNasmDirectiveOrg
+/// ::= org address
+/// Sets the origin: labels and $/$$ are resolved relative to this address.
+/// Unlike a file offset, this does not emit any padding (matching NASM 'bin').
+bool AsmParser::parseNasmDirectiveOrg(unsigned int &KsError)
+{
+  int64_t Addr;
+  if (parseAbsoluteExpression(Addr)) {
+    KsError = KS_ERR_ASM_DIRECTIVE_INVALID;
+    return true;
+  }
+  if (getLexer().isNot(AsmToken::EndOfStatement)) {
+    KsError = KS_ERR_ASM_DIRECTIVE_TOKEN;
+    return true;
+  }
+  Lex();
+
+  getContext().setBaseAddress((uint64_t)Addr);
+  return false;
+}
+
 /// parseDirectiveEndIf
 /// ::= .endif
 bool AsmParser::parseDirectiveEndIf(SMLoc DirectiveLoc)
@@ -5362,6 +5794,25 @@ void AsmParser::initializeDirectiveKindMap(int syntax)
         DirectiveKindMap["dw"] = DK_SHORT;
         DirectiveKindMap["dd"] = DK_INT;
         DirectiveKindMap["dq"] = DK_QUAD;
+        DirectiveKindMap["dt"] = DK_NASM_DT;
+        DirectiveKindMap["do"] = DK_NASM_DO;
+        DirectiveKindMap["dy"] = DK_NASM_DY;
+        DirectiveKindMap["dz"] = DK_NASM_DZ;
+        DirectiveKindMap["org"] = DK_NASM_ORG;
+        DirectiveKindMap["section"] = DK_NASM_SECTION;
+        DirectiveKindMap["segment"] = DK_NASM_SECTION;
+        DirectiveKindMap["extern"] = DK_EXTERN;
+        DirectiveKindMap["resb"] = DK_NASM_RESB;
+        DirectiveKindMap["resw"] = DK_NASM_RESB;
+        DirectiveKindMap["resd"] = DK_NASM_RESB;
+        DirectiveKindMap["resq"] = DK_NASM_RESB;
+        DirectiveKindMap["rest"] = DK_NASM_RESB;
+        DirectiveKindMap["reso"] = DK_NASM_RESB;
+        DirectiveKindMap["resy"] = DK_NASM_RESB;
+        DirectiveKindMap["resz"] = DK_NASM_RESB;
+        DirectiveKindMap["times"] = DK_NASM_TIMES;
+        DirectiveKindMap["equ"] = DK_NASM_EQU;
+        DirectiveKindMap["align"] = DK_NASM_ALIGN;
         DirectiveKindMap["use16"] = DK_CODE16;
         DirectiveKindMap["use32"] = DK_NASM_USE32;
         DirectiveKindMap["global"] = DK_GLOBAL;

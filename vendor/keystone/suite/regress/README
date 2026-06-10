@@ -4,3 +4,9 @@ Run ./regress.py to execute all the tests.
 
 Take test1.py as an example when you create a new regression.
 Please fill in the Github issue number & Author in your regression.
+
+x86_emulate_directives.py additionally runs the assembled output in the Unicorn
+CPU emulator (an end-to-end check that directive/boot code actually executes).
+It is skipped automatically unless Unicorn is installed:
+
+    pip install unicorn

@@ -154,6 +154,7 @@ bool deserializeState()
     }
 
     LOG_INFO("Successfully deserialized from file " << fileName);
-    safeHighlightLine(addressLineNoMap[icicle_get_pc(icicle)]);
+    const auto lineIt = addressLineNoMap.find(icicle_get_pc(icicle));
+    safeHighlightLine(lineIt != addressLineNoMap.end() && lineIt->second ? static_cast<int>(lineIt->second - 1) : -1);
     return true;
 }

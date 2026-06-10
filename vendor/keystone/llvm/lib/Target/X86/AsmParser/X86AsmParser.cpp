@@ -69,6 +69,9 @@ private:
   // PUSH i8  --> PUSH32i8
   // PUSH word i8 --> PUSH16i8
   bool push32;
+  // PUSH word imm16 --> PUSHi16 (otherwise an imm16 that does not fit in i8
+  // matches the generic PUSHi32 and loses the 0x66 operand-size prefix).
+  bool push16;
   SMLoc consumeToken() {
     MCAsmParser &Parser = getParser();
     SMLoc Result = Parser.getTok().getLoc();
@@ -322,6 +325,9 @@ private:
     unsigned BaseReg, IndexReg, TmpReg, Scale;
     int64_t Imm;
     const MCExpr *Sym;
+    // A second, subtracted symbol so that symbol differences such as
+    // [eax + b - a] can be represented (the displacement becomes Sym - SymB).
+    const MCExpr *SymB;
     StringRef SymName;
     bool StopOnLBrac, AddImmPrefix, Rel, Abs;
     InfixCalculator IC;
@@ -330,13 +336,14 @@ private:
   public:
     IntelExprStateMachine(int64_t imm, bool stoponlbrac, bool addimmprefix, bool isrel=false) :
       State(IES_PLUS), PrevState(IES_ERROR), BaseReg(0), IndexReg(0), TmpReg(0),
-      Scale(1), Imm(imm), Sym(nullptr), StopOnLBrac(stoponlbrac),
+      Scale(1), Imm(imm), Sym(nullptr), SymB(nullptr), StopOnLBrac(stoponlbrac),
       AddImmPrefix(addimmprefix), Rel(isrel), Abs(false) { Info.clear(); }
 
     unsigned getBaseReg() { return (Rel && !Abs && BaseReg == 0 && IndexReg == 0) ? (unsigned)X86::RIP : BaseReg; }
     unsigned getIndexReg() { return IndexReg; }
     unsigned getScale() { return Scale; }
     const MCExpr *getSym() { return Sym; }
+    const MCExpr *getSymB() { return SymB; }
     StringRef getSymName() { return SymName; }
     int64_t getImm(unsigned int &KsError) { return Imm + IC.execute(KsError); }
     bool isValidEndState() {
@@ -447,7 +454,15 @@ private:
                 State = IES_ERROR;
                 break;
             }
-            IndexReg = TmpReg;
+            // The stack pointer (ESP/RSP) cannot be encoded as a SIB index.
+            // When it would land in the index slot with scale 1, swap it into
+            // the base slot, as NASM does (e.g. [rax+rsp] -> [rsp+rax]).
+            if (TmpReg == X86::ESP || TmpReg == X86::RSP) {
+                IndexReg = BaseReg;
+                BaseReg = TmpReg;
+            } else {
+                IndexReg = TmpReg;
+            }
             Scale = 1;
           }
         }
@@ -488,7 +503,15 @@ private:
                 State = IES_ERROR;
                 break;
             }
-            IndexReg = TmpReg;
+            // The stack pointer (ESP/RSP) cannot be encoded as a SIB index.
+            // When it would land in the index slot with scale 1, swap it into
+            // the base slot, as NASM does (e.g. [rax+rsp] -> [rsp+rax]).
+            if (TmpReg == X86::ESP || TmpReg == X86::RSP) {
+                IndexReg = BaseReg;
+                BaseReg = TmpReg;
+            } else {
+                IndexReg = TmpReg;
+            }
             Scale = 1;
           }
         }
@@ -554,6 +577,7 @@ private:
       PrevState = CurrState;
     }
     void onIdentifierExpr(const MCExpr *SymRef, StringRef SymRefName) {
+      IntelExprState CurrState = State;
       PrevState = State;
       switch (State) {
       default:
@@ -563,8 +587,19 @@ private:
       case IES_MINUS:
       case IES_NOT:
         State = IES_INTEGER;
-        Sym = SymRef;
-        SymName = SymRefName;
+        if (!Sym) {
+          Sym = SymRef;
+          SymName = SymRefName;
+        } else if (CurrState == IES_MINUS && !SymB) {
+          // A subtracted second symbol: the displacement is a symbol
+          // difference (e.g. [eax + b - a]).
+          SymB = SymRef;
+        } else {
+          // More than two symbols, or two added symbols -- unrepresentable
+          // here; keep the previous (single-symbol) behaviour.
+          Sym = SymRef;
+          SymName = SymRefName;
+        }
         IC.pushOperand(IC_IMM);
         break;
       }
@@ -599,6 +634,15 @@ private:
           if(Scale != 1 && Scale != 2 && Scale != 4 && Scale != 8) {
             ErrMsg = "scale factor in address must be 1, 2, 4 or 8";
             return true;
+          }
+          // The stack pointer (ESP/RSP) cannot be a SIB index. If it was given
+          // an explicit scale of 1 (e.g. [rbx+rsp*1]), swap it into the base
+          // slot as NASM does.
+          if ((IndexReg == X86::ESP || IndexReg == X86::RSP) && Scale == 1 &&
+              BaseReg) {
+            unsigned Tmp = BaseReg;
+            BaseReg = IndexReg;
+            IndexReg = Tmp;
           }
           // Get the scale and replace the 'Register * Scale' with '0'.
           IC.popOperator();
@@ -691,7 +735,15 @@ private:
                 State = IES_ERROR;
                 break;
             }
-            IndexReg = TmpReg;
+            // The stack pointer (ESP/RSP) cannot be encoded as a SIB index.
+            // When it would land in the index slot with scale 1, swap it into
+            // the base slot, as NASM does (e.g. [rax+rsp] -> [rsp+rax]).
+            if (TmpReg == X86::ESP || TmpReg == X86::RSP) {
+                IndexReg = BaseReg;
+                BaseReg = TmpReg;
+            } else {
+                IndexReg = TmpReg;
+            }
             Scale = 1;
           }
         }
@@ -1540,6 +1592,25 @@ X86AsmParser::ParseIntelBracExpression(unsigned SegReg, SMLoc Start,
     return ErrorOperand(BracLoc, "Expected '[' token!");
   Parser.Lex(); // Eat '['
 
+  // NASM/Intel write a segment override inside the brackets: [seg:disp]
+  // (e.g. [es:0x10], [fs:eax]). Detect a leading 'segreg :' here -- the
+  // 'seg:[...]' form is handled earlier by ParseIntelSegmentOverride.
+  if (SegReg == 0 && getLexer().is(AsmToken::Identifier) &&
+      getLexer().peekTok().is(AsmToken::Colon)) {
+    unsigned SegRegNo = 0;
+    SMLoc SegStart, SegEnd;
+    unsigned int SegErr;
+    if (!ParseRegister(SegRegNo, SegStart, SegEnd, SegErr) &&
+        (SegRegNo == X86::ES || SegRegNo == X86::CS || SegRegNo == X86::SS ||
+         SegRegNo == X86::DS || SegRegNo == X86::FS || SegRegNo == X86::GS)) {
+      SegReg = SegRegNo;
+      Parser.Lex(); // Eat ':'
+    } else {
+      KsError = KS_ERR_ASM_INVALIDOPERAND;
+      return nullptr;
+    }
+  }
+
   SMLoc StartInBrac = Tok.getLoc();
   bool IsRel;
   switch(SegReg) {
@@ -1565,6 +1636,10 @@ X86AsmParser::ParseIntelBracExpression(unsigned SegReg, SMLoc Start,
   if (const MCExpr *Sym = SM.getSym()) {
     // A symbolic displacement.
     Disp = Sym;
+    // A symbol difference, e.g. [eax + b - a], resolves to the distance
+    // between the two labels at layout time.
+    if (const MCExpr *SymB = SM.getSymB())
+      Disp = MCBinaryExpr::createSub(Disp, SymB, getContext());
     if (isParsingInlineAsm())
       RewriteIntelBracExpression(*InstInfo->AsmRewrites, SM.getSymName(),
                                  ImmDisp, SM.getImm(KsError), BracLoc, StartInBrac,
@@ -2035,6 +2110,8 @@ std::unique_ptr<X86Operand> X86AsmParser::ParseIntelOperand(std::string Mnem, un
       if (Mnem == "push") {
           if (Size == 0)
               push32 = true;
+          else if (Size == 16)
+              push16 = true;
       }
 
       const MCExpr *ImmExpr = MCConstantExpr::create(Imm, getContext());
@@ -2609,6 +2686,7 @@ bool X86AsmParser::ParseInstruction(ParseInstructionInfo &Info, StringRef Name,
     Name == "rex64" || Name == "data16";
 
   push32 = false;
+  push16 = false;
 
   // This does the actual operand parsing.  Don't parse any more if we have a
   // prefix juxtaposed with an operation like "lock incl 4(%rax)", because we
@@ -3216,8 +3294,54 @@ bool X86AsmParser::MatchAndEmitIntelInstruction(SMLoc IDLoc, unsigned &Opcode,
       ErrorInfoMissingFeature = ErrorInfo;
   }
 
-  if (push32 && Inst.getOpcode() == X86::PUSH16i8)
-      Inst.setOpcode(X86::PUSH32i8);
+  // 'push word <imm>' forces a 16-bit operand.
+  if (push16 && Inst.getOpcode() == X86::PUSHi32)
+      Inst.setOpcode(X86::PUSHi16);
+  // A bare 'push <imm>' (push32 == "no explicit size") follows the CPU mode:
+  // 32-bit in 32/64-bit mode (the matcher's imm8 default is the 16-bit form,
+  // so bump it up), 16-bit in 16-bit mode (bump the imm16/32 default down).
+  if (push32) {
+    if (is16BitMode()) {
+      if (Inst.getOpcode() == X86::PUSHi32)
+          Inst.setOpcode(X86::PUSHi16);
+    } else {
+      if (Inst.getOpcode() == X86::PUSH16i8)
+          Inst.setOpcode(X86::PUSH32i8);
+    }
+  }
+
+  // The Intel-syntax mnemonic alias table (unlike AT&T's) lacks the
+  // mode-dependent operand-size suffixing for several no-/immediate-operand
+  // instructions (ret/iret/pushf/popf/push imm/call imm), so they match one
+  // fixed variant and then pick up a spurious 0x66 operand-size prefix in the
+  // other CPU mode. Re-select the mode-appropriate variant here (AT&T already
+  // resolves these via the alias table, so only do it for Intel/NASM syntax).
+  if (isParsingIntelSyntax()) {
+    if (is16BitMode()) {
+      switch (Inst.getOpcode()) {
+      case X86::RETL:   Inst.setOpcode(X86::RETW);   break;
+      case X86::RETIL:  Inst.setOpcode(X86::RETIW);  break;
+      case X86::LRETL:  Inst.setOpcode(X86::LRETW);  break;
+      case X86::LRETIL: Inst.setOpcode(X86::LRETIW); break;
+      case X86::CALLpcrel32: Inst.setOpcode(X86::CALLpcrel16); break;
+      default: break;
+      }
+    } else if (is32BitMode()) {
+      switch (Inst.getOpcode()) {
+      case X86::IRET16:  Inst.setOpcode(X86::IRET32);  break;
+      case X86::PUSHF16: Inst.setOpcode(X86::PUSHF32); break;
+      case X86::POPF16:  Inst.setOpcode(X86::POPF32);  break;
+      default: break;
+      }
+    } else if (is64BitMode()) {
+      switch (Inst.getOpcode()) {
+      case X86::IRET16:  Inst.setOpcode(X86::IRET64);  break;
+      case X86::PUSHF16: Inst.setOpcode(X86::PUSHF64); break;
+      case X86::POPF16:  Inst.setOpcode(X86::POPF64);  break;
+      default: break;
+      }
+    }
+  }
 
   // Restore the size of the unsized memory operand if we modified it.
   if (UnsizedMemOp)

@@ -207,8 +207,11 @@ bool MCAssembler::evaluateFixup(const MCAsmLayout &Layout,
             uint64_t imm;
             ks_sym_resolver resolver = (ks_sym_resolver)KsSymResolver;
             if (resolver(Sym.getName().str().c_str(), &imm)) {
-                // resolver handled this symbol
-                Value = imm;
+                // resolver handled this symbol. Add (not overwrite) so any
+                // constant already folded into the fixup is preserved -- e.g.
+                // the X86 emitter bakes the PC-relative -4 bias into the
+                // displacement, so a resolved 'call sym' must keep it.
+                Value += imm;
                 IsResolved = true;
             } else {
                 // resolver did not handle this symbol
@@ -323,6 +326,16 @@ uint64_t MCAssembler::computeFragmentSize(const MCAsmLayout &Layout,
         return 0;
       }
       TargetLocation += Val;
+    }
+    // Handle a subtracted symbol so that symbol-difference offsets work (this
+    // is how the NASM 'times N-($-$$) db x' fill is computed at layout time).
+    if (const MCSymbolRefExpr *B = Value.getSymB()) {
+      uint64_t Val;
+      if (!Layout.getSymbolOffset(B->getSymbol(), Val, valid)) {
+        valid = false;
+        return 0;
+      }
+      TargetLocation -= Val;
     }
     int64_t Size = TargetLocation - FragmentOffset;
     if (Size < 0 || Size >= 0x40000000) {

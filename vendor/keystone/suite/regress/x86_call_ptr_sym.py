@@ -12,7 +12,8 @@ import regress
 
 def sym_resolver(symbol, value):
     if symbol == b'GetPhoneBuildString':
-        value = 0x41b000
+        # value is a pointer; write through it so the C side sees the result.
+        value[0] = 0x41b000
         return True
     return False
 

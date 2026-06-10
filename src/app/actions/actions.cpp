@@ -32,6 +32,56 @@ uint64_t remoteResumeGeneration = 0;
 
 static void syncRemoteUiState(bool refreshTarget, bool resetCodeMemoryBase);
 
+namespace {
+
+struct BreakpointLocation {
+    uint64_t address{};
+    uint64_t lineNo{};
+};
+
+bool ensureLocalAddressMapForBreakpoints()
+{
+    if (remote_gdb::useRemoteDebugging() || !addressLineNoMap.empty()) {
+        return true;
+    }
+
+    if (selectedFile.empty()) {
+        return false;
+    }
+
+    return !getBytes(selectedFile).empty();
+}
+
+std::optional<BreakpointLocation> resolveBreakpointLocationForEditorLine(const int editorLine)
+{
+    if (editorLine < 0) {
+        return std::nullopt;
+    }
+
+    if (!ensureLocalAddressMapForBreakpoints()) {
+        return std::nullopt;
+    }
+
+    const auto requestedLineNo = static_cast<uint64_t>(editorLine + 1);
+    std::optional<BreakpointLocation> best;
+
+    for (const auto& [address, lineNo] : addressLineNoMap) {
+        if (lineNo == requestedLineNo) {
+            return BreakpointLocation{address, lineNo};
+        }
+
+        if (lineNo > requestedLineNo &&
+            (!best.has_value() || lineNo < best->lineNo ||
+             (lineNo == best->lineNo && address < best->address))) {
+            best = BreakpointLocation{address, lineNo};
+        }
+    }
+
+    return best;
+}
+
+}
+
 void openBrowser(const std::string& url) {
 #ifdef __EMSCRIPTEN__
     EM_ASM({ window.open(UTF8ToString($0), '_blank'); }, url.c_str());
@@ -163,7 +213,8 @@ void stepBack()
 
     icicle_vm_restore(icicle, stateToRestore);
 
-    safeHighlightLine(addressLineNoMap[icicle_get_pc(icicle)] - 1);
+    const auto restoredLineIt = addressLineNoMap.find(icicle_get_pc(icicle));
+    safeHighlightLine(restoredLineIt != addressLineNoMap.end() ? static_cast<int>(restoredLineIt->second - 1) : -1);
     updateRegs(false);
 
     if (snapshot && snapshot != stateToRestore) {
@@ -402,7 +453,7 @@ bool debugAddBreakpointAddress(const uint64_t address) {
         if (!remote_gdb::remoteAddBreakpoint(address)) {
             return false;
         }
-    } else if (!addBreakpoint(address, false)) {
+    } else if (icicle != nullptr && !addBreakpoint(address, false)) {
         return false;
     }
 
@@ -426,7 +477,7 @@ bool debugRemoveBreakpointAddress(const uint64_t address) {
         if (!remote_gdb::remoteRemoveBreakpoint(address)) {
             return false;
         }
-    } else if (!removeBreakpoint(address)) {
+    } else if (icicle != nullptr && !removeBreakpoint(address)) {
         return false;
     }
 
@@ -516,45 +567,12 @@ void stepOverAction(){
             return;
         }
 
-        // It may cause issues if the actual line is 0 and not undefined. (Need to start from 1)
-        const uint64_t lineNo = addressLineNoMap[icicle_get_pc(icicle)];
-
-        if (lineNo){
-            
-            breakpointMutex.lock();
-            auto bpLineNoAddr = lineNoToAddress(lineNo + 1);
-            icicle_add_breakpoint(icicle, bpLineNoAddr);
-            breakpointLines.push_back(lineNo + 1); // Track the temporary breakpoint
-            breakpointMutex.unlock();
-
-            // Run until the next line (or breakpoint)
-            executeCode(icicle, 0); // Use executeCode which handles breakpoints
-
-            // Update UI with new position
-            if (!executionComplete) {
-                const uint64_t newLineNo = addressLineNoMap[icicle_get_pc(icicle)];
-                if (newLineNo)
-                    safeHighlightLine(newLineNo - 1);
-            }
-
-            // Attempt to remove the temporary breakpoint
-            breakpointMutex.lock();
-            icicle_remove_breakpoint(icicle, bpLineNoAddr);
-            auto it = std::ranges::find(breakpointLines, lineNo + 1);
-            if (it != breakpointLines.end()) {
-                 breakpointLines.erase(it);
-                 LOG_DEBUG("Removed step over breakpoint at line: " << lineNo + 1);
-            }
-            breakpointMutex.unlock();
-
-            // The old logic seems complex and potentially incorrect, replacing with simpler execute
-            stepOverBPLineNo = -1; // Clear any leftover state
-            LOG_INFO("Step over completed.");
-            continueOverBreakpoint = false; // Reset this flag
+        if (!stepOverCode()) {
+            consoleWriteThreadSafe("debug >> step-over failed\n");
         }
-        else {
-            LOG_WARNING("Could not get current line number for step over.");
-        }
+        stepOverBPLineNo = -1;
+        continueOverBreakpoint = false;
+        LOG_INFO("Step over completed.");
     });
     
 }
@@ -583,9 +601,9 @@ void stepInAction(){
         
         // Update UI after step is complete
         if (!executionComplete) {
-                const uint64_t newLineNo = addressLineNoMap[icicle_get_pc(icicle)];
-                if (newLineNo)
-                    safeHighlightLine(newLineNo - 1);
+            const auto lineIt = addressLineNoMap.find(icicle_get_pc(icicle));
+            if (lineIt != addressLineNoMap.end() && lineIt->second)
+                safeHighlightLine(lineIt->second - 1);
         }
         
         stepIn = false;
@@ -643,65 +661,43 @@ void debugToggleBreakpoint(){
 bool debugAddBreakpoint(const int lineNum){
     LOG_DEBUG("Adding breakpoint on the line " << lineNum);
 
-    if (remote_gdb::useRemoteDebugging()) {
-        if (std::ranges::find(breakpointLines, lineNum + 1) != breakpointLines.end()) {
-            return false;
-        }
-        const auto address = lineNoToAddress(lineNum + 1);
-        if (!address) {
-            consoleWriteThreadSafe("remote >> cannot resolve line to address for breakpoint\n");
-            return false;
-        }
-        return debugAddBreakpointAddress(address);
-    }
-
-    breakpointMutex.lock();
-
-    const auto breakpointLineNo = (std::ranges::find(breakpointLines, lineNum + 1));
-    if (breakpointLineNo != breakpointLines.end()){
-        LOG_DEBUG("Breakpoint already exists, skipping...");
-        breakpointMutex.unlock();
+    const auto location = resolveBreakpointLocationForEditorLine(lineNum);
+    if (!location.has_value()) {
+        consoleWriteThreadSafe(remote_gdb::useRemoteDebugging()
+            ? "remote >> cannot resolve line to address for breakpoint\n"
+            : "debug >> cannot resolve line to executable address for breakpoint\n");
         return false;
     }
-    else{
-        addBreakpointToLine(lineNum);
-        editor->HighlightBreakpoints(lineNum);
-        breakpointAddresses.push_back(lineNoToAddress(lineNum + 1));
-        LOG_DEBUG("Breakpoint added successfully!");
+
+    if (std::ranges::find(breakpointLines, location->lineNo) != breakpointLines.end() ||
+        std::ranges::find(breakpointAddresses, location->address) != breakpointAddresses.end()) {
+        LOG_DEBUG("Breakpoint already exists, skipping...");
+        return false;
     }
 
-    breakpointMutex.unlock();
-    return true;
+    const bool added = debugAddBreakpointAddress(location->address);
+    if (added) {
+        LOG_DEBUG("Breakpoint added successfully!");
+    }
+    return added;
 }
 
 bool debugRemoveBreakpoint(const int lineNum){
     LOG_DEBUG("Removing the breakpoint at " << lineNum);
-    const auto breakpointIter = (std::ranges::find(breakpointLines, lineNum + 1));
+    const auto location = resolveBreakpointLocationForEditorLine(lineNum);
 
-    if (breakpointIter == breakpointLines.end()){
+    if (!location.has_value() ||
+        std::ranges::find(breakpointLines, location->lineNo) == breakpointLines.end()){
         LOG_DEBUG("No breakpoint exists at line no. " << lineNum);
         return false;
     }
     else{
-        if (remote_gdb::useRemoteDebugging()) {
-            const auto address = lineNoToAddress(lineNum + 1);
-            if (!address) {
-                return false;
-            }
-            return debugRemoveBreakpointAddress(address);
+        const bool removed = debugRemoveBreakpointAddress(location->address);
+        if (removed) {
+            LOG_DEBUG("Removed breakpoint at line no. " << lineNum);
         }
-        if (!removeBreakpointFromLineNo(lineNum + 1)) {
-            return false;
-        }
-        const auto address = lineNoToAddress(lineNum + 1);
-        const auto addressIter = std::ranges::find(breakpointAddresses, address);
-        if (addressIter != breakpointAddresses.end()) {
-            breakpointAddresses.erase(addressIter);
-        }
-        LOG_DEBUG("Removed breakpoint at line no. " << lineNum);
+        return removed;
     }
-
-    return true;
 }
 
 void debugRunSelectionAction(){
@@ -766,12 +762,14 @@ void debugContinueAction(const bool skipBP) {
         
         // Update UI after execution
         if (!executionComplete) {
-                const uint64_t newLineNo = addressLineNoMap[icicle_get_pc(icicle)];
-                if (newLineNo)
-                    safeHighlightLine(newLineNo - 1);
+            const auto lineIt = addressLineNoMap.find(icicle_get_pc(icicle));
+            if (lineIt != addressLineNoMap.end() && lineIt->second)
+                safeHighlightLine(lineIt->second - 1);
         }
-        else
-            safeHighlightLine(lastInstructionLineNo - 1);
+        else {
+            const int currentLine = getCurrentLine();
+            safeHighlightLine(currentLine > 0 ? currentLine - 1 : (lastInstructionLineNo > 0 ? static_cast<int>(lastInstructionLineNo - 1) : -1));
+        }
 
         skipBreakpoints = false;
         runningAsContinue = false;
@@ -889,9 +887,9 @@ void runActions(){
                 skipEndStep = false;
 
                 if (!executionComplete) {
-                    const uint64_t newLineNo = addressLineNoMap[icicle_get_pc(icicle)];
-                    if (newLineNo)
-                        safeHighlightLine(newLineNo - 1);
+                    const auto lineIt = addressLineNoMap.find(icicle_get_pc(icicle));
+                    if (lineIt != addressLineNoMap.end() && lineIt->second)
+                        safeHighlightLine(lineIt->second - 1);
                 }
                 
                 // Remove temporary breakpoint
@@ -947,7 +945,8 @@ void runActions(){
                 // Execution was successful
                 // Update UI after run
                 if (executionComplete) {
-                    safeHighlightLine(lastInstructionLineNo - 1);
+                    const int currentLine = getCurrentLine();
+                    safeHighlightLine(currentLine > 0 ? currentLine - 1 : (lastInstructionLineNo > 0 ? static_cast<int>(lastInstructionLineNo - 1) : -1));
                 }
             }
             else {
