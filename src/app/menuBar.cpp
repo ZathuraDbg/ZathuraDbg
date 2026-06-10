@@ -337,10 +337,10 @@ void appMenuBar()
                 ImGui::MenuItem("Stop debugging", "Shift+F5", &debugStop);
             }
             ImGui::MenuItem("Configure target", nullptr, &showDebugTargetSettings);
-            ImGui::MenuItem("Step In", "CTRL+J", &debugStepIn, debugModeEnabled ? true : false);
-            ImGui::MenuItem("Step Over", "CTRL+K", &debugStepOver, debugModeEnabled ? true : false);
+            ImGui::MenuItem("Step Over", "F10", &debugStepOver, debugModeEnabled ? true : false);
+            ImGui::MenuItem("Step In", "F11", &debugStepIn, debugModeEnabled ? true : false);
             ImGui::MenuItem("Continue", debugModeEnabled ? "F5" : nullptr, &debugContinue, debugModeEnabled ? true : false);
-            ImGui::MenuItem("Restart debugging", "CTRL+F5", &debugRestart, debugModeEnabled ? true : false);
+            ImGui::MenuItem("Restart debugging", "Ctrl+Shift+F5", &debugRestart, debugModeEnabled ? true : false);
             ImGui::MenuItem("Memory maps", "CTRL+F7", &memoryMapsUI, debugModeEnabled ? true : false);
             ImGui::MenuItem("Breakpoints", nullptr, &breakpointsUI, true);
             ImGui::MenuItem("Watchpoints", nullptr, &watchpointsUI, true);

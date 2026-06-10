@@ -88,7 +88,7 @@ bool setupButtons() {
 
          if (ImGui::IsItemHovered()) {
             ImGui::BeginTooltip();
-            ImGui::Text("Run (F10)");
+            ImGui::Text("Run (Ctrl+F5)");
             ImGui::EndTooltip();
         }
 
@@ -114,7 +114,7 @@ bool setupButtons() {
 
         if (ImGui::IsItemHovered()) {
             ImGui::BeginTooltip();
-            ImGui::Text("Restart Debugging (CTRL+F5)");
+            ImGui::Text("Restart Debugging (Ctrl+Shift+F5)");
             ImGui::EndTooltip();
         }
 
@@ -142,7 +142,7 @@ bool setupButtons() {
 
         if (ImGui::IsItemHovered()) {
             ImGui::BeginTooltip();
-            ImGui::Text("Step Over (CTRL+K)");
+            ImGui::Text("Step Over (F10)");
             ImGui::EndTooltip();
         }
 
@@ -156,7 +156,7 @@ bool setupButtons() {
 
         if (ImGui::IsItemHovered()) {
             ImGui::BeginTooltip();
-            ImGui::Text("Step In (CTRL+J)");
+            ImGui::Text("Step In (F11)");
             ImGui::EndTooltip();
         }
 
@@ -219,7 +219,7 @@ bool setupButtons() {
     }
     if (ImGui::IsItemHovered()) {
         ImGui::BeginTooltip();
-        ImGui::Text("Restart Debugging (CTRL+F5)");
+        ImGui::Text("Restart Debugging (Ctrl+Shift+F5)");
         ImGui::EndTooltip();
     }
     const char* targetLabel = remote_gdb::useRemoteDebugging() ? "Server" : "Emulation";
