@@ -12,11 +12,12 @@ import regress
 class TestARM(regress.RegressTest):
     def runTest(self):
         def sym_resolver(symbol, value):
-            if symbol == "symBackward":
+            # The symbol name arrives as bytes from the C callback.
+            if symbol == b"symBackward":
                 value[0] = 0x0
                 return True
 
-            if symbol == "symForward":
+            if symbol == b"symForward":
                 value[0] = 0x20
                 return True
 

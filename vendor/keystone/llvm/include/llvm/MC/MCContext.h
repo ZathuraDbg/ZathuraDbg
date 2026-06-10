@@ -249,6 +249,7 @@ namespace llvm_ks {
     void setUseNamesOnTempLabels(bool Value) { UseNamesOnTempLabels = Value; }
 
     uint64_t getBaseAddress() { return BaseAddress; }
+    void setBaseAddress(uint64_t Addr) { BaseAddress = Addr; }
 
     /// \name Module Lifetime Management
     /// @{

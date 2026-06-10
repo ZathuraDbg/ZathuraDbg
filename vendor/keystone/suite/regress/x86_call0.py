@@ -16,8 +16,10 @@ class TestX86(regress.RegressTest):
         ks = Ks(KS_ARCH_X86, KS_MODE_32)
         # Assemble to get back insn encoding & statement count
         encoding, count = ks.asm(b"call 0")
-        # Assert the result
-        self.assertEqual(encoding, [ 0xE8, 0x00, 0x00, 0x00, 0x00 ])
+        # 'call 0' targets absolute address 0; with the call at address 0 the
+        # PC-relative displacement is 0 - 5 = -5. This matches NASM
+        # ('call 0' -> e8 fb ff ff ff).
+        self.assertEqual(encoding, [ 0xE8, 0xFB, 0xFF, 0xFF, 0xFF ])
 
 if __name__ == '__main__':
     regress.main()

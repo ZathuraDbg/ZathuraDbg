@@ -46,6 +46,7 @@ if [[ ! -f "$WASM_LIBS_ROOT/keystone-src/build-wasm/llvm/lib/libkeystone.a" ]]; 
     rm -rf "$WASM_LIBS_ROOT/keystone-src"
     cp -r "$REPO_DIR/vendor/keystone" "$WASM_LIBS_ROOT/keystone-src"
     emcmake cmake -S "$WASM_LIBS_ROOT/keystone-src" -B "$WASM_LIBS_ROOT/keystone-src/build-wasm" \
+        -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
         -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF \
         -DLLVM_TARGETS_TO_BUILD="X86;AArch64;ARM" -DBUILD_LIBS_ONLY=ON
     cmake --build "$WASM_LIBS_ROOT/keystone-src/build-wasm" -j"$(nproc)"

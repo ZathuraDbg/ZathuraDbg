@@ -54,16 +54,6 @@ Icicle* initIC()
     LOG_INFO("Initiation complete...");
     initArch();
 
-
-    if (!breakpointLines.empty())
-    {
-        for (auto& line : breakpointLines)
-        {
-            // addBreakpointToLine(line);
-            icicle_add_breakpoint(vm, lineNoToAddress(line));
-        }
-    }
-
     icicle = vm;
     return vm;
 }
@@ -170,6 +160,7 @@ bool resetState(bool reInit){
 
     codeCurrentLen = 0;
     codeFinalLen = 0;
+    codeExecutableEndAddress = 0;
     lineNo = 0;
     expectedIP = 0;
 

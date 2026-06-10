@@ -3,16 +3,17 @@
 bool removeBreakpoint(const uint64_t& address) {
     std::lock_guard<std::mutex> lock(breakpointMutex);
 
-    bool success = false;
-    if (breakpointLines.empty()) {
-        return success;
+    bool success = true;
+    if (icicle != nullptr) {
+        icicle_remove_breakpoint(icicle, address);
     }
 
-    const auto it = std::ranges::find(breakpointLines, addressLineNoMap[address]);
-    if  (it != breakpointLines.end()) {
-        icicle_remove_breakpoint(icicle, address);
-        breakpointLines.erase(it);
-        success = true;
+    const auto lineIt = addressLineNoMap.find(address);
+    if (lineIt != addressLineNoMap.end()) {
+        const auto it = std::ranges::find(breakpointLines, lineIt->second);
+        if  (it != breakpointLines.end()) {
+            breakpointLines.erase(it);
+        }
     }
 
     return success;

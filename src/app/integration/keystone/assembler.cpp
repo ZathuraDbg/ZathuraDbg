@@ -120,8 +120,11 @@ bool isValidInstruction(ks_engine* ksEngine, const char* instruction) {
 }
 
 uint64_t lastInstructionLineNo = 0;
+uint64_t codeExecutableEndAddress = 0;
 void initInsSizeInfoMap(){
     LOG_INFO("Updating instruction sizes info map...");
+    lastInstructionLineNo = 0;
+    codeExecutableEndAddress = 0;
     
     if (instructionSizes.empty() && codeInformation.archIC != IC_ARCH_AARCH64) {
         LOG_ERROR("instructionSizes is empty! Cannot initialize instruction size info map.");
@@ -181,16 +184,19 @@ void initInsSizeInfoMap(){
 
 
         if (isValidInstruction(ks, line.c_str()) || (codeInformation.archIC == IC_ARCH_AARCH64 && instructionStr.contains('.'))){
-             if (labels.size() <= 1)
-                lastInstructionLineNo = lineNo;
+            lastInstructionLineNo = lineNo;
 
             addressLineNoMap.insert({currentAddr, lineNo});
             if (codeInformation.archIC == IC_ARCH_AARCH64)
+            {
                 currentAddr += 4; // every instruction in aarch64 is 4 bytes long
+                codeExecutableEndAddress = currentAddr;
+            }
             else
             {
                 if (count < instructionSizes.size()) {
                     currentAddr += instructionSizes[count];
+                    codeExecutableEndAddress = currentAddr;
                 } else {
                     std::cerr << "instructionSizes out-of-bounds: count = " << count
                               << ", instructionSizes.size() = " << instructionSizes.size()

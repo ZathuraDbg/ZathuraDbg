@@ -25,6 +25,7 @@ using namespace llvm_ks;
 MCAsmInfo::MCAsmInfo() {
   PointerSize = 4;
   CalleeSaveStackSlotSize = 4;
+  Radix = 10; // decimal immediates by default
 
   IsLittleEndian = true;
   StackGrowsUp = false;

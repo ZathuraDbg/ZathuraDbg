@@ -1,7 +1,8 @@
 Name: keystone
 Description: Keystone assembler engine
 Version: 0.9
-libdir=/usr/local/lib
-includedir=/usr/local/include
+prefix=${pcfiledir}/../..
+libdir=${prefix}/lib
+includedir=${prefix}/include
 Libs: -L${libdir} -lkeystone
 Cflags: -I${includedir}

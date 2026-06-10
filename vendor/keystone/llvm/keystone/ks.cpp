@@ -554,7 +554,9 @@ ks_err ks_close(ks_engine *ks)
 KEYSTONE_EXPORT
 ks_err ks_option(ks_engine *ks, ks_opt_type type, size_t value)
 {
-    ks->MAI->setRadix(16);
+    // Default to decimal immediates (NASM/Intel/GAS are all decimal by
+    // default). Hex-default is opt-in via the KS_OPT_SYNTAX_RADIX16 flag below.
+    ks->MAI->setRadix(10);
     switch(type) {
         case KS_OPT_SYNTAX:
             if (ks->arch != KS_ARCH_X86)
@@ -568,7 +570,10 @@ ks_err ks_option(ks_engine *ks, ks_opt_type type, size_t value)
                     ks->MAI->setRadix(16);
                 case KS_OPT_SYNTAX_NASM:
                 case KS_OPT_SYNTAX_INTEL:
-                    ks->syntax = (ks_opt_value)value;
+                    // Store the base syntax without the radix flag so that
+                    // syntax comparisons (e.g. == KS_OPT_SYNTAX_NASM) still hold
+                    // when RADIX16 is combined in.
+                    ks->syntax = (ks_opt_value)(value & ~KS_OPT_SYNTAX_RADIX16);
                     ks->MAI->setAssemblerDialect(1);
                     break;
                 case KS_OPT_SYNTAX_GAS | KS_OPT_SYNTAX_RADIX16:
@@ -576,7 +581,10 @@ ks_err ks_option(ks_engine *ks, ks_opt_type type, size_t value)
                     ks->MAI->setRadix(16);
                 case KS_OPT_SYNTAX_GAS:
                 case KS_OPT_SYNTAX_ATT:
-                    ks->syntax = (ks_opt_value)value;
+                    // Store the base syntax without the radix flag so that
+                    // syntax comparisons (e.g. == KS_OPT_SYNTAX_NASM) still hold
+                    // when RADIX16 is combined in.
+                    ks->syntax = (ks_opt_value)(value & ~KS_OPT_SYNTAX_RADIX16);
                     ks->MAI->setAssemblerDialect(0);
                     break;
             }

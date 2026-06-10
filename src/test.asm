@@ -1,38 +1,31 @@
-main:
-	mov rbx, 0x400
-	movabs rax, 0x4010000000000000
-	movq xmm0, rax
-	punpcklqdq xmm0, xmm0
-	add rbx, rax
-	mov rdi, rbx
-	inc rdi
-    call subtract_hundred
-    call subtract_hundred
-    cmp r11, 10000
-    jne nextblock
-    push rax
-    push rbx
-    mov rax, 0x100
-    
-subtract_hundred:
-    sub rdi, 0x100
-    mov rax, rdi
-    mov rbx, 0x12
+bits 64
+default rel
+
+section .text
+_start:
+    mov rax, 1
+    mov rdi, 1
+    lea rsi, [message]
+    mov rdx, message_len
+    syscall
+
+    mov rcx, 5
+    xor rbx, rbx
+
+count:
+    add rbx, rcx
+    loop count
+
+    call double_result
+
+    mov rax, 60
+    xor rdi, rdi
+    syscall
+
+double_result:
+    add rbx, rbx
     ret
 
-nextblock:
-	mov rax, rbx
-	jmp nextblockagain
-
-nextblockagain:
-	mov rbx, rcx
-	jmp nextblocktwice
-
-nextblocktwice:
-	mov rdx, rcx
-	jmp anewblock
-
-anewblock:
-	mov r8, r9
-	inc r11
-	jmp main
+section .data
+message: db "Hello from ZathuraDbg", 10
+message_len equ $ - message

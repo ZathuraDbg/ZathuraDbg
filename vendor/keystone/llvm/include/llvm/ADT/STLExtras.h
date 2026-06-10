@@ -21,6 +21,7 @@
 #include <algorithm> // for std::all_of
 #include <cassert>
 #include <cstddef> // for std::size_t
+#include <cstdint> // for std::intptr_t
 #include <cstdlib> // for qsort
 #include <functional>
 #include <iterator>

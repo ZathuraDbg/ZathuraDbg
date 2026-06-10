@@ -16,11 +16,19 @@ extern "C" {
 #ifdef _MSC_VER     // MSVC compiler
 #pragma warning(disable:4201)
 #pragma warning(disable:4100)
+#ifndef KEYSTONE_STATIC
 #define KEYSTONE_EXPORT __declspec(dllexport)
+#else
+#define KEYSTONE_EXPORT
+#endif
 #else
 #ifdef __GNUC__
 #include <stdbool.h>
+#ifndef KEYSTONE_STATIC
 #define KEYSTONE_EXPORT __attribute__((visibility("default")))
+#else
+#define KEYSTONE_EXPORT
+#endif
 #else
 #define KEYSTONE_EXPORT
 #endif
@@ -56,6 +64,7 @@ typedef enum ks_arch {
     KS_ARCH_SYSTEMZ,    // SystemZ architecture (S390X)
     KS_ARCH_HEXAGON,    // Hexagon architecture
     KS_ARCH_EVM,        // Ethereum Virtual Machine architecture
+    KS_ARCH_RISCV,      // RISC-V architecture
     KS_ARCH_MAX,
 } ks_arch;
 
@@ -81,6 +90,9 @@ typedef enum ks_mode {
     KS_MODE_PPC32 = 1 << 2,       // 32-bit mode
     KS_MODE_PPC64 = 1 << 3,       // 64-bit mode
     KS_MODE_QPX = 1 << 4,         // Quad Processing eXtensions mode
+        //riscv
+    KS_MODE_RISCV32 = 1 << 2,     // 32-bit mode
+    KS_MODE_RISCV64 = 1 << 3,     // 64-bit mode
     // sparc
     KS_MODE_SPARC32 = 1 << 2,     // 32-bit mode
     KS_MODE_SPARC64 = 1 << 3,     // 64-bit mode
@@ -181,6 +193,7 @@ typedef enum ks_opt_value {
 #include "hexagon.h"
 #include "mips.h"
 #include "ppc.h"
+#include "riscv.h"
 #include "sparc.h"
 #include "systemz.h"
 #include "x86.h"

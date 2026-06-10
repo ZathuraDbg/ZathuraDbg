@@ -26,6 +26,7 @@ typedef struct{
 
 extern uint64_t totalInstructions;
 extern uint64_t lastInstructionLineNo;
+extern uint64_t codeExecutableEndAddress;
 extern std::unordered_map<uint64_t, uint64_t> addressLineNoMap;
 extern std::map<std::string, int> labelLineNoMapInternal;
 
