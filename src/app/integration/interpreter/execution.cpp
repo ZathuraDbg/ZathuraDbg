@@ -1,4 +1,5 @@
 #include "interpreter.hpp"
+#include "../debugState.hpp"
 #include <algorithm>
 
 int getCurrentLine(){
@@ -132,6 +133,7 @@ bool preExecutionSetup(const std::string& codeIn)
     uint32_t instructionHookID = icicle_add_execution_hook(icicle, instructionHook, nullptr);
     uint32_t stackWriteHookID = icicle_add_mem_write_hook(icicle, stackWriteHook, nullptr, STACK_ADDRESS, STACK_ADDRESS + STACK_SIZE);
     icicle_add_syscall_hook(icicle, handleSyscalls, icicle);
+    installDebugWatchpointHooks();
 
     // Signal that debugging setup is complete and ready for execution
     {
@@ -326,10 +328,7 @@ bool executeCode(Icicle* icicle, const size_t& instructionCount)
 bool stepCode(const size_t instructionCount){
     LOG_DEBUG("Stepping into code requested...");
 
-    {
-        std::unique_lock<std::mutex> lk(debugReadyMutex);
-        debugReadyCv.wait(lk, []{ return isDebugReady; });
-    }
+    waitForDebugReady();
     LOG_DEBUG("Debug state confirmed ready, proceeding with step.");
 
     std::lock_guard<std::mutex> execLock(execMutex);

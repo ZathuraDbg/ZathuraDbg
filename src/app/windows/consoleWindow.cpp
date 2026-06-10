@@ -1,4 +1,6 @@
 #include "windows.hpp"
+#include "../integration/debugState.hpp"
+#include "../integration/elfLoader.hpp"
 #include <algorithm>
 #include <functional>
 #include <regex>
@@ -236,6 +238,16 @@ static std::string joinArguments(const std::vector<std::string>& arguments, size
     return joined;
 }
 
+static std::string trimWhitespace(const std::string& value) {
+    const auto start = value.find_first_not_of(" \t\r\n");
+    if (start == std::string::npos) {
+        return {};
+    }
+
+    const auto end = value.find_last_not_of(" \t\r\n");
+    return value.substr(start, end - start + 1);
+}
+
 // --- Individual command handlers ---
 
 static void cmdHelp(const std::vector<std::string>&);
@@ -386,7 +398,7 @@ static void cmdPacket(const std::vector<std::string>& arguments) {
 }
 
 static void cmdSymbolFile(const std::vector<std::string>& arguments) {
-    if (arguments.empty()) {
+    if (arguments.empty() || arguments[0].empty()) {
         consoleWrite("Usage: symbol-file <path>");
         return;
     }
@@ -394,9 +406,61 @@ static void cmdSymbolFile(const std::vector<std::string>& arguments) {
     consoleWriteThreadSafe("remote >> loading symbols from " + path + " ...");
     if (remote_gdb::remoteLoadSymbolFile(path)) {
         const auto& syms = remote_gdb::remoteLoadedSymbols();
-        consoleWrite("Loaded " + std::to_string(syms.addrToName.size()) + " symbols.");
+        consoleWrite("Loaded " + std::to_string(syms.addrToName.size()) + " symbols and " +
+                     std::to_string(syms.addrToSourceLine.size()) + " source line entries.");
+        if (remote_gdb::remoteDebugConnected()) {
+            requestRemoteUiSync(false);
+        }
     } else {
         consoleWrite("Failed to load symbols from " + path);
+    }
+}
+
+static void cmdSourceFile(const std::vector<std::string>& arguments) {
+    if (arguments.empty() || arguments[0].empty()) {
+        consoleWrite("Usage: source-file <path|clear>");
+        return;
+    }
+
+    if (toLowerCase(arguments[0]) == "clear") {
+        clearRemoteSourceFile();
+        consoleWrite("Remote source file cleared.");
+        return;
+    }
+
+    setRemoteSourceFile(arguments[0]);
+    consoleWrite("Remote source file set to " + arguments[0]);
+}
+
+static void cmdSourceMap(const std::vector<std::string>& arguments) {
+    if (arguments.empty()) {
+        consoleWrite("Usage: source-map <debug-prefix> <local-prefix> | source-map clear");
+        return;
+    }
+
+    if (toLowerCase(arguments[0]) == "clear") {
+        clearRemoteSourcePathRemaps();
+        consoleWrite("Remote source path remaps cleared.");
+        return;
+    }
+
+    if (arguments.size() < 2) {
+        consoleWrite("Usage: source-map <debug-prefix> <local-prefix>");
+        return;
+    }
+
+    addRemoteSourcePathRemap(arguments[0], arguments[1]);
+    consoleWrite("Source remap added: " + arguments[0] + " -> " + arguments[1]);
+}
+
+static void cmdLoadElf(const std::vector<std::string>& arguments) {
+    if (arguments.empty() || arguments[0].empty()) {
+        consoleWrite("Usage: load-elf <path>");
+        return;
+    }
+
+    if (!loadElfBinaryForDebug(arguments[0])) {
+        consoleWrite("Failed to load ELF binary.");
     }
 }
 
@@ -439,6 +503,53 @@ static void cmdReadMem(const std::vector<std::string>& arguments) {
     }
     icicle_free_buffer(data, outSize);
     consoleWrite(out);
+}
+
+static std::optional<uint64_t> parseAddressArgument(const std::vector<std::string>& arguments) {
+    if (arguments.empty()) {
+        return std::nullopt;
+    }
+
+    if (arguments[0].starts_with('$')) {
+        return static_cast<uint64_t>(std::strtoull(parseVals(arguments[0]).c_str(), nullptr, 10));
+    }
+
+    return static_cast<uint64_t>(std::strtoull(arguments[0].c_str(), nullptr, 0));
+}
+
+static void addWatchpointCommand(const std::vector<std::string>& arguments, const WatchpointKind kind) {
+    if (arguments.empty()) {
+        consoleWrite("Usage: watch <address> [size]");
+        return;
+    }
+
+    const auto address = parseAddressArgument(arguments);
+    const size_t size = arguments.size() > 1
+        ? static_cast<size_t>(std::strtoull(arguments[1].c_str(), nullptr, 0))
+        : 1;
+
+    if (!address.has_value() || *address == 0) {
+        consoleWrite("Invalid watchpoint address.");
+        return;
+    }
+
+    if (addDebugWatchpoint(*address, size, kind)) {
+        consoleWrite("Added " + std::string(watchpointKindName(kind)) + " watchpoint.");
+    } else {
+        consoleWrite("Watchpoint already exists or could not be installed.");
+    }
+}
+
+static void cmdWatch(const std::vector<std::string>& arguments) {
+    addWatchpointCommand(arguments, WatchpointKind::Write);
+}
+
+static void cmdRWatch(const std::vector<std::string>& arguments) {
+    addWatchpointCommand(arguments, WatchpointKind::Read);
+}
+
+static void cmdAWatch(const std::vector<std::string>& arguments) {
+    addWatchpointCommand(arguments, WatchpointKind::Access);
 }
 
 static std::pair<int, std::string> resolveBreakpointTarget(const std::vector<std::string>& arguments) {
@@ -630,12 +741,31 @@ static void cmdInfoLabels() {
     }
 }
 
+static void cmdInfoWatchpoints() {
+    const auto& watchpoints = debugWatchpoints();
+    if (watchpoints.empty()) {
+        consoleWrite("No watchpoints found.");
+        return;
+    }
+
+    consoleWrite("Num\tKind\tAddress\t\tSize\tHits");
+    for (size_t i = 0; i < watchpoints.size(); ++i) {
+        const auto& watchpoint = watchpoints[i];
+        std::stringstream address;
+        address << "0x" << std::hex << watchpoint.address;
+        consoleWrite(std::to_string(i) + "\t" + watchpointKindName(watchpoint.kind) + "\t" +
+                     address.str() + "\t" + std::to_string(watchpoint.size) + "\t" +
+                     std::to_string(watchpoint.hitCount));
+    }
+}
+
 static void cmdInfo(const std::vector<std::string>& arguments) {
     if (arguments.empty()) {
-        consoleWrite("Usage: info <registers|breakpoints|labels>");
+        consoleWrite("Usage: info <registers|breakpoints|labels|watchpoints>");
         consoleWrite("  registers, r  [name]  Show register values");
         consoleWrite("  breakpoints, b         List breakpoints");
         consoleWrite("  labels, l              List labels");
+        consoleWrite("  watchpoints, w         List watchpoints");
         return;
     }
 
@@ -643,8 +773,9 @@ static void cmdInfo(const std::vector<std::string>& arguments) {
     if (sub == "r" || sub == "registers") { cmdInfoRegisters(arguments); return; }
     if (sub == "b" || sub == "breakpoints") { cmdInfoBreakpoints(); return; }
     if (sub == "l" || sub.starts_with("labels")) { cmdInfoLabels(); return; }
+    if (sub == "w" || sub == "watchpoints") { cmdInfoWatchpoints(); return; }
 
-    consoleWrite("Unknown info subcommand: " + sub + ". Use: registers, breakpoints, labels.");
+    consoleWrite("Unknown info subcommand: " + sub + ". Use: registers, breakpoints, labels, watchpoints.");
 }
 
 struct CmdDef {
@@ -665,12 +796,18 @@ static const CmdDef commandDefs[] = {
     {"step,s",        "Step into next line",         cmdStep},
     {"breakpoint,b",  "Set a breakpoint",            cmdBreakpoint},
     {"delete,d",      "Delete a breakpoint",         cmdDelete},
+    {"watch",         "Set a write watchpoint",       cmdWatch},
+    {"rwatch",        "Set a read watchpoint",        cmdRWatch},
+    {"awatch",        "Set an access watchpoint",     cmdAWatch},
     {"info,i",        "Show program information",    cmdInfo},
     {"target",        "Manage debug target mode",    cmdTarget},
     {"monitor",       "Send a remote monitor command", cmdMonitor},
     {"packet",        "Send a raw remote packet",    cmdPacket},
     {"readmem",       "Read memory from the backend", cmdReadMem},
-    {"symbol-file",   "Load ELF symbols for labels",  cmdSymbolFile},
+    {"symbol-file",   "Load ELF symbols and source lines",  cmdSymbolFile},
+    {"source-file",   "Show a local source file in remote mode",  cmdSourceFile},
+    {"source-map",    "Map debug source paths to local paths", cmdSourceMap},
+    {"load-elf",      "Load a local ELF binary into emulation", cmdLoadElf},
 };
 
 static void cmdHelp(const std::vector<std::string>&) {
@@ -721,7 +858,11 @@ static void executeCommand(const std::string& input) {
 
     std::vector<std::string> args;
     if (!argStr.empty()) {
-        splitStringExpressions(argStr, args);
+        if (cmdName == "symbol-file" || cmdName == "source-file" || cmdName == "load-elf") {
+            args.push_back(trimWhitespace(argStr));
+        } else {
+            splitStringExpressions(argStr, args);
+        }
     }
 
     auto it = commands.find(cmdName);

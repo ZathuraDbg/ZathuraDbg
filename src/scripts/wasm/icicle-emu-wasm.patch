@@ -1,0 +1,159 @@
+diff --git a/icicle-cpu/src/lifter/mod.rs b/icicle-cpu/src/lifter/mod.rs
+index d38fbe4..56394c3 100644
+--- a/icicle-cpu/src/lifter/mod.rs
++++ b/icicle-cpu/src/lifter/mod.rs
+@@ -290,7 +290,8 @@ enum BlockResult {
+ pub type BlockId = usize;
+ 
+ /// Constant to use for unknown labels.
+-const UNKNOWN_BLOCK: usize = 0xbadbadbadbad;
++// Sentinel that must fit in a 32-bit usize for wasm32 targets.
++const UNKNOWN_BLOCK: usize = usize::MAX;
+ 
+ /// Constant to use for labels that point to the next address
+ const NEXT_ADDR_LABEL: u16 = u16::MAX;
+diff --git a/icicle-vm/Cargo.toml b/icicle-vm/Cargo.toml
+index e8985a5..6010fdb 100644
+--- a/icicle-vm/Cargo.toml
++++ b/icicle-vm/Cargo.toml
+@@ -3,10 +3,14 @@ name = "icicle-vm"
+ version = "0.2.0"
+ edition = "2021"
+ 
++[features]
++default = ["jit"]
++jit = ["dep:icicle-jit"]
++
+ [dependencies]
+ icicle-cpu = { path = "../icicle-cpu" }
+ icicle-linux = { path = "../icicle-linux" }
+-icicle-jit = { path = "../icicle-jit" }
++icicle-jit = { path = "../icicle-jit", optional = true }
+ anyhow = { workspace = true }
+ pcode = { workspace = true }
+ sleigh-runtime = { workspace = true }
+diff --git a/icicle-vm/src/jit_stub.rs b/icicle-vm/src/jit_stub.rs
+new file mode 100644
+index 0000000..a90e8af
+--- /dev/null
++++ b/icicle-vm/src/jit_stub.rs
+@@ -0,0 +1,96 @@
++//! No-op replacement for `icicle_jit` used when the `jit` feature is disabled
++//! (e.g. wasm32 targets, where runtime code generation is impossible).
++//!
++//! Mirrors the subset of the icicle-jit API used by this crate. `lookup_fast`
++//! always misses and `compile` always fails, so execution permanently stays in
++//! the interpreter. The `runtime` sentinel functions are copied from
++//! icicle-jit so exception semantics are identical if they are ever invoked.
++
++use std::collections::HashMap;
++
++use icicle_cpu::{Cpu, lifter::Block as IcicleBlock};
++
++pub type JitFunction = unsafe extern "C" fn(*mut Cpu, u64) -> u64;
++
++pub struct CompilationTarget<'a> {
++    pub blocks: &'a [IcicleBlock],
++    pub targets: &'a [usize],
++}
++
++impl<'a> CompilationTarget<'a> {
++    pub fn new(blocks: &'a [IcicleBlock], targets: &'a [usize]) -> Self {
++        Self { blocks, targets }
++    }
++}
++
++#[derive(Debug)]
++pub struct JitUnavailable;
++
++impl std::fmt::Display for JitUnavailable {
++    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
++        f.write_str("JIT support was disabled at compile time (`jit` feature)")
++    }
++}
++
++impl std::error::Error for JitUnavailable {}
++
++#[derive(Default)]
++pub struct JIT {
++    pub il_dump: Option<String>,
++    pub jit_hit: u64,
++    pub jit_miss: u64,
++    pub entry_points: HashMap<u64, JitFunction>,
++    pub dead: usize,
++}
++
++impl JIT {
++    pub fn new(_cpu: &Cpu) -> Self {
++        Self::default()
++    }
++
++    /// Safety: trivially safe; `unsafe` only to match the icicle-jit signature.
++    pub unsafe fn reset(&mut self) {}
++
++    pub fn clear(&mut self) {}
++
++    pub fn should_purge(&self) -> bool {
++        false
++    }
++
++    pub fn invalidate(&mut self, _block_id: usize) {}
++
++    pub fn lookup_fast(&self, _addr: u64) -> Option<JitFunction> {
++        None
++    }
++
++    pub fn add_fast_lookup(&mut self, _addr: u64, _entry: JitFunction) {}
++
++    pub fn remove_fast_lookup(&mut self, _addr: u64) {}
++
++    pub fn clear_fast_lookup(&mut self) {}
++
++    pub fn compile(&mut self, _target: &CompilationTarget) -> Result<(), JitUnavailable> {
++        Err(JitUnavailable)
++    }
++}
++
++pub mod runtime {
++    use icicle_cpu::{Cpu, ExceptionCode, InternalError};
++
++    pub unsafe extern "C" fn jit_compilation_error(cpu: *mut Cpu, addr: u64) -> u64 {
++        (*cpu).exception.code = ExceptionCode::JitError as u32;
++        addr
++    }
++
++    pub unsafe extern "C" fn address_not_translated(cpu: *mut Cpu, addr: u64) -> u64 {
++        (*cpu).exception.code = ExceptionCode::CodeNotTranslated as u32;
++        (*cpu).exception.value = addr;
++        addr
++    }
++
++    pub unsafe extern "C" fn switch_to_interpreter(cpu: *mut Cpu, addr: u64) -> u64 {
++        (*cpu).exception =
++            (ExceptionCode::InternalError, InternalError::SwitchToInterpreter).into();
++        addr
++    }
++}
+diff --git a/icicle-vm/src/lib.rs b/icicle-vm/src/lib.rs
+index 789c81f..c785b5d 100644
+--- a/icicle-vm/src/lib.rs
++++ b/icicle-vm/src/lib.rs
+@@ -1,5 +1,9 @@
+ mod builder;
+ pub mod debug;
++#[cfg(not(feature = "jit"))]
++mod jit_stub;
++#[cfg(not(feature = "jit"))]
++use jit_stub as icicle_jit;
+ pub mod elf_dump;
+ pub mod env;
+ pub mod hw;
+@@ -83,7 +87,7 @@ impl Vm {
+             interrupt_flag: std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)),
+             code: BlockTable::default(),
+             jit,
+-            enable_jit: true,
++            enable_jit: cfg!(feature = "jit"),
+             enable_recompilation: true,
+             prev_isa_mode: u8::MAX,
+ 

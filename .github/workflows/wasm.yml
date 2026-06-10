@@ -1,0 +1,139 @@
+name: wasm
+
+# Smoke-build the WebAssembly (Emscripten) port so the browser build cannot
+# silently break, and so the wasm stub files cannot drift from the interfaces
+# they replace. Runs only when the build, the wasm tooling, or the deps change.
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'src/**'
+      - 'vendor/keystone/**'
+      - 'vendor/icicle-cpp/**'
+      - '.github/workflows/wasm.yml'
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'vendor/keystone/**'
+      - 'vendor/icicle-cpp/**'
+      - '.github/workflows/wasm.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: wasm-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Fast gate (seconds, no toolchain): the wasm stubs must cover the interfaces
+  # they replace, or the wasm link would break unnoticed.
+  stub-drift:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Check wasm stubs cover their interfaces
+        run: ./src/scripts/wasm/check-stubs.sh
+
+  # Full reproducible wasm build: deps (capstone/keystone/icicle) + the app.
+  # Catches anything the stub gate cannot (compile errors in __EMSCRIPTEN__
+  # paths, link-time stub completeness, embedded-FS wiring).
+  wasm-build:
+    runs-on: ubuntu-latest
+    needs: stub-drift
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install build tooling
+        run: sudo apt-get update && sudo apt-get install -y cmake ninja-build ccache
+
+      - uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: 6.0.0
+          actions-cache-folder: emsdk-cache
+
+      - name: Add Rust wasm target
+        run: rustup target add wasm32-unknown-emscripten
+
+      # The prebuilt wasm libs (capstone/keystone/icicle) are expensive but only
+      # change when their pinned sources/patches do -- cache them on that key.
+      - name: Cache wasm dependency libs
+        uses: actions/cache@v4
+        with:
+          path: icicle-wasm
+          key: wasm-libs-${{ runner.os }}-${{ hashFiles('vendor/keystone/**', 'vendor/icicle-cpp/src/**', 'src/scripts/wasm/icicle-emu-*.txt', 'src/scripts/wasm/*.patch') }}
+
+      - name: Build wasm dependencies
+        env:
+          WASM_LIBS_ROOT: ${{ github.workspace }}/icicle-wasm
+        run: ./src/scripts/wasm/build-wasm-deps.sh
+
+      - name: Build ZathuraDbg (wasm)
+        env:
+          WASM_LIBS_ROOT: ${{ github.workspace }}/icicle-wasm
+        run: |
+          # setup-emsdk already exported the toolchain, so configure directly
+          # rather than via build-wasm.sh (which re-sources an emsdk env file).
+          cd src
+          emcmake cmake -S . -B build-wasm -DCMAKE_BUILD_TYPE=Release \
+            -DWASM_LIBS_ROOT="$WASM_LIBS_ROOT"
+          cmake --build build-wasm --target Zathura -j"$(nproc)"
+
+      - name: Upload wasm artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: zathura-wasm
+          path: |
+            src/Zathura.html
+            src/Zathura.js
+            src/Zathura.wasm
+            src/Zathura.data
+          if-no-files-found: error
+
+  # Publish the built wasm bundle to Cloudflare Pages on every push to master.
+  # Skips cleanly (the job's steps no-op) until CLOUDFLARE_API_TOKEN +
+  # CLOUDFLARE_ACCOUNT_ID repo secrets are configured.
+  deploy:
+    runs-on: ubuntu-latest
+    needs: wasm-build
+    # Auto-deploy on push to master; also allow a manual run (any branch) so the
+    # deploy can be tested without merging.
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/master') || github.event_name == 'workflow_dispatch'
+    env:
+      CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+    steps:
+      - name: Download wasm artifact
+        if: env.CF_TOKEN != ''
+        uses: actions/download-artifact@v4
+        with:
+          name: zathura-wasm
+          path: dist
+
+      - name: Prepare site (entry point + cache headers)
+        if: env.CF_TOKEN != ''
+        run: |
+          cp dist/Zathura.html dist/index.html
+          cat > dist/_headers <<'EOF'
+          /index.html
+            Cache-Control: public, max-age=0, must-revalidate
+          /Zathura.html
+            Cache-Control: public, max-age=0, must-revalidate
+          /Zathura.js
+            Cache-Control: public, max-age=0, must-revalidate
+            Content-Type: text/javascript; charset=utf-8
+          /Zathura.wasm
+            Cache-Control: public, max-age=0, must-revalidate
+            Content-Type: application/wasm
+          /Zathura.data
+            Cache-Control: public, max-age=0, must-revalidate
+          EOF
+
+      - name: Deploy to Cloudflare Pages
+        if: env.CF_TOKEN != ''
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=zathuradbg --branch=main
+
+      - name: Note when skipped
+        if: env.CF_TOKEN == ''
+        run: echo "CLOUDFLARE_API_TOKEN not set — skipping deploy. Add repo secrets CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID to enable."

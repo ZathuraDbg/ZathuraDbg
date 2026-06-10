@@ -1,9 +1,11 @@
 #include "app.hpp"
 bool enableDebugMode = false;
 bool openFile = false;
+bool openElfBinary = false;
 bool createFile = false;
 bool saveFile = false;
 bool saveFileAs = false;
+bool shareLink = false;  // wasm: copy a shareable URL of the current program
 
 
 bool showRequiredButton(const std::string& buttonName, bool state){

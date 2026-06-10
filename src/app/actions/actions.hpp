@@ -13,7 +13,6 @@ extern bool debugAddBreakpoint(int lineNum);
 extern bool debugAddBreakpointAddress(uint64_t address);
 extern bool debugRemoveBreakpoint(int lineNum);
 extern bool debugRemoveBreakpointAddress(uint64_t address);
-extern int times;
 
 // Add declarations for the UI update functions
 void safeHighlightLine(int lineNo);

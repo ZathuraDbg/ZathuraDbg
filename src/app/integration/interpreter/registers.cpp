@@ -206,7 +206,6 @@ static std::vector<uint8_t> encodeRemoteRegisterValue(const std::string& regName
 
 registerValueT read256BitRegister(const std::string& regName)
 {
-    uint8_t arrSize = use32BitLanes ? 8 : 4;
     registerValueT regValue{};
     uint8_t ymmValue[32] = {0};
     size_t outSize;
@@ -218,7 +217,10 @@ registerValueT read256BitRegister(const std::string& regName)
     }
 
     if (!use32BitLanes){
-        double valueArray[arrSize] = {0};
+        // A 256-bit register holds 4 doubles. Fixed-size (8 = max lane count for
+        // either mode) rather than a VLA, which clang/wasm rejects with an
+        // initializer.
+        double valueArray[8] = {0};
 
         // Convert bytes to doubles
         for (int i = 0; i < 4; i++) {
@@ -245,7 +247,8 @@ registerValueT read256BitRegister(const std::string& regName)
         }
     }
     else{
-        float valueArray[arrSize];
+        // 8 floats in a 256-bit register. Fixed-size (not a VLA).
+        float valueArray[8] = {0};
 
         // Convert bytes to floats (8 floats in a 256-bit register)
         for (int i = 0; i < 8; i++) {

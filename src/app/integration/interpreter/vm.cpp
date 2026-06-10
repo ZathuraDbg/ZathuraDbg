@@ -1,4 +1,5 @@
 #include "interpreter.hpp"
+#include "../debugState.hpp"
 #include <unordered_set>
 
 namespace {
@@ -184,6 +185,8 @@ bool resetState(bool reInit){
         remote_gdb::disconnectRemoteDebugSession();
     }
     restoreLocalEditorAfterRemoteSession();
+    resetDebugWatchpointHooks();
+    clearDebugDiffs();
 
     clearVmSnapshots();
 
@@ -222,8 +225,8 @@ bool resetState(bool reInit){
         }
     }
 
-    for (const auto &key: registerValueMap | std::views::keys){
-        registerValueMap[key] = "0x00";
+    for (const auto &entry: registerValueMap){
+        registerValueMap[entry.first] = "0x00";
     }
 
     stackArraysZeroed = false;

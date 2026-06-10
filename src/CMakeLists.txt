@@ -85,6 +85,8 @@ set(SRC_WINDOWS
         ${APP_DIR}/windows/registerWindow.cpp
         ${APP_DIR}/windows/consoleWindow.cpp
         ${APP_DIR}/windows/hexEditorWindow.cpp
+        ${APP_DIR}/windows/sourceWindow.cpp
+        ${APP_DIR}/windows/debugToolWindows.cpp
         ${APP_DIR}/windows/stackWindow.cpp
         ${APP_DIR}/windows/memoryMapView.cpp
 )
@@ -97,6 +99,8 @@ set(SRC_ARCH
 
 set(SRC_INTEGRATION
     ${APP_DIR}/integration/debugBackend.cpp
+    ${APP_DIR}/integration/debugState.cpp
+    ${APP_DIR}/integration/elfLoader.cpp
     ${APP_DIR}/integration/interpreter/interpreter.cpp
     ${APP_DIR}/integration/interpreter/registers.cpp
     ${APP_DIR}/integration/interpreter/vm.cpp
@@ -131,6 +135,21 @@ set(SRC_VENDOR_C
         ${VENDOR_DIR}/tinyfdialogue/tinyfiledialogs.c
 )
 
+# In the browser build, swap socket/dialog-dependent sources for inert stubs.
+if (EMSCRIPTEN)
+    list(REMOVE_ITEM SRC_INTEGRATION
+            ${APP_DIR}/integration/gdb/gdbRemote.cpp
+            ${APP_DIR}/integration/gdb/gdbPacket.cpp)
+    list(APPEND SRC_INTEGRATION
+            ${APP_DIR}/integration/gdb/gdbRemoteStub.cpp
+            ${APP_DIR}/integration/wasm/browserFiles.cpp)
+    list(REMOVE_ITEM SRC_VENDOR_C
+            ${VENDOR_DIR}/tinyfdialogue/tinyfiledialogs.c
+            ${VENDOR_DIR}/whereami/src/whereami.c)
+    list(APPEND SRC_VENDOR_C
+            ${APP_DIR}/dialogs/tinyfd_stub.c)
+endif()
+
 set(SRC_ZATHURA
         ${SRC_MAIN}
         ${SRC_DIALOGS}
@@ -149,8 +168,24 @@ set(OpenGL_GL_PREFERENCE GLVND)
 # Define the output directory for the binary
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
 
+# Locations of the wasm-compiled third-party static libraries. Defaults assume
+# the icicle-wasm workspace sits next to this repo (../../icicle-wasm relative
+# to src/); override with -DWASM_LIBS_ROOT=... if it lives elsewhere.
+set(WASM_LIBS_ROOT "${CMAKE_SOURCE_DIR}/../../icicle-wasm" CACHE PATH "Root of prebuilt wasm libs")
+set(WASM_ICICLE_LIB "${WASM_LIBS_ROOT}/icicle-cpp/src/target/wasm32-unknown-emscripten/release/libicicle.a" CACHE FILEPATH "wasm libicicle.a")
+set(WASM_KEYSTONE_LIB "${WASM_LIBS_ROOT}/keystone-src/build-wasm/llvm/lib/libkeystone.a" CACHE FILEPATH "wasm libkeystone.a")
+set(WASM_CAPSTONE_LIB "${WASM_LIBS_ROOT}/capstone/build-wasm/libcapstone.a" CACHE FILEPATH "wasm libcapstone.a")
+set(WASM_CAPSTONE_INCLUDE "${WASM_LIBS_ROOT}/capstone/include" CACHE PATH "wasm capstone headers")
+set(WASM_UNICORN_INCLUDE "${WASM_LIBS_ROOT}/unicorn-include" CACHE PATH "unicorn headers (enums only)")
+set(WASM_FS_ROOT "${WASM_LIBS_ROOT}/zathura-fs" CACHE PATH "MEMFS staging dir to embed")
+
 # Platform-specific options
-if (UNIX AND NOT APPLE)
+if (EMSCRIPTEN)
+    message("Emscripten (wasm)")
+    # GLFW + WebGL2/GLES3 are provided by emscripten; only the emulator,
+    # assembler and disassembler need to be the prebuilt wasm archives.
+    set(LIBS ${WASM_ICICLE_LIB} ${WASM_KEYSTONE_LIB} ${WASM_CAPSTONE_LIB})
+elseif (UNIX AND NOT APPLE)
     message("Linux")
     find_package(PkgConfig REQUIRED)
     pkg_check_modules(GLFW REQUIRED glfw3)
@@ -158,8 +193,9 @@ if (UNIX AND NOT APPLE)
     find_package(glfw3 REQUIRED)
     find_package(Threads REQUIRED)
 
+    set(VENDORED_KEYSTONE_LIB ${CMAKE_SOURCE_DIR}/../vendor/local/usr/local/lib/libkeystone.so.0)
     link_directories(/usr/lib /usr/local/lib ${CMAKE_SOURCE_DIR}/../vendor/local/usr/local/lib)
-    set(LIBS ${GLFW_LDFLAGS} -lGL -ldl -lstdc++ -lkeystone -lcapstone -lunicorn -L/usr/lib -L/usr/local/lib -L${CMAKE_SOURCE_DIR}/../vendor/local/usr/local/lib -licicle -lssl -lcrypto)
+    set(LIBS ${GLFW_LDFLAGS} -lGL -ldl -lstdc++ ${VENDORED_KEYSTONE_LIB} -lcapstone -lunicorn -L/usr/lib -L/usr/local/lib -L${CMAKE_SOURCE_DIR}/../vendor/local/usr/local/lib -licicle -lssl -lcrypto)
 elseif (APPLE)
     message("Mac OS X")
     find_library(GLFW_LIB glfw3)
@@ -183,13 +219,15 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE ZATHURA_REQUIRE_LOGGER_ADAPTE
 target_include_directories(${PROJECT_NAME} PRIVATE ${ZATHURA_COMMON_INCLUDES})
 
 # Precompiled header: parse imgui/unicorn/capstone/STL once instead of per-TU.
+# pch.hpp is Emscripten-safe (no desktop-GL includes), and force-including it
+# keeps parity with the native build where every TU sees these headers.
 target_precompile_headers(${PROJECT_NAME} PRIVATE ${PROJECT_ROOT}/pch.hpp)
 set_source_files_properties(${SRC_VENDOR_C} PROPERTIES SKIP_PRECOMPILE_HEADERS ON)
 
 # Debug info comes from CMAKE_*_FLAGS_DEBUG; avoid passing -g twice.
 target_compile_options(${PROJECT_NAME} PRIVATE -Wformat -pipe)
 
-if (NOT WIN32)
+if (NOT WIN32 AND NOT EMSCRIPTEN)
     add_executable(zathura_elf_symbols_test
             ${APP_DIR}/integration/gdb/elfSymbols.cpp
             ${PROJECT_ROOT}/tests/elfSymbolsTest.cpp
@@ -200,7 +238,44 @@ if (NOT WIN32)
 endif()
 
 # Platform-specific target settings
-if (UNIX AND NOT APPLE)
+if (EMSCRIPTEN)
+    set(ZATHURA_EM_FLAGS
+            -O2
+            -fexceptions
+            -sUSE_GLFW=3)
+    foreach(tgt ${PROJECT_NAME} zathura_imgui_core zathura_imgui_backends zathura_textedit)
+        target_compile_options(${tgt} PRIVATE ${ZATHURA_EM_FLAGS})
+        # capstone (cs_arch enums) + unicorn (UC_MODE_* enums) are referenced in
+        # headers even though neither engine is linked in the wasm build.
+        target_include_directories(${tgt} PRIVATE ${WASM_CAPSTONE_INCLUDE} ${WASM_UNICORN_INCLUDE})
+    endforeach()
+
+    target_link_options(${PROJECT_NAME} PRIVATE
+            -O2
+            -fexceptions
+            -sUSE_GLFW=3
+            -sMIN_WEBGL_VERSION=2
+            -sMAX_WEBGL_VERSION=2
+            -sFULL_ES3=1
+            -sALLOW_MEMORY_GROWTH=1
+            -sINITIAL_MEMORY=536870912   # 512 MiB: emulator heap + embedded MEMFS headroom; grows on demand
+            -sSTACK_SIZE=8388608         # 8 MiB: sleigh spec compilation recurses deeply
+            -sFORCE_FILESYSTEM=1
+            -sEXIT_RUNTIME=0
+            -sASSERTIONS=1
+            -sEXPORTED_RUNTIME_METHODS=ccall,cwrap,FS,UTF8ToString,HEAPU8
+            # --preload-file (vs --embed-file) keeps the ~6MB sleigh/asset data
+            # out of the wasm: it ships as a separate Zathura.data fetched in
+            # parallel and cached independently. The loader populates MEMFS
+            # before main() runs, so no code change is needed.
+            "SHELL:--preload-file ${WASM_FS_ROOT}@/"
+            "SHELL:--shell-file ${PROJECT_ROOT}/wasm-shell.html")
+    set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".html")
+    # Relink when the shell template changes.
+    set_target_properties(${PROJECT_NAME} PROPERTIES LINK_DEPENDS ${PROJECT_ROOT}/wasm-shell.html)
+elseif (UNIX AND NOT APPLE)
+    set_target_properties(${PROJECT_NAME} PROPERTIES
+            BUILD_RPATH "${CMAKE_SOURCE_DIR}/../vendor/local/usr/local/lib")
     target_include_directories(${PROJECT_NAME} PRIVATE ${OPENGL_INCLUDE_DIR})
     target_include_directories(zathura_imgui_core PRIVATE ${OPENGL_INCLUDE_DIR})
     target_include_directories(zathura_imgui_backends PRIVATE ${OPENGL_INCLUDE_DIR})

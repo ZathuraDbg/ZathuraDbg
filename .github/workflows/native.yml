@@ -1,0 +1,49 @@
+name: native
+
+# Build the desktop (native Linux) app and run its tests. The emulator,
+# assembler and disassembler libs (unicorn/keystone/icicle) are committed under
+# vendor/local, so CI only needs the system deps from the package manager.
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'src/**'
+      - 'vendor/**'
+      - '.github/workflows/native.yml'
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'vendor/**'
+      - '.github/workflows/native.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: native-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            cmake ninja-build pkg-config g++-14 gcc-14 \
+            libglfw3-dev libgl1-mesa-dev \
+            libcapstone-dev libssl-dev nlohmann-json3-dev
+
+      - name: Configure
+        run: |
+          cmake -S src -B src/build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_C_COMPILER=gcc-14 \
+            -DCMAKE_CXX_COMPILER=g++-14
+
+      - name: Build
+        run: cmake --build src/build -j"$(nproc)"
+
+      - name: Test
+        run: ctest --test-dir src/build --output-on-failure
