@@ -84,6 +84,27 @@ float frameRate = 120;
 // file scope so the Emscripten main-loop callback can reach it.
 static ImVec4 gClearColor;
 
+#ifdef __EMSCRIPTEN__
+// HiDPI: size the canvas backing store to CSS-size x devicePixelRatio so the
+// browser doesn't upscale a 1x bitmap (blurry on Retina). Returns the dpr.
+static double updateHiDpiCanvas()
+{
+    const double dpr = emscripten_get_device_pixel_ratio();
+    double cssW = 0.0, cssH = 0.0;
+    if (emscripten_get_element_css_size("#canvas", &cssW, &cssH) != EMSCRIPTEN_RESULT_SUCCESS) {
+        return dpr;
+    }
+    const int bw = static_cast<int>(cssW * dpr + 0.5);
+    const int bh = static_cast<int>(cssH * dpr + 0.5);
+    int curW = 0, curH = 0;
+    emscripten_get_canvas_element_size("#canvas", &curW, &curH);
+    if (bw > 0 && bh > 0 && (curW != bw || curH != bh)) {
+        emscripten_set_canvas_element_size("#canvas", bw, bh);
+    }
+    return dpr;
+}
+#endif
+
 // One rendered frame. Native builds call this from a while loop; the Emscripten
 // build registers it with emscripten_set_main_loop so the browser drives it.
 static void renderFrame()
@@ -91,8 +112,18 @@ static void renderFrame()
     ImGuiIO& io = ImGui::GetIO();
 
     glfwPollEvents();
+#ifdef __EMSCRIPTEN__
+    const double gDpr = updateHiDpiCanvas();
+#endif
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
+#ifdef __EMSCRIPTEN__
+    // The Emscripten GLFW shim reports window==framebuffer, so the backend sets
+    // a framebuffer scale of 1. Override it with the real devicePixelRatio so
+    // ImGui renders draw data into the dpr-scaled backing store (crisp on
+    // Retina). DisplaySize stays in CSS units, so layout/mouse are unaffected.
+    io.DisplayFramebufferScale = ImVec2(static_cast<float>(gDpr), static_cast<float>(gDpr));
+#endif
 
     static float prevFontScale = 1.0f;
     static ImGuiStyle baseStyle = ImGui::GetStyle();
@@ -121,7 +152,13 @@ static void renderFrame()
     }
 
     int displayW, displayH;
+#ifdef __EMSCRIPTEN__
+    // Use the actual canvas backing size (CSS x dpr) for the clear viewport; the
+    // GLFW shim's framebuffer size does not reflect the dpr-scaled backing.
+    emscripten_get_canvas_element_size("#canvas", &displayW, &displayH);
+#else
     glfwGetFramebufferSize(window, &displayW, &displayH);
+#endif
     glViewport(0, 0, displayW, displayH);
     glClearColor(gClearColor.x * gClearColor.w, gClearColor.y * gClearColor.w, gClearColor.z * gClearColor.w, gClearColor.w);
     glClear(GL_COLOR_BUFFER_BIT);
