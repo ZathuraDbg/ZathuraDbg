@@ -79,6 +79,19 @@
     // it. Focus the canvas so it receives keyboard input immediately.
     window.addEventListener('load', () => canvas.focus());
 
+    // Capture the keys ZathuraDbg uses so the browser doesn't hijack them
+    // (F5 reload, F11 fullscreen, Ctrl+S "save page", Ctrl+O "open file", the
+    // step keys, etc.). preventDefault only cancels the browser's default
+    // action -- the keydown still reaches the wasm app. e.code is used so the
+    // checks are layout- and shift-independent. Ctrl+R / Ctrl+W are left alone
+    // so reload and close still work.
+    const ZATHURA_FN_KEYS = new Set(['F3','F4','F5','F6','F7','F9','F10','F11']);
+    const ZATHURA_MOD_KEYS = new Set(['KeyS','KeyO','KeyM','Period','Backquote','Equal','Minus','Digit0']);
+    window.addEventListener('keydown', (e) => {
+      if (ZATHURA_FN_KEYS.has(e.code)) { e.preventDefault(); return; }
+      if ((e.ctrlKey || e.metaKey) && ZATHURA_MOD_KEYS.has(e.code)) { e.preventDefault(); }
+    }, { capture: true });
+
     function showError(msg) {
       document.getElementById('error-text').textContent = msg;
       document.getElementById('error-box').style.display = 'flex';
