@@ -1,5 +1,7 @@
 #include "interpreter.hpp"
 #include "../debugState.hpp"
+#include "../elfLoader.hpp"
+#include "../linuxProcess.hpp"
 #include <capstone/capstone.h>
 #include <algorithm>
 
@@ -8,9 +10,15 @@ namespace {
 int sourceLineIndexForAddress(const uint64_t address)
 {
     const auto lineIt = addressLineNoMap.find(address);
-    return lineIt != addressLineNoMap.end() && lineIt->second > 0
-        ? static_cast<int>(lineIt->second - 1)
-        : -1;
+    if (lineIt != addressLineNoMap.end() && lineIt->second > 0) {
+        return static_cast<int>(lineIt->second - 1);
+    }
+
+    if (localElfBinaryLoaded()) {
+        requestLocalElfUiSync(address);
+    }
+
+    return -1;
 }
 
 int fallbackLastSourceLineIndex()
@@ -29,12 +37,14 @@ bool currentInstructionIsCall(const uint64_t address, uint64_t& fallthroughAddre
     fallthroughAddress = 0;
 
     const auto endAddress = codeEndAddress();
-    if (icicle == nullptr || endAddress == 0 || address >= endAddress)
+    if (icicle == nullptr || (endAddress != 0 && address >= endAddress))
     {
         return false;
     }
 
-    const auto maxRead = static_cast<size_t>(std::min<uint64_t>(16, endAddress - address));
+    const auto maxRead = static_cast<size_t>(endAddress != 0
+        ? std::min<uint64_t>(16, endAddress - address)
+        : 16);
     size_t outSize = 0;
     unsigned char* bytes = icicle_mem_read(icicle, address, maxRead, &outSize);
     if (bytes == nullptr || outSize == 0)
@@ -132,6 +142,11 @@ int getCurrentLine(){
 
 int handleSyscalls(void* data, uint64_t syscall_nr, const SyscallArgs* args)
 {
+    if (linuxProcessActive())
+    {
+        return handleLinuxProcessSyscall(data, syscall_nr, args);
+    }
+
     if (args != nullptr)
     {
         if (syscall_nr == 1)
@@ -290,6 +305,14 @@ bool checkStatusUpdateState(const size_t& instructionCount, RunStatus status, co
     if (lineIndex >= 0)
         safeHighlightLine(lineIndex);
 
+    if (linuxProcessExited())
+    {
+        executionComplete = true;
+        stoppedAtBreakpoint = false;
+        consoleWriteThreadSafe("linux >> exited with status " + std::to_string(linuxProcessExitCode()) + "\n");
+        return true;
+    }
+
     if (isAtCodeEnd(ip))
     {
         icicle_remove_breakpoint(icicle, ip);
@@ -408,15 +431,11 @@ static bool executeCodeCore(Icicle* icicle, const size_t& instructionCount)
     if (instructionCount == 0)
     {
         const auto endAddress = codeEndAddress();
-        if (endAddress == 0)
-        {
-           LOG_ERROR("Cannot add end breakpoint before code has been assembled.");
-        }
-        else if (!icicle_add_breakpoint(icicle, endAddress) && !isEndBreakpointSet)
+        if (endAddress != 0 && !icicle_add_breakpoint(icicle, endAddress) && !isEndBreakpointSet)
         {
            LOG_ERROR("Failed to add breakpoint at the end of the assembled code. The program may end unexpectedly.");
         }
-        else
+        else if (endAddress != 0)
         {
             isEndBreakpointSet = true;
         }

@@ -1,6 +1,7 @@
 #include "fileTasks.hpp"
 #include <mutex>
 #include "../app.hpp"
+#include "../integration/elfLoader.hpp"
 
 std::filesystem::path getTemporaryPath(){
     std::filesystem::path tempDir;
@@ -21,6 +22,11 @@ static std::mutex icicleMutex;
 bool fileOpenTask(const std::string& fileName){
     if (!fileName.empty()){
         LOG_DEBUG("Opening the file " << fileName);
+        if (isElfBinaryFile(fileName)) {
+            return loadElfBinaryForDebug(fileName);
+        }
+
+        clearLocalElfBinary();
         resetState(false);
         if (!readFileIntoEditor(fileName)){
             LOG_ERROR("Read operation failed on the file: " << fileName);

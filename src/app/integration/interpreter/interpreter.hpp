@@ -87,6 +87,7 @@ typedef struct{
 } registerValueInfoT;
 
 extern VmSnapshot* saveICSnapshot(Icicle* icicle);
+extern Icicle* initIC();
 extern std::mutex execMutex;
 extern std::mutex breakpointMutex;
 extern bool skipBreakpoints;

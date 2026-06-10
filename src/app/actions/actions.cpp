@@ -27,6 +27,9 @@ int pendingHighlightLine = -1;
 bool pendingRemoteUiSync = false;
 bool pendingRemoteRefreshTarget = false;
 bool pendingRemoteResetCodeMemoryBase = false;
+bool pendingLocalElfUiSync = false;
+uint64_t pendingLocalElfPc = 0;
+bool pendingLocalElfForce = false;
 std::optional<uint64_t> remoteDisassemblyBaseAddress{};
 uint64_t remoteResumeGeneration = 0;
 
@@ -252,12 +255,22 @@ void requestRemoteUiSync(const bool refreshTarget, const bool resetCodeMemoryBas
     pendingRemoteResetCodeMemoryBase = pendingRemoteResetCodeMemoryBase || resetCodeMemoryBase;
 }
 
+void requestLocalElfUiSync(const uint64_t currentPc, const bool force) {
+    std::lock_guard<std::mutex> lock(uiUpdateMutex);
+    pendingLocalElfUiSync = true;
+    pendingLocalElfPc = currentPc;
+    pendingLocalElfForce = pendingLocalElfForce || force;
+}
+
 void processUIUpdates() {
     bool applyHighlight = false;
     int highlightLine = -1;
     bool applyRemoteSync = false;
     bool refreshTarget = false;
     bool resetCodeMemoryBase = false;
+    bool applyLocalElfSync = false;
+    uint64_t localElfPc = 0;
+    bool forceLocalElfSync = false;
 
     {
         std::lock_guard<std::mutex> lock(uiUpdateMutex);
@@ -275,14 +288,32 @@ void processUIUpdates() {
             pendingRemoteRefreshTarget = false;
             pendingRemoteResetCodeMemoryBase = false;
         }
+
+        if (pendingLocalElfUiSync) {
+            applyLocalElfSync = true;
+            localElfPc = pendingLocalElfPc;
+            forceLocalElfSync = pendingLocalElfForce;
+            pendingLocalElfUiSync = false;
+            pendingLocalElfPc = 0;
+            pendingLocalElfForce = false;
+        }
     }
 
     if (applyRemoteSync) {
         syncRemoteUiState(refreshTarget, resetCodeMemoryBase);
     }
 
+    if (applyLocalElfSync && isCodeRunning) {
+        requestLocalElfUiSync(localElfPc, forceLocalElfSync);
+    } else if (applyLocalElfSync) {
+        syncLocalElfDisassemblyView(localElfPc, forceLocalElfSync);
+    }
+
     if (applyHighlight) {
         editor->HighlightDebugCurrentLine(highlightLine);
+        if (highlightLine >= 0) {
+            editor->SetCursorPosition(highlightLine, 0);
+        }
     }
 }
 
@@ -540,6 +571,13 @@ void restartDebugging(){
             }
             return;
         }
+        if (localElfBinaryLoaded()) {
+            if (!reloadElfBinaryForDebug()) {
+                consoleWriteThreadSafe("elf >> restart failed\n");
+            }
+            LOG_INFO("ELF debugging restarted.");
+            return;
+        }
         resetState();
         fileRunTask(false);
         LOG_INFO("Debugging restarted successfully.");
@@ -646,7 +684,12 @@ void debugStopAction(){
         remote_gdb::disconnectRemoteDebugSession();
     }
     debugModeEnabled = false;
-    resetState();
+    if (localElfBinaryLoaded()) {
+        clearLocalElfBinary();
+        resetState(false);
+    } else {
+        resetState();
+    }
     LOG_INFO("Debugging stopped successfully.");
 }
 
@@ -919,6 +962,17 @@ void runActions(){
                 } else {
                     consoleWriteThreadSafe("remote >> run/continue failed\n");
                 }
+                return;
+            }
+
+            if (localElfBinaryLoaded()) {
+                skipBreakpoints = true;
+                if (reloadElfBinaryForDebug()) {
+                    stepCode(0);
+                } else {
+                    consoleWriteThreadSafe("elf >> run failed\n");
+                }
+                skipBreakpoints = false;
                 return;
             }
 
