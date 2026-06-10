@@ -87,6 +87,14 @@ EM_JS(int, zathura_js_ls_get_to_file, (const char* keyC, const char* destC), {
     return 1;
 });
 
+EM_JS(int, zathura_js_is_apple, (), {
+    try {
+        const p = (navigator.userAgentData && navigator.userAgentData.platform)
+                  || navigator.platform || navigator.userAgent || '';
+        return /mac|iphone|ipad|ipod/i.test(p) ? 1 : 0;
+    } catch (e) { return 0; }
+});
+
 // --- C entry points -----------------------------------------------------------
 
 // Called from JS once a picked file has been written into MEMFS.
@@ -145,6 +153,10 @@ void browserRestoreLayout() {
     } else {
         ImGui::LoadIniSettingsFromDisk("/app/config.zlyt");
     }
+}
+
+bool browserIsApplePlatform() {
+    return zathura_js_is_apple() != 0;
 }
 
 void browserPersistTick() {

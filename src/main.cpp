@@ -288,6 +288,13 @@ int main(int argc, const char** argv)
     loadIniFile();
 #endif
     io = setupIO();
+#ifdef __EMSCRIPTEN__
+    // The native build sets Cmd-vs-Ctrl behaviour from __APPLE__ at compile
+    // time; the wasm build is one binary for all platforms, so detect Apple at
+    // runtime and use Cmd as the shortcut modifier there (matches expectations
+    // and stops Ctrl+K etc. firing debugger actions on a Mac).
+    io.ConfigMacOSXBehaviors = browserIsApplePlatform();
+#endif
 
     ImGuiStyle& style = ImGui::GetStyle();
     if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)

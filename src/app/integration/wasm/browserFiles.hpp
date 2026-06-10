@@ -40,4 +40,9 @@ void browserRestoreLayout();
 // layout (when ImGui flags a change) to localStorage. Call once per frame.
 void browserPersistTick();
 
+// True when running on an Apple platform (macOS/iOS), so the UI can use Cmd as
+// the shortcut modifier instead of Ctrl. The native build decides this at
+// compile time via __APPLE__; the wasm build must detect it at runtime.
+bool browserIsApplePlatform();
+
 #endif  // __EMSCRIPTEN__
