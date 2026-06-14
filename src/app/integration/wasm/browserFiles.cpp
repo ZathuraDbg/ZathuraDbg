@@ -3,6 +3,9 @@
 
 #include <emscripten.h>
 
+#include <algorithm>
+#include <string>
+
 #include "../../tasks/editorTasks.hpp"   // editor, readFileIntoEditor
 #include "../../tasks/fileTasks.hpp"     // fileOpenTask
 #include "../../dialogs/dialogHeader.hpp" // selectedFile
@@ -87,6 +90,42 @@ EM_JS(int, zathura_js_ls_get_to_file, (const char* keyC, const char* destC), {
     return 1;
 });
 
+// Code autosave restoration has one migration: old browser builds autosaved
+// their bundled demo, so those browsers would keep showing stale samples after
+// the embedded /app/bin/test.asm changed. Return 2 when such a stale bundled
+// demo was removed and the caller should fall back to the current default file.
+EM_JS(int, zathura_js_ls_get_code_to_file, (const char* keyC, const char* destC), {
+    const key = UTF8ToString(keyC);
+    let v;
+    try { v = localStorage.getItem(key); } catch (e) { return 0; }
+    if (v === null) return 0;
+
+    const has = (needle) => v.indexOf(needle) !== -1;
+    const oldLoopDemo =
+        has('punpcklqdq xmm0') &&
+        has('nextblockagain:') &&
+        has('jmp main');
+    const oldBasicDemo =
+        has('zero_regs:') &&
+        has('subtract_hundred:') &&
+        has('mov rax, 0x100');
+    const previousNasmDemo =
+        has('bits 64') &&
+        has('default rel') &&
+        has('section .data\\nmessage: db "Hello from ZathuraDbg", 10') &&
+        has('call double_result') &&
+        !has('section .rodata') &&
+        !has('section .bss');
+
+    if (oldLoopDemo || oldBasicDemo || previousNasmDemo) {
+        try { localStorage.removeItem(key); } catch (e) {}
+        return 2;
+    }
+
+    try { FS.writeFile(UTF8ToString(destC), v); } catch (e) { return 0; }
+    return 1;
+});
+
 EM_JS(int, zathura_js_is_apple, (), {
     try {
         const p = (navigator.userAgentData && navigator.userAgentData.platform)
@@ -94,6 +133,37 @@ EM_JS(int, zathura_js_is_apple, (), {
         return /mac|iphone|ipad|ipod/i.test(p) ? 1 : 0;
     } catch (e) { return 0; }
 });
+
+EM_JS(int, zathura_js_clipboard_len, (), {
+    const text = (Module.zathuraClipboardText || window.zathuraClipboardText || '');
+    return lengthBytesUTF8(text);
+});
+
+EM_JS(void, zathura_js_clipboard_get, (char* dest, int capacity), {
+    const text = (Module.zathuraClipboardText || window.zathuraClipboardText || '');
+    stringToUTF8(text, dest, capacity);
+});
+
+EM_JS(void, zathura_js_clipboard_set, (const char* textC), {
+    const text = UTF8ToString(textC);
+    Module.zathuraClipboardText = text;
+    window.zathuraClipboardText = text;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).catch(() => {});
+    }
+});
+
+static const char* browserClipboardGet(ImGuiContext*) {
+    static std::string text;
+    const int len = std::max(0, zathura_js_clipboard_len());
+    text.assign(static_cast<size_t>(len) + 1, '\0');
+    zathura_js_clipboard_get(text.data(), len + 1);
+    return text.c_str();
+}
+
+static void browserClipboardSet(ImGuiContext*, const char* text) {
+    zathura_js_clipboard_set(text ? text : "");
+}
 
 // --- C entry points -----------------------------------------------------------
 
@@ -135,12 +205,12 @@ bool browserLoadCodeFromUrl() {
 
 // --- localStorage persistence -------------------------------------------------
 
-static const char* kCodeKey = "zathura.code";
+static const char* kCodeKey = "zathura.code.v2";
 static const char* kLayoutKey = "zathura.layout";
 static const char* kLayoutFile = "/tmp/zathura_layout.ini";
 
 bool browserRestoreSavedCode() {
-    if (zathura_js_ls_get_to_file(kCodeKey, kSharedPath)) {
+    if (zathura_js_ls_get_code_to_file(kCodeKey, kSharedPath) == 1) {
         selectedFile = kSharedPath;
         return true;
     }
@@ -157,6 +227,12 @@ void browserRestoreLayout() {
 
 bool browserIsApplePlatform() {
     return zathura_js_is_apple() != 0;
+}
+
+void browserInstallClipboardHandlers() {
+    ImGuiPlatformIO& platformIo = ImGui::GetPlatformIO();
+    platformIo.Platform_GetClipboardTextFn = browserClipboardGet;
+    platformIo.Platform_SetClipboardTextFn = browserClipboardSet;
 }
 
 void browserPersistTick() {

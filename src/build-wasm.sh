@@ -30,6 +30,6 @@ emcmake cmake -S . -B "$BUILD_DIR" \
 cmake --build "$BUILD_DIR" --target Zathura -j"$(nproc)"
 
 echo
-echo "Built: $BUILD_DIR/Zathura.html (+ .js/.wasm/.data)"
-echo "Serve with COOP/COEP-agnostic static server, e.g.:"
-echo "  emrun --no_browser --port 8080 $BUILD_DIR/Zathura.html"
+echo "Built: $PWD/Zathura.html (+ .js/.wasm/.data)"
+echo "Serve from this directory, e.g.:"
+echo "  uv run python -m http.server 8090 --bind 127.0.0.1"

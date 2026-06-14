@@ -26,10 +26,17 @@ int fallbackLastSourceLineIndex()
     return lastInstructionLineNo > 0 ? static_cast<int>(lastInstructionLineNo - 1) : -1;
 }
 
+void markExecutionComplete()
+{
+    executionComplete = true;
+    stoppedAtBreakpoint = false;
+    safeHighlightLine(fallbackLastSourceLineIndex());
+}
+
 bool isAtCodeEnd(const uint64_t address)
 {
     const auto endAddress = codeEndAddress();
-    return endAddress != 0 && address == endAddress;
+    return endAddress != 0 && address >= endAddress;
 }
 
 bool currentInstructionIsCall(const uint64_t address, uint64_t& fallthroughAddress)
@@ -307,8 +314,7 @@ bool checkStatusUpdateState(const size_t& instructionCount, RunStatus status, co
 
     if (linuxProcessExited())
     {
-        executionComplete = true;
-        stoppedAtBreakpoint = false;
+        markExecutionComplete();
         consoleWriteThreadSafe("linux >> exited with status " + std::to_string(linuxProcessExitCode()) + "\n");
         return true;
     }
@@ -317,9 +323,7 @@ bool checkStatusUpdateState(const size_t& instructionCount, RunStatus status, co
     {
         icicle_remove_breakpoint(icicle, ip);
         isEndBreakpointSet = false;
-        executionComplete = true;
-        stoppedAtBreakpoint = false;
-        safeHighlightLine(fallbackLastSourceLineIndex());
+        markExecutionComplete();
         return true;
     }
 
@@ -371,8 +375,7 @@ bool checkStatusUpdateState(const size_t& instructionCount, RunStatus status, co
     }
     else if (status == RunStatus::Halt)
     {
-        executionComplete = true;
-        stoppedAtBreakpoint = false;
+        markExecutionComplete();
     }
 
     if (addBreakpointBack)

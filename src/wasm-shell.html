@@ -79,6 +79,31 @@
     // it. Focus the canvas so it receives keyboard input immediately.
     window.addEventListener('load', () => canvas.focus());
 
+    function zathuraSetClipboardText(text) {
+      const normalized = String(text ?? '').replace(/\r\n?/g, '\n');
+      window.zathuraClipboardText = normalized;
+      if (window.Module) {
+        window.Module.zathuraClipboardText = normalized;
+      }
+    }
+
+    function zathuraWarmClipboardCache() {
+      if (!navigator.clipboard || !navigator.clipboard.readText) { return; }
+      navigator.clipboard.readText().then(zathuraSetClipboardText).catch(() => {});
+    }
+
+    window.addEventListener('paste', (e) => {
+      const text = e.clipboardData && e.clipboardData.getData('text/plain');
+      if (typeof text !== 'string') { return; }
+      zathuraSetClipboardText(text);
+      canvas.focus();
+      e.preventDefault();
+      e.stopImmediatePropagation();
+    }, { capture: true });
+
+    window.addEventListener('copy', zathuraWarmClipboardCache, { capture: true });
+    window.addEventListener('cut', zathuraWarmClipboardCache, { capture: true });
+
     // Capture the keys ZathuraDbg uses so the browser doesn't hijack them
     // (F5 reload, F11 fullscreen, Ctrl+S "save page", Ctrl+O "open file", the
     // step keys, etc.). preventDefault only cancels the browser's default
@@ -88,6 +113,8 @@
     const ZATHURA_FN_KEYS = new Set(['F3','F4','F5','F6','F7','F9','F10','F11']);
     const ZATHURA_MOD_KEYS = new Set(['KeyS','KeyO','KeyM','Period','Backquote','Equal','Minus','Digit0']);
     window.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.code === 'KeyV') { zathuraWarmClipboardCache(); return; }
+      if (e.shiftKey && e.code === 'Insert') { zathuraWarmClipboardCache(); return; }
       if (ZATHURA_FN_KEYS.has(e.code)) { e.preventDefault(); return; }
       if ((e.ctrlKey || e.metaKey) && ZATHURA_MOD_KEYS.has(e.code)) { e.preventDefault(); }
     }, { capture: true });
@@ -97,10 +124,21 @@
       document.getElementById('error-box').style.display = 'flex';
       loading.classList.add('hidden');
     }
+    if (location.protocol === 'file:') {
+      showError('Open this build through a local HTTP server so Zathura.data and Zathura.wasm can be fetched.');
+    }
     window.addEventListener('error', (e) => showError(e.message || String(e.error)));
+    window.addEventListener('unhandledrejection', (e) => showError(e.reason?.message || String(e.reason)));
+
+    try {
+      if (!localStorage.getItem('zathura.code.v2')) {
+        localStorage.removeItem('zathura.code');
+      }
+    } catch (e) {}
 
     var Module = {
       canvas: canvas,
+      zathuraClipboardText: window.zathuraClipboardText || '',
       preRun: [],
       postRun: [],
       print: (...args) => console.log(...args),

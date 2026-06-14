@@ -45,4 +45,8 @@ void browserPersistTick();
 // compile time via __APPLE__; the wasm build must detect it at runtime.
 bool browserIsApplePlatform();
 
+// Replace Emscripten GLFW's in-canvas clipboard bridge with browser-aware
+// handlers backed by real paste/copy events from wasm-shell.html.
+void browserInstallClipboardHandlers();
+
 #endif  // __EMSCRIPTEN__

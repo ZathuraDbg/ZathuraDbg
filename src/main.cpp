@@ -305,6 +305,7 @@ int main(int argc, const char** argv)
 
     ImGui_ImplGlfw_InitForOpenGL(window, true);
 #ifdef __EMSCRIPTEN__
+    browserInstallClipboardHandlers();
     // Track the browser canvas: resizes the GLFW window (and thus ImGui's
     // display size) whenever the canvas / window / fullscreen state changes.
     ImGui_ImplGlfw_InstallEmscriptenCallbacks(window, "#canvas");
