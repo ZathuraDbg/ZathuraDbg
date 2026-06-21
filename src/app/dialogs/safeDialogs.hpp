@@ -1,6 +1,7 @@
 #ifndef ZATHURA_UI_SAFEDIALOGS_HPP
 #define ZATHURA_UI_SAFEDIALOGS_HPP
 
+#include <cctype>
 #include <string>
 #include <tinyfiledialogs.h>
 
@@ -28,7 +29,20 @@ inline std::string sanitizeForTinyfd(const char* text) {
             case '\'': out += "\xE2\x80\x99"; break; // U+2019 right single quote
             case '"':  out += "\xE2\x80\x9D"; break; // U+201D right double quote
             case '`':  out += "\xE2\x80\x98"; break; // U+2018 left single quote
-            case '$':  out += "\xEF\xBC\x84"; break; // U+FF04 fullwidth dollar
+            case '$': {
+                // tinyfiledialogs only rejects '$' when it begins a shell
+                // expansion ('$(' , '$_' or '$<letter>'); see tfd_quoteDetected.
+                // Leave any other '$' (e.g. "$5", a trailing "$") untouched so
+                // legitimate text -- common in a debugger UI -- is preserved.
+                const char next = *(p + 1); // safe: reads the NUL at most
+                if (next == '(' || next == '_' ||
+                    std::isalpha(static_cast<unsigned char>(next))) {
+                    out += "\xEF\xBC\x84"; // U+FF04 fullwidth dollar
+                } else {
+                    out += '$';
+                }
+                break;
+            }
             default:   out += *p;             break;
         }
     }
@@ -44,25 +58,9 @@ inline int safeMessageBox(const char* title, const char* message,
                              dialogType, iconType, defaultButton);
 }
 
-inline int safeNotifyPopup(const char* title, const char* message,
-                           const char* iconType) {
-    const std::string safeTitle = sanitizeForTinyfd(title);
-    const std::string safeMessage = sanitizeForTinyfd(message);
-    return tinyfd_notifyPopup(safeTitle.c_str(), safeMessage.c_str(), iconType);
-}
-
-inline const char* safeInputBox(const char* title, const char* message,
-                                const char* defaultInput) {
-    const std::string safeTitle = sanitizeForTinyfd(title);
-    const std::string safeMessage = sanitizeForTinyfd(message);
-    // A NULL defaultInput requests a hidden password field; preserve that.
-    if (defaultInput == nullptr) {
-        return tinyfd_inputBox(safeTitle.c_str(), safeMessage.c_str(), nullptr);
-    }
-    const std::string safeDefault = sanitizeForTinyfd(defaultInput);
-    return tinyfd_inputBox(safeTitle.c_str(), safeMessage.c_str(),
-                           safeDefault.c_str());
-}
+// Note: only the messageBox wrapper exists because that is the only tinyfd
+// dialog the app currently raises. Add safeNotifyPopup / safeInputBox the same
+// way (sanitize each user-facing argument) when a caller actually needs them.
 
 } // namespace Zathura
 
