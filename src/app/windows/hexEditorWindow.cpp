@@ -1,4 +1,5 @@
 #include "windows.hpp"
+#include "../dialogs/safeDialogs.hpp"
 #include "../app.hpp"
 #include "../integration/debugState.hpp"
 
@@ -25,7 +26,7 @@ void hexWriteFunc(ImU8* data, const size_t off, const ImU8 d){
         const auto hex = static_cast<char *>(malloc(24));
         sprintf(static_cast<char *>(hex), "Data change: %x", d);
         LOG_ERROR(hex);
-        tinyfd_messageBox("ERROR!", "Failed to write to the memory address!!", "ok", "error", 0);
+        Zathura::safeMessageBox("ERROR!", "Failed to write to the memory address!!", "ok", "error", 0);
         free(hex);
     }
 }

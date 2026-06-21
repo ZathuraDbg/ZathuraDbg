@@ -1,4 +1,5 @@
 #include "editorTasks.hpp"
+#include "../dialogs/safeDialogs.hpp"
 #include "../integration/keystone/assembler.hpp"
 #include "../app.hpp"
 #include <cctype>
@@ -9,7 +10,7 @@ bool writeEditorToFile(const std::string &filePath) {
     LOG_DEBUG("Writing to file " << filePath);
 
     if (editorShowingRemoteDisassembly()) {
-        tinyfd_messageBox("Remote View Active",
+        Zathura::safeMessageBox("Remote View Active",
                           "The main editor is currently showing remote target disassembly.\nStop the remote session before saving local files.",
                           "ok", "warning", 0);
         return false;
@@ -24,7 +25,7 @@ bool writeEditorToFile(const std::string &filePath) {
         return true;
     }
 
-    tinyfd_messageBox("File write error!", ("Unable to write to the file " + filePath + "!\nPlease check if the "
+    Zathura::safeMessageBox("File write error!", ("Unable to write to the file " + filePath + "!\nPlease check if the "
                       "file is not open in another program and/or you have the permissions to read it.").c_str(),
                       "ok", "error", 0);
     return false;
@@ -42,7 +43,7 @@ bool readFileIntoEditor(const std::string &filePath) {
         return true;
     }
 
-    tinyfd_messageBox("File read error!", "Unable to read the file you're trying to open. Please check if the "
+    Zathura::safeMessageBox("File read error!", "Unable to read the file you're trying to open. Please check if the "
                        "file is not open in another program and/or you have the permissions to read it.",
                       "ok", "error", 0);
 
@@ -237,7 +238,7 @@ void pasteCallback(const std::string clipboardText) {
             return;
         }
 
-        const int res = tinyfd_messageBox("Valid shellcode found!",
+        const int res = Zathura::safeMessageBox("Valid shellcode found!",
             "It looks like you are trying to paste shellcode.\n"
             "Do you want ZathuraDbg to automatically disassemble this shellcode?",
             "yesno", "question", 0);
