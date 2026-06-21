@@ -7,7 +7,9 @@ name: appimage
 on:
   push:
     tags:
-      - '*'
+      # Release tags only (this project tags as 1.0, 0.5.0-beta, ...), so
+      # scratch tags like "wip" or "backup" do not trigger a public release.
+      - '[0-9]+.*'
 
 permissions:
   contents: write

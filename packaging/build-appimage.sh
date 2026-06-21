@@ -162,33 +162,53 @@ in_allowlist() {
 }
 
 echo "==> Bundling libraries into usr/lib"
-# Vendored keystone (preferred source; always present in-tree).
-shopt -s nullglob
-for ks in "${REPO_ROOT}"/vendor/local/usr/local/lib/libkeystone.so.0*; do
-    cp -Lf "${ks}" "${APPDIR}/usr/lib/libkeystone.so.0"
-    echo "    + libkeystone.so.0 (vendored)"
-done
-shopt -u nullglob
+# Vendored keystone (preferred source; always present in-tree). Resolve exactly
+# one source file deterministically: the unversioned SONAME if it exists,
+# otherwise the highest-sorting versioned match. (A glob loop that copies every
+# match onto the same destination name would be order-dependent.)
+keystone_src="${REPO_ROOT}/vendor/local/usr/local/lib/libkeystone.so.0"
+if [[ ! -e "${keystone_src}" ]]; then
+    shopt -s nullglob
+    keystone_matches=("${REPO_ROOT}"/vendor/local/usr/local/lib/libkeystone.so.0*)
+    shopt -u nullglob
+    (( ${#keystone_matches[@]} )) && keystone_src="${keystone_matches[-1]}"
+fi
+if [[ -e "${keystone_src}" ]]; then
+    cp -Lf "${keystone_src}" "${APPDIR}/usr/lib/libkeystone.so.0"
+    echo "    + libkeystone.so.0 (vendored, from ${keystone_src})"
+else
+    echo "ERROR: vendored libkeystone.so.0 not found under vendor/local." >&2
+    exit 1
+fi
 
 # Everything else, derived from ldd against the real binary.
-if command -v ldd >/dev/null 2>&1; then
-    while read -r name _arrow path _addr; do
-        # ldd lines look like: "libfoo.so.1 => /path/libfoo.so.1 (0x...)"
-        [[ "${name}" == */* ]] && continue          # skip the dynamic loader line
-        [[ -z "${path:-}" || "${path}" == "not" ]] && continue
-        [[ -e "${path}" ]] || continue
-        base="$(basename "${name}")"
-        in_allowlist "${base}" || continue
-        # keystone already handled from the vendored copy.
-        [[ "${base}" == "libkeystone.so.0" && -e "${APPDIR}/usr/lib/libkeystone.so.0" ]] && continue
-        if [[ ! -e "${APPDIR}/usr/lib/${base}" ]]; then
-            cp -Lf "${path}" "${APPDIR}/usr/lib/${base}"
-            echo "    + ${base} (from ${path})"
-        fi
-    done < <(ldd "${APPDIR}/usr/bin/Zathura" 2>/dev/null)
-else
-    echo "    WARNING: ldd not found; only the vendored keystone was bundled." >&2
+command -v ldd >/dev/null 2>&1 || { echo "ERROR: ldd not found; cannot resolve runtime libraries." >&2; exit 1; }
+
+# Capture ldd output once and sanity-check it: an empty result, or one without
+# any "=>" resolution lines, means the binary is static or ldd failed -- in
+# which case bundling only keystone would silently ship a broken AppImage.
+ldd_output="$(ldd "${APPDIR}/usr/bin/Zathura" 2>/dev/null || true)"
+if ! grep -q '=>' <<<"${ldd_output}"; then
+    echo "ERROR: ldd reported no shared-library dependencies for the binary." >&2
+    echo "       It may be statically linked or ldd failed; refusing to ship a" >&2
+    echo "       half-bundled AppImage." >&2
+    exit 1
 fi
+
+while read -r name _arrow path _addr; do
+    # ldd lines look like: "libfoo.so.1 => /path/libfoo.so.1 (0x...)"
+    [[ "${name}" == */* ]] && continue              # skip the dynamic loader line
+    [[ -z "${path:-}" || "${path}" == "not" ]] && continue
+    [[ -e "${path}" ]] || continue
+    base="$(basename "${name}")"
+    in_allowlist "${base}" || continue
+    # keystone already handled from the vendored copy.
+    [[ "${base}" == "libkeystone.so.0" ]] && continue
+    if [[ ! -e "${APPDIR}/usr/lib/${base}" ]]; then
+        cp -Lf "${path}" "${APPDIR}/usr/lib/${base}"
+        echo "    + ${base} (from ${path})"
+    fi
+done <<<"${ldd_output}"
 
 # 3c. Assets and ghidra processor specs (loaded relative to the binary).
 echo "==> Copying assets and vendor/ghidra"
