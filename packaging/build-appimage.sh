@@ -122,8 +122,13 @@ cp -f "${ZATHURA_BIN}" "${APPDIR}/usr/bin/Zathura"
 chmod +x "${APPDIR}/usr/bin/Zathura"
 if [[ "${STRIP_BINARY}" != "0" ]] && command -v strip >/dev/null 2>&1; then
     echo "==> Stripping binary (set STRIP=0 to keep symbols)"
-    strip --strip-unneeded "${APPDIR}/usr/bin/Zathura" || \
-        echo "    (strip failed, continuing with unstripped binary)"
+    # Strip in place, but restore the known-good binary if strip fails partway
+    # so a corrupted executable is never packaged.
+    if ! strip --strip-unneeded "${APPDIR}/usr/bin/Zathura"; then
+        echo "    (strip failed; restoring unstripped binary)"
+        cp -f "${ZATHURA_BIN}" "${APPDIR}/usr/bin/Zathura"
+        chmod +x "${APPDIR}/usr/bin/Zathura"
+    fi
 fi
 
 # 3a-bis. Default sample file. The app opens "test.asm" relative to the

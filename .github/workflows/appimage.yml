@@ -39,7 +39,9 @@ jobs:
       - name: Publish AppImage to release
         uses: softprops/action-gh-release@v2
         with:
-          files: Zathura_Debugger-x86_64.AppImage
+          # Glob so the upload stays correct if ARCH changes; the build script
+          # names the artifact Zathura_Debugger-${ARCH}.AppImage.
+          files: Zathura_Debugger-*.AppImage
           fail_on_unmatched_files: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
