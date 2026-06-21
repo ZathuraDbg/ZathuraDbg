@@ -61,11 +61,16 @@ NOTE: The Windows Build has not been tested thoroughly yet so expect issues.
 - Update the environment and then install the following dependencies
 ```sh
 pacman -Syyu
-pacman -S mingw-w64-x86_64-toolchain mingw-w64-x86_64-glfw mingw-w64-x86_64-keystone mingw-w64-x86_64-unicorn mingw-w64-x86_64-cmake git 
+pacman -S mingw-w64-x86_64-toolchain mingw-w64-x86_64-glfw mingw-w64-x86_64-keystone mingw-w64-x86_64-unicorn mingw-w64-x86_64-cmake mingw-w64-x86_64-ninja git
 ```
 - Install capstone engine from MSYS2 packages
 ```sh
 pacman -S mingw-w64-x86_64-capstone
+```
+- The bundled icicle emulator (`vendor/icicle-cpp`) is a Rust crate, and the
+  link step needs OpenSSL, so install those too:
+```sh
+pacman -S mingw-w64-x86_64-rust mingw-w64-x86_64-openssl
 ```
 
 ## Building the project
@@ -148,6 +153,15 @@ libcapstone.dll
 libkeystone.dll     
 libunicorn.dll
 ```
+
+## Packaging a Windows installer
+
+To produce the distributable `.exe` installer (the one on the Releases page),
+see [`installer/windows/README.md`](installer/windows/README.md). In short:
+`installer/windows/stage.sh` collects the EXE + its DLLs (resolved via `ldd`, so
+no hand-maintained list) + `assets/`, then Inno Setup's `ISCC` compiles
+`installer/windows/zathura.iss`. CI does this automatically on a tag push via
+`.github/workflows/windows.yml`.
 
 # Troubleshooting
 
