@@ -1,4 +1,5 @@
 #include <thread>
+#include "../dialogs/safeDialogs.hpp"
 #include <condition_variable>
 #include <functional>
 #ifdef _WIN32
@@ -130,7 +131,7 @@ void updateWindow()
         currentVersion = getLatestVersion();
         if (currentVersion.empty())
         {
-            if (tinyfd_messageBox("Error", "Failed to check for updates! Your internet may not be working", "ok", "error", 0))
+            if (Zathura::safeMessageBox("Error", "Failed to check for updates! Your internet may not be working", "ok", "error", 0))
             {
                 return;
             }

@@ -1,4 +1,5 @@
 #include "assembler.hpp"
+#include "../../dialogs/safeDialogs.hpp"
 #include "../interpreter/interpreter.hpp"
 #include <capstone/capstone.h>
 #include <algorithm>
@@ -28,7 +29,7 @@ std::pair<std::string, std::size_t> assemble(const std::string& assemblyString, 
         err = ks_open(ksSettings.arch, ksSettings.mode, &ks);
 
         if (err != KS_ERR_OK) {
-            tinyfd_messageBox("ERROR!","Failed to initialize Keystone engine!", "ok", "error", 0);
+            Zathura::safeMessageBox("ERROR!","Failed to initialize Keystone engine!", "ok", "error", 0);
             return {"", 0};
         }
 
@@ -47,12 +48,12 @@ std::pair<std::string, std::size_t> assemble(const std::string& assemblyString, 
         const std::string error(ks_strerror(err));
         if (err == KS_ERR_ASM_INVALIDOPERAND){
             LOG_ERROR("Wrong architecture error!: " << error);
-            tinyfd_messageBox("Assembly syntax error!", "The code does not belong to the currently selected architecture!"
+            Zathura::safeMessageBox("Assembly syntax error!", "The code does not belong to the currently selected architecture!"
                                     "\nPlease change the architecture in the settings.", "ok", "error", 0);
         }
         else if (err >= KS_ERR_ASM){
             LOG_ERROR("Assembly syntax error: " << error);
-            tinyfd_messageBox("Assembly syntax error!", error.c_str(), "ok", "error", 0);
+            Zathura::safeMessageBox("Assembly syntax error!", error.c_str(), "ok", "error", 0);
         }
 
         LOG_ERROR(error);
@@ -306,7 +307,7 @@ bool updateInstructionSizes(const std::string& compiledAsm){
         LOG_ERROR("  - Mode: " << codeInformation.modeCS);
         LOG_ERROR("  - Entry point: 0x" << std::hex << ENTRY_POINT_ADDRESS);
         LOG_ERROR("  - Data size: " << std::dec << compiledAsm.length());
-        tinyfd_messageBox("Unable to run the given code!\n",  "Please check the logs and create an issue on GitHub if the issue persists", "ok", "error", 0);
+        Zathura::safeMessageBox("Unable to run the given code!\n",  "Please check the logs and create an issue on GitHub if the issue persists", "ok", "error", 0);
         cs_close(&handle);
         return false;
     }
@@ -319,7 +320,7 @@ std::string getBytes(const std::string& fileName){
 
     if (!asmFile.is_open()){
         LOG_ERROR("File can not be read: getBytes(" << fileName << ")");
-        tinyfd_messageBox("File read error!", "Asm file cannot be read!", "ok", "error", 0);
+        Zathura::safeMessageBox("File read error!", "Asm file cannot be read!", "ok", "error", 0);
         return "";
     }
     assembly.clear();

@@ -1,4 +1,5 @@
 #include "windows.hpp"
+#include "../dialogs/safeDialogs.hpp"
 
 bool expandMemoryRegion(Icicle* ic, const uint64_t startAddr, uint64_t oldEndAddr, uint64_t newEndAddr,
                         const uint64_t oldSize, const MemoryProtection perms)
@@ -25,7 +26,7 @@ bool expandMemoryRegion(Icicle* ic, const uint64_t startAddr, uint64_t oldEndAdd
     if (((newSize % 4096) != 0))
     {
         LOG_ALERT("The new size requested for the memory region is not a multiple of 4096, rounding up...");
-        tinyfd_messageBox(
+        Zathura::safeMessageBox(
             "Warning",
             "The new end address provided by you is not a multiple of the page size. The number will be rounded up to a multiple of 4KB.",
             "ok", "warning", 1);
@@ -320,7 +321,7 @@ void memoryMapWindow()
                 ImGui::Checkbox("###Check4_", &mapped);
                 if (ImGui::IsItemHovered() && ImGui::IsMouseReleased(0))
                 {
-                    bool unmap = tinyfd_messageBox("Confirmation required!", "Are you sure you want to unmap it?", "okcancel", "error", 0);
+                    bool unmap = Zathura::safeMessageBox("Confirmation required!", "Are you sure you want to unmap it?", "okcancel", "error", 0);
 
                     if (unmap)
                     {

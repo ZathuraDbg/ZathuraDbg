@@ -1,4 +1,5 @@
 #include "fileTasks.hpp"
+#include "../dialogs/safeDialogs.hpp"
 #include <mutex>
 #include "../app.hpp"
 #include "../integration/elfLoader.hpp"
@@ -89,7 +90,7 @@ bool fileRunTask(const bool& execCode){
             }
         }
         else{
-            tinyfd_messageBox("Stack creation failed!", "The app was unable to create the stack to run the code.\nPlease try restarting it or report this issue on github!",
+            Zathura::safeMessageBox("Stack creation failed!", "The app was unable to create the stack to run the code.\nPlease try restarting it or report this issue on github!",
                 "ok", "error", 0);
 
             LOG_ERROR("Unable to create stack!, quitting!");
@@ -98,7 +99,7 @@ bool fileRunTask(const bool& execCode){
     }
     else{
         LOG_ERROR("No file selected to run!");
-        tinyfd_messageBox("No file selected!", "Please open a file to run the code!", "ok", "error", 0);
+        Zathura::safeMessageBox("No file selected!", "Please open a file to run the code!", "ok", "error", 0);
         return false;
     }
 

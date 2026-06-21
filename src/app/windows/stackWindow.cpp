@@ -1,4 +1,5 @@
 #include "windows.hpp"
+#include "../dialogs/safeDialogs.hpp"
 #include "../integration/debugState.hpp"
 
 #include <algorithm>
@@ -75,7 +76,7 @@ void stackWriteFunc(ImU8* data, const size_t offset, const ImU8 delta) {
 
     if (!writeOk) {
         LOG_ERROR("Failed to write to memory. Address: 0x" << std::hex << address);
-        tinyfd_messageBox("ERROR!", "Failed to write to the memory address!!", "ok", "error", 0);
+        Zathura::safeMessageBox("ERROR!", "Failed to write to the memory address!!", "ok", "error", 0);
         return;
     }
 

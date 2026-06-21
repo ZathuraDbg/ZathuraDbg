@@ -1,4 +1,5 @@
 #include "app.hpp"
+#include "dialogs/safeDialogs.hpp"
 bool firstTime = true;
 const char* architectureStrings[] = {"Intel x86_64", "AArch32", "AArch64", "RISC-V", "PowerPC"};
 const char* ksSyntaxOptStr[] = {"Intel", "AT&T", "NASM", "GAS"};
@@ -220,7 +221,7 @@ void changeEmulationSettings(){
             currentDefinitionId = TextEditor::LanguageDefinitionId::AsmArm;
         }
         else {
-            tinyfd_messageBox("Unsupported Architecture!", "Only x86 and ARM Architectures are supported with ZathuraDbg at this point."
+            Zathura::safeMessageBox("Unsupported Architecture!", "Only x86 and ARM Architectures are supported with ZathuraDbg at this point."
                                                            "\nOthers will be coming sooner.", "ok", "info", 0);
             selectedArch = arch::x86;
             ucMode = UC_MODE_64;

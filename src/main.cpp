@@ -1,5 +1,6 @@
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include "../vendor/imgui/imgui_internal.h"
+#include "app/dialogs/safeDialogs.hpp"
 #include "../vendor/imgui/imgui.h"
 #include "../vendor/imgui/backends/imgui_impl_glfw.h"
 #include "../vendor/imgui/backends/imgui_impl_opengl3.h"
@@ -64,7 +65,7 @@ void reportStartupWarning(const std::string &message) {
     }
 
     std::cerr << message << '\n';
-    tinyfd_messageBox("ZathuraDbg startup warning", message.c_str(), "ok", "warning", 0);
+    Zathura::safeMessageBox("ZathuraDbg startup warning", message.c_str(), "ok", "warning", 0);
 }
 
 }
@@ -239,7 +240,7 @@ int main(int argc, const char** argv)
             char* path = nullptr;
             path = static_cast<char *>(malloc(length + 1));
             if (path == nullptr) {
-                tinyfd_messageBox("Whereami error!", "Failed to get executable path!", "ok", "error", 0);
+                Zathura::safeMessageBox("Whereami error!", "Failed to get executable path!", "ok", "error", 0);
                 return 1;
             }
             wai_getExecutablePath(path, length, &dirnameLength);
@@ -375,7 +376,7 @@ int main(int argc, const char** argv)
     glfwShowWindow(window);
 
     if (!getenv("GHIDRA_SRC")) {
-        tinyfd_messageBox("Environment variable missing!", "The environment variable GHIDRA_SRC is missing. The emulator can\'t run without this.", "ok", "warning", 0);
+        Zathura::safeMessageBox("Environment variable missing!", "The environment variable GHIDRA_SRC is missing. The emulator can\'t run without this.", "ok", "warning", 0);
     }
 
 #ifdef __EMSCRIPTEN__
