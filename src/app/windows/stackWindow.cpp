@@ -1,18 +1,32 @@
 #include "windows.hpp"
 #include "../integration/debugState.hpp"
 
+#include <algorithm>
+
 MemoryEditor stackEditor;
 
 namespace {
 
+constexpr size_t kMaxStackDisplaySize = 64ULL * 1024ULL;
+uint64_t g_stackDisplayBase = 0;
 size_t g_stackDisplaySize = 0;
+
+size_t currentStackDisplayRange()
+{
+    return static_cast<size_t>(std::min<uintptr_t>(STACK_SIZE, kMaxStackDisplaySize));
+}
+
+uint64_t currentStackDisplayBase(const size_t displayRange)
+{
+    return STACK_ADDRESS + (STACK_SIZE > displayRange ? STACK_SIZE - displayRange : 0);
+}
 
 bool stackDiffHighlightFn(const ImU8*, const size_t off) {
     if (g_stackDisplaySize == 0 || off >= g_stackDisplaySize) {
         return false;
     }
 
-    const uint64_t address = STACK_ADDRESS + g_stackDisplaySize - off - 1;
+    const uint64_t address = g_stackDisplayBase + g_stackDisplaySize - off - 1;
     return isDebugStackMemoryChanged(address);
 }
 
@@ -20,6 +34,10 @@ bool stackDiffHighlightFn(const ImU8*, const size_t off) {
 
 static void* copyBigEndian(void* dst, const void* src, size_t size)
 {
+    if (size == 0) {
+        return dst;
+    }
+
     uint8_t* dst_ptr = static_cast<uint8_t*>(dst);
     const uint8_t* src_ptr = static_cast<const uint8_t*>(src) + size - 1;
 
@@ -44,13 +62,13 @@ void stackWriteFunc(ImU8* data, const size_t offset, const ImU8 delta) {
         std::lock_guard<std::mutex> lk(debugReadyMutex);
     }
 
-    const size_t displayedSize = g_stackDisplaySize > 0 ? g_stackDisplaySize : STACK_SIZE;
+    const size_t displayedSize = g_stackDisplaySize > 0 ? g_stackDisplaySize : currentStackDisplayRange();
     if (offset >= displayedSize) {
         LOG_ERROR("Stack write offset is outside the displayed stack range. Offset: " << offset);
         return;
     }
 
-    const uint64_t address = STACK_ADDRESS + displayedSize - offset - 1;
+    const uint64_t address = g_stackDisplayBase + displayedSize - offset - 1;
     LOG_INFO("Stack write at 0x" << std::hex << address << ": " << static_cast<int>(delta));
 
     const bool writeOk = writeDebugMemory(address, delta);
@@ -91,18 +109,37 @@ bool handleStackError() {
 }
 
 static std::unique_ptr<unsigned char[], decltype(&free)> stackBuffer(nullptr, free);
+static size_t stackBufferSize = 0;
 
 void stackEditorWindow() {
     const auto io = ImGui::GetIO();
     ImGui::PushFont(io.Fonts->Fonts[3]);
 
+    const size_t stackDisplayRange = currentStackDisplayRange();
+    const uint64_t stackDisplayBase = currentStackDisplayBase(stackDisplayRange);
+    const size_t requiredBufferSize = std::max<size_t>(stackDisplayRange, 1);
+
+    if (!stackBuffer || stackBufferSize != requiredBufferSize) {
+        stackBuffer.reset(static_cast<unsigned char*>(calloc(1, requiredBufferSize)));
+        stackBufferSize = stackBuffer ? requiredBufferSize : 0;
+    }
     if (!stackBuffer) {
-        stackBuffer.reset(static_cast<unsigned char*>(calloc(1, STACK_SIZE)));
+        ImGui::Text("Unable to allocate stack view buffer.");
+        ImGui::PopFont();
+        return;
     }
 
     if (!remote_gdb::useRemoteDebugging() && icicle && isDebugReady)
     {
         static bool stack_mapped_once = false;
+        static uintptr_t mappedStackAddress = 0;
+        static uintptr_t mappedStackSize = 0;
+        if (mappedStackAddress != STACK_ADDRESS || mappedStackSize != STACK_SIZE) {
+            stack_mapped_once = false;
+            mappedStackAddress = STACK_ADDRESS;
+            mappedStackSize = STACK_SIZE;
+        }
+
         if (!stack_mapped_once) {
             LOG_INFO("Stack mapping if not done already");
 
@@ -131,12 +168,15 @@ void stackEditorWindow() {
     std::optional<std::vector<uint8_t>> memData;
     static size_t remoteStackReadable = 0;
     static uintptr_t lastStackAddr = 0;
+    static size_t lastStackDisplayRange = 0;
     static bool remoteStackProbeFailed = false;
     static uint64_t lastStackResumeGen = ~uint64_t{0};
 
-    if (lastStackAddr != STACK_ADDRESS || lastStackResumeGen != remoteResumeGeneration) {
+    if (lastStackAddr != stackDisplayBase || lastStackDisplayRange != stackDisplayRange ||
+        lastStackResumeGen != remoteResumeGeneration) {
         remoteStackReadable = 0;
-        lastStackAddr = STACK_ADDRESS;
+        lastStackAddr = stackDisplayBase;
+        lastStackDisplayRange = stackDisplayRange;
         lastStackResumeGen = remoteResumeGeneration;
         remoteStackProbeFailed = false;
     }
@@ -144,8 +184,8 @@ void stackEditorWindow() {
     if (isDebugReady) {
         if (remote_gdb::useRemoteDebugging()) {
             if (!remoteStackProbeFailed) {
-                const size_t trySize = remoteStackReadable > 0 ? remoteStackReadable : STACK_SIZE;
-                memData = remote_gdb::remoteReadMemoryWithFallback(STACK_ADDRESS, trySize);
+                const size_t trySize = remoteStackReadable > 0 ? remoteStackReadable : stackDisplayRange;
+                memData = remote_gdb::remoteReadMemoryWithFallback(stackDisplayBase, trySize);
                 if (memData.has_value()) {
                     remoteStackReadable = memData->size();
                 } else {
@@ -154,16 +194,19 @@ void stackEditorWindow() {
                 }
             }
         } else {
-            memData = readDebugMemory(STACK_ADDRESS, STACK_SIZE);
+            memData = readDebugMemory(stackDisplayBase, stackDisplayRange);
         }
     }
 
-    const size_t displaySize = memData.has_value() ? memData->size() : STACK_SIZE;
+    const size_t displaySize = memData.has_value() ? memData->size() : stackDisplayRange;
+    g_stackDisplayBase = stackDisplayBase;
     g_stackDisplaySize = displaySize;
 
-    memset(stackBuffer.get(), 0, STACK_SIZE);
+    if (stackBuffer) {
+        memset(stackBuffer.get(), 0, stackBufferSize);
+    }
     if (memData.has_value()) {
-        trackDebugStackMemory(STACK_ADDRESS, *memData);
+        trackDebugStackMemory(stackDisplayBase, *memData);
         copyBigEndian(stackBuffer.get(), memData->data(), memData->size());
     }
 
@@ -175,7 +218,7 @@ void stackEditorWindow() {
     stackEditor.StackFashionAddrSubtraction = true;
     stackEditor.WriteFn = &stackWriteFunc;
 
-    stackEditor.DrawWindow("Stack", reinterpret_cast<void*>(stackBuffer.get()), displaySize, STACK_ADDRESS + displaySize);
+    stackEditor.DrawWindow("Stack", reinterpret_cast<void*>(stackBuffer.get()), displaySize, stackDisplayBase + displaySize);
 
     if (!newMemEditWindows.empty()) {
         int i = 0;

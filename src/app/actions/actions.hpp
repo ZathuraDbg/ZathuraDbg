@@ -1,6 +1,7 @@
 #ifndef ZATHURA_ACTIONS_HPP
 #define ZATHURA_ACTIONS_HPP
 #include "../app.hpp"
+#include <cstdint>
 #include <optional>
 extern std::mutex debugActionsMutex;
 extern std::optional<uint64_t> remoteDisassemblyBaseAddress;
@@ -19,5 +20,6 @@ void safeHighlightLine(int lineNo);
 void processUIUpdates();
 void executeInBackground(const std::function<void()>& func);
 void requestRemoteUiSync(bool refreshTarget = false, bool resetCodeMemoryBase = false);
+void requestLocalElfUiSync(uint64_t currentPc, bool force = false);
 
 #endif //ZATHURA_ACTIONS_HPP
