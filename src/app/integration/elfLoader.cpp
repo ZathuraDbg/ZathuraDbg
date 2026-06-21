@@ -11,6 +11,21 @@
 #include <elf.h>
 #endif
 
+// <elf.h> is Linux-only, so on Windows (MinGW) the ELF program-header flag
+// macros aren't defined. They leak into host-agnostic code — segmentProtection()
+// below uses them outside the _WIN32 guards — so provide the spec-fixed values.
+// Guarded with #ifndef so they never clash with the real <elf.h>. (Actual ELF
+// loading is still gated off on Windows; see the _WIN32 blocks further down.)
+#ifndef PF_X
+#define PF_X 0x1
+#endif
+#ifndef PF_W
+#define PF_W 0x2
+#endif
+#ifndef PF_R
+#define PF_R 0x4
+#endif
+
 #include <algorithm>
 #include <capstone/capstone.h>
 #include <cstring>
