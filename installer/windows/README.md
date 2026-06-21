@@ -17,10 +17,12 @@ relative to its own EXE (`src/utils/fonts.cpp`, `src/main.cpp`). Don't flatten i
 
 ## How it fits together
 
-1. **`stage.sh`** assembles the install tree from a build. It resolves the
-   MinGW runtime DLLs with `ldd` (so the list can't drift — the old script was
-   missing `libcapstone`/`libunicorn`) and copies the project-built DLLs
-   (e.g. `icicle.dll`) plus `assets/`.
+1. **`stage.sh`** assembles the install tree from a build. It resolves the DLLs
+   the EXE actually links with `ldd` (so the list can't drift — CI showed the old
+   hand-list was missing the OpenSSL DLLs `libssl-3-x64`/`libcrypto-3-x64`), plus
+   any project-built DLLs in the build tree, plus `assets/`. Note: the icicle
+   emulator links **statically** on Windows (`libicicle.a`), so there is no
+   `icicle.dll` — the old script shipped a stale one.
 2. **`zathura.iss`** packages that staged tree. It is fully parameterized — no
    machine paths — via `/D` defines:
    - `MyAppVersion`     — display version (CI uses the git tag, else `VERSION`)
