@@ -1,0 +1,43 @@
+name: appimage
+
+# Build the Linux AppImage and attach it to the GitHub Release whenever a tag
+# is pushed. The emulator/assembler libs are committed under vendor/local, so
+# the build only needs system deps from apt (no Rust step). vendor/ is part of
+# the main tree (no submodules), so a normal checkout is sufficient.
+on:
+  push:
+    tags:
+      - '*'
+
+permissions:
+  contents: write
+
+jobs:
+  appimage:
+    runs-on: ubuntu-latest
+    env:
+      ARCH: x86_64
+    steps:
+      - name: Checkout (with tag)
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            cmake ninja-build pkg-config g++-14 gcc-14 \
+            libglfw3-dev libgl1-mesa-dev \
+            libcapstone-dev libssl-dev nlohmann-json3-dev
+
+      - name: Build AppImage
+        run: bash packaging/build-appimage.sh
+
+      - name: Publish AppImage to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: Zathura_Debugger-x86_64.AppImage
+          fail_on_unmatched_files: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
