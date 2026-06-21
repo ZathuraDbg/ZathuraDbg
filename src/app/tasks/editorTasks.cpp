@@ -42,7 +42,7 @@ bool readFileIntoEditor(const std::string &filePath) {
         return true;
     }
 
-    tinyfd_messageBox("File read error!", "Unable to read the file you're trying to open. Please check if the "
+    tinyfd_messageBox("File read error!", "Unable to read the file you are trying to open. Please check if the "
                        "file is not open in another program and/or you have the permissions to read it.",
                       "ok", "error", 0);
 
