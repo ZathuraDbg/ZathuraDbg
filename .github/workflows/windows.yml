@@ -1,0 +1,117 @@
+name: windows-installer
+
+# Build the native Windows app (MSYS2 / MINGW64) and package it into a signed-
+# ready Inno Setup installer. Replaces the old by-hand build on a developer's
+# D:\ box. Conservative triggers so it never gates normal PRs:
+#   * manual run (workflow_dispatch) -> uploads the installer as an artifact
+#   * tag push                       -> also attaches it to the GitHub Release
+#
+# NOTE: authored without a Windows runner to test against — the build steps
+# mirror COMPILE.md plus the deps it omits (Rust for vendor/icicle-cpp, openssl
+# for -lssl/-lcrypto). Expect to tweak package names on the first real run.
+on:
+  workflow_dispatch:
+  push:
+    # TEMP (remove after CI validation): lets the branch push trigger a real
+    # run, since workflow_dispatch isn't available until this file is on master.
+    branches: ["ci/windows-installer"]
+    tags: ["v*", "[0-9]+.*"]
+
+permissions:
+  contents: write # attach the installer to the release on a tag
+
+concurrency:
+  group: windows-installer-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  installer:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          # COMPILE.md's list + the two it misses: rust (vendor/icicle-cpp is a
+          # cargo crate) and openssl (CMakeLists links -lssl -lcrypto).
+          install: >-
+            git
+            mingw-w64-x86_64-toolchain
+            mingw-w64-x86_64-cmake
+            mingw-w64-x86_64-ninja
+            mingw-w64-x86_64-rust
+            mingw-w64-x86_64-glfw
+            mingw-w64-x86_64-keystone
+            mingw-w64-x86_64-capstone
+            mingw-w64-x86_64-unicorn
+            mingw-w64-x86_64-openssl
+
+      - name: Resolve version
+        id: ver
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            v="${GITHUB_REF#refs/tags/}"; v="${v#v}"
+          else
+            v="$(tr -d '[:space:]' < VERSION)-dev"
+          fi
+          # numeric x.y.z.0 for the EXE VersionInfo (drop any -beta suffix)
+          num="$(printf '%s' "$v" | grep -oE '^[0-9]+(\.[0-9]+){0,2}' || echo '0.0.0')"
+          IFS=. read -r a b c <<< "$num"
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+          echo "verinfo=${a:-0}.${b:-0}.${c:-0}.0" >> "$GITHUB_OUTPUT"
+          echo "resolved version=$v verinfo=${a:-0}.${b:-0}.${c:-0}.0"
+
+      - name: Build (MINGW64)
+        run: |
+          cd src
+          cmake -G Ninja -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build -j2
+
+      - name: Locate Zathura.exe
+        id: exe
+        run: |
+          exe="$(find src -type f -name 'Zathura.exe' | head -n1)"
+          [ -n "$exe" ] || { echo "::error::Zathura.exe not found under src/"; exit 1; }
+          echo "path=$exe" >> "$GITHUB_OUTPUT"
+          echo "found: $exe"
+
+      - name: Stage install tree
+        run: bash installer/windows/stage.sh "${{ steps.exe.outputs.path }}" installer/windows/staging
+
+      - name: Install Inno Setup
+        shell: pwsh
+        run: choco install innosetup -y --no-progress
+
+      - name: Build installer (ISCC)
+        shell: pwsh
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          # Absolute StagingDir — Inno resolves relative [Files] Source paths
+          # against the .iss directory, not the CWD, so an absolute path is the
+          # unambiguous choice.
+          $staging = Join-Path $env:GITHUB_WORKSPACE "installer\windows\staging"
+          & $iscc /DMyAppVersion="${{ steps.ver.outputs.version }}" `
+                  /DMyAppVersionInfo="${{ steps.ver.outputs.verinfo }}" `
+                  /DStagingDir="$staging" `
+                  "installer\windows\zathura.iss"
+          if ($LASTEXITCODE -ne 0) { throw "ISCC failed ($LASTEXITCODE)" }
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ZathuraDbg-windows-x64-installer
+          path: dist/*.exe
+          if-no-files-found: error
+
+      - name: Attach to release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*.exe
+          fail_on_unmatched_files: true

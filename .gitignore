@@ -58,3 +58,7 @@ vendor/**/*.o
 src/app/dialogs/tinyfiledialogs/**/*.dll
 src/app/dialogs/tinyfiledialogs/**/*.dylib
 src/app/dialogs/tinyfiledialogs/**/*.so
+
+# Windows installer build outputs
+installer/windows/staging/
+/dist/
