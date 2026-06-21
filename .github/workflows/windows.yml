@@ -13,6 +13,14 @@ on:
   workflow_dispatch:
   push:
     tags: ["v*", "[0-9]+.*"]
+  # Validate the Windows build on PRs that touch the app, vendored deps, or the
+  # installer (path-filtered like native.yml so unrelated PRs don't pay the cost).
+  pull_request:
+    paths:
+      - "src/**"
+      - "vendor/**"
+      - "installer/**"
+      - ".github/workflows/windows.yml"
 
 permissions:
   contents: write # attach the installer to the release on a tag
