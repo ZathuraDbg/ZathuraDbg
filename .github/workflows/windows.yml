@@ -68,6 +68,19 @@ jobs:
           echo "verinfo=${a:-0}.${b:-0}.${c:-0}.0" >> "$GITHUB_OUTPUT"
           echo "resolved version=$v verinfo=${a:-0}.${b:-0}.${c:-0}.0"
 
+      # The project's CMake only builds vendor/icicle-cpp on UNIX (the
+      # add_subdirectory is gated `if (UNIX ...)`), but the Windows link step
+      # still wants `-licicle`. Build the Rust staticlib and drop it on the
+      # MinGW lib path so the linker finds it — this mirrors the maintainer's
+      # manual Windows prebuild. (Rust's own deps — ws2_32/ntdll/userenv/bcrypt —
+      # are already in the CMake WIN32 LIBS list.)
+      - name: Build icicle (Rust staticlib)
+        run: |
+          cd vendor/icicle-cpp/src
+          cargo build --release
+          cp target/release/libicicle.a "$MINGW_PREFIX/lib/"
+          echo "installed $(ls -la "$MINGW_PREFIX/lib/libicicle.a")"
+
       - name: Build (MINGW64)
         run: |
           cd src
