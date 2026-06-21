@@ -12,9 +12,6 @@ name: windows-installer
 on:
   workflow_dispatch:
   push:
-    # TEMP (remove after CI validation): lets the branch push trigger a real
-    # run, since workflow_dispatch isn't available until this file is on master.
-    branches: ["ci/windows-installer"]
     tags: ["v*", "[0-9]+.*"]
 
 permissions:
