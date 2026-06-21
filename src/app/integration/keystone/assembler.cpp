@@ -320,7 +320,7 @@ std::string getBytes(const std::string& fileName){
 
     if (!asmFile.is_open()){
         LOG_ERROR("File can not be read: getBytes(" << fileName << ")");
-        Zathura::safeMessageBox("File read error!", "Asm file cannot be read!", "ok", "error", 0);
+        Zathura::safeMessageBox("File read error!", "Asm file can't be read!", "ok", "error", 0);
         return "";
     }
     assembly.clear();

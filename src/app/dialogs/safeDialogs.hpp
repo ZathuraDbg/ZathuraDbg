@@ -52,9 +52,12 @@ inline std::string sanitizeForTinyfd(const char* text) {
 inline int safeMessageBox(const char* title, const char* message,
                           const char* dialogType, const char* iconType,
                           const int defaultButton) {
+    // Pass NULL through unchanged rather than normalizing it to "": tinyfd
+    // accepts a NULL title/message and we must not silently alter that contract.
     const std::string safeTitle = sanitizeForTinyfd(title);
     const std::string safeMessage = sanitizeForTinyfd(message);
-    return tinyfd_messageBox(safeTitle.c_str(), safeMessage.c_str(),
+    return tinyfd_messageBox(title != nullptr ? safeTitle.c_str() : nullptr,
+                             message != nullptr ? safeMessage.c_str() : nullptr,
                              dialogType, iconType, defaultButton);
 }
 
