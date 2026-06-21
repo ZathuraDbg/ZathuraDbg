@@ -57,12 +57,11 @@ void fileSaveAsTask(const std::string &fileName){
 void fileSaveTask(const std::string &fileName){
     if (!fileName.empty()){
         LOG_DEBUG("Saving the file " << fileName);
-        if (!writeEditorToFile(selectedFile)) {
+        if (!writeEditorToFile(fileName)) {
             LOG_ERROR("Save operation failed on the file: " << fileName << " !");
         }
 
         selectedFile = fileName;
-        fileOpenTask(selectedFile);
     }
 }
 
