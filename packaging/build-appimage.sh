@@ -126,6 +126,16 @@ if [[ "${STRIP_BINARY}" != "0" ]] && command -v strip >/dev/null 2>&1; then
         echo "    (strip failed, continuing with unstripped binary)"
 fi
 
+# 3a-bis. Default sample file. The app opens "test.asm" relative to the
+# executable on startup (see src/main.cpp), so it must sit next to the binary
+# at usr/bin/test.asm. Without it the first launch fails to load a default file.
+if [[ -f "${REPO_ROOT}/src/test.asm" ]]; then
+    echo "==> Bundling default test.asm"
+    cp -f "${REPO_ROOT}/src/test.asm" "${APPDIR}/usr/bin/test.asm"
+else
+    echo "    (warning: src/test.asm not found; AppImage will start without a default file)"
+fi
+
 # 3b. Bundle shared libraries.
 #
 # Strategy: ship the vendored keystone, plus an allowlist of libs that are not
